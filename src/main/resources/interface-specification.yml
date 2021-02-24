@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Party Registry Proxy Server
-  description: This service is the proxy to the party registry
+  title: Party Management Micro Service
+  description: This service is the party manager
   version: 0.0.1
   contact:
     name: API Support
@@ -23,7 +23,7 @@ paths:
   /organizations/{orgId}:
     get:
       tags:
-        - organization
+        - public
       summary: Find organization by ID
       description: Returns a single organization
       operationId: getOrganizationById
@@ -53,6 +53,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/OrganizationError'
+  /status:
+    get:
+      tags:
+        - public
+      summary: Health status endpoint
+      description: Return ok
+      operationId: getStatus
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Status'
 components:
   schemas:
     Organization:
@@ -89,5 +103,11 @@ components:
           type: string
         title:
           type: string
+        status:
+          type: string
+    Status:
+      required:
+        - status
+      properties:
         status:
           type: string

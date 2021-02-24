@@ -3,7 +3,8 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.api.impl
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.OrganizationApiService
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationError}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.OrganizationError
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Organization
 
 class OrganizationApiServiceImpl extends OrganizationApiService {
   override def getOrganizationById200(responseOrganization: Organization)(implicit
