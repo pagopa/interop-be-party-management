@@ -11,12 +11,12 @@ sealed trait PartyType {
   }
 }
 
-sealed trait Person             extends PartyType
-case object Operator            extends Person
-case object LegalRepresentative extends Person
-case object Delegate            extends Person
-case object GroupLeader         extends Person
+sealed trait PersonType         extends PartyType
+case object Operator            extends PersonType
+case object LegalRepresentative extends PersonType
+case object Delegate            extends PersonType
+case object GroupLeader         extends PersonType
 
-sealed trait Organization extends PartyType
-case object AAOU          extends Organization
-case object UO            extends Organization
+sealed trait OrganizationType extends PartyType
+case object AAOU              extends OrganizationType
+case object UO                extends OrganizationType

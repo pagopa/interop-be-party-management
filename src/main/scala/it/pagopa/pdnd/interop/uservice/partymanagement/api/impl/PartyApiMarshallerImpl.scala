@@ -1,0 +1,18 @@
+package it.pagopa.pdnd.interop.uservice.partymanagement.api.impl
+
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiMarshaller
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Credential, ErrorResponse, Person}
+import spray.json._
+
+class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
+  override implicit def fromEntityUnmarshallerPerson: FromEntityUnmarshaller[Person] = ???
+
+  override implicit def toEntityMarshallerCredential: ToEntityMarshaller[Credential] = ???
+
+  override implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] = ???
+
+  override implicit def toEntityMarshallerPerson: ToEntityMarshaller[Person] = ???
+}

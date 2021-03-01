@@ -7,56 +7,132 @@ info:
     name: API Support
     url: http://www.example.com/support
     email: support@example.com
-  termsOfService: http://localhost/terms
+  termsOfService: 'http://swagger.io/terms/'
   x-api-id: an x-api-id
   x-summary: an x-summary
 servers:
-  - url: https://localhost/pdnd-interop-uservice-party-registry-proxy/v0.0.1
-    description: This service is the proxy to the party registry
+  - url: https://localhost/pdnd-interop-uservice-party-management/v0.0.1
+    description: This service is the party manager
+security:
+  - bearerAuth: []
 tags:
-  - name: organization
-    description: Retrieve information about organization
+  - name: party
+    description: Manipulate party information
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+  - name: health
+    description: Verify service status
     externalDocs:
       description: Find out more
       url: http://swagger.io
 paths:
-  /organizations/{orgId}:
+  /credentials/{credentialId}:
     get:
+      security:
+        - bearerAuth: []
       tags:
-        - public
-      summary: Find organization by ID
-      description: Returns a single organization
-      operationId: getOrganizationById
+        - party
+      summary: Find credential by ID
+      description: Returns a single credential
+      operationId: getCredentialById
       parameters:
-        - name: orgId
+        - name: credentialId
           in: path
-          description: ID of organization to return
+          description: ID of credentials to return
           required: true
           schema:
             type: string
+            maxLength: 36
+            example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+            format: uuid
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/Credential'
         '400':
           description: Invalid ID supplied
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/OrganizationError'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Organization not found
+          description: Credential not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/OrganizationError'
+                $ref: '#/components/schemas/ErrorResponse'
+  /persons/{fiscalCode}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - party
+      summary: Find person by fiscal code
+      description: Return ok
+      operationId: getPersonByFiscalCode
+      parameters:
+        - name: fiscalCode
+          in: path
+          description: The fiscal code of the Person to return
+          required: true
+          schema:
+            description: Il codice fiscale.
+            example: RSSMRA75L01H501A
+            maxLength: 16
+            minLength: 11
+            pattern: /^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$/i
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Credential not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /persons:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - party
+      summary: Create a new person
+      description: Return ok
+      operationId: createPerson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Person'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Person'
   /status:
     get:
+      security:
+        - bearerAuth: []
       tags:
-        - public
+        - health
       summary: Health status endpoint
       description: Return ok
       operationId: getStatus
@@ -66,48 +142,110 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Status'
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    Organization:
+    Person:
       required:
         - id
-        - dn
-        - description
-        - pec
+        - name
+        - surname
+        - fiscalCode
       type: object
+      additionalProperties: false
       properties:
         id:
           type: string
-          example: age
-        dn:
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          maxLength: 36
+          format: uuid
+        name:
           type: string
-          example: aoo=agd_DG,o=agd,c=it
-        description:
+          example: John
+          format: name
+          maxLength: 12
+        surname:
           type: string
-          example: AGENCY X
-        pec:
+          example: Doe
+          format: surname
+          maxLength: 12
+        fiscalCode:
+          description: Il codice fiscale.
+          example: RSSMRA75L01H501A
+          maxLength: 16
+          minLength: 11
+          pattern: /^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$/i
           type: string
-          example: mail@pec.mail.org
-    OrganizationError:
+    Credential:
       required:
-        - detail
-        - type
-        - title
-        - status
+        - id
+        - name
+        - surname
       type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          format: uuid
+          maxLength: 36
+        name:
+          type: string
+          example: John
+          format: name
+          maxLength: 12
+        surname:
+          type: string
+          example: Doe
+          format: surname
+          maxLength: 12
+    ErrorResponse:
+      additionalProperties: false
       properties:
         detail:
+          description:
+            A human readable explanation specific to this occurrence of the problem.
+          example: Request took too long to complete.
+          maxLength: 4096
+          pattern: ^.{0,1024}$
+          type: string
+        instance:
+          description:
+            An absolute URI that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
+          format: uri
+          maxLength: 2048
+          type: string
+        status:
+          description:
+            The HTTP status code generated by the origin server for this occurrence
+            of the problem.
+          example: 503
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        title:
+          description:
+            A short, summary of the problem type. Written in english and readable
+          example: Service Unavailable
+          maxLength: 64
+          pattern: ^[ -~]{0,64}$
           type: string
         type:
+          default: about:blank
+          description:
+            An absolute URI that identifies the problem type.  When dereferenced,
+            it SHOULD provide human-readable documentation for the problem type
+            (e.g., using HTML).
+          example: https://tools.ietf.org/html/rfc7231#section-6.6.4
+          format: uri
+          maxLength: 2048
           type: string
-        title:
-          type: string
-        status:
-          type: string
-    Status:
-      required:
-        - status
-      properties:
-        status:
-          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
+      scheme: bearer
+      bearerFormat: JWT
