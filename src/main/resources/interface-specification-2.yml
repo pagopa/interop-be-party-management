@@ -197,16 +197,6 @@ components:
           example: John
           format: name
           maxLength: 12
-        phone:
-          type: string
-          example: '333112233445'
-          format: phone
-          maxLength: 12
-        email:
-          example: email@mail.org
-          maxLength: 20
-          format: email
-          type: string
         type:
           type: string
           enum: [ Operator,LegalRepresentative,Delegate,GroupLeader,AAOU,UO ]
@@ -254,25 +244,14 @@ components:
         - $ref: '#/components/schemas/Party'
         - type: object
           properties:
-            ipaCod:
-              example: age
-              maxLength: 3
-              pattern: /[a-z]{2,3}
-              type: string
-            manager:
-              example: Mario Rossi
-              maxLength: 20
-              pattern: /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
-              type: string
             pec:
+              description: Il codice fiscale.
               example: email@pec.mail.org
               maxLength: 20
-              format: email
+              pattern: email
               type: string
           required:
             - pec
-            - ipaCod
-            - manager
           additionalProperties: false
     PartyRelationShip:
       type: object

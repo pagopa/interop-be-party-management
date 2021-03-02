@@ -1,36 +1,80 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
-import java.time.Instant
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, Person}
+
+import java.time.OffsetDateTime
+import java.util.UUID
 
 sealed trait Party {
-  def id: String
+  def id: UUID
   def `type`: PartyType
-  def start: Instant
-  def end: Option[Instant]
+  def start: OffsetDateTime
+  def end: Option[OffsetDateTime]
   def status: PartyStatus
 }
 
-final case class Person(
-  id: String,
+final case class PersonParty(
+  id: UUID,
   name: String,
   surname: String,
-  email: String,
-  fiscalCode: String,
+  email: Option[String],
+  phone: Option[String],
+  taxCode: String,
   `type`: PartyType,
-  start: Instant,
-  end: Option[Instant],
-  status: PartyStatus,
-  credential: Option[Credential]
-) extends Party
-
-final case class Organization(
-  id: String,
-  ipaCod: String,
-  name: String,
-  manager: String,
-  fiscalCode: String,
-  `type`: PartyType,
-  start: Instant,
-  end: Option[Instant],
+  start: OffsetDateTime,
+  end: Option[OffsetDateTime],
   status: PartyStatus
 ) extends Party
+
+final case class InstitutionParty(
+  id: UUID,
+  ipaCod: String,
+  name: String,
+  email: Option[String],
+  phone: Option[String],
+  pec: String,
+  manager: String,
+  taxCode: String,
+  `type`: PartyType,
+  start: OffsetDateTime,
+  end: Option[OffsetDateTime],
+  status: PartyStatus
+) extends Party
+
+object Party {
+  def apply(person: Person): Either[Throwable, Party] =
+    for {
+      partyType <- PartyType(person.`type`)
+      status    <- PartyStatus(person.status)
+    } yield PersonParty(
+      id = person.id,
+      name = person.name,
+      surname = person.surname,
+      email = person.email,
+      phone = person.phone,
+      taxCode = person.taxCode,
+      `type` = partyType,
+      start = person.start,
+      end = person.end,
+      status = status
+    )
+
+  def apply(institution: Institution): Either[Throwable, Party] =
+    for {
+      partyType <- PartyType(institution.`type`)
+      status    <- PartyStatus(institution.status)
+    } yield InstitutionParty(
+      id = institution.id,
+      ipaCod = institution.ipaCod,
+      name = institution.name,
+      email = institution.email,
+      phone = institution.phone,
+      pec = institution.pec,
+      manager = institution.manager,
+      taxCode = institution.taxCode,
+      `type` = partyType,
+      start = institution.start,
+      end = institution.end,
+      status = status
+    )
+}
