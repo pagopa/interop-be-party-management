@@ -89,6 +89,46 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Person'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /intitutions:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Create an institution
+      description: Return ok
+      operationId: createInstitution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Institution'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Institution not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /intitutions/{institutionId}:
     get:
       security:
