@@ -17,4 +17,6 @@ client/src
 .bsp
 openapitools.json
 .DS_Store
+snapshots
+snapshots/
 
