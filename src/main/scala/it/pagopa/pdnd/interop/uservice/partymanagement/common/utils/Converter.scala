@@ -1,6 +1,5 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.common.utils
 
-
 trait Converter[A] {
   type B
   def value(a: A): B
