@@ -13,7 +13,7 @@ import scala.util.{Failure, Success, Try}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
-  final val formatter: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
+  final val formatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
   implicit val uuidFormat: JsonFormat[UUID] =
     new JsonFormat[UUID] {
