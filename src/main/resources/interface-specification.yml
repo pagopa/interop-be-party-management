@@ -11,7 +11,7 @@ info:
   x-api-id: an x-api-id
   x-summary: an x-summary
 servers:
-  - url: https://localhost/pdnd-interop-uservice-party-management/v0.0.1
+  - url: http://localhost:8088/pdnd-interop-uservice-party-management/0.0.1
     description: This service is the party manager
 security:
   - bearerAuth: [ ]
@@ -46,13 +46,13 @@ paths:
             example: RSSMRA75L01H501A
             maxLength: 16
             minLength: 11
-            pattern: /^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$/i
+            pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
             type: string
       responses:
         '200':
           description: successful operation
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Person'
         '400':
@@ -83,10 +83,10 @@ paths:
             schema:
               $ref: '#/components/schemas/Person'
       responses:
-        '200':
+        '201':
           description: successful operation
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Person'
         '400':
@@ -111,20 +111,14 @@ paths:
             schema:
               $ref: '#/components/schemas/Institution'
       responses:
-        '200':
+        '201':
           description: successful operation
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Institution'
         '400':
           description: Invalid ID supplied
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Institution not found
           content:
             application/problem+json:
               schema:
@@ -153,7 +147,7 @@ paths:
         '200':
           description: successful operation
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Institution'
         '400':
@@ -187,7 +181,7 @@ paths:
             example: RSSMRA75L01H501A
             maxLength: 16
             minLength: 11
-            pattern: /^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$/i
+            pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
             type: string
         - name: institutionId
           in: path
@@ -200,12 +194,12 @@ paths:
             maxLength: 36
             format: uuid
       responses:
-        '200':
+        '201':
           description: successful operation
           content:
-            application/problem+json:
+            application/json:
               schema:
-                $ref: '#/components/schemas/PartyRelationShip'
+                $ref: '#/components/schemas/Institution'
   /status:
     get:
       security:
@@ -255,7 +249,7 @@ components:
           example: RSSMRA75L01H501A
           maxLength: 16
           minLength: 11
-          pattern: /^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$/i
+          pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
           type: string
         start:
           type: string
@@ -353,13 +347,6 @@ components:
           maxLength: 4096
           pattern: ^.{0,1024}$
           type: string
-        instance:
-          description:
-            An absolute URI that identifies the specific occurrence of the problem.
-            It may or may not yield further information if dereferenced.
-          format: uri
-          maxLength: 2048
-          type: string
         status:
           description:
             The HTTP status code generated by the origin server for this occurrence
@@ -377,17 +364,10 @@ components:
           maxLength: 64
           pattern: ^[ -~]{0,64}$
           type: string
-        type:
-          default: about:blank
-          description:
-            An absolute URI that identifies the problem type.  When dereferenced,
-            it SHOULD provide human-readable documentation for the problem type
-            (e.g., using HTML).
-          example: https://tools.ietf.org/html/rfc7231#section-6.6.4
-          format: uri
-          maxLength: 2048
-          type: string
       additionalProperties: false
+      required:
+        - status
+        - title
   securitySchemes:
     bearerAuth:
       type: http

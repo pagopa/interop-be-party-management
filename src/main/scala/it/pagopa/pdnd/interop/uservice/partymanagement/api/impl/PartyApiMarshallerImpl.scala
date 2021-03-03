@@ -18,7 +18,8 @@ class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport wi
   override implicit def fromEntityUnmarshallerInstitution: FromEntityUnmarshaller[Institution] =
     sprayJsonUnmarshaller[Institution]
 
-  override implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] = errorResponseMarshaller
+  override implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
+    sprayJsonMarshaller[ErrorResponse](jsonFormat3(ErrorResponse))
 
   override implicit def toEntityMarshallerPerson: ToEntityMarshaller[Person] = sprayJsonMarshaller[Person]
 

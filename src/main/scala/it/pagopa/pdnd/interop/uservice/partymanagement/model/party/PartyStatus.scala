@@ -19,6 +19,6 @@ object PartyStatus {
     case "Active"   => Right(Active)
     case "Inactive" => Right(Inactive)
     case "Deleted"  => Right(Deleted)
-    case _          => Left(new RuntimeException) //TODO meaningful error
+    case _          => Left(new RuntimeException("Invalid party status")) //TODO meaningful error
   }
 }

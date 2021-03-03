@@ -6,5 +6,6 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.ErrorResponse
 
 class HealthApiMarshallerImpl extends HealthApiMarshaller {
 
-  override implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] = errorResponseMarshaller
+  override implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
+    sprayJsonMarshaller[ErrorResponse](jsonFormat3(ErrorResponse))
 }

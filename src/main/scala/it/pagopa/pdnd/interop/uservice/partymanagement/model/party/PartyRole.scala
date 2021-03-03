@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
-sealed trait PartRole {
+sealed trait PartyRole {
   def stringify: String = this match {
     case DelegatedBy => "DelegatedBy"
     case ManagerOf   => "ManagerOf"
@@ -8,17 +8,17 @@ sealed trait PartRole {
   }
 }
 
-case object DelegatedBy extends PartRole
+case object DelegatedBy extends PartyRole
 
-case object ManagerOf extends PartRole
+case object ManagerOf extends PartyRole
 
-case object PartOf extends PartRole
+case object PartOf extends PartyRole
 
-object PartRole {
-  def apply(str: String): Either[Throwable, PartRole] = str match {
+object PartyRole {
+  def apply(str: String): Either[Throwable, PartyRole] = str match {
     case "DelegatedBy" => Right(DelegatedBy)
     case "ManagerOf"   => Right(ManagerOf)
     case "PartOf"      => Right(PartOf)
-    case _             => Left(new RuntimeException) //TODO meaningful error
+    case _             => Left(new RuntimeException("Invalid PartyRole")) //TODO meaningful error
   }
 }

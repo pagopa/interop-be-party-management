@@ -1,8 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Institution, PartyRelationShip, Person}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, PartyRelationShip, Person}
 import spray.json.{DefaultJsonProtocol, JsString, JsValue, JsonFormat, RootJsonFormat, deserializationError}
 
 import java.net.URI
@@ -62,9 +61,6 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
           deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
       }
     }
-
-  val errorResponseMarshaller: ToEntityMarshaller[ErrorResponse] =
-    sprayJsonMarshaller[ErrorResponse](jsonFormat5(ErrorResponse))
 
   implicit val personFormat: RootJsonFormat[Person]                       = jsonFormat10(Person)
   implicit val institutionFormat: RootJsonFormat[Institution]             = jsonFormat12(Institution)

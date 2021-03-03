@@ -24,7 +24,21 @@ final case class PersonParty(
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   status: PartyStatus
-) extends Party
+) extends Party {
+  def toApi: Person =
+    Person(
+      id = id,
+      name = name,
+      phone = phone,
+      email = email,
+      `type` = `type`.stringify,
+      taxCode = taxCode,
+      start = start,
+      end = end,
+      status = status.stringify,
+      surname = surname
+    )
+}
 
 final case class InstitutionParty(
   id: UUID,
@@ -39,7 +53,23 @@ final case class InstitutionParty(
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   status: PartyStatus
-) extends Party
+) extends Party {
+  def toApi: Institution =
+    Institution(
+      id = id,
+      name = name,
+      phone = phone,
+      email = email,
+      `type` = `type`.stringify,
+      taxCode = taxCode,
+      start = start,
+      end = end,
+      status = status.stringify,
+      ipaCod = ipaCod,
+      manager = manager,
+      pec = pec
+    )
+}
 
 object Party {
   def apply(person: Person): Either[Throwable, Party] =

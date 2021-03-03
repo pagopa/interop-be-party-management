@@ -29,6 +29,6 @@ object PartyType {
     case "GroupLeader"         => Right(GroupLeader)
     case "AAOU"                => Right(AAOU)
     case "UO"                  => Right(UO)
-    case _                     => Left(new RuntimeException) //TODO meaningful error
+    case _                     => Left(new RuntimeException("Invalid Party Type")) //TODO meaningful error
   }
 }

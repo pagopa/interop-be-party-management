@@ -4,7 +4,7 @@ import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Party
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{InstitutionParty, Party, PersonParty}
 
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
@@ -12,24 +12,43 @@ import scala.language.postfixOps
 
 object PartyPersistentBehavior {
 
-  final case class State(parties: Map[UUID, Party]) extends CborSerializable {
-    def add(party: Party): State = copy(parties = parties + (party.id -> party))
+  final case class State(parties: Map[UUID, Party], indexes: Map[String, UUID]) extends CborSerializable {
+    def add(party: Party): State = {
+      copy(
+        parties = parties + (party.id -> party),
+        indexes = indexes + {
+          party match {
+            case p: PersonParty      => p.taxCode -> p.id
+            case i: InstitutionParty => i.ipaCod  -> i.id
+          }
+        }
+      )
 
-    def delete(id: UUID): State = copy(parties = parties - id)
+    }
+
+    def delete(party: Party): State = copy(
+      parties = parties - party.id,
+      indexes = indexes - {
+        party match {
+          case p: PersonParty      => p.taxCode
+          case i: InstitutionParty => i.ipaCod
+        }
+      }
+    )
 
   }
 
   object State {
-    val empty: State = State(parties = Map.empty)
+    val empty: State = State(parties = Map.empty, indexes = Map.empty)
   }
 
   sealed trait Command extends CborSerializable
 
   final case class Add(entity: Party, replyTo: ActorRef[StatusReply[State]]) extends Command
 
-  final case class Delete(id: UUID, replyTo: ActorRef[StatusReply[State]]) extends Command
+  final case class Delete(entity: Party, replyTo: ActorRef[StatusReply[State]]) extends Command
 
-  final case class Get(id: UUID, replyTo: ActorRef[StatusReply[Option[Party]]]) extends Command
+  final case class Get(id: String, replyTo: ActorRef[StatusReply[Option[Party]]]) extends Command
 
   final case class List(replyTo: ActorRef[StatusReply[State]]) extends Command
 
@@ -37,7 +56,7 @@ object PartyPersistentBehavior {
 
   final case class Added(party: Party) extends Event
 
-  final case class Deleted(id: UUID) extends Event
+  final case class Deleted(party: Party) extends Event
 
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
@@ -47,25 +66,29 @@ object PartyPersistentBehavior {
           .thenRun(state => {
             replyTo ! StatusReply.Success(state)
           })
-      case Delete(id, replyTo) =>
+      case Delete(party, replyTo) =>
         Effect
-          .persist(Deleted(id))
+          .persist(Deleted(party))
           .thenRun(state => replyTo ! StatusReply.Success(state))
       case List(replyTo) =>
         replyTo ! StatusReply.Success(state)
         Effect.none
       case Get(id, replyTo) =>
-        replyTo ! StatusReply.Success(state.parties.get(id))
+        val party = for {
+          uuid  <- state.indexes.get(id)
+          party <- state.parties.get(uuid)
+        } yield party
+
+        replyTo ! StatusReply.Success(party)
+
         Effect.none
     }
   }
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case Added(party) =>
-        state.add(party)
-      case Deleted(id) =>
-        state.delete(id)
+      case Added(party)   => state.add(party)
+      case Deleted(party) => state.delete(party)
     }
 
   def apply(): Behavior[Command] =

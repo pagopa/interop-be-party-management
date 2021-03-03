@@ -6,7 +6,7 @@ import java.util.UUID
 final case class PartyRelationShip(
   from: UUID,
   to: UUID,
-  role: PartRole,
+  role: PartyRole,
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
 )
@@ -14,6 +14,6 @@ final case class PartyRelationShip(
 object PartyRelationShip {
 
   //TODO add role check
-  def create(from: Party, to: Party, role: PartRole, end: Option[OffsetDateTime]): PartyRelationShip =
+  def create(from: Party, to: Party, role: PartyRole, end: Option[OffsetDateTime]): PartyRelationShip =
     PartyRelationShip(from = from.id, to = to.id, role = role, start = OffsetDateTime.now(), end = end)
 }
