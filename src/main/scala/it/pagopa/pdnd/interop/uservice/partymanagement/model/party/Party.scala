@@ -1,5 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.Converter
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.Converter.Aux
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, Person}
 
 import java.time.OffsetDateTime
@@ -24,20 +26,25 @@ final case class PersonParty(
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   status: PartyStatus
-) extends Party {
-  def toApi: Person =
-    Person(
-      id = id,
-      name = name,
-      phone = phone,
-      email = email,
-      `type` = `type`.stringify,
-      taxCode = taxCode,
-      start = start,
-      end = end,
-      status = status.stringify,
-      surname = surname
-    )
+) extends Party
+
+object PersonParty {
+  implicit def personPartyAux[A]: Aux[PersonParty, Person] = new Converter[PersonParty] {
+    type B = Person
+    def value(personParty: PersonParty): Person =
+      Person(
+        id = personParty.id,
+        name = personParty.name,
+        phone = personParty.phone,
+        email = personParty.email,
+        `type` = personParty.`type`.stringify,
+        taxCode = personParty.taxCode,
+        start = personParty.start,
+        end = personParty.end,
+        status = personParty.status.stringify,
+        surname = personParty.surname
+      )
+  }
 }
 
 final case class InstitutionParty(
@@ -53,22 +60,27 @@ final case class InstitutionParty(
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   status: PartyStatus
-) extends Party {
-  def toApi: Institution =
-    Institution(
-      id = id,
-      name = name,
-      phone = phone,
-      email = email,
-      `type` = `type`.stringify,
-      taxCode = taxCode,
-      start = start,
-      end = end,
-      status = status.stringify,
-      ipaCod = ipaCod,
-      manager = manager,
-      pec = pec
-    )
+) extends Party
+
+object InstitutionParty {
+  implicit def institutionPartyAux[A]: Aux[InstitutionParty, Institution] = new Converter[InstitutionParty] {
+    type B = Institution
+    def value(institutionParty: InstitutionParty): Institution =
+      Institution(
+        id = institutionParty.id,
+        name = institutionParty.name,
+        phone = institutionParty.phone,
+        email = institutionParty.email,
+        `type` = institutionParty.`type`.stringify,
+        taxCode = institutionParty.taxCode,
+        start = institutionParty.start,
+        end = institutionParty.end,
+        status = institutionParty.status.stringify,
+        ipaCod = institutionParty.ipaCod,
+        manager = institutionParty.manager,
+        pec = institutionParty.pec
+      )
+  }
 }
 
 object Party {

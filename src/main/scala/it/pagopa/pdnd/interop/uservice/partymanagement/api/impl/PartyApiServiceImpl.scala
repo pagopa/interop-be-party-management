@@ -7,11 +7,12 @@ import akka.http.scaladsl.server.Directives.onComplete
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{scheduler, timeout}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.Converter
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersonParty}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.{Add, Command, Get}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Institution, PartyRelationShip, Person}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{timeout, scheduler}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -31,15 +32,11 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       party.fold(ex => Future.failed(ex), p => commander.ask(ref => Add(p, ref)))
 
     onComplete(result) {
-      case Success(_) => createPerson200(person)
+      case Success(_) => createPerson201(person)
       case Failure(ex) =>
         createPerson400(ErrorResponse(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
-
-  override def createRelationShip(taxCode: String, institutionId: String)(implicit
-    toEntityMarshallerPartyRelationShip: ToEntityMarshaller[PartyRelationShip]
-  ): Route = ???
 
   override def createInstitution(institution: Institution)(implicit
     toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
@@ -61,7 +58,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       case Success(statusReply) =>
         statusReply.getValue
           .map {
-            case person: PersonParty => getPersonByTaxCode200(person.toApi)
+            case person: PersonParty => getPersonByTaxCode200(Converter.convert(person))
             case _ =>
               getInstitutionByID400(
                 ErrorResponse(detail = Option("Invalid person id"), status = 400, title = "some error")
@@ -76,4 +73,8 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
 
     }
   }
+
+  override def createRelationShip(taxCode: String, institutionId: String)(implicit
+    toEntityMarshallerPartyRelationShip: ToEntityMarshaller[PartyRelationShip]
+  ): Route = ???
 }
