@@ -1,7 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import java.time.OffsetDateTime
-import java.util.UUID
 
 final case class PartyRelationShip(
   id: PartyRelationShipId,

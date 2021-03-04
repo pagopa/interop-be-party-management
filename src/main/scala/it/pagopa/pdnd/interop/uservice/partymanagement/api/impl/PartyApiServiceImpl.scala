@@ -12,7 +12,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.Converter
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Party
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.{AddParty, Command, GetParty}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.{
+  AddParty,
+  Command,
+  GetParty
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Institution, PartyRelationShip, Person}
 
 import scala.concurrent.Future

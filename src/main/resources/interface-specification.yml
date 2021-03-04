@@ -202,12 +202,12 @@ components:
         name:
           type: string
           example: John
-          format: name
+          format: '[a-zA-Z]+' # to improve
           maxLength: 12
         phone:
           type: string
           example: '333112233445'
-          format: phone
+          format: '[\d]+' # to improve
           maxLength: 12
         email:
           example: email@mail.org
@@ -311,7 +311,7 @@ components:
             A human readable explanation specific to this occurrence of the problem.
           example: Request took too long to complete.
           maxLength: 4096
-          pattern: ^.{0,1024}$
+          pattern: '^.{0,1024}$'
           type: string
         status:
           description:
@@ -328,7 +328,7 @@ components:
             A short, summary of the problem type. Written in english and readable
           example: Service Unavailable
           maxLength: 64
-          pattern: ^[ -~]{0,64}$
+          pattern: '^[ -~]{0,64}$'
           type: string
       additionalProperties: false
       required:

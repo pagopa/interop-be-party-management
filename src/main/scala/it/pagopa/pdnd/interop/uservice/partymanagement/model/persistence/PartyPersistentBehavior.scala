@@ -9,6 +9,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
   Party,
   PartyRelationShip,
   PartyRelationShipId,
+  PartyRole,
   PersonParty
 }
 
@@ -23,7 +24,7 @@ object PartyPersistentBehavior {
     indexes: Map[String, UUID],
     relationShips: Map[PartyRelationShipId, PartyRelationShip]
   ) extends CborSerializable {
-    def add(party: Party): State = {
+    def addParty(party: Party): State = {
       copy(
         parties = parties + (party.id -> party),
         indexes = indexes + {
@@ -36,7 +37,7 @@ object PartyPersistentBehavior {
 
     }
 
-    def delete(party: Party): State = copy(
+    def deleteParty(party: Party): State = copy(
       parties = parties - party.id,
       indexes = indexes - {
         party match {
@@ -45,6 +46,12 @@ object PartyPersistentBehavior {
         }
       }
     )
+
+    def addPartyRelationShip(partyRelationShip: PartyRelationShip): State =
+      copy(relationShips = relationShips + (partyRelationShip.id -> partyRelationShip))
+
+    def deletePartyRelationShip(partyRelationShip: PartyRelationShip): State =
+      copy(relationShips = relationShips - partyRelationShip.id)
 
   }
 
@@ -63,12 +70,22 @@ object PartyPersistentBehavior {
   final case class GetParty(id: String, replyTo: ActorRef[StatusReply[Option[Party]]]) extends PartyCommand
 
   /* PartyRelationShip Command */
-  final case class AddPartyRelationShip(entity: Party, replyTo: ActorRef[StatusReply[State]])
-      extends PartyRelationShipCommand
-  final case class DeletePartyRelationShip(entity: Party, replyTo: ActorRef[StatusReply[State]])
-      extends PartyRelationShipCommand
-  final case class GetPartyRelationShip(id: String, replyTo: ActorRef[StatusReply[Option[Party]]])
-      extends PartyRelationShipCommand
+  final case class AddPartyRelationShip(
+    from: Party,
+    to: Party,
+    partyRole: PartyRole,
+    replyTo: ActorRef[StatusReply[State]]
+  ) extends PartyRelationShipCommand
+
+  final case class DeletePartyRelationShip(
+    partyRelationShipId: PartyRelationShipId,
+    replyTo: ActorRef[StatusReply[State]]
+  ) extends PartyRelationShipCommand
+
+  final case class GetPartyRelationShip(
+    partyRelationShipId: PartyRelationShipId,
+    replyTo: ActorRef[StatusReply[Option[Party]]]
+  ) extends PartyRelationShipCommand
 
   /* Event */
   sealed trait Event                  extends CborSerializable
@@ -80,8 +97,8 @@ object PartyPersistentBehavior {
   final case class PartyDeleted(party: Party) extends PartyEvent
 
   /* PartyRelationShip Event */
-  final case class PartyRelationShipAdded(party: Party)   extends PartyRelationShipEvent
-  final case class PartyRelationShipDeleted(party: Party) extends PartyRelationShipEvent
+  final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)   extends PartyRelationShipEvent
+  final case class PartyRelationShipDeleted(partyRelationShip: PartyRelationShip) extends PartyRelationShipEvent
 
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
@@ -104,13 +121,18 @@ object PartyPersistentBehavior {
         replyTo ! StatusReply.Success(party)
 
         Effect.none
+      case AddPartyRelationShip()  => ???
+      case DeletePartyRelationShip => ???
+      case GetPartyRelationShip    => ???
     }
   }
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case PartyAdded(party)   => state.add(party)
-      case PartyDeleted(party) => state.delete(party)
+      case PartyAdded(party)                           => state.addParty(party)
+      case PartyDeleted(party)                         => state.deleteParty(party)
+      case PartyRelationShipAdded(partyRelationShip)   => state.addPartyRelationShip(partyRelationShip)
+      case PartyRelationShipDeleted(partyRelationShip) => state.deletePartyRelationShip(partyRelationShip)
     }
 
   def apply(): Behavior[Command] =

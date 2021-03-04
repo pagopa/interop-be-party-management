@@ -17,7 +17,6 @@ sealed trait Party {
 }
 
 object Party {
-
   implicit def convertFromApi: Aux[ApiParty, Party] =
     new Converter[ApiParty] {
       type B = Party
