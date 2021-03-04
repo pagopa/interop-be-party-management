@@ -13,6 +13,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
   PersonParty
 }
 
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
@@ -50,8 +51,8 @@ object PartyPersistentBehavior {
     def addPartyRelationShip(partyRelationShip: PartyRelationShip): State =
       copy(relationShips = relationShips + (partyRelationShip.id -> partyRelationShip))
 
-    def deletePartyRelationShip(partyRelationShip: PartyRelationShip): State =
-      copy(relationShips = relationShips - partyRelationShip.id)
+    def deletePartyRelationShip(partyRelationShipId: PartyRelationShipId): State =
+      copy(relationShips = relationShips - partyRelationShipId)
 
   }
 
@@ -84,7 +85,7 @@ object PartyPersistentBehavior {
 
   final case class GetPartyRelationShip(
     partyRelationShipId: PartyRelationShipId,
-    replyTo: ActorRef[StatusReply[Option[Party]]]
+    replyTo: ActorRef[StatusReply[Option[PartyRelationShip]]]
   ) extends PartyRelationShipCommand
 
   /* Event */
@@ -97,8 +98,8 @@ object PartyPersistentBehavior {
   final case class PartyDeleted(party: Party) extends PartyEvent
 
   /* PartyRelationShip Event */
-  final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)   extends PartyRelationShipEvent
-  final case class PartyRelationShipDeleted(partyRelationShip: PartyRelationShip) extends PartyRelationShipEvent
+  final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)       extends PartyRelationShipEvent
+  final case class PartyRelationShipDeleted(partyRelationShipId: PartyRelationShipId) extends PartyRelationShipEvent
 
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
@@ -121,9 +122,25 @@ object PartyPersistentBehavior {
         replyTo ! StatusReply.Success(party)
 
         Effect.none
-      case AddPartyRelationShip()  => ???
-      case DeletePartyRelationShip => ???
-      case GetPartyRelationShip    => ???
+      case AddPartyRelationShip(from, to, role, replyTo) =>
+        val partyRelationShip: PartyRelationShip =
+          PartyRelationShip(id = PartyRelationShipId(from.id, to.id), role, OffsetDateTime.now(), None)
+
+        Effect
+          .persist(PartyRelationShipAdded(partyRelationShip))
+          .thenRun(state => {
+            replyTo ! StatusReply.Success(state)
+          })
+      case DeletePartyRelationShip(partyRelationShipId, replyTo) =>
+        Effect
+          .persist(PartyRelationShipDeleted(partyRelationShipId))
+          .thenRun(state => {
+            replyTo ! StatusReply.Success(state)
+          })
+      case GetPartyRelationShip(partyRelationShipId, replyTo) =>
+        val partyRelationShip: Option[PartyRelationShip] = state.relationShips.get(partyRelationShipId)
+        replyTo ! StatusReply.Success(partyRelationShip)
+        Effect.none
     }
   }
 

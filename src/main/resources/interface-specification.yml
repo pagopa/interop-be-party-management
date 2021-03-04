@@ -71,10 +71,6 @@ paths:
       responses:
         '201':
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Person'
         '400':
           description: Invalid ID supplied
           content:
@@ -99,10 +95,6 @@ paths:
       responses:
         '201':
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Institution'
         '400':
           description: Invalid ID supplied
           content:
@@ -169,10 +161,12 @@ paths:
       responses:
         '201':
           description: successful operation
+        '400':
+          description: Invalid ID supplied
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/PartyRelationShip'
+                $ref: '#/components/schemas/ErrorResponse'
   /status:
     get:
       security:
