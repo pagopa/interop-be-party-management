@@ -11,7 +11,7 @@ info:
   x-api-id: an x-api-id
   x-summary: an x-summary
 servers:
-  - url: http://localhost:8088/pdnd-interop-uservice-party-management/0.0.1
+  - url: https://localhost:8088/pdnd-interop-uservice-party-management/0.0.1
     description: This service is the party manager
 security:
   - bearerAuth: [ ]
@@ -28,18 +28,18 @@ tags:
       url: http://swagger.io
 paths:
   /persons/{taxCode}:
-    get:
+    head:
       security:
         - bearerAuth: [ ]
       tags:
         - party
-      summary: Find person by fiscal code
+      summary: Verify if a person exists for a given taxCode
       description: Return ok
-      operationId: getPersonByTaxCode
+      operationId: existsPerson
       parameters:
         - name: taxCode
           in: path
-          description: The fiscal code of the Person to return
+          description: The fiscal code of the Person to check
           required: true
           schema:
             description: Il codice fiscale.
@@ -50,23 +50,9 @@ paths:
             type: string
       responses:
         '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Person'
-        '400':
-          description: Invalid ID supplied
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Person exists
         '404':
-          description: Credential not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Person not found
   /persons:
     post:
       security:
@@ -124,18 +110,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /intitutions/{institutionId}:
-    get:
+    head:
       security:
         - bearerAuth: [ ]
       tags:
         - party
-      summary: Find institution by institution ID
+      summary: Verify if an institution exists for a given institutionId
       description: Return ok
-      operationId: getInstitutionByID
+      operationId: existsInstitution
       parameters:
         - name: institutionId
           in: path
-          description: The ID of the Institution to return
+          description: The ID of the Institution to check
           required: true
           schema:
             description: to be defined
@@ -146,22 +132,9 @@ paths:
       responses:
         '200':
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Institution'
-        '400':
-          description: Invalid ID supplied
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Institution not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+
   /persons/{taxCode}/institutions/{institutionId}:
     post:
       security:
@@ -241,9 +214,6 @@ components:
           maxLength: 20
           format: email
           type: string
-        type:
-          type: string
-          enum: [ Operator,LegalRepresentative,Delegate,GroupLeader,AAOU,UO ]
         taxCode:
           description: Il codice fiscale.
           example: RSSMRA75L01H501A
@@ -259,16 +229,12 @@ components:
           type: string
           format: date-time
           example: 2017-07-21T17:32:28Z
-        status:
-          type: string
-          enum: [ Active,Inactive,Deleted ]
       required:
         - id
         - name
         - type
         - taxCode
         - start
-        - status
       additionalProperties: false
     Person:
       allOf:
@@ -291,12 +257,12 @@ components:
             ipaCod:
               example: age
               maxLength: 3
-              pattern: /[a-z]{2,3}
+              pattern: '[a-z]{2,3}'
               type: string
             manager:
               example: Mario Rossi
               maxLength: 20
-              pattern: /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
+              pattern: ^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
               type: string
             pec:
               example: email@pec.mail.org

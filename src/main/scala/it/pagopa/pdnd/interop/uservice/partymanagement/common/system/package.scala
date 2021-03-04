@@ -7,11 +7,14 @@ import akka.http.scaladsl.server.Directives.Authenticator
 import akka.http.scaladsl.server.directives.Credentials
 import akka.util.Timeout
 import akka.{actor => classic}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, Person}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.DurationInt
 
 package object system {
+
+  type ApiParty = Either[Institution, Person]
 
   implicit val actorSystem: ActorSystem[Nothing] =
     ActorSystem[Nothing](Behaviors.empty, "pdnd-interop-uservice-party-management")
