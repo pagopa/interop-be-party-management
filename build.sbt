@@ -86,7 +86,7 @@ lazy val root = (project in file("."))
     dockerExposedPorts in Docker := Seq(8080),
     dockerBaseImage in Docker := "openjdk:8-jre-alpine",
     dockerUpdateLatest in Docker := true,
-    wartremoverErrors ++= Warts.unsafe,
+//    wartremoverErrors ++= Warts.unsafe,
     scalafmtOnCompile := true
   )
   .aggregate(client)

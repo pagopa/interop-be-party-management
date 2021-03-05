@@ -77,7 +77,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /intitutions:
+  /institutions:
     post:
       security:
         - bearerAuth: [ ]
@@ -101,7 +101,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /intitutions/{institutionId}:
+  /institutions/{institutionId}:
     head:
       security:
         - bearerAuth: [ ]

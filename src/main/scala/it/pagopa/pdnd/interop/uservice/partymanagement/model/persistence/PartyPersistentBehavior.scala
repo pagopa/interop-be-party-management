@@ -106,13 +106,13 @@ object PartyPersistentBehavior {
       case AddParty(party, replyTo) =>
         Effect
           .persist(PartyAdded(party))
-          .thenRun(state => {
-            replyTo ! StatusReply.Success(state)
-          })
+          .thenRun(state => replyTo ! StatusReply.Success(state))
+
       case DeleteParty(party, replyTo) =>
         Effect
           .persist(PartyDeleted(party))
           .thenRun(state => replyTo ! StatusReply.Success(state))
+
       case GetParty(id, replyTo) =>
         val party: Option[Party] = for {
           uuid  <- state.indexes.get(id)
@@ -122,24 +122,25 @@ object PartyPersistentBehavior {
         replyTo ! StatusReply.Success(party)
 
         Effect.none
+
       case AddPartyRelationShip(from, to, role, replyTo) =>
         val partyRelationShip: PartyRelationShip =
           PartyRelationShip(id = PartyRelationShipId(from.id, to.id), role, OffsetDateTime.now(), None)
 
         Effect
           .persist(PartyRelationShipAdded(partyRelationShip))
-          .thenRun(state => {
-            replyTo ! StatusReply.Success(state)
-          })
+          .thenRun(state => replyTo ! StatusReply.Success(state))
+
       case DeletePartyRelationShip(partyRelationShipId, replyTo) =>
         Effect
           .persist(PartyRelationShipDeleted(partyRelationShipId))
-          .thenRun(state => {
-            replyTo ! StatusReply.Success(state)
-          })
+          .thenRun(state => replyTo ! StatusReply.Success(state))
+
       case GetPartyRelationShip(partyRelationShipId, replyTo) =>
         val partyRelationShip: Option[PartyRelationShip] = state.relationShips.get(partyRelationShipId)
+
         replyTo ! StatusReply.Success(partyRelationShip)
+
         Effect.none
     }
   }

@@ -63,6 +63,10 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
         Converter
           .convert[Party](party)
           .swap
+          .map { x =>
+            println(x.toString)
+            x
+          }
           .fold(_ => existsInstitution404, _ => existsInstitution200)
       )
     }
