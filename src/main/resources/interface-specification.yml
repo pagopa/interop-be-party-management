@@ -46,7 +46,7 @@ paths:
             example: RSSMRA75L01H501A
             maxLength: 16
             minLength: 11
-            pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
+            #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
             type: string
       responses:
         '200':
@@ -119,7 +119,7 @@ paths:
             description: to be defined
             example: age
             maxLength: 3
-            pattern: '[a-z]{2,3}'
+            # pattern: '[a-z]{2,3}'
             type: string
       responses:
         '200':
@@ -217,11 +217,6 @@ components:
         - $ref: '#/components/schemas/Party'
         - type: object
           properties:
-            ipaCod:
-              example: age
-              maxLength: 3
-              pattern: '[a-z]{2,3}'
-              type: string
             manager:
               example: Mario Rossi
               maxLength: 20
@@ -234,7 +229,6 @@ components:
               type: string
           required:
             - pec
-            - ipaCod
             - manager
           additionalProperties: false
     PartyRelationShip:

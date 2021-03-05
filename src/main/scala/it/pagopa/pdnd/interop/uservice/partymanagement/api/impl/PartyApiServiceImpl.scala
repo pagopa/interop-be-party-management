@@ -31,39 +31,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
 
     val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
 
-    onComplete(result) {
-      case Success(_) => createPerson201
-      case Failure(ex) =>
-        createPerson400(ErrorResponse(detail = Option(ex.getMessage), status = 400, title = "some error"))
-    }
-  }
-
-  override def createInstitution(
-    institution: Institution
-  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
-
-    val party: Party = Party.createFromApi(Left(institution))
-
-    val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
-
-    onComplete(result) {
-      case Success(_) => createInstitution201
-      case Failure(ex) =>
-        createInstitution400(ErrorResponse(detail = Option(ex.getMessage), status = 400, title = "some error"))
-    }
-  }
-
-  override def existsInstitution(institutionId: String): Route = {
-    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(institutionId, ref))
-
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(existsInstitution404)(party =>
-        Party
-          .convertToApi(party)
-          .swap
-          .fold(_ => existsInstitution404, _ => existsInstitution200)
-      )
-    }
+    manageCreationResponse(result, createPerson201, createPerson400)
 
   }
 
@@ -80,6 +48,32 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     }
   }
 
+  override def createInstitution(
+    institution: Institution
+  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
+
+    val party: Party = Party.createFromApi(Left(institution))
+
+    val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
+
+    manageCreationResponse(result, createInstitution201, createInstitution400)
+
+  }
+
+  override def existsInstitution(institutionId: String): Route = {
+    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(institutionId, ref))
+
+    onSuccess(result) { statusReply =>
+      statusReply.getValue.fold(existsInstitution404)(party =>
+        Party
+          .convertToApi(party)
+          .swap
+          .fold(_ => existsInstitution404, _ => existsInstitution200)
+      )
+    }
+
+  }
+
   override def createRelationShip(
     partyRelationShip: PartyRelationShip
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
@@ -92,19 +86,24 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       res     <- commander.ask(ref => AddPartyRelationShip(parties._1, parties._2, role, ref))
     } yield res
 
-    onComplete(result) {
-      case Success(_) => createRelationShip201
-      case Failure(ex) =>
-        createPerson400(ErrorResponse(detail = Option(ex.getMessage), status = 400, title = "some error"))
-    }
+    manageCreationResponse(result, createRelationShip201, createPerson400)
+
   }
 
   //TODO Improve this part
-  private def extractParties(
-    from: StatusReply[Option[Party]],
-    to: StatusReply[Option[Party]]
-  ): Future[(Party, Party)] = {
+  private def extractParties(from: StatusReply[Option[Party]], to: StatusReply[Option[Party]]): Future[(Party, Party)] =
     Future.fromTry(Try((from.getValue.get, to.getValue.get)))
 
+  private def manageCreationResponse[A](
+    result: Future[StatusReply[A]],
+    success: Route,
+    failure: ErrorResponse => Route
+  ): Route = {
+    onComplete(result) {
+      case Success(statusReply) if statusReply.isError =>
+        failure(ErrorResponse(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
+      case Success(_)  => success
+      case Failure(ex) => failure(ErrorResponse(detail = Option(ex.getMessage), status = 400, title = "some error"))
+    }
   }
 }

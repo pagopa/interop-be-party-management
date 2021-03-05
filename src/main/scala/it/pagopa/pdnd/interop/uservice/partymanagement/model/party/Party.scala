@@ -8,6 +8,7 @@ import java.util.UUID
 
 sealed trait Party {
   def id: UUID
+  def externalId: String
   def `type`: Option[PartyType]
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
@@ -25,7 +26,7 @@ object Party {
             name = personParty.name,
             phone = personParty.phone,
             email = personParty.email,
-            taxCode = personParty.taxCode,
+            taxCode = personParty.externalId,
             surname = personParty.surname
           )
         }
@@ -35,8 +36,7 @@ object Party {
             name = institutionParty.name,
             phone = institutionParty.phone,
             email = institutionParty.email,
-            taxCode = institutionParty.taxCode,
-            ipaCod = institutionParty.ipaCod,
+            taxCode = institutionParty.externalId,
             manager = institutionParty.manager,
             pec = institutionParty.pec
           )
@@ -47,11 +47,11 @@ object Party {
     case Right(person: Person) =>
       PersonParty(
         id = UUID.randomUUID(),
+        externalId = person.taxCode,
         name = person.name,
         surname = person.surname,
         email = person.email,
         phone = person.phone,
-        taxCode = person.taxCode,
         `type` = None,
         start = OffsetDateTime.now(),
         end = None,
@@ -60,13 +60,12 @@ object Party {
     case Left(institution: Institution) =>
       InstitutionParty(
         id = UUID.randomUUID(),
-        ipaCod = institution.ipaCod,
+        externalId = institution.taxCode,
         name = institution.name,
         email = institution.email,
         phone = institution.phone,
         pec = institution.pec,
         manager = institution.manager,
-        taxCode = institution.taxCode,
         `type` = None,
         start = OffsetDateTime.now(),
         end = None,
@@ -78,11 +77,11 @@ object Party {
 
 final case class PersonParty(
   id: UUID,
+  externalId: String,
   name: String,
   surname: String,
   email: Option[String],
   phone: Option[String],
-  taxCode: String,
   `type`: Option[PartyType],
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
@@ -91,13 +90,12 @@ final case class PersonParty(
 
 final case class InstitutionParty(
   id: UUID,
-  ipaCod: String,
+  externalId: String,
   name: String,
   email: Option[String],
   phone: Option[String],
   pec: String,
   manager: String,
-  taxCode: String,
   `type`: Option[PartyType],
   start: OffsetDateTime,
   end: Option[OffsetDateTime],

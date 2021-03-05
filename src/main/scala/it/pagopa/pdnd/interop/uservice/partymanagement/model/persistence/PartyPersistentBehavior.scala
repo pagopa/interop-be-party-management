@@ -4,14 +4,7 @@ import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
-  InstitutionParty,
-  Party,
-  PartyRelationShip,
-  PartyRelationShipId,
-  PartyRole,
-  PersonParty
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -25,28 +18,13 @@ object PartyPersistentBehavior {
     indexes: Map[String, UUID],
     relationShips: Map[PartyRelationShipId, PartyRelationShip]
   ) extends CborSerializable {
+
     def addParty(party: Party): State = {
-      copy(
-        parties = parties + (party.id -> party),
-        indexes = indexes + {
-          party match {
-            case p: PersonParty      => p.taxCode -> p.id
-            case i: InstitutionParty => i.ipaCod  -> i.id
-          }
-        }
-      )
+      copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
 
     }
 
-    def deleteParty(party: Party): State = copy(
-      parties = parties - party.id,
-      indexes = indexes - {
-        party match {
-          case p: PersonParty      => p.taxCode
-          case i: InstitutionParty => i.ipaCod
-        }
-      }
-    )
+    def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
 
     def addPartyRelationShip(partyRelationShip: PartyRelationShip): State =
       copy(relationShips = relationShips + (partyRelationShip.id -> partyRelationShip))
@@ -104,9 +82,17 @@ object PartyPersistentBehavior {
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
       case AddParty(party, replyTo) =>
-        Effect
-          .persist(PartyAdded(party))
-          .thenRun(state => replyTo ! StatusReply.Success(state))
+        state.indexes
+          .get(party.externalId)
+          .map { _ =>
+            replyTo ! StatusReply.Error(s"Party ${party.externalId} already exists")
+            Effect.none[PartyAdded, State]
+          }
+          .getOrElse {
+            Effect
+              .persist(PartyAdded(party))
+              .thenRun(state => replyTo ! StatusReply.Success(state))
+          }
 
       case DeleteParty(party, replyTo) =>
         Effect
