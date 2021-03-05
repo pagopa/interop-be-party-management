@@ -1,8 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.Converter
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.Converter.Aux
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, Person}
 
 import java.time.OffsetDateTime
@@ -14,78 +12,68 @@ sealed trait Party {
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
   def status: PartyStatus
+
 }
 
 object Party {
-  implicit def convertFromApi: Aux[ApiParty, Party] =
-    new Converter[ApiParty] {
-      type B = Party
-      def value(apiParty: ApiParty): Party = apiParty match {
-        case Right(person: Person) =>
-          PersonParty(
-            id = person.id,
-            name = person.name,
-            surname = person.surname,
-            email = person.email,
-            phone = person.phone,
-            taxCode = person.taxCode,
-            `type` = None,
-            start = person.start,
-            end = person.end,
-            status = Pending
+
+  def convertToApi(party: Party): ApiParty =
+    party match {
+      case personParty: PersonParty =>
+        Right {
+          Person(
+            name = personParty.name,
+            phone = personParty.phone,
+            email = personParty.email,
+            taxCode = personParty.taxCode,
+            surname = personParty.surname
           )
-        case Left(institution: Institution) =>
-          InstitutionParty(
-            id = institution.id,
-            ipaCod = institution.ipaCod,
-            name = institution.name,
-            email = institution.email,
-            phone = institution.phone,
-            pec = institution.pec,
-            manager = institution.manager,
-            taxCode = institution.taxCode,
-            `type` = None,
-            start = institution.start,
-            end = institution.end,
-            status = Pending //TODO probably it never be Pending
+        }
+      case institutionParty: InstitutionParty =>
+        Left {
+          Institution(
+            name = institutionParty.name,
+            phone = institutionParty.phone,
+            email = institutionParty.email,
+            taxCode = institutionParty.taxCode,
+            ipaCod = institutionParty.ipaCod,
+            manager = institutionParty.manager,
+            pec = institutionParty.pec
           )
-      }
+        }
     }
 
-  implicit def convertToApi: Aux[Party, ApiParty] =
-    new Converter[Party] {
-      type B = ApiParty
-      def value(party: Party): ApiParty = party match {
-        case personParty: PersonParty =>
-          Right {
-            Person(
-              id = personParty.id,
-              name = personParty.name,
-              phone = personParty.phone,
-              email = personParty.email,
-              taxCode = personParty.taxCode,
-              start = personParty.start,
-              end = personParty.end,
-              surname = personParty.surname
-            )
-          }
-        case institutionParty: InstitutionParty =>
-          Left {
-            Institution(
-              id = institutionParty.id,
-              name = institutionParty.name,
-              phone = institutionParty.phone,
-              email = institutionParty.email,
-              taxCode = institutionParty.taxCode,
-              start = institutionParty.start,
-              end = institutionParty.end,
-              ipaCod = institutionParty.ipaCod,
-              manager = institutionParty.manager,
-              pec = institutionParty.pec
-            )
-          }
-      }
-    }
+  def createFromApi(apiParty: ApiParty): Party = apiParty match {
+    case Right(person: Person) =>
+      PersonParty(
+        id = UUID.randomUUID(),
+        name = person.name,
+        surname = person.surname,
+        email = person.email,
+        phone = person.phone,
+        taxCode = person.taxCode,
+        `type` = None,
+        start = OffsetDateTime.now(),
+        end = None,
+        status = Pending
+      )
+    case Left(institution: Institution) =>
+      InstitutionParty(
+        id = UUID.randomUUID(),
+        ipaCod = institution.ipaCod,
+        name = institution.name,
+        email = institution.email,
+        phone = institution.phone,
+        pec = institution.pec,
+        manager = institution.manager,
+        taxCode = institution.taxCode,
+        `type` = None,
+        start = OffsetDateTime.now(),
+        end = None,
+        status = Active //TODO probably it never be Pending
+      )
+  }
+
 }
 
 final case class PersonParty(

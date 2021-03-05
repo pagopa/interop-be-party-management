@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, PartyRelationShip, Person}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Institution, PartyRelationShip, Person}
 import spray.json.{DefaultJsonProtocol, JsString, JsValue, JsonFormat, RootJsonFormat, deserializationError}
 
 import java.net.URI
@@ -62,8 +62,9 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
 
-  implicit val personFormat: RootJsonFormat[Person]                       = jsonFormat8(Person)
-  implicit val institutionFormat: RootJsonFormat[Institution]             = jsonFormat10(Institution)
-  implicit val partyRelationShipFormat: RootJsonFormat[PartyRelationShip] = jsonFormat5(PartyRelationShip)
+  implicit val personFormat: RootJsonFormat[Person]                       = jsonFormat5(Person)
+  implicit val institutionFormat: RootJsonFormat[Institution]             = jsonFormat7(Institution)
+  implicit val partyRelationShipFormat: RootJsonFormat[PartyRelationShip] = jsonFormat3(PartyRelationShip)
+  implicit val errorResponseFormat: RootJsonFormat[ErrorResponse]         = jsonFormat3(ErrorResponse)
 
 }

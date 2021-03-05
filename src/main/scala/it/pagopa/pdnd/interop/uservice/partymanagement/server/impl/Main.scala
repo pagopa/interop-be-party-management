@@ -11,10 +11,12 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   PartyApiServiceImpl
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
-import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{Authenticator, classicActorSystem}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
+import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import kamon.Kamon
+
+import scala.concurrent.Future
 
 object Main extends App {
 
@@ -38,7 +40,9 @@ object Main extends App {
     val _ = AkkaManagement.get(classicActorSystem).start()
   }
 
-  val controller = new Controller(healthApi, partyApi)
+  val controller: Controller = new Controller(healthApi, partyApi)
 
-  val bindingFuture = Http().newServerAt("0.0.0.0", 8088).bind(controller.routes)
+  val bindingFuture: Future[Http.ServerBinding] =
+    Http().newServerAt("0.0.0.0", 8088).bind(controller.routes)
+
 }
