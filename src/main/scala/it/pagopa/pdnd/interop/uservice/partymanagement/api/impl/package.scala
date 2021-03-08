@@ -23,7 +23,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
           Try(UUID.fromString(s)) match {
             case Success(result) => result
             case Failure(exception) =>
-              deserializationError(s"could not parse $s as Joda LocalDateTime", exception)
+              deserializationError(s"could not parse $s as UUID", exception)
           }
         case notAJsString =>
           deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
@@ -39,7 +39,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
           Try(OffsetDateTime.parse(s, formatter)) match {
             case Success(result) => result
             case Failure(exception) =>
-              deserializationError(s"could not parse $s as Joda LocalDateTime", exception)
+              deserializationError(s"could not parse $s as java OffsetDateTime", exception)
           }
         case notAJsString =>
           deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
@@ -55,7 +55,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
           Try(URI.create(s)) match {
             case Success(result) => result
             case Failure(exception) =>
-              deserializationError(s"could not parse $s as Joda LocalDateTime", exception)
+              deserializationError(s"could not parse $s as URI", exception)
           }
         case notAJsString =>
           deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")

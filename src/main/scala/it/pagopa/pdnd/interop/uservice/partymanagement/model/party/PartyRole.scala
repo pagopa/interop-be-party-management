@@ -17,7 +17,7 @@ case object ManagerOf extends PartyRole
 case object PartOf extends PartyRole
 
 object PartyRole {
-  def apply(str: String): Future[PartyRole] = str match {
+  def fromText(str: String): Future[PartyRole] = str match {
     case "DelegatedBy" => Future.successful(DelegatedBy)
     case "ManagerOf"   => Future.successful(ManagerOf)
     case "PartOf"      => Future.successful(PartOf)

@@ -82,7 +82,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       from    <- commander.ask(ref => GetParty(partyRelationShip.from, ref))
       to      <- commander.ask(ref => GetParty(partyRelationShip.to, ref))
       parties <- extractParties(from, to)
-      role    <- PartyRole(partyRelationShip.role)
+      role    <- PartyRole.fromText(partyRelationShip.role)
       res     <- commander.ask(ref => AddPartyRelationShip(parties._1, parties._2, role, ref))
     } yield res
 
