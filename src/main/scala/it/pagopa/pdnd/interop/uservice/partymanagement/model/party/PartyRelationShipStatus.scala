@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
-sealed trait PartyStatus {
+sealed trait PartyRelationShipStatus {
   def stringify: String = this match {
     case Pending  => "Pending"
     case Active   => "Active"
@@ -9,13 +9,13 @@ sealed trait PartyStatus {
   }
 }
 
-case object Pending  extends PartyStatus
-case object Active   extends PartyStatus
-case object Inactive extends PartyStatus
-case object Deleted  extends PartyStatus
+case object Pending  extends PartyRelationShipStatus
+case object Active   extends PartyRelationShipStatus
+case object Inactive extends PartyRelationShipStatus
+case object Deleted  extends PartyRelationShipStatus
 
-object PartyStatus {
-  def apply(str: String): Either[Throwable, PartyStatus] = str match {
+object PartyRelationShipStatus {
+  def apply(str: String): Either[Throwable, PartyRelationShipStatus] = str match {
     case "Pending"  => Right(Pending)
     case "Active"   => Right(Active)
     case "Inactive" => Right(Inactive)

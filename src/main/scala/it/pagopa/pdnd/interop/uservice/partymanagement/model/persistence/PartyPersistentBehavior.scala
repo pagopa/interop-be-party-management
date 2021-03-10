@@ -6,7 +6,6 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 
-import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
@@ -19,10 +18,8 @@ object PartyPersistentBehavior {
     relationShips: Map[PartyRelationShipId, PartyRelationShip]
   ) extends CborSerializable {
 
-    def addParty(party: Party): State = {
+    def addParty(party: Party): State =
       copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
-
-    }
 
     def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
 
@@ -110,8 +107,7 @@ object PartyPersistentBehavior {
         Effect.none
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
-        val partyRelationShip: PartyRelationShip =
-          PartyRelationShip(id = PartyRelationShipId(from.id, to.id), role, OffsetDateTime.now(), None)
+        val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
 
         Effect
           .persist(PartyRelationShipAdded(partyRelationShip))

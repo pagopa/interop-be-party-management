@@ -12,7 +12,6 @@ sealed trait Party {
   def `type`: Option[PartyType]
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
-  def status: PartyStatus
 
 }
 
@@ -54,8 +53,7 @@ object Party {
         phone = person.phone,
         `type` = None,
         start = OffsetDateTime.now(),
-        end = None,
-        status = Pending
+        end = None
       )
     case Left(institution: Institution) =>
       InstitutionParty(
@@ -68,8 +66,7 @@ object Party {
         manager = institution.manager,
         `type` = None,
         start = OffsetDateTime.now(),
-        end = None,
-        status = Active //TODO probably it never be Pending
+        end = None
       )
   }
 
@@ -84,8 +81,7 @@ final case class PersonParty(
   phone: Option[String],
   `type`: Option[PartyType],
   start: OffsetDateTime,
-  end: Option[OffsetDateTime],
-  status: PartyStatus
+  end: Option[OffsetDateTime]
 ) extends Party
 
 final case class InstitutionParty(
@@ -98,6 +94,5 @@ final case class InstitutionParty(
   manager: String,
   `type`: Option[PartyType],
   start: OffsetDateTime,
-  end: Option[OffsetDateTime],
-  status: PartyStatus
+  end: Option[OffsetDateTime]
 ) extends Party

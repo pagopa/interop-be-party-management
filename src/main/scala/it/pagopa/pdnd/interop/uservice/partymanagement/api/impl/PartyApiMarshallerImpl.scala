@@ -9,6 +9,11 @@ import spray.json._
 
 class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
 
+  override implicit def toEntityMarshallerPerson: ToEntityMarshaller[Person] = sprayJsonMarshaller[Person]
+
+  override implicit def toEntityMarshallerInstitution: ToEntityMarshaller[Institution] =
+    sprayJsonMarshaller[Institution]
+
   override implicit def fromEntityUnmarshallerInstitution: FromEntityUnmarshaller[Institution] =
     sprayJsonUnmarshaller[Institution]
 
