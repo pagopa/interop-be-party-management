@@ -95,7 +95,15 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     * Code: 404, Message: Person not found
     */
   override def existsPerson(taxCode: String): Route = {
-    getParty(taxCode)((x: ApiParty) => x.fold(_ => existsPerson404, _ => existsInstitution200))
+    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(taxCode, ref))
+
+    onSuccess(result) { statusReply =>
+      statusReply.getValue.fold(existsPerson404)(party =>
+        Party
+          .convertToApi(party)
+          .fold(_ => existsPerson404, _ => existsPerson200)
+      )
+    }
 
   }
 
@@ -136,20 +144,6 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
 
     manageCreationResponse(result, createRelationShip201, createPerson400)
 
-  }
-
-  def getParty(partyId: String)(f: ApiParty => Route): Route = {
-    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(partyId, ref))
-
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(existsInstitution404)(party =>
-        f(
-          Party
-            .convertToApi(party)
-        )
-      )
-
-    }
   }
 
   //TODO Improve this part
