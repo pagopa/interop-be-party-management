@@ -29,8 +29,8 @@ tags:
 paths:
   /persons/{taxCode}:
     head:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Verify if a person exists for a given taxCode
@@ -54,8 +54,8 @@ paths:
         '404':
           description: Person not found
     get:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Retrieve the person for the given taxCode
@@ -85,11 +85,11 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Problem'
   /persons:
     post:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create a new person
@@ -109,11 +109,11 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Problem'
   /organizations:
     post:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create an organization
@@ -133,11 +133,11 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Problem'
   /organizations/{organizationId}:
     head:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Verify if an organization exists for a given organizationId
@@ -160,8 +160,8 @@ paths:
         '404':
           description: Organization not found
     get:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Retrieve the organization for the given organizationId
@@ -190,12 +190,12 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Problem'
 
   /relationships:
     post:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create a new reletion ship between a Person and an Organization
@@ -215,11 +215,11 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Problem'
   /status:
     get:
-#      security:
-#        - bearerAuth: [ ]
+      #      security:
+      #        - bearerAuth: [ ]
       tags:
         - health
       summary: Health status endpoint
@@ -231,7 +231,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     Party:
@@ -314,7 +314,7 @@ components:
         - from
         - to
         - role
-    ErrorResponse:
+    Problem:
       properties:
         detail:
           description:

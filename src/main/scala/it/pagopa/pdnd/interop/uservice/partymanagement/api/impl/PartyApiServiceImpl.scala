@@ -16,7 +16,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPe
   Command,
   GetParty
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Organization, PartyRelationShip, Person}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, PartyRelationShip, Person, Problem}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -28,7 +28,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     */
   override def createOrganization(
     organization: Organization
-  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
+  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
 
     val party: Party = Party.createFromApi(Left(organization))
 
@@ -60,11 +60,11 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     */
   override def getOrganization(organizationId: String)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
-    toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]
   ): Route = {
     val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(organizationId, ref))
 
-    val errorResponse: ErrorResponse = ErrorResponse(detail = None, status = 404, title = "some error")
+    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
     onSuccess(result) { statusReply =>
       statusReply.getValue.fold(getOrganization404(errorResponse))(party =>
         Party
@@ -81,7 +81,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     */
   override def createPerson(
     person: Person
-  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
+  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
 
     val party: Party = Party.createFromApi(Right(person))
 
@@ -112,12 +112,12 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     */
   override def getPerson(taxCode: String)(implicit
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
-    toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]
   ): Route = {
 
     val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(taxCode, ref))
 
-    val errorResponse: ErrorResponse = ErrorResponse(detail = None, status = 404, title = "some error")
+    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
     onSuccess(result) { statusReply =>
       statusReply.getValue.fold(getPerson404(errorResponse))(party =>
         Party
@@ -132,7 +132,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     */
   override def createRelationShip(
     partyRelationShip: PartyRelationShip
-  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
+  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
 
     val result = for {
       from    <- commander.ask(ref => GetParty(partyRelationShip.from, ref))
@@ -157,13 +157,13 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   private def manageCreationResponse[A](
     result: Future[StatusReply[A]],
     success: Route,
-    failure: ErrorResponse => Route
+    failure: Problem => Route
   ): Route = {
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
-        failure(ErrorResponse(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
+        failure(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
       case Success(_)  => success
-      case Failure(ex) => failure(ErrorResponse(detail = Option(ex.getMessage), status = 400, title = "some error"))
+      case Failure(ex) => failure(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
 }
