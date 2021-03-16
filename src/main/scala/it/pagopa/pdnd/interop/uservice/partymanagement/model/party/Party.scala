@@ -37,7 +37,7 @@ object Party {
             email = institutionParty.email,
             taxCode = institutionParty.externalId,
             manager = institutionParty.manager,
-            pec = institutionParty.pec
+            digitalAddress = institutionParty.digitalAddress
           )
         }
     }
@@ -62,7 +62,7 @@ object Party {
         name = organization.name,
         email = organization.email,
         phone = organization.phone,
-        pec = organization.pec,
+        digitalAddress = organization.digitalAddress,
         manager = organization.manager,
         `type` = None,
         start = OffsetDateTime.now(),
@@ -90,7 +90,7 @@ final case class InstitutionParty(
   name: String,
   email: Option[String],
   phone: Option[String],
-  pec: String,
+  digitalAddress: String,
   manager: String,
   `type`: Option[PartyType],
   start: OffsetDateTime,

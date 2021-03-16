@@ -286,13 +286,13 @@ components:
               maxLength: 20
               pattern: ^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
               type: string
-            pec:
+            digitalAddress:
               example: email@pec.mail.org
               maxLength: 20
               format: email
               type: string
           required:
-            - pec
+            - digitalAddress
             - manager
           additionalProperties: false
     PartyRelationShip:
