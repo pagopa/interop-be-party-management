@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApiParty, executionContext, scheduler, timeout}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{executionContext, scheduler, timeout}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRole}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.{
@@ -16,7 +16,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPe
   Command,
   GetParty
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Institution, PartyRelationShip, Person}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{ErrorResponse, Organization, PartyRelationShip, Person}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -26,51 +26,51 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: ErrorResponse
     */
-  override def createInstitution(
-    institution: Institution
+  override def createOrganization(
+    organization: Organization
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]): Route = {
 
-    val party: Party = Party.createFromApi(Left(institution))
+    val party: Party = Party.createFromApi(Left(organization))
 
     val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
 
-    manageCreationResponse(result, createInstitution201, createInstitution400)
+    manageCreationResponse(result, createOrganization201, createOrganization400)
 
   }
 
   /** Code: 200, Message: successful operation
-    * Code: 404, Message: Institution not found
+    * Code: 404, Message: Organization not found
     */
-  override def existsInstitution(institutionId: String): Route = {
-    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(institutionId, ref))
+  override def existsOrganization(organizationId: String): Route = {
+    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(organizationId, ref))
 
     onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(existsInstitution404)(party =>
+      statusReply.getValue.fold(existsOrganization404)(party =>
         Party
           .convertToApi(party)
           .swap
-          .fold(_ => existsInstitution404, _ => existsInstitution200)
+          .fold(_ => existsOrganization404, _ => existsOrganization200)
       )
     }
 
   }
 
-  /** Code: 200, Message: successful operation, DataType: Institution
-    * Code: 404, Message: Institution not found, DataType: ErrorResponse
+  /** Code: 200, Message: successful operation, DataType: Organization
+    * Code: 404, Message: Organization not found, DataType: ErrorResponse
     */
-  override def getInstitution(institutionId: String)(implicit
-    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
+  override def getOrganization(organizationId: String)(implicit
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(institutionId, ref))
+    val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(organizationId, ref))
 
     val errorResponse: ErrorResponse = ErrorResponse(detail = None, status = 404, title = "some error")
     onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(getInstitution404(errorResponse))(party =>
+      statusReply.getValue.fold(getOrganization404(errorResponse))(party =>
         Party
           .convertToApi(party)
           .swap
-          .fold(_ => getInstitution404(errorResponse), institution => getInstitution200(institution))
+          .fold(_ => getOrganization404(errorResponse), institution => getOrganization200(institution))
       )
     }
 

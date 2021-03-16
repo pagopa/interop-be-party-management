@@ -137,7 +137,7 @@ object PartyPersistentBehavior {
 
   def apply(): Behavior[Command] =
     EventSourcedBehavior[Command, Event, State](
-      persistenceId = PersistenceId.ofUniqueId("pdnd-interop-uservice-party-management-party"),
+      persistenceId = PersistenceId.ofUniqueId("pdnd-interop-uservice-party-management"),
       emptyState = State.empty,
       commandHandler = commandHandler,
       eventHandler = eventHandler

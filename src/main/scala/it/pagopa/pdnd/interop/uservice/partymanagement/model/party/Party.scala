@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Institution, Person}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person}
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -31,7 +31,7 @@ object Party {
         }
       case institutionParty: InstitutionParty =>
         Left {
-          Institution(
+          Organization(
             name = institutionParty.name,
             phone = institutionParty.phone,
             email = institutionParty.email,
@@ -55,15 +55,15 @@ object Party {
         start = OffsetDateTime.now(),
         end = None
       )
-    case Left(institution: Institution) =>
+    case Left(organization: Organization) =>
       InstitutionParty(
         id = UUID.randomUUID(),
-        externalId = institution.taxCode,
-        name = institution.name,
-        email = institution.email,
-        phone = institution.phone,
-        pec = institution.pec,
-        manager = institution.manager,
+        externalId = organization.taxCode,
+        name = organization.name,
+        email = organization.email,
+        phone = organization.phone,
+        pec = organization.pec,
+        manager = organization.manager,
         `type` = None,
         start = OffsetDateTime.now(),
         end = None

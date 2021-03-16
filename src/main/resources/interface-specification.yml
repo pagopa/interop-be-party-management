@@ -13,8 +13,8 @@ info:
 servers:
   - url: http://localhost:8088/pdnd-interop-uservice-party-management/0.0.1
     description: This service is the party manager
-security:
-  - bearerAuth: [ ]
+#security:
+#  - bearerAuth: [ ]
 tags:
   - name: party
     description: Manipulate party information
@@ -29,8 +29,8 @@ tags:
 paths:
   /persons/{taxCode}:
     head:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
       summary: Verify if a person exists for a given taxCode
@@ -54,8 +54,8 @@ paths:
         '404':
           description: Person not found
     get:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
       summary: Retrieve the person for the given taxCode
@@ -88,8 +88,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /persons:
     post:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
       summary: Create a new person
@@ -110,21 +110,21 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /institutions:
+  /organizations:
     post:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
-      summary: Create an institution
+      summary: Create an organization
       description: Return ok
-      operationId: createInstitution
+      operationId: createOrganization
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Institution'
+              $ref: '#/components/schemas/Organization'
       responses:
         '201':
           description: successful operation
@@ -134,19 +134,19 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /institutions/{institutionId}:
+  /organizations/{organizationId}:
     head:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
-      summary: Verify if an institution exists for a given institutionId
+      summary: Verify if an organization exists for a given organizationId
       description: Return ok
-      operationId: existsInstitution
+      operationId: existsOrganization
       parameters:
-        - name: institutionId
+        - name: organizationId
           in: path
-          description: The ID of the Institution to check
+          description: The ID of the Organization to check
           required: true
           schema:
             description: to be defined
@@ -158,19 +158,19 @@ paths:
         '200':
           description: successful operation
         '404':
-          description: Institution not found
+          description: Organization not found
     get:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
-      summary: Retrieve the institution for the given institutionId
+      summary: Retrieve the organization for the given organizationId
       description: Return ok
-      operationId: getInstitution
+      operationId: getOrganization
       parameters:
-        - name: institutionId
+        - name: organizationId
           in: path
-          description: The ID of the Institution to retrieve
+          description: The ID of the Organization to retrieve
           required: true
           schema:
             description: to be defined
@@ -184,9 +184,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Institution'
+                $ref: '#/components/schemas/Organization'
         '404':
-          description: Institution not found
+          description: Organization not found
           content:
             application/problem+json:
               schema:
@@ -194,11 +194,11 @@ paths:
 
   /relationships:
     post:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - party
-      summary: Create a new reletion ship between a Person and an Institutions
+      summary: Create a new reletion ship between a Person and an Organization
       description: Return ok
       operationId: createRelationShip
       requestBody:
@@ -218,8 +218,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /status:
     get:
-      security:
-        - bearerAuth: [ ]
+#      security:
+#        - bearerAuth: [ ]
       tags:
         - health
       summary: Health status endpoint
@@ -261,7 +261,6 @@ components:
           type: string
       required:
         - name
-        - type
         - taxCode
       additionalProperties: false
     Person:
@@ -277,7 +276,7 @@ components:
               example: Doe
               format: surname
               maxLength: 12
-    Institution:
+    Organization:
       allOf:
         - $ref: '#/components/schemas/Party'
         - type: object
@@ -345,9 +344,9 @@ components:
       required:
         - status
         - title
-  securitySchemes:
-    bearerAuth:
-      type: http
-      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
-      scheme: bearer
-      bearerFormat: JWT
+#  securitySchemes:
+#    bearerAuth:
+#      type: http
+#      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
+#      scheme: bearer
+#      bearerFormat: JWT

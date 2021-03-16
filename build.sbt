@@ -12,6 +12,8 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 ThisBuild / version := {
   Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 }
+resolvers in ThisBuild += "PDND-Interop Nexus Snapshots" at "http://localhost:8081/nexus/content/repositories/maven-releases/"
+resolvers in ThisBuild += "PDND-Interop Nexus Releases" at "http://localhost:8081/nexus/content/repositories/maven-snapshots/"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
