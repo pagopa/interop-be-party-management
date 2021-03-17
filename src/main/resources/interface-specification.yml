@@ -100,10 +100,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Person'
+              $ref: '#/components/schemas/PersonSeed'
       responses:
         '201':
           description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
         '400':
           description: Invalid ID supplied
           content:
@@ -124,10 +128,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/OrganizationSeed'
       responses:
         '201':
           description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Invalid ID supplied
           content:
@@ -216,6 +224,34 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /tokens:
+    post:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Create a new token Person and an Organization
+      description: Return ok
+      operationId: createToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenSeed'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TokenText'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /status:
     get:
       #      security:
@@ -234,6 +270,31 @@ paths:
                 $ref: '#/components/schemas/Problem'
 components:
   schemas:
+    PersonSeed:
+      type: object
+      properties:
+        taxCode:
+          description: Il codice fiscale.
+          example: RSSMRA75L01H501A
+          maxLength: 16
+          minLength: 11
+          pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
+          type: string
+        surname:
+          type: string
+          example: Doe
+          pattern: '[a-zA-Z]+' # to improvername
+          maxLength: 12
+        name:
+          type: string
+          example: John
+          format: '[a-zA-Z]+' # to improve
+          maxLength: 12
+      required:
+        - taxCode
+        - name
+        - surname
+      additionalProperties: false
     Person:
       type: object
       properties:
@@ -247,19 +308,24 @@ components:
         surname:
           type: string
           example: Doe
-          format: su'[a-zA-Z]+' # to improvername
+          pattern: '[a-zA-Z]+' # to improvername
           maxLength: 12
         name:
           type: string
           example: John
           format: '[a-zA-Z]+' # to improve
           maxLength: 12
+        partyId:
+          type: string
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          maxLength: 36
       required:
         - taxCode
         - name
         - surname
+        - partyId
       additionalProperties: false
-    Organization:
+    OrganizationSeed:
       type: object
       properties:
         institutionId:
@@ -289,6 +355,41 @@ components:
         - manager
         - digitalAddress
       additionalProperties: false
+    Organization:
+      type: object
+      properties:
+        institutionId:
+          description: DN
+          example: aoo=c_f205,o=c_f205,c=it
+          maxLength: 64
+          minLength: 1
+          type: string
+        description:
+          type: string
+          example: AGENCY X
+          format: '[a-zA-Z]+' # to improve
+          maxLength: 12
+        manager:
+          example: Mario Rossi
+          maxLength: 20
+          pattern: ^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
+          type: string
+        digitalAddress:
+          example: email@pec.mail.org
+          maxLength: 20
+          format: email
+          type: string
+        partyId:
+          type: string
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          maxLength: 36
+      required:
+        - institutionId
+        - description
+        - manager
+        - digitalAddress
+        - partyId
+      additionalProperties: false
     PartyRelationShip:
       type: object
       properties:
@@ -301,6 +402,49 @@ components:
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
           maxLength: 36
         role:
+          type: enum
+          $ref: '#/components/schemas/Role'
+      additionalProperties: false
+      required:
+        - from
+        - to
+        - role
+    TokenSeed:
+      type: object
+      properties:
+        seed:
+          type: string
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          maxLength: 36
+        from:
+          type: string
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          maxLength: 36
+        to:
+          type: string
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+          maxLength: 36
+        role:
+          type: enum
+          $ref: '#/components/schemas/Role'
+      additionalProperties: false
+      required:
+        - seed
+        - from
+        - to
+        - role
+    TokenText:
+      properties:
+        token:
+          maxLength: 4096
+          pattern: '^.{0,1024}$'
+          type: string
+      additionalProperties: false
+      required:
+        - token
+    Role:
+      properties:
+        value:
           type: string
           enum:
             - Manager
@@ -308,9 +452,7 @@ components:
             - Operator
       additionalProperties: false
       required:
-        - from
-        - to
-        - role
+        - value
     Problem:
       properties:
         detail:

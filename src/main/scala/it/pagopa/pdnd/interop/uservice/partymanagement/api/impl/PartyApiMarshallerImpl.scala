@@ -4,24 +4,35 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiMarshaller
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Problem, Organization, PartyRelationShip, Person}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import spray.json._
 
 class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
 
   override implicit def toEntityMarshallerPerson: ToEntityMarshaller[Person] = sprayJsonMarshaller[Person]
 
-  override implicit def fromEntityUnmarshallerOrganization: FromEntityUnmarshaller[Organization] =
-    sprayJsonUnmarshaller[Organization]
+  implicit def fromEntityUnmarshallerPerson: FromEntityUnmarshaller[Person] = sprayJsonUnmarshaller[Person]
 
   override implicit def toEntityMarshallerOrganization: ToEntityMarshaller[Organization] =
     sprayJsonMarshaller[Organization]
 
+  implicit def fromEntityUnmarshallerOrganization: FromEntityUnmarshaller[Organization] =
+    sprayJsonUnmarshaller[Organization]
+
   override implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] =
     sprayJsonMarshaller[Problem]
 
-  override implicit def fromEntityUnmarshallerPerson: FromEntityUnmarshaller[Person] = sprayJsonUnmarshaller[Person]
+  override implicit def fromEntityUnmarshallerPersonSeed: FromEntityUnmarshaller[PersonSeed] =
+    sprayJsonUnmarshaller[PersonSeed]
+
+  override implicit def fromEntityUnmarshallerOrganizationSeed: FromEntityUnmarshaller[OrganizationSeed] =
+    sprayJsonUnmarshaller[OrganizationSeed]
 
   override implicit def fromEntityUnmarshallerPartyRelationShip: FromEntityUnmarshaller[PartyRelationShip] =
     sprayJsonUnmarshaller[PartyRelationShip]
+
+  override implicit def fromEntityUnmarshallerTokenSeed: FromEntityUnmarshaller[TokenSeed] =
+    sprayJsonUnmarshaller[TokenSeed]
+
+  override implicit def toEntityMarshallerTokenText: ToEntityMarshaller[TokenText] = sprayJsonMarshaller[TokenText]
 }
