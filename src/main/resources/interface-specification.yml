@@ -175,7 +175,7 @@ paths:
           schema:
             description: to be defined
             example: age
-            maxLength: 3
+            maxLength: 32
             # pattern: '[a-z]{2,3}'
             type: string
       responses:
@@ -252,25 +252,25 @@ components:
           maxLength: 20
           format: email
           type: string
-        taxCode:
-          description: Il codice fiscale.
-          example: RSSMRA75L01H501A
-          maxLength: 16
-          minLength: 11
-          pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
-          type: string
       required:
         - name
-        - taxCode
       additionalProperties: false
     Person:
       allOf:
         - $ref: '#/components/schemas/Party'
         - type: object
           required:
+            - taxCode
             - surname
           additionalProperties: false
           properties:
+            taxCode:
+              description: Il codice fiscale.
+              example: RSSMRA75L01H501A
+              maxLength: 16
+              minLength: 11
+              pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
+              type: string
             surname:
               type: string
               example: Doe
@@ -281,6 +281,12 @@ components:
         - $ref: '#/components/schemas/Party'
         - type: object
           properties:
+            institutionId:
+              description: DN
+              example: aoo=c_f205,o=c_f205,c=it
+              maxLength: 64
+              minLength: 1
+              type: string
             manager:
               example: Mario Rossi
               maxLength: 20
@@ -292,6 +298,7 @@ components:
               format: email
               type: string
           required:
+            - institutionId
             - digitalAddress
             - manager
           additionalProperties: false
@@ -308,6 +315,8 @@ components:
           maxLength: 36
         role:
           type: string
+#          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+#          maxLength: 36
           enum: [ DelegatedBy, ManagerOf, PartOf ]
       additionalProperties: false
       required:

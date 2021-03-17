@@ -17,11 +17,13 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPe
   GetParty
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, PartyRelationShip, Person, Problem}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService {
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: ErrorResponse
@@ -29,7 +31,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   override def createOrganization(
     organization: Organization
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
-
+    logger.info(s"Creating organization ${organization.name}")
     val party: Party = Party.createFromApi(Left(organization))
 
     val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
@@ -42,6 +44,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     * Code: 404, Message: Organization not found
     */
   override def existsOrganization(organizationId: String): Route = {
+    logger.info(s"Verify organization ${organizationId}")
     val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(organizationId, ref))
 
     onSuccess(result) { statusReply =>
@@ -62,6 +65,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]
   ): Route = {
+    logger.info(s"Retrieve organization ${organizationId}")
     val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(organizationId, ref))
 
     val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
@@ -82,7 +86,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   override def createPerson(
     person: Person
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
-
+    logger.info(s"Creating person ${person.name}/${person.surname}")
     val party: Party = Party.createFromApi(Right(person))
 
     val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
@@ -95,6 +99,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     * Code: 404, Message: Person not found
     */
   override def existsPerson(taxCode: String): Route = {
+    logger.info(s"Verify person $taxCode")
     val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(taxCode, ref))
 
     onSuccess(result) { statusReply =>
@@ -114,7 +119,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
     toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]
   ): Route = {
-
+    logger.info(s"Retrieving person $taxCode")
     val result: Future[StatusReply[Option[Party]]] = commander.ask(ref => GetParty(taxCode, ref))
 
     val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
@@ -133,13 +138,16 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   override def createRelationShip(
     partyRelationShip: PartyRelationShip
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
-
+    logger.info(s"Creating reletionship ${partyRelationShip.toString}")
     val result = for {
-      from    <- commander.ask(ref => GetParty(partyRelationShip.from, ref))
-      to      <- commander.ask(ref => GetParty(partyRelationShip.to, ref))
+      from <- commander.ask(ref => GetParty(partyRelationShip.from, ref))
+      _ = logger.info(s"From retrieved ${from.toString()}")
+      to <- commander.ask(ref => GetParty(partyRelationShip.to, ref))
+      _ = logger.info(s"To retrieved ${to.toString()}")
       parties <- extractParties(from, to)
-      role    <- PartyRole.fromText(partyRelationShip.role)
-      res     <- commander.ask(ref => AddPartyRelationShip(parties._1, parties._2, role, ref))
+      _ = logger.info(s"Parties retrieved ${parties.toString()}")
+      role <- PartyRole.fromText(partyRelationShip.role)
+      res  <- commander.ask(ref => AddPartyRelationShip(parties._1, parties._2, role, ref))
     } yield res
 
     manageCreationResponse(result, createRelationShip201, createPerson400)
@@ -161,9 +169,14 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   ): Route = {
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
+        logger.error(s"Error trying to create organization: ${statusReply.getError.getMessage}")
         failure(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
-      case Success(_)  => success
-      case Failure(ex) => failure(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+      case Success(_) =>
+        logger.info(s"Organization successfully created")
+        success
+      case Failure(ex) =>
+        logger.error(s"Error trying to create organization: ${ex.getMessage}")
+        failure(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
 }

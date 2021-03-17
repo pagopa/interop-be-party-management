@@ -5,12 +5,15 @@ import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
+import org.slf4j.LoggerFactory
 
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
 object PartyPersistentBehavior {
+
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   final case class State(
     parties: Map[UUID, Party],
@@ -79,6 +82,7 @@ object PartyPersistentBehavior {
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
       case AddParty(party, replyTo) =>
+        logger.info(s"Adding party ${party.externalId}")
         state.indexes
           .get(party.externalId)
           .map { _ =>
@@ -97,8 +101,11 @@ object PartyPersistentBehavior {
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
       case GetParty(id, replyTo) =>
+        logger.info(s"Getting party $id")
+        state.indexes.foreach(println)
         val party: Option[Party] = for {
-          uuid  <- state.indexes.get(id)
+          uuid <- state.indexes.get(id)
+          _ = logger.info(s"Found $id/${uuid.toString}")
           party <- state.parties.get(uuid)
         } yield party
 

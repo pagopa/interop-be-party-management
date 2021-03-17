@@ -35,7 +35,7 @@ object Party {
             name = institutionParty.name,
             phone = institutionParty.phone,
             email = institutionParty.email,
-            taxCode = institutionParty.externalId,
+            institutionId = institutionParty.externalId,
             manager = institutionParty.manager,
             digitalAddress = institutionParty.digitalAddress
           )
@@ -58,7 +58,7 @@ object Party {
     case Left(organization: Organization) =>
       InstitutionParty(
         id = UUID.randomUUID(),
-        externalId = organization.taxCode,
+        externalId = organization.institutionId,
         name = organization.name,
         email = organization.email,
         phone = organization.phone,
