@@ -115,10 +115,17 @@ object PartyPersistentBehavior {
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
         val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
-
-        Effect
-          .persist(PartyRelationShipAdded(partyRelationShip))
-          .thenRun(state => replyTo ! StatusReply.Success(state))
+        state.relationShips
+          .get(partyRelationShip.id)
+          .map { _ =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationShip.id.stringify} already exists")
+            Effect.none[PartyAdded, State]
+          }
+          .getOrElse {
+            Effect
+              .persist(PartyRelationShipAdded(partyRelationShip))
+              .thenRun(state => replyTo ! StatusReply.Success(state))
+          }
 
       case DeletePartyRelationShip(partyRelationShipId, replyTo) =>
         Effect
@@ -136,10 +143,10 @@ object PartyPersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case PartyAdded(party)                           => state.addParty(party)
-      case PartyDeleted(party)                         => state.deleteParty(party)
-      case PartyRelationShipAdded(partyRelationShip)   => state.addPartyRelationShip(partyRelationShip)
-      case PartyRelationShipDeleted(partyRelationShip) => state.deletePartyRelationShip(partyRelationShip)
+      case PartyAdded(party)                             => state.addParty(party)
+      case PartyDeleted(party)                           => state.deleteParty(party)
+      case PartyRelationShipAdded(partyRelationShip)     => state.addPartyRelationShip(partyRelationShip)
+      case PartyRelationShipDeleted(partyRelationShipId) => state.deletePartyRelationShip(partyRelationShipId)
     }
 
   def apply(): Behavior[Command] =

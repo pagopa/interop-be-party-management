@@ -31,7 +31,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   override def createOrganization(
     organization: Organization
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
-    logger.info(s"Creating organization ${organization.name}")
+    logger.info(s"Creating organization ${organization.description}")
     val party: Party = Party.createFromApi(Left(organization))
 
     val result: Future[StatusReply[PartyPersistentBehavior.State]] = commander.ask(ref => AddParty(party, ref))
@@ -150,7 +150,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       res  <- commander.ask(ref => AddPartyRelationShip(parties._1, parties._2, role, ref))
     } yield res
 
-    manageCreationResponse(result, createRelationShip201, createPerson400)
+    manageCreationResponse(result, createRelationShip201, createRelationShip400)
 
   }
 

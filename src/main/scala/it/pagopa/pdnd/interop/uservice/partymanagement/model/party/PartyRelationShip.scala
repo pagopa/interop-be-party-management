@@ -4,7 +4,6 @@ import java.time.OffsetDateTime
 
 final case class PartyRelationShip(
   id: PartyRelationShipId,
-  role: PartyRole,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   status: PartyRelationShipStatus
@@ -15,8 +14,7 @@ object PartyRelationShip {
   //TODO add role check
   def create(from: Party, to: Party, role: PartyRole): PartyRelationShip =
     PartyRelationShip(
-      PartyRelationShipId(from = from.id, to = to.id),
-      role = role,
+      PartyRelationShipId(from = from.id, to = to.id, role = role),
       start = OffsetDateTime.now(),
       end = None,
       status = Pending

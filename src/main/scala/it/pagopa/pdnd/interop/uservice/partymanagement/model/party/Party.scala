@@ -9,7 +9,6 @@ import java.util.UUID
 sealed trait Party {
   def id: UUID
   def externalId: String
-  def `type`: Option[PartyType]
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 
@@ -20,26 +19,16 @@ object Party {
   def convertToApi(party: Party): ApiParty =
     party match {
       case personParty: PersonParty =>
-        Right {
-          Person(
-            name = personParty.name,
-            phone = personParty.phone,
-            email = personParty.email,
-            taxCode = personParty.externalId,
-            surname = personParty.surname
-          )
-        }
+        Right(Person(name = personParty.name, taxCode = personParty.externalId, surname = personParty.surname))
       case institutionParty: InstitutionParty =>
-        Left {
+        Left(
           Organization(
-            name = institutionParty.name,
-            phone = institutionParty.phone,
-            email = institutionParty.email,
+            description = institutionParty.description,
             institutionId = institutionParty.externalId,
             manager = institutionParty.manager,
             digitalAddress = institutionParty.digitalAddress
           )
-        }
+        )
     }
 
   def createFromApi(apiParty: ApiParty): Party = apiParty match {
@@ -49,9 +38,6 @@ object Party {
         externalId = person.taxCode,
         name = person.name,
         surname = person.surname,
-        email = person.email,
-        phone = person.phone,
-        `type` = None,
         start = OffsetDateTime.now(),
         end = None
       )
@@ -59,12 +45,9 @@ object Party {
       InstitutionParty(
         id = UUID.randomUUID(),
         externalId = organization.institutionId,
-        name = organization.name,
-        email = organization.email,
-        phone = organization.phone,
+        description = organization.description,
         digitalAddress = organization.digitalAddress,
         manager = organization.manager,
-        `type` = None,
         start = OffsetDateTime.now(),
         end = None
       )
@@ -77,9 +60,6 @@ final case class PersonParty(
   externalId: String,
   name: String,
   surname: String,
-  email: Option[String],
-  phone: Option[String],
-  `type`: Option[PartyType],
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
 ) extends Party
@@ -87,12 +67,9 @@ final case class PersonParty(
 final case class InstitutionParty(
   id: UUID,
   externalId: String,
-  name: String,
-  email: Option[String],
-  phone: Option[String],
+  description: String,
   digitalAddress: String,
   manager: String,
-  `type`: Option[PartyType],
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
 ) extends Party
