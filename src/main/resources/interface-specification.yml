@@ -264,10 +264,34 @@ paths:
       parameters:
         - name: token
           in: path
-          description: The ID of the Organization to check
+          description: The token to consume
           required: true
           schema:
             description: to be defined
+            type: string
+      responses:
+        '201':
+          description: successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    delete:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Invalidate a token
+      description: Return ok
+      operationId: invalidateToken
+      parameters:
+        - name: token
+          in: path
+          description: The token to invalidate
+          required: true
+          schema:
             type: string
       responses:
         '201':

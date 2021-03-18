@@ -122,11 +122,13 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     val result: Future[StatusReply[Option[ApiParty]]] = commander.ask(ref => GetParty(taxCode, ref))
 
     val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
+
     onSuccess(result) { statusReply =>
       statusReply.getValue.fold(getPerson404(errorResponse))(party =>
         party.fold(_ => getPerson404(errorResponse), person => getPerson200(person))
       )
     }
+
   }
 
   /** Code: 201, Message: successful operation
@@ -150,6 +152,10 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     } yield res
 
     onComplete(result) {
+      case Success(statusReply) if statusReply.isError =>
+        createRelationShip400(
+          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
+        )
       case Success(_) => createRelationShip201
       case Failure(ex) =>
         createRelationShip400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
@@ -178,17 +184,42 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
   override def consumeToken(token: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
-    val result = for {
+    val result: Future[StatusReply[State]] = for {
       token <- Future.fromTry(Token.decode(token))
-      _ <-
+      res <-
         if (token.isValid) commander.ask(ref => ConsumeToken(token.relationShipId, ref))
         else commander.ask(ref => InvalidateToken(token.relationShipId, ref))
-    } yield ()
+    } yield res
 
     onComplete(result) {
-      case Success(_) => createRelationShip201
+      case Success(statusReply) if statusReply.isError =>
+        consumeToken400(Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error"))
+      case Success(_) => consumeToken201
       case Failure(ex) =>
-        createRelationShip400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+        consumeToken400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+    }
+
+  }
+
+  /** Code: 201, Message: successful operation
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    */
+  override def invalidateToken(
+    token: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
+    val result: Future[StatusReply[State]] = for {
+      token <- Future.fromTry(Token.decode(token))
+      res   <- commander.ask(ref => InvalidateToken(token.relationShipId, ref))
+    } yield res
+
+    onComplete(result) {
+      case Success(statusReply) if statusReply.isError =>
+        invalidateToken400(
+          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
+        )
+      case Success(_) => invalidateToken201
+      case Failure(ex) =>
+        invalidateToken400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
     }
 
   }

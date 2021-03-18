@@ -189,12 +189,16 @@ object PartyPersistentBehavior {
         Effect.none
 
       case AddToken(token, replyTo) =>
-        val tokens: List[Token] = state.tokens.getOrElse(token.relationShipId, List.empty[Token])
+        val isEligible: Boolean =
+          !checkTokens(
+            state,
+            token.relationShipId,
+            _.relationShipId == token.relationShipId && token.status != TokenStatus.Invalid
+          )
 
-        val isValidToken: Boolean =
-          tokens.forall(t => t.relationShipId != token.relationShipId || token.status == TokenStatus.Invalid)
+        //tokens.forall(t => t.relationShipId != token.relationShipId || token.status == TokenStatus.Invalid)
 
-        if (isValidToken)
+        if (isEligible)
           Effect
             .persist(TokenAdded(token))
             .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
@@ -204,38 +208,40 @@ object PartyPersistentBehavior {
         }
 
       case InvalidateToken(relationShipId, replyTo) =>
-        val tokens: List[Token] = state.tokens.getOrElse(relationShipId, List.empty[Token])
-
         val isEligible: Boolean =
-          tokens.forall(t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
+          checkTokens(state, relationShipId, t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
 
-        val message = StatusReply.Error(s"Can't invalidate token for ${relationShipId.stringify}")
+//          tokens.exists(t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
 
         if (isEligible)
           Effect
             .persist(TokenInvalidated(relationShipId))
-            .thenRun(_ => replyTo ! message)
+            .thenRun(_ => replyTo ! StatusReply.Success(state))
         else {
-          replyTo ! message
+          replyTo ! StatusReply.Error(s"Can't invalidate token for ${relationShipId.stringify}")
           Effect.none[TokenInvalidated, State]
         }
 
       case ConsumeToken(relationShipId, replyTo) =>
-        val tokens: List[Token] = state.tokens.getOrElse(relationShipId, List.empty[Token])
-
         val isEligible: Boolean =
-          tokens.forall(t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
+          checkTokens(state, relationShipId, t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
+//          tokens.exists(t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
 
         if (isEligible)
           Effect
             .persist(TokenConsumed(relationShipId))
             .thenRun(state => replyTo ! StatusReply.Success(state))
         else {
-          StatusReply.Error(s"Can't consume token for ${relationShipId.stringify}")
+          replyTo ! StatusReply.Error(s"Can't consume token for ${relationShipId.stringify}")
           Effect.none[TokenConsumed, State]
         }
 
     }
+  }
+
+  private def checkTokens(state: State, relationShipId: RelationShipId, g: Token => Boolean): Boolean = {
+    val tokens: List[Token] = state.tokens.getOrElse(relationShipId, List.empty[Token])
+    tokens.exists(g)
   }
 
   val eventHandler: (State, Event) => State = (state, event) =>
