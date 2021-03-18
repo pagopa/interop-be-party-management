@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.common
 
+import akka.pattern.StatusReply
 import spray.json.{JsString, JsValue, JsonFormat, deserializationError}
 
 import java.net.URI
@@ -19,6 +20,14 @@ package object utils {
 
   implicit class EitherOps[A](val either: Either[Throwable, A]) extends AnyVal {
     def toFuture: Future[A] = either.fold(e => Future.failed(e), a => Future.successful(a))
+  }
+
+  implicit class StatusReplyOps[A](val statusReply: StatusReply[A]) extends AnyVal {
+    def toEither: Either[Throwable, A] =
+      if (statusReply.isSuccess) Right(statusReply.getValue) else Left(statusReply.getError)
+
+    def toTry: Try[A] =
+      if (statusReply.isSuccess) Success(statusReply.getValue) else Failure(statusReply.getError)
   }
 
   final val formatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME

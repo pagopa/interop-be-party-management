@@ -10,20 +10,14 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApiParty, executionContext, scheduler, timeout}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
-  InstitutionParty,
-  Party,
-  PartyRole,
-  PersonParty,
-  Token
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{RelationShip => _, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior._
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -80,15 +74,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
 
     onSuccess(result) { statusReply =>
       statusReply.getValue.swap
-        .fold(
-          _ => createOrganization400(errorResponse),
-          organization => {
-            println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            println(s"${organization.toString}")
-            println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            createOrganization201(organization)
-          }
-        )
+        .fold(_ => createOrganization400(errorResponse), organization => createOrganization201(organization))
     }
 
   }
@@ -107,15 +93,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
 
     val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
     onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(
-        _ => createPerson400(errorResponse),
-        person => {
-          println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-          println(s"${person.toString}")
-          println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-          createPerson201(person)
-        }
-      )
+      statusReply.getValue.fold(_ => createPerson400(errorResponse), person => createPerson201(person))
     }
 
   }
@@ -191,7 +169,27 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       token <- Token.generate(tokenSeed).toFuture
       res   <- commander.ask(ref => AddToken(token, ref))
     } yield res
+
     manageCreationResponse(result, createToken201, createToken400)
+
+  }
+
+  /** Code: 201, Message: successful operation
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    */
+  override def consumeToken(token: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
+    val result = for {
+      token <- Future.fromTry(Token.decode(token))
+      _ <-
+        if (token.isValid) commander.ask(ref => ConsumeToken(token.relationShipId, ref))
+        else commander.ask(ref => InvalidateToken(token.relationShipId, ref))
+    } yield ()
+
+    onComplete(result) {
+      case Success(_) => createRelationShip201
+      case Failure(ex) =>
+        createRelationShip400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+    }
 
   }
 
@@ -201,8 +199,19 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     to: StatusReply[Option[ApiParty]]
   ): Future[(Person, Organization)] =
     Future.fromTry {
-      Try {
-        (from.getValue.flatMap(_.toOption).get, to.getValue.flatMap(_.swap.toOption).get)
+
+      if (from.isError || to.isError)
+        Failure(new RuntimeException("Party extraction from ApiParty failed"))
+      else {
+        val parties: Option[(Person, Organization)] = for {
+          apiPartyFrom <- from.getValue
+          person       <- apiPartyFrom.toOption
+          apiPartyTo   <- to.getValue
+          organization <- apiPartyTo.swap.toOption
+        } yield (person, organization)
+
+        parties.map(Success(_)).getOrElse(Failure(new RuntimeException("Party extraction from ApiParty failed")))
+
       }
     }
 

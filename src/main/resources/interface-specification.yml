@@ -230,7 +230,7 @@ paths:
       #        - bearerAuth: [ ]
       tags:
         - party
-      summary: Create a new token Person and an Organization
+      summary: Create a new token
       description: Return ok
       operationId: createToken
       requestBody:
@@ -246,6 +246,32 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/TokenText'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /tokens/{token}:
+    post:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Consume a token
+      description: Return ok
+      operationId: consumeToken
+      parameters:
+        - name: token
+          in: path
+          description: The ID of the Organization to check
+          required: true
+          schema:
+            description: to be defined
+            type: string
+      responses:
+        '201':
+          description: successful operation
         '400':
           description: Invalid ID supplied
           content:

@@ -10,13 +10,8 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.{Failure, Success, Try}
 
-final case class Token(
-  partyRelationShipId: PartyRelationShipId,
-  validity: OffsetDateTime,
-  status: TokenStatus,
-  seed: UUID
-) {
-  def isValid: Boolean = OffsetDateTime.now().isBefore(validity) && status == Waiting
+final case class Token(relationShipId: RelationShipId, validity: OffsetDateTime, status: TokenStatus, seed: UUID) {
+  def isValid: Boolean = OffsetDateTime.now().isBefore(validity) && status == TokenStatus.Waiting
 
 }
 
@@ -32,10 +27,9 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
       .map(role =>
         Token(
           seed = UUID.fromString(tokenSeed.seed),
-          partyRelationShipId =
-            PartyRelationShipId(UUID.fromString(tokenSeed.from), UUID.fromString(tokenSeed.to), role),
+          relationShipId = RelationShipId(UUID.fromString(tokenSeed.from), UUID.fromString(tokenSeed.to), role),
           validity = OffsetDateTime.now().plusHours(validityHours),
-          status = Waiting
+          status = TokenStatus.Waiting
         )
       )
 
@@ -46,7 +40,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
     Base64.getEncoder.encodeToString(bytes)
   }
 
-  def decode(code: String): Token = {
+  def decode(code: String): Try[Token] = Try {
     val decoded: Array[Byte] = Base64.getDecoder.decode(code)
     val jsonTxt: String      = new String(decoded, StandardCharsets.UTF_8)
     jsonTxt.parseJson.convertTo[Token]
@@ -56,6 +50,10 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
 sealed trait TokenStatus
 
 object TokenStatus {
+
+  case object Waiting  extends TokenStatus
+  case object Invalid  extends TokenStatus
+  case object Consumed extends TokenStatus
 
   implicit val format: JsonFormat[TokenStatus] = new JsonFormat[TokenStatus] {
     override def write(obj: TokenStatus): JsValue = obj match {
@@ -79,7 +77,3 @@ object TokenStatus {
 
   }
 }
-
-case object Waiting  extends TokenStatus
-case object Invalid  extends TokenStatus
-case object Consumed extends TokenStatus

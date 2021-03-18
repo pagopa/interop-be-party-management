@@ -21,8 +21,8 @@ object PartyPersistentBehavior {
   final case class State(
     parties: Map[UUID, Party],
     indexes: Map[String, UUID],
-    tokens: Map[PartyRelationShipId, List[Token]],
-    relationShips: Map[PartyRelationShipId, PartyRelationShip]
+    tokens: Map[RelationShipId, List[Token]],
+    relationShips: Map[RelationShipId, RelationShip]
   ) extends CborSerializable {
 
     def addParty(party: Party): State =
@@ -30,31 +30,38 @@ object PartyPersistentBehavior {
 
     def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
 
-    def addPartyRelationShip(partyRelationShip: PartyRelationShip): State =
-      copy(relationShips = relationShips + (partyRelationShip.id -> partyRelationShip))
+    def addPartyRelationShip(relationShip: RelationShip): State =
+      copy(relationShips = relationShips + (relationShip.id -> relationShip))
 
-    def deletePartyRelationShip(partyRelationShipId: PartyRelationShipId): State =
-      copy(relationShips = relationShips - partyRelationShipId)
+    def deletePartyRelationShip(relationShipId: RelationShipId): State =
+      copy(relationShips = relationShips - relationShipId)
 
     def addToken(token: Token): State = {
-      tokens.get(token.partyRelationShipId) match {
-        case Some(ts: List[Token]) => copy(tokens = tokens + (token.partyRelationShipId -> (token :: ts)))
-        case None                  => copy(tokens = tokens + (token.partyRelationShipId -> (token :: Nil)))
+      tokens.get(token.relationShipId) match {
+        case Some(ts: List[Token]) => copy(tokens = tokens + (token.relationShipId -> (token :: ts)))
+        case None                  => copy(tokens = tokens + (token.relationShipId -> (token :: Nil)))
       }
     }
 
-    def invalidateToken(partyRelationShipId: PartyRelationShipId): State =
-      changeTokenStatus(partyRelationShipId, Invalid)
+    def invalidateToken(relationShipId: RelationShipId): State =
+      changeTokenStatus(relationShipId, TokenStatus.Invalid)
 
-    def consumeToken(partyRelationShipId: PartyRelationShipId): State =
-      changeTokenStatus(partyRelationShipId, Consumed)
+    def consumeToken(relationShipId: RelationShipId): State =
+      changeTokenStatus(relationShipId, TokenStatus.Consumed)
 
-    private def changeTokenStatus(partyRelationShipId: PartyRelationShipId, status: TokenStatus): State = {
-      val modified = tokens(partyRelationShipId).map {
-        case x if x.partyRelationShipId == partyRelationShipId => x.copy(status = status)
-        case x                                                 => x
+    private def changeTokenStatus(relationShipId: RelationShipId, status: TokenStatus): State = {
+      val modified = tokens(relationShipId).map {
+        case token if token.relationShipId == relationShipId => token.copy(status = status)
+        case token                                           => token
       }
-      copy(tokens = tokens + (partyRelationShipId -> modified))
+
+      if (status == TokenStatus.Consumed) {
+        val relationShip = relationShips(relationShipId).copy(status = RelationShipStatus.Active)
+        copy(
+          relationShips = relationShips + (relationShipId -> relationShip),
+          tokens = tokens + (relationShipId               -> modified)
+        )
+      } else copy(tokens = tokens + (relationShipId -> modified))
 
     }
 
@@ -83,23 +90,21 @@ object PartyPersistentBehavior {
     replyTo: ActorRef[StatusReply[State]]
   ) extends PartyRelationShipCommand
 
-  final case class DeletePartyRelationShip(
-    partyRelationShipId: PartyRelationShipId,
-    replyTo: ActorRef[StatusReply[State]]
-  ) extends PartyRelationShipCommand
+  final case class DeletePartyRelationShip(relationShipId: RelationShipId, replyTo: ActorRef[StatusReply[State]])
+      extends PartyRelationShipCommand
 
   final case class GetPartyRelationShip(
-    partyRelationShipId: PartyRelationShipId,
-    replyTo: ActorRef[StatusReply[Option[PartyRelationShip]]]
+    relationShipId: RelationShipId,
+    replyTo: ActorRef[StatusReply[Option[RelationShip]]]
   ) extends PartyRelationShipCommand
 
   /* Party Command */
   final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
 
-  final case class InvalidateToken(partyRelationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[State]])
+  final case class InvalidateToken(relationShipId: RelationShipId, replyTo: ActorRef[StatusReply[State]])
       extends TokenCommand
 
-  final case class ConsumeToken(partyRelationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[State]])
+  final case class ConsumeToken(relationShipId: RelationShipId, replyTo: ActorRef[StatusReply[State]])
       extends TokenCommand
 
   /* Event */
@@ -113,18 +118,19 @@ object PartyPersistentBehavior {
   final case class PartyDeleted(party: Party) extends PartyEvent
 
   /* PartyRelationShip Event */
-  final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)       extends PartyRelationShipEvent
-  final case class PartyRelationShipDeleted(partyRelationShipId: PartyRelationShipId) extends PartyRelationShipEvent
+  final case class PartyRelationShipAdded(partyRelationShip: RelationShip)  extends PartyRelationShipEvent
+  final case class PartyRelationShipDeleted(relationShipId: RelationShipId) extends PartyRelationShipEvent
 
   /* Token Event */
-  final case class TokenAdded(token: Token)                                   extends TokenEvent
-  final case class TokenInvalidated(partyRelationShipId: PartyRelationShipId) extends TokenEvent
-  final case class TokenConsumed(partyRelationShipId: PartyRelationShipId)    extends TokenEvent
+  final case class TokenAdded(token: Token)                         extends TokenEvent
+  final case class TokenInvalidated(relationShipId: RelationShipId) extends TokenEvent
+  final case class TokenConsumed(relationShipId: RelationShipId)    extends TokenEvent
 
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
       case AddParty(party, replyTo) =>
         logger.info(s"Adding party ${party.externalId}")
+
         state.indexes
           .get(party.externalId)
           .map { _ =>
@@ -144,7 +150,7 @@ object PartyPersistentBehavior {
 
       case GetParty(id, replyTo) =>
         logger.info(s"Getting party $id")
-        state.indexes.foreach(println)
+
         val party: Option[ApiParty] = for {
           uuid <- state.indexes.get(id)
           _ = logger.info(s"Found $id/${uuid.toString}")
@@ -156,7 +162,8 @@ object PartyPersistentBehavior {
         Effect.none
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
-        val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
+        val partyRelationShip: RelationShip = RelationShip.create(from, to, role)
+
         state.relationShips
           .get(partyRelationShip.id)
           .map { _ =>
@@ -169,52 +176,77 @@ object PartyPersistentBehavior {
               .thenRun(state => replyTo ! StatusReply.Success(state))
           }
 
-      case DeletePartyRelationShip(partyRelationShipId, replyTo) =>
+      case DeletePartyRelationShip(relationShipId, replyTo) =>
         Effect
-          .persist(PartyRelationShipDeleted(partyRelationShipId))
+          .persist(PartyRelationShipDeleted(relationShipId))
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
-      case GetPartyRelationShip(partyRelationShipId, replyTo) =>
-        val partyRelationShip: Option[PartyRelationShip] = state.relationShips.get(partyRelationShipId)
+      case GetPartyRelationShip(relationShipId, replyTo) =>
+        val partyRelationShip: Option[RelationShip] = state.relationShips.get(relationShipId)
 
         replyTo ! StatusReply.Success(partyRelationShip)
 
         Effect.none
 
       case AddToken(token, replyTo) =>
-        val tokens: List[Token] = state.tokens.getOrElse(token.partyRelationShipId, List.empty[Token])
+        val tokens: List[Token] = state.tokens.getOrElse(token.relationShipId, List.empty[Token])
 
-        val isInvalidToken: Boolean = tokens.exists(token => Set[TokenStatus](Consumed, Waiting).contains(token.status))
+        val isValidToken: Boolean =
+          tokens.forall(t => t.relationShipId != token.relationShipId || token.status == TokenStatus.Invalid)
 
-        if (isInvalidToken) {
-          replyTo ! StatusReply.Error(s"Token ${token.partyRelationShipId.stringify} already exists")
-          Effect.none[PartyAdded, State]
-        } else
+        if (isValidToken)
           Effect
             .persist(TokenAdded(token))
             .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
+        else {
+          replyTo ! StatusReply.Error(s"Token ${token.relationShipId.stringify} already exists")
+          Effect.none[PartyAdded, State]
+        }
 
-      case InvalidateToken(partyRelationShipId, replyTo) =>
-        Effect
-          .persist(TokenInvalidated(partyRelationShipId))
-          .thenRun(state => replyTo ! StatusReply.Success(state))
+      case InvalidateToken(relationShipId, replyTo) =>
+        val tokens: List[Token] = state.tokens.getOrElse(relationShipId, List.empty[Token])
 
-      case ConsumeToken(partyRelationShipId, replyTo) =>
-        Effect
-          .persist(TokenConsumed(partyRelationShipId))
-          .thenRun(state => replyTo ! StatusReply.Success(state))
+        val isEligible: Boolean =
+          tokens.forall(t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
+
+        val message = StatusReply.Error(s"Can't invalidate token for ${relationShipId.stringify}")
+
+        if (isEligible)
+          Effect
+            .persist(TokenInvalidated(relationShipId))
+            .thenRun(_ => replyTo ! message)
+        else {
+          replyTo ! message
+          Effect.none[TokenInvalidated, State]
+        }
+
+      case ConsumeToken(relationShipId, replyTo) =>
+        val tokens: List[Token] = state.tokens.getOrElse(relationShipId, List.empty[Token])
+
+        val isEligible: Boolean =
+          tokens.forall(t => t.relationShipId == relationShipId && t.status == TokenStatus.Waiting)
+
+        if (isEligible)
+          Effect
+            .persist(TokenConsumed(relationShipId))
+            .thenRun(state => replyTo ! StatusReply.Success(state))
+        else {
+          StatusReply.Error(s"Can't consume token for ${relationShipId.stringify}")
+          Effect.none[TokenConsumed, State]
+        }
+
     }
   }
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case PartyAdded(party)                             => state.addParty(party)
-      case PartyDeleted(party)                           => state.deleteParty(party)
-      case PartyRelationShipAdded(partyRelationShip)     => state.addPartyRelationShip(partyRelationShip)
-      case PartyRelationShipDeleted(partyRelationShipId) => state.deletePartyRelationShip(partyRelationShipId)
-      case TokenAdded(partyRelationShipId)               => state.addToken(partyRelationShipId)
-      case TokenInvalidated(partyRelationShipId)         => state.invalidateToken(partyRelationShipId)
-      case TokenConsumed(partyRelationShipId)            => state.consumeToken(partyRelationShipId)
+      case PartyAdded(party)                         => state.addParty(party)
+      case PartyDeleted(party)                       => state.deleteParty(party)
+      case PartyRelationShipAdded(partyRelationShip) => state.addPartyRelationShip(partyRelationShip)
+      case PartyRelationShipDeleted(relationShipId)  => state.deletePartyRelationShip(relationShipId)
+      case TokenAdded(relationShipId)                => state.addToken(relationShipId)
+      case TokenInvalidated(relationShipId)          => state.invalidateToken(relationShipId)
+      case TokenConsumed(relationShipId)             => state.consumeToken(relationShipId)
     }
 
   def apply(): Behavior[Command] =
