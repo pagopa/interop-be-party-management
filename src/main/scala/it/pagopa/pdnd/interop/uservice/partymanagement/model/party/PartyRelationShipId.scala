@@ -4,10 +4,10 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.uuidFormat
 import java.util.UUID
 
-final case class RelationShipId(from: UUID, to: UUID, role: PartyRole) {
+final case class PartyRelationShipId(from: UUID, to: UUID, role: PartyRole) {
   def stringify: String = s"${from.toString}-${to.toString}-${role.stringify}"
 }
 
-object RelationShipId extends DefaultJsonProtocol {
-  implicit val personFormat: RootJsonFormat[RelationShipId] = jsonFormat3(RelationShipId.apply)
+object PartyRelationShipId extends DefaultJsonProtocol {
+  implicit val personFormat: RootJsonFormat[PartyRelationShipId] = jsonFormat3(PartyRelationShipId.apply)
 }

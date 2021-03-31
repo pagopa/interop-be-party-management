@@ -10,28 +10,42 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.{Failure, Success, Try}
 
-final case class Token(relationShipId: RelationShipId, validity: OffsetDateTime, status: TokenStatus, seed: UUID) {
+final case class Token(
+  manager: PartyRelationShipId,
+  delegate: PartyRelationShipId,
+  validity: OffsetDateTime,
+  status: TokenStatus,
+  seed: UUID
+) {
   def isValid: Boolean = OffsetDateTime.now().isBefore(validity) && status == TokenStatus.Waiting
 
 }
 
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val format: RootJsonFormat[Token] = jsonFormat4(Token.apply)
+  implicit val format: RootJsonFormat[Token] = jsonFormat5(Token.apply)
 
   final val validityHours: Long = 24L
 
   def generate(tokenSeed: TokenSeed): Either[Throwable, Token] = {
-    PartyRole
-      .fromText(tokenSeed.role.value)
-      .map(role =>
-        Token(
-          seed = UUID.fromString(tokenSeed.seed),
-          relationShipId = RelationShipId(UUID.fromString(tokenSeed.from), UUID.fromString(tokenSeed.to), role),
-          validity = OffsetDateTime.now().plusHours(validityHours),
-          status = TokenStatus.Waiting
-        )
-      )
+    for {
+      managerRole  <- PartyRole.fromText(tokenSeed.manager.role.value)
+      delegateRole <- PartyRole.fromText(tokenSeed.delegate.role.value)
+    } yield Token(
+      seed = UUID.fromString(tokenSeed.seed),
+      manager = PartyRelationShipId(
+        UUID.fromString(tokenSeed.manager.from),
+        UUID.fromString(tokenSeed.manager.to),
+        managerRole
+      ),
+      delegate = PartyRelationShipId(
+        UUID.fromString(tokenSeed.delegate.from),
+        UUID.fromString(tokenSeed.delegate.to),
+        delegateRole
+      ),
+      validity = OffsetDateTime.now().plusHours(validityHours),
+      status = TokenStatus.Waiting
+    )
 
   }
 

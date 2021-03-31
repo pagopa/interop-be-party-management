@@ -1,4 +1,5 @@
 openapi: 3.0.3
+
 info:
   title: Party Management Micro Service
   description: This service is the party manager
@@ -214,10 +215,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PartyRelationShip'
+              $ref: '#/components/schemas/RelationShipSeed'
       responses:
         '201':
           description: successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /relationships/{taxCode}:
+    get:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Create a new reletion ship between a Person and an Organization
+      description: Return ok
+      operationId: getRelationShips
+      parameters:
+        - name: taxCode
+          in: path
+          description: The ID of Person
+          required: true
+          schema:
+            description: to be defined
+            example: age
+            maxLength: 32
+            # pattern: '[a-z]{2,3}'
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelationShips'
         '400':
           description: Invalid ID supplied
           content:
@@ -440,7 +474,7 @@ components:
         - digitalAddress
         - partyId
       additionalProperties: false
-    PartyRelationShip:
+    RelationShipSeed:
       type: object
       properties:
         from:
@@ -459,6 +493,32 @@ components:
         - from
         - to
         - role
+    RelationShip:
+      type: object
+      properties:
+        taxCode:
+          type: string
+        institutionId:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+      required:
+        - taxCode
+        - institutionId
+        - role
+        - status
+    RelationShips:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationShip'
+      additionalProperties: false
+      required:
+        - items
     TokenSeed:
       type: object
       properties:
@@ -466,6 +526,18 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
           maxLength: 36
+        manager:
+          $ref: '#/components/schemas/TokenUser'
+        delegate:
+          $ref: '#/components/schemas/TokenUser'
+      additionalProperties: false
+      required:
+        - seed
+        - manager
+        - delegate
+    TokenUser:
+      type: object
+      properties:
         from:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
@@ -479,7 +551,6 @@ components:
           $ref: '#/components/schemas/Role'
       additionalProperties: false
       required:
-        - seed
         - from
         - to
         - role
@@ -538,4 +609,5 @@ components:
 #      type: http
 #      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
 #      scheme: bearer
-#      bearerFormat: JWT
+#      bearerFormat: JWTly in the editor.
+

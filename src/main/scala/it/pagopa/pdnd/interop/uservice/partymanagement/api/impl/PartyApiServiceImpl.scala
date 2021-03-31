@@ -10,7 +10,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApiParty, executionContext, scheduler, timeout}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{RelationShip => _, _}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationShip => _, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior._
 import org.slf4j.{Logger, LoggerFactory}
@@ -135,17 +135,17 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     * Code: 400, Message: Invalid ID supplied, DataType: ErrorResponse
     */
   override def createRelationShip(
-    partyRelationShip: PartyRelationShip
+    relationShipSeed: RelationShipSeed
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
-    logger.info(s"Creating relationship ${partyRelationShip.toString}")
+    logger.info(s"Creating relationship ${relationShipSeed.toString}")
     val result: Future[StatusReply[PartyPersistentBehavior.State]] = for {
-      from <- commander.ask(ref => GetParty(partyRelationShip.from, ref))
+      from <- commander.ask(ref => GetParty(relationShipSeed.from, ref))
       _ = logger.info(s"From retrieved ${from.toString()}")
-      to <- commander.ask(ref => GetParty(partyRelationShip.to, ref))
+      to <- commander.ask(ref => GetParty(relationShipSeed.to, ref))
       _ = logger.info(s"To retrieved ${to.toString()}")
       parties <- extractParties(from, to)
       _ = logger.info(s"Parties retrieved ${parties.toString()}")
-      role <- PartyRole.fromText(partyRelationShip.role.value).toFuture
+      role <- PartyRole.fromText(relationShipSeed.role.value).toFuture
       res <- commander.ask(ref =>
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )
@@ -159,6 +159,29 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
       case Success(_) => createRelationShip201
       case Failure(ex) =>
         createRelationShip400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+    }
+
+  }
+
+  /** Code: 200, Message: successful operation, DataType: RelationShips
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    */
+  override def getRelationShips(from: String)(implicit
+    toEntityMarshallerRelationShips: ToEntityMarshaller[RelationShips],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+  ): Route = {
+
+    logger.info(s"Getting relationships for $from")
+    val result = commander.ask(ref => GetPartyRelationShip(UUID.fromString(from), ref))
+
+    onComplete(result) {
+      case Success(statusReply) if statusReply.isError =>
+        getRelationShips400(
+          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
+        )
+      case Success(result) => getRelationShips200(RelationShips(result.getValue))
+      case Failure(ex) =>
+        getRelationShips400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
     }
 
   }
@@ -187,8 +210,8 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     val result: Future[StatusReply[State]] = for {
       token <- Future.fromTry(Token.decode(token))
       res <-
-        if (token.isValid) commander.ask(ref => ConsumeToken(token.relationShipId, ref))
-        else commander.ask(ref => InvalidateToken(token.relationShipId, ref))
+        if (token.isValid) commander.ask(ref => ConsumeToken(token, ref))
+        else commander.ask(ref => InvalidateToken(token, ref))
     } yield res
 
     onComplete(result) {
@@ -209,7 +232,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
     val result: Future[StatusReply[State]] = for {
       token <- Future.fromTry(Token.decode(token))
-      res   <- commander.ask(ref => InvalidateToken(token.relationShipId, ref))
+      res   <- commander.ask(ref => InvalidateToken(token, ref))
     } yield res
 
     onComplete(result) {

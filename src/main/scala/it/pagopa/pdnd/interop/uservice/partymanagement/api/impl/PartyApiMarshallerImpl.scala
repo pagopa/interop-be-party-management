@@ -28,8 +28,14 @@ class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport wi
   override implicit def fromEntityUnmarshallerOrganizationSeed: FromEntityUnmarshaller[OrganizationSeed] =
     sprayJsonUnmarshaller[OrganizationSeed]
 
-  override implicit def fromEntityUnmarshallerPartyRelationShip: FromEntityUnmarshaller[PartyRelationShip] =
-    sprayJsonUnmarshaller[PartyRelationShip]
+  override implicit def fromEntityUnmarshallerRelationShipSeed: FromEntityUnmarshaller[RelationShipSeed] =
+    sprayJsonUnmarshaller[RelationShipSeed]
+
+  override implicit def toEntityMarshallerRelationShips: ToEntityMarshaller[RelationShips] =
+    sprayJsonMarshaller[RelationShips]
+
+  implicit def fromEntityMarshallerRelationShips: FromEntityUnmarshaller[RelationShips] =
+    sprayJsonUnmarshaller[RelationShips]
 
   override implicit def fromEntityUnmarshallerTokenSeed: FromEntityUnmarshaller[TokenSeed] =
     sprayJsonUnmarshaller[TokenSeed]
