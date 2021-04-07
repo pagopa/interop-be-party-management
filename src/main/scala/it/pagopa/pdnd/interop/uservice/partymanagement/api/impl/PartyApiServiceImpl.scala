@@ -13,13 +13,14 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationShip => _, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior._
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService {
+class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSupplier) extends PartyApiService {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   /** Code: 200, Message: successful operation
@@ -66,15 +67,21 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     toEntityMarshallerProblem: ToEntityMarshaller[Problem]
   ): Route = {
     logger.info(s"Creating organization ${organizationSeed.description}")
-    val party: Party = InstitutionParty.fromApi(organizationSeed)
+    val party: Party = InstitutionParty.fromApi(organizationSeed, uuidSupplier)
 
     val result: Future[StatusReply[ApiParty]] = commander.ask(ref => AddParty(party, ref))
 
-    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
-
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.swap
-        .fold(_ => createOrganization400(errorResponse), organization => createOrganization201(organization))
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        statusReply.getValue.swap
+          .fold(
+            _ => createOrganization400(Problem(detail = None, status = 400, title = "some error")),
+            organization => createOrganization201(organization)
+          )
+      case statusReply =>
+        createOrganization400(
+          Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error")
+        )
     }
 
   }
@@ -87,13 +94,19 @@ class PartyApiServiceImpl(commander: ActorRef[Command]) extends PartyApiService 
     toEntityMarshallerProblem: ToEntityMarshaller[Problem]
   ): Route = {
     logger.info(s"Creating person ${personSeed.name}/${personSeed.surname}")
-    val party: Party = PersonParty.fromApi(personSeed)
+    val party: Party = PersonParty.fromApi(personSeed, uuidSupplier)
 
     val result: Future[StatusReply[ApiParty]] = commander.ask(ref => AddParty(party, ref))
 
-    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(_ => createPerson400(errorResponse), person => createPerson201(person))
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        statusReply.getValue
+          .fold(
+            _ => createPerson400(Problem(detail = None, status = 400, title = "some error")),
+            person => createPerson201(person)
+          )
+      case statusReply =>
+        createPerson400(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
     }
 
   }

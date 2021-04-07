@@ -14,6 +14,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{Authenticator, classicActorSystem}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.UUIDSupplierImpl
 import kamon.Kamon
 
 import scala.concurrent.Future
@@ -24,8 +26,10 @@ object Main extends App {
 
   val partyCommander = ActorSystem(PartyPersistentBehavior(), "pdnd-interop-uservice-party-management")
 
+  val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
+
   val partyApi: PartyApi = new PartyApi(
-    new PartyApiServiceImpl(partyCommander),
+    new PartyApiServiceImpl(partyCommander, uuidSupplier),
     new PartyApiMarshallerImpl(),
     SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
   )

@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationSeed, Person, PersonSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -51,8 +52,8 @@ final case class PersonParty(
 ) extends Party
 
 object PersonParty {
-  def fromApi(person: PersonSeed): PersonParty = PersonParty(
-    id = UUID.randomUUID(),
+  def fromApi(person: PersonSeed, uuidSupplier: UUIDSupplier): PersonParty = PersonParty(
+    id = uuidSupplier.get,
     externalId = person.taxCode,
     name = person.name,
     surname = person.surname,
@@ -72,8 +73,8 @@ final case class InstitutionParty(
 ) extends Party
 
 object InstitutionParty {
-  def fromApi(organization: OrganizationSeed): InstitutionParty = InstitutionParty(
-    id = UUID.randomUUID(),
+  def fromApi(organization: OrganizationSeed, uuidSupplier: UUIDSupplier): InstitutionParty = InstitutionParty(
+    id = uuidSupplier.get,
     externalId = organization.institutionId,
     description = organization.description,
     digitalAddress = organization.digitalAddress,
