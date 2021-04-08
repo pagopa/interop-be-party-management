@@ -185,7 +185,7 @@ object PartyPersistentBehavior {
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
       case GetPartyRelationShip(from, replyTo) =>
-        val partyRelationShip: List[RelationShip] =
+        val relationShips: List[RelationShip] =
           state.relationShips.filter(_._1.from == from).values.toList.flatMap { rl =>
             for {
               from <- state.parties.get(rl.id.from)
@@ -197,7 +197,7 @@ object PartyPersistentBehavior {
               status = rl.status.stringify
             )
           }
-        replyTo ! StatusReply.Success(partyRelationShip)
+        replyTo ! StatusReply.Success(relationShips)
 
         Effect.none
 
@@ -217,32 +217,9 @@ object PartyPersistentBehavior {
         }
 
       case InvalidateToken(token, replyTo) =>
-//        state.tokens.get(token.seed) match {
-//          case Some(t) if t.status == TokenStatus.Waiting =>
-//            Effect
-//              .persist(TokenInvalidated(token))
-//              .thenRun(_ => replyTo ! StatusReply.Success(state))
-//          case Some(t) =>
-//            replyTo ! StatusReply.Error(s"Invalid token status: token seed ${t.seed}")
-//            Effect.none[TokenInvalidated, State]
-//          case None =>
-//            replyTo ! StatusReply.Error(s"Token ${token.seed} not found")
-//            Effect.none[TokenInvalidated, State]
-//        }
         processToken(state.tokens.get(token.seed), replyTo, state, TokenInvalidated)
+
       case ConsumeToken(token, replyTo) =>
-//        state.tokens.get(token.seed) match {
-//          case Some(t) if t.status == TokenStatus.Waiting =>
-//            Effect
-//              .persist(TokenConsumed(token))
-//              .thenRun(_ => replyTo ! StatusReply.Success(state))
-//          case Some(t) =>
-//            replyTo ! StatusReply.Error(s"Invalid token status: token seed ${t.seed}")
-//            Effect.none[TokenConsumed, State]
-//          case None =>
-//            replyTo ! StatusReply.Error(s"Token ${token.seed} not found")
-//            Effect.none[TokenConsumed, State]
-//        }
         processToken(state.tokens.get(token.seed), replyTo, state, TokenConsumed)
     }
 
@@ -284,6 +261,6 @@ object PartyPersistentBehavior {
       emptyState = State.empty,
       commandHandler = commandHandler,
       eventHandler = eventHandler
-    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 10, keepNSnapshots = 1))
+    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 100, keepNSnapshots = 1))
       .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
 }

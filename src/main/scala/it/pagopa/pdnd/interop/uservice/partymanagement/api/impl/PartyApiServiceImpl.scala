@@ -171,7 +171,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
         )
       case Success(_) => createRelationShip201
       case Failure(ex) =>
-        createRelationShip400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+        createRelationShip400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }
@@ -185,16 +185,19 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
   ): Route = {
 
     logger.info(s"Getting relationships for $from")
-    val result = commander.ask(ref => GetPartyRelationShip(UUID.fromString(from), ref))
+    val result: Future[StatusReply[List[RelationShip]]] =
+      commander.ask(ref => GetPartyRelationShip(UUID.fromString(from), ref))
 
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
         getRelationShips400(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
+          Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error")
         )
+      case Success(result) if result.getValue.isEmpty =>
+        getRelationShips404(Problem(detail = None, status = 404, title = "some error"))
       case Success(result) => getRelationShips200(RelationShips(result.getValue))
       case Failure(ex) =>
-        getRelationShips400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+        getRelationShips400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }

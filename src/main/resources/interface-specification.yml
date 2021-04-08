@@ -252,6 +252,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RelationShips'
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '400':
           description: Invalid ID supplied
           content:
