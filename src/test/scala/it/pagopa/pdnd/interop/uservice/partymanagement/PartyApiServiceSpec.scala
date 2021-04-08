@@ -18,6 +18,9 @@ import org.scalatest.{BeforeAndAfterAll, Suites}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
+@SuppressWarnings(
+  Array("org.wartremover.warts.Var", "org.wartremover.warts.Null", "org.wartremover.warts.OptionPartial")
+)
 class PartyApiServiceSpec
     extends Suites(
       OrganizationsPartyApiServiceSpec(uuidSupplier),

@@ -212,7 +212,7 @@ object PartyPersistentBehavior {
               .persist(TokenAdded(token))
               .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
           case Some(t) =>
-            replyTo ! StatusReply.Error(s"Invalid token status ${t.status}: token seed ${t.seed}")
+            replyTo ! StatusReply.Error(s"Invalid token status ${t.status.toString}: token seed ${t.seed.toString}")
             Effect.none[TokenAdded, State]
         }
 
@@ -236,7 +236,7 @@ object PartyPersistentBehavior {
           .persist(event(t))
           .thenRun(_ => replyTo ! StatusReply.Success(output))
       case Some(t) =>
-        replyTo ! StatusReply.Error(s"Invalid token status ${t.status}: token seed ${t.seed}")
+        replyTo ! StatusReply.Error(s"Invalid token status ${t.status.toString}: token seed ${t.seed.toString}")
         Effect.none[Event, State]
       case None =>
         replyTo ! StatusReply.Error(s"Token not found")

@@ -1,3 +1,6 @@
+import sbt.Credentials
+import sbt.Keys.credentials
+
 import scala.sys.process.Process
 
 ThisBuild / scalaVersion := "2.13.4"
@@ -12,8 +15,6 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 ThisBuild / version := {
   Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 }
-resolvers in ThisBuild += "PDND-Interop Nexus Snapshots" at "http://localhost:8081/nexus/content/repositories/maven-releases/"
-resolvers in ThisBuild += "PDND-Interop Nexus Releases" at "http://localhost:8081/nexus/content/repositories/maven-snapshots/"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -56,10 +57,14 @@ cleanFiles += baseDirectory.value / "client" / "src"
 
 lazy val generated = project.in(file("generated")).settings(scalacOptions := Seq(), scalafmtOnCompile := true)
 
+lazy val nexusHost = Option(System.getenv("NEXUS_HOST")).getOrElse("my.artifact.repo.net")
+lazy val nexusUser = Option(System.getenv("NEXUS_USER")).getOrElse("user")
+lazy val nexusPass = Option(System.getenv("NEXUS_PASSWORD")).getOrElse("password")
+
 lazy val client = project
   .in(file("client"))
   .settings(
-    name := "pdnd-interop-uservice-party-management-client",
+    name := "pdnd-interop-uservice-party-management",
     scalacOptions := Seq(),
     scalafmtOnCompile := true,
     libraryDependencies := Dependencies.Jars.client.map(m =>
@@ -67,7 +72,17 @@ lazy val client = project
         m.withDottyCompat(scalaVersion.value)
       else
         m
-    )
+    ),
+    credentials += Credentials("Sonatype Nexus Repository Manager", nexusHost, nexusUser, nexusPass),
+    updateOptions := updateOptions.value.withGigahorse(false),
+    publishTo := {
+      val nexus = s"$nexusHost/nexus/repository/"
+
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "maven-snapshots/")
+      else
+        Some("releases" at nexus + "maven-releases/")
+    }
   )
 
 lazy val root = (project in file("."))
@@ -88,7 +103,7 @@ lazy val root = (project in file("."))
     dockerExposedPorts in Docker := Seq(8080),
     dockerBaseImage in Docker := "openjdk:8-jre-alpine",
     dockerUpdateLatest in Docker := true,
-//    wartremoverErrors ++= Warts.unsafe,
+    wartremoverErrors ++= Warts.unsafe,
     scalafmtOnCompile := true
   )
   .aggregate(client)

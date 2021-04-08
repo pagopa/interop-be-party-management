@@ -18,6 +18,7 @@ import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+@SuppressWarnings(Array("org.wartremover.warts.Any", "org.wartremover.warts.NonUnitStatements"))
 final case class PersonPartyApiServiceSpec(uuidSupplier: UUIDSupplier)
     extends AnyWordSpec
     with TestSuite

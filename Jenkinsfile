@@ -7,7 +7,7 @@ pipeline {
     stage('Deploy DAGS') {
       agent { label 'sbt-template' }
       environment {
-        NEXUS = 'gateway.pdnd.dev'
+        NEXUS = 'gateway.interop.pdnd.dev'
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
       }
       steps {
@@ -64,5 +64,18 @@ pipeline {
       }
     }
 
+    stage('Publish client') {
+      agent { label 'sbt-template' }
+      steps{
+
+        sh '''#!/bin/bash
+        export NEXUS_HOST=$NEXUS
+        export NEXUS_USER=$NEXUS_CREDENTIALS_USR
+        export NEXUS_PASSWORD=$NEXUS_CREDENTIALS_PSW
+        sbt clean generateCode compile publish
+        '''
+      }
+    }
   }
+
 }
