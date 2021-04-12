@@ -70,16 +70,11 @@ pipeline {
         NEXUS = 'gateway.interop.pdnd.dev/nexus'
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
       }
-      steps{
-
+      steps {
         sh '''#!/bin/bash
-        export $NEXUS=$NEXUS
-        export NEXUS_USER=$NEXUS_CREDENTIALS_USR
-        export NEXUS_PASSWORD=$NEXUS_CREDENTIALS_PSW
-        echo $NEXUS
-        echo $NEXUS
-        echo $NEXUS_CREDENTIALS_USR
-        echo NEXUS_USER
+        export NEXUS_HOST=${NEXUS}
+        export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
+        export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
         sbt clean generateCode compile publish
         '''
       }
