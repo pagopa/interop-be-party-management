@@ -1,6 +1,3 @@
-import sbt.Credentials
-import sbt.Keys.credentials
-
 import scala.sys.process.Process
 
 ThisBuild / scalaVersion := "2.13.4"
@@ -15,12 +12,6 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 ThisBuild / version := {
   Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 }
-
-resolvers in ThisBuild += Resolver.sonatypeRepo("public")
-resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
-resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
-resolvers in ThisBuild += "Pagopa Nexus Snapshots" at "https://gateway.interop.pdnd.dev/nexus/repository/maven-snapshots/"
-resolvers in ThisBuild += "Pagopa Nexus Releases" at "https://gateway.interop.pdnd.dev/nexus/repository/maven-releases/"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -75,21 +66,21 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials(
-      "Sonatype Nexus Repository Manager",
-      System.getenv("NEXUS_HOST"),
-      System.getenv("NEXUS_USER"),
-      System.getenv("NEXUS_PASSWORD")
-    ),
-    updateOptions := updateOptions.value.withGigahorse(false),
-    publishTo := {
-      val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
-
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "maven-snapshots/")
-      else
-        Some("releases" at nexus + "maven-releases/")
-    }
+//    credentials += Credentials(
+//      "Sonatype Nexus Repository Manager",
+//      System.getenv("NEXUS_HOST"),
+//      System.getenv("NEXUS_USER"),
+//      System.getenv("NEXUS_PASSWORD")
+//    ),
+//    updateOptions := updateOptions.value.withGigahorse(false),
+//    publishTo := {
+//      val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
+//
+//      if (isSnapshot.value)
+//        Some("snapshots" at nexus + "maven-snapshots/")
+//      else
+//        Some("releases" at nexus + "maven-releases/")
+//    }
   )
 
 lazy val root = (project in file("."))

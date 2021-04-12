@@ -30,9 +30,6 @@ pipeline {
 
             sh '''#!/bin/bash
             export DOCKER_REPO=$NEXUS
-            export NEXUS_HOST=${NEXUS}
-            export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
-            export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
             sbt generateCode docker:publish
 
             '''
@@ -66,25 +63,25 @@ pipeline {
       }
     }
 
-    stage('Publish client') {
-      agent { label 'sbt-template' }
-      environment {
-        NEXUS = 'gateway.interop.pdnd.dev'
-        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-      }
-      steps {
-        container('sbt-container') {
-          script {
-            sh '''#!/bin/bash
-            export NEXUS_HOST=${NEXUS}
-            export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
-            export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            sbt -Djavax.net.ssl.trustStore clean generateCode compile publish
-            '''
-          }
-        }
-      }
-    }
+//     stage('Publish client') {
+//       agent { label 'sbt-template' }
+//       environment {
+//         NEXUS = 'gateway.interop.pdnd.dev'
+//         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+//       }
+//       steps {
+//         container('sbt-container') {
+//           script {
+//             sh '''#!/bin/bash
+//             export NEXUS_HOST=${NEXUS}
+//             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
+//             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
+//             sbt -Djavax.net.ssl.trustStore clean generateCode compile publish
+//             '''
+//           }
+//         }
+//       }
+//     }
   }
 
 }
