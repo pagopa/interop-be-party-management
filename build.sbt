@@ -57,10 +57,6 @@ cleanFiles += baseDirectory.value / "client" / "src"
 
 lazy val generated = project.in(file("generated")).settings(scalacOptions := Seq(), scalafmtOnCompile := true)
 
-lazy val nexusHost = Option(System.getenv("NEXUS_HOST")).getOrElse("my.artifact.repo.net")
-lazy val nexusUser = Option(System.getenv("NEXUS_USER")).getOrElse("user")
-lazy val nexusPass = Option(System.getenv("NEXUS_PASSWORD")).getOrElse("password")
-
 lazy val client = project
   .in(file("client"))
   .settings(
@@ -73,7 +69,12 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials("Sonatype Nexus Repository Manager", nexusHost, nexusUser, nexusPass),
+    credentials += Credentials(
+      "Sonatype Nexus Repository Manager",
+      System.getenv("NEXUS_HOST"),
+      System.getenv("NEXUS_USER"),
+      System.getenv("NEXUS_PASSWORD")
+    ),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"$nexusHost/nexus/repository/"
