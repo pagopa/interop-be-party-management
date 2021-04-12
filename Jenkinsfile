@@ -7,7 +7,7 @@ pipeline {
     stage('Deploy DAGS') {
       agent { label 'sbt-template' }
       environment {
-        NEXUS = 'gateway.interop.pdnd.dev'
+        NEXUS = 'gateway.interop.pdnd.dev/nexus'
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
       }
       steps {
