@@ -16,11 +16,11 @@ ThisBuild / version := {
   Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 }
 
-resolvers in ThisBuild += Resolver.sonatypeRepo("public")
-resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
-resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
-resolvers in ThisBuild += "Pagopa Nexus Snapshots" at "https://gateway.interop.pdnd.dev/nexus/repository/maven-snapshots/"
-resolvers in ThisBuild += "Pagopa Nexus Releases" at "https://gateway.interop.pdnd.dev/nexus/repository/maven-releases/"
+//resolvers in ThisBuild += Resolver.sonatypeRepo("public")
+//resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
+//resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
+//resolvers in ThisBuild += "Pagopa Nexus Snapshots" at "https://gateway.interop.pdnd.dev/nexus/repository/maven-snapshots/"
+//resolvers in ThisBuild += "Pagopa Nexus Releases" at "https://gateway.interop.pdnd.dev/nexus/repository/maven-releases/"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
