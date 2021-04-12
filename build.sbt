@@ -77,7 +77,7 @@ lazy val client = project
     ),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
-      val nexus = s"${System.getenv("NEXUS_HOST")}/nexus/repository/"
+      val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
 
       if (isSnapshot.value)
         Some("snapshots" at nexus + "maven-snapshots/")
