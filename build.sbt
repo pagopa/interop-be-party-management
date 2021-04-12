@@ -60,10 +60,13 @@ lazy val generated = project.in(file("generated")).settings(scalacOptions := Seq
 lazy val nexusHost = Option(System.getenv("NEXUS_HOST")).getOrElse("my.artifact.repo.net")
 lazy val nexusUser = Option(System.getenv("NEXUS_USER")).getOrElse("user")
 lazy val nexusPass = Option(System.getenv("NEXUS_PASSWORD")).getOrElse("password")
-val _  = println("!!!!!!!!!!!")
-val _  = println(Option(System.getenv("NEXUS_HOST")))
-val _  = println(nexusHost)
-val _  = println("!!!!!!!!!!!")
+
+lazy val printer = taskKey[Unit]("Printer")
+printer := println("!!!!!!!!!!!")
+printer :=  println(Option(System.getenv("NEXUS_HOST")))
+printer :=  println(nexusHost)
+printer :=  println("!!!!!!!!!!!")
+
 lazy val client = project
   .in(file("client"))
   .settings(
