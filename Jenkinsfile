@@ -79,7 +79,7 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            sbt clean generateCode compile publish
+            sbt -Djavax.net.ssl.trustStore clean generateCode compile publish
             '''
           }
         }
