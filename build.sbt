@@ -61,12 +61,6 @@ lazy val nexusHost = Option(System.getenv("NEXUS_HOST")).getOrElse("my.artifact.
 lazy val nexusUser = Option(System.getenv("NEXUS_USER")).getOrElse("user")
 lazy val nexusPass = Option(System.getenv("NEXUS_PASSWORD")).getOrElse("password")
 
-lazy val printer = taskKey[Unit]("Printer")
-printer := println("!!!!!!!!!!!")
-printer :=  println(Option(System.getenv("NEXUS_HOST")))
-printer :=  println(nexusHost)
-printer :=  println("!!!!!!!!!!!")
-
 lazy val client = project
   .in(file("client"))
   .settings(
