@@ -66,6 +66,10 @@ pipeline {
 
     stage('Publish client') {
       agent { label 'sbt-template' }
+      environment {
+        NEXUS = 'gateway.interop.pdnd.dev/nexus'
+        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+      }
       steps{
 
         sh '''#!/bin/bash
