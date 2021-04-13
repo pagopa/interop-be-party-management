@@ -13,8 +13,8 @@ pipeline {
       }
       steps {
         container('sbt-container') {
-          withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd-certificate')]) {
-               sh "cat \$pdnd-certificate > gateway.interop.pdnd.dev.cer"
+          withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd_certificate')]) {
+               sh "cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer"
           }
           script {
 
@@ -79,8 +79,8 @@ pipeline {
       }
       steps {
         container('sbt-container') {
-          withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd-certificate')]) {
-               sh "cat \$pdnd-certificate > gateway.interop.pdnd.dev.cer"
+          withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd_certificate')]) {
+               sh "cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer"
           }
           script {
             sh '''#!/bin/bash
