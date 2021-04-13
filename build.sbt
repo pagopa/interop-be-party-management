@@ -13,7 +13,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 //  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 //}
 
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.1.0-snapshot"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -33,7 +33,7 @@ generateCode := {
              |                               -p invokerPackage=it.pagopa.${packagePrefix}.server
              |                               -p modelPackage=it.pagopa.${packagePrefix}.model
              |                               -p apiPackage=it.pagopa.${packagePrefix}.api
-             |                               -p dateLibrary=java8
+             |                               -pcd . dateLibrary=java8
              |                               -o generated""".stripMargin).!!
 
   Process(s"""openapi-generator-cli generate -t template/scala-akka-http-client
