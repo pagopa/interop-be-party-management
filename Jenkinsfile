@@ -38,7 +38,8 @@ pipeline {
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
             pwd
             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
-            cat ./PDNDTrustStore
+            cp $JAVA_HOME/jre/lib/security/cacerts main_certs
+            keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
             sbt generateCode
             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} docker:publish
             '''
@@ -89,10 +90,9 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            echo ${PDND_TRUST_CERT} > gateway.interop.pdnd.dev.cer
             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
-            cat ./PDNDTrustStore
-            pwd
+            cp $JAVA_HOME/jre/lib/security/cacerts main_certs
+            keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
             sbt clean compile
             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} "project client" publish
             '''
