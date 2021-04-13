@@ -60,6 +60,13 @@ lazy val client = project
     name := "pdnd-interop-uservice-party-management",
     scalacOptions := Seq(),
     scalafmtOnCompile := true,
+    version := s"${
+      val buildVersion = (version in ThisBuild).value
+      if (buildVersion == "latest")
+        buildVersion
+      else
+        s"v$buildVersion"
+    }".toLowerCase,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)

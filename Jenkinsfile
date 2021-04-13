@@ -52,7 +52,7 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode docker:publish
+            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode "project root" docker:publish
             '''
 
           }
@@ -84,27 +84,27 @@ pipeline {
       }
     }
 
-    stage('Publish client') {
-      agent { label 'sbt-template' }
-      environment {
-        NEXUS = 'gateway.interop.pdnd.dev'
-        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
-      }
-      steps {
-        container('sbt-container') {
-          unstash "pdnd_trust_store"
-          script {
-            sh '''#!/bin/bash
-            export NEXUS_HOST=${NEXUS}
-            export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
-            export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
-            '''
-          }
-        }
-      }
-    }
+//     stage('Publish client') {
+//       agent { label 'sbt-template' }
+//       environment {
+//         NEXUS = 'gateway.interop.pdnd.dev'
+//         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+//         PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
+//       }
+//       steps {
+//         container('sbt-container') {
+//           unstash "pdnd_trust_store"
+//           script {
+//             sh '''#!/bin/bash
+//             export NEXUS_HOST=${NEXUS}
+//             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
+//             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
+//             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
+//             '''
+//           }
+//         }
+//       }
+//     }
   }
 
 }
