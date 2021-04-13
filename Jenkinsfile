@@ -7,8 +7,10 @@ pipeline {
     stage('Deploy DAGS') {
       agent { label 'sbt-template' }
       environment {
-        NEXUS = 'gateway.interop.pdnd.dev'
-        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+       NEXUS = 'gateway.interop.pdnd.dev'
+       NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+       PDND_TRUST_CERT = credentials('pdnd-interop-trust-cert')
+       PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
         container('sbt-container') {
@@ -33,10 +35,10 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            cat $JENKINS_HOME/PDNDTrustStore
-            echo ${PDND_TRUST_STORE_PSW}
-            sbt -Djavax.net.ssl.trustStore=$JENKINS_HOME/PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode docker:publish
-
+            echo ${PDND_TRUST_CERT} > gateway.interop.pdnd.dev.cer
+            keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
+            cat ./PDNDTrustStore
+            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode docker:publish
             '''
 
           }
@@ -73,7 +75,8 @@ pipeline {
       environment {
         NEXUS = 'gateway.interop.pdnd.dev'
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-        PDND_TRUST_STORE_PSW = credentials('pdnd-trust-store')
+        PDND_TRUST_CERT = credentials('pdnd-interop-trust-cert')
+        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
         container('sbt-container') {
@@ -82,7 +85,10 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            sbt -Djavax.net.ssl.trustStore=$JENKINS_HOME/PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
+            echo ${PDND_TRUST_CERT} > gateway.interop.pdnd.dev.cer
+            keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
+            cat ./PDNDTrustStore
+            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
             '''
           }
         }
