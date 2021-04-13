@@ -1,4 +1,4 @@
-import scala.sys.process.Process
+//import scala.sys.process.Process
 
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / organization := "it.pagopa"
@@ -33,7 +33,7 @@ generateCode := {
              |                               -p invokerPackage=it.pagopa.${packagePrefix}.server
              |                               -p modelPackage=it.pagopa.${packagePrefix}.model
              |                               -p apiPackage=it.pagopa.${packagePrefix}.api
-             |                               -pcd . dateLibrary=java8
+             |                               -p dateLibrary=java8
              |                               -o generated""".stripMargin).!!
 
   Process(s"""openapi-generator-cli generate -t template/scala-akka-http-client
