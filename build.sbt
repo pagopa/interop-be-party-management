@@ -13,7 +13,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 //  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 //}
 
-ThisBuild / version := "v0.1.0-SNAPSHOT"
+ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
