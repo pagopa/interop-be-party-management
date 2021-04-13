@@ -9,12 +9,13 @@ pipeline {
       environment {
        NEXUS = 'gateway.interop.pdnd.dev'
        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-       PDND_TRUST_CERT = credentials('pdnd-interop-trust-cert')
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
         container('sbt-container') {
-
+          withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd-certificate')]) {
+               sh "cat \$pdnd-certificate > gateway.interop.pdnd.dev.cer"
+          }
           script {
 
             sh '''
@@ -35,7 +36,6 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            echo ${PDND_TRUST_CERT} > gateway.interop.pdnd.dev.cer
             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
             cat ./PDNDTrustStore
             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode docker:publish
@@ -75,11 +75,13 @@ pipeline {
       environment {
         NEXUS = 'gateway.interop.pdnd.dev'
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-        PDND_TRUST_CERT = credentials('pdnd-interop-trust-cert')
         PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
         container('sbt-container') {
+          withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd-certificate')]) {
+               sh "cat \$pdnd-certificate > gateway.interop.pdnd.dev.cer"
+          }
           script {
             sh '''#!/bin/bash
             export NEXUS_HOST=${NEXUS}
