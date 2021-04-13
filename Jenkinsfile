@@ -5,6 +5,7 @@ pipeline {
   stages {
 
     stage('Initialize') {
+      agent { label 'sbt-template' }
       environment {
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
