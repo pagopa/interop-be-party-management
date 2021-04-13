@@ -30,6 +30,9 @@ pipeline {
 
             sh '''#!/bin/bash
             export DOCKER_REPO=$NEXUS
+            export NEXUS_HOST=${NEXUS}
+            export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
+            export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
             sbt generateCode docker:publish
 
             '''
