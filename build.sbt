@@ -12,6 +12,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 ThisBuild / version := {
   Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 }
+resolvers in ThisBuild += Resolver.sbtPluginRepo("releases")
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -66,21 +67,21 @@ lazy val client = project
       else
         m
     ),
-//    credentials += Credentials(
-//      "Sonatype Nexus Repository Manager",
-//      System.getenv("NEXUS_HOST"),
-//      System.getenv("NEXUS_USER"),
-//      System.getenv("NEXUS_PASSWORD")
-//    ),
-//    updateOptions := updateOptions.value.withGigahorse(false),
-//    publishTo := {
-//      val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
-//
-//      if (isSnapshot.value)
-//        Some("snapshots" at nexus + "maven-snapshots/")
-//      else
-//        Some("releases" at nexus + "maven-releases/")
-//    }
+    credentials += Credentials(
+      "Sonatype Nexus Repository Manager",
+      System.getenv("NEXUS_HOST"),
+      System.getenv("NEXUS_USER"),
+      System.getenv("NEXUS_PASSWORD")
+    ),
+    updateOptions := updateOptions.value.withGigahorse(false),
+    publishTo := {
+      val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
+
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "maven-snapshots/")
+      else
+        Some("releases" at nexus + "maven-releases/")
+    }
   )
 
 lazy val root = (project in file("."))
