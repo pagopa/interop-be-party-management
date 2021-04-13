@@ -71,6 +71,7 @@ pipeline {
       environment {
         NEXUS = 'gateway.interop.pdnd.dev'
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+        PDND_TRUST_STORE_PSW = credentials('pdnd-trust-store')
       }
       steps {
         container('sbt-container') {
@@ -79,7 +80,7 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-            sbt -Djavax.net.ssl.trustStore clean generateCode compile publish
+            sbt -Djavax.net.ssl.trustStore=$JENKINS_HOME/PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
             '''
           }
         }
