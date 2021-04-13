@@ -9,9 +9,11 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
   else
     m
 )
-ThisBuild / version := {
-  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
-}
+//ThisBuild / version := {
+//  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
+//}
+
+ThisBuild / version := "v0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -73,12 +75,13 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials(
-      "Sonatype Nexus Repository Manager",
-      System.getenv("NEXUS_HOST"),
-      System.getenv("NEXUS_USER"),
-      System.getenv("NEXUS_PASSWORD")
-    ),
+    credentials += {
+      for {
+        host <- Option(System.getenv("NEXUS_HOST"))
+        user <- Option( System.getenv("NEXUS_USER"))
+        password <- Option(System.getenv("NEXUS_PASSWORD"))
+      } yield Credentials( "Sonatype Nexus Repository Manager",host,user,password)
+    },
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
