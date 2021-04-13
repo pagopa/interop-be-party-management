@@ -3,18 +3,21 @@ pipeline {
   agent none
 
   stages {
+
     stage('Initialize') {
       environment {
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
-      withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd_certificate')]) {
-        sh '''
-        cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer
-        keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
-        cp $JAVA_HOME/jre/lib/security/cacerts main_certs
-        keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
-        '''
-        stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
+      steps {
+        withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd_certificate')]) {
+          sh '''
+          cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer
+          keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
+          cp $JAVA_HOME/jre/lib/security/cacerts main_certs
+          keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
+          '''
+          stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
+        }
       }
     }
 
