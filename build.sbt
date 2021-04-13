@@ -12,7 +12,6 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 ThisBuild / version := {
   Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 }
-resolvers in ThisBuild += Resolver.sbtPluginRepo("releases")
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
