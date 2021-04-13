@@ -36,9 +36,11 @@ pipeline {
             export NEXUS_HOST=${NEXUS}
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
+            pwd
             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
             cat ./PDNDTrustStore
-            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode docker:publish
+            sbt generateCode
+            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} docker:publish
             '''
 
           }
@@ -90,7 +92,9 @@ pipeline {
             echo ${PDND_TRUST_CERT} > gateway.interop.pdnd.dev.cer
             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
             cat ./PDNDTrustStore
-            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
+            pwd
+            sbt clean compile
+            sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} "project client" publish
             '''
           }
         }
