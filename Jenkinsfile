@@ -25,8 +25,8 @@ pipeline {
           sh '''
           echo "realm=Sonatype Nexus Repository Manager
           host=https://gateway.interop.pdnd.dev/nexus
-          user=${$NEXUS_CREDENTIALS_USR}
-          password=${$NEXUS_CREDENTIALS_PSW}" > ${SBT_FOLDER}/.credentials
+          user=${NEXUS_CREDENTIALS_USR}
+          password=${NEXUS_CREDENTIALS_PSW}" > ${SBT_FOLDER}/.credentials
           '''
           stash includes: "${SBT_FOLDER}/*", name: "sbt_folder"
         }
