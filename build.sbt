@@ -70,7 +70,7 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+    credentials += Credentials(file(".") / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"

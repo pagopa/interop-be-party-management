@@ -7,7 +7,6 @@ pipeline {
     stage('Initialize') {
       agent { label 'sbt-template' }
       environment {
-       SBT_FOLDER = ".sbt"
        NEXUS = 'gateway.interop.pdnd.dev'
        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
@@ -23,15 +22,10 @@ pipeline {
           stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
         }
         script {
-          sh 'if [ ! -d ${SBT_FOLDER} ]; then mkdir ${SBT_FOLDER}; fi'
           sh '''
-          echo ${SBT_FOLDER}
-          echo "realm=Sonatype Nexus Repository Manager
-          host=${NEXUS}/nexus
-          user=${NEXUS_CREDENTIALS_USR}
-          password=${NEXUS_CREDENTIALS_PSW}" > ${SBT_FOLDER}/.credentials
+          echo "realm=Sonatype Nexus Repository Manager\nhost=${NEXUS}/nexus\nuser=${NEXUS_CREDENTIALS_USR}\npassword=${NEXUS_CREDENTIALS_PSW}" > .credentials
           '''
-          stash includes: "${SBT_FOLDER}/*", name: "sbt_folder"
+          stash includes: ".credentials", name: "nexus_credentials"
         }
       }
     }
@@ -46,7 +40,7 @@ pipeline {
       steps {
         container('sbt-container') {
           unstash "pdnd_trust_store"
-          unstash "sbt_folder"
+          unstash "nexus_credentials"
           script {
 
             sh '''
@@ -68,6 +62,7 @@ pipeline {
             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode "project root" docker:publish
+            rm -f .credentials
             '''
 
           }
