@@ -11,4 +11,4 @@ popd  > /dev/null
 name=$(cat $SCRIPT_PATH/../build.sbt | grep "name :=" | awk -F:= '{ print $2 }' | sed 's/\"//' | sed 's/\",//' | sed 's/ //' | tr '[:upper:]' '[:lower:]' | uniq)
 
 #version=$($SCRIPT_PATH/../version.sh)
-version=v$(cat $SCRIPT_PATH/../build.sbt  | grep "0.1.0-snapshot" | awk -F:= '{ print $2 }'  | sed 's/ //' | sed 's/"//' | sed 's/"//' | uniq)
+version=v$(cat $SCRIPT_PATH/../build.sbt  | grep "0.1.0-SNAPSHOT" | awk -F:= '{ print $2 }'  | sed 's/ //' | sed 's/"//' | sed 's/"//' | tr '[:upper:]' '[:lower:]' | uniq)

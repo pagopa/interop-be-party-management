@@ -13,7 +13,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 //  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
 //}
 
-ThisBuild / version := "0.1.0-snapshot"
+ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -67,8 +67,8 @@ lazy val client = project
       if (buildVersion == "latest")
         buildVersion
       else
-        s"v$buildVersion"
-    }".toLowerCase,
+        s"$buildVersion"
+    }",
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
@@ -105,7 +105,7 @@ lazy val root = (project in file("."))
         buildVersion
       else
         s"v$buildVersion"
-    }".toLowerCase,
+    }",
     packageName in Docker := s"services/${name.value}",
     daemonUser in Docker := "daemon",
     dockerExposedPorts in Docker := Seq(8080),
