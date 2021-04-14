@@ -8,6 +8,8 @@ pipeline {
       agent { label 'sbt-template' }
       environment {
        SBT_FOLDER = ".sbt"
+       NEXUS = 'gateway.interop.pdnd.dev'
+       NEXUS_CREDENTIALS = credentials('pdnd-nexus')
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
@@ -23,8 +25,9 @@ pipeline {
         script {
           sh 'if [ ! -d ${SBT_FOLDER} ]; then mkdir ${SBT_FOLDER}; fi'
           sh '''
+          echo ${SBT_FOLDER}
           echo "realm=Sonatype Nexus Repository Manager
-          host=https://gateway.interop.pdnd.dev/nexus
+          host=${NEXUS}/nexus
           user=${NEXUS_CREDENTIALS_USR}
           password=${NEXUS_CREDENTIALS_PSW}" > ${SBT_FOLDER}/.credentials
           '''

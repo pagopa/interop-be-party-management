@@ -93,7 +93,7 @@ lazy val root = (project in file("."))
       if (buildVersion == "latest")
         buildVersion
       else
-        s"v$buildVersion"
+        s"$buildVersion"
     }",
     packageName in Docker := s"services/${name.value}",
     daemonUser in Docker := "daemon",
