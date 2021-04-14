@@ -23,7 +23,7 @@ pipeline {
         }
         script {
           sh '''
-          echo "realm=Sonatype Nexus Repository Manager\nhost=${NEXUS}/nexus\nuser=${NEXUS_CREDENTIALS_USR}\npassword=${NEXUS_CREDENTIALS_PSW}" > .credentials
+          echo "realm=Sonatype Nexus Repository Manager\nhost=${NEXUS}\nuser=${NEXUS_CREDENTIALS_USR}\npassword=${NEXUS_CREDENTIALS_PSW}" > .credentials
           '''
           stash includes: ".credentials", name: "nexus_credentials"
         }
