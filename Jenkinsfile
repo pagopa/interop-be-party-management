@@ -7,6 +7,7 @@ pipeline {
     stage('Initialize') {
       agent { label 'sbt-template' }
       environment {
+       SBT_FOLDER = ".sbt"
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
@@ -18,6 +19,16 @@ pipeline {
           keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
           '''
           stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
+        }
+        script {
+          sh 'if [ ! -d ${SBT_FOLDER} ]; then mkdir ${SBT_FOLDER}; fi'
+          sh '''
+          echo "realm=Sonatype Nexus Repository Manager
+          host=https://gateway.interop.pdnd.dev/nexus
+          user=${$NEXUS_CREDENTIALS_USR}
+          password=${$NEXUS_CREDENTIALS_PSW}" > ${SBT_FOLDER}/.credentials
+          '''
+          stash includes: "${SBT_FOLDER}/*", name: "sbt_folder"
         }
       }
     }
@@ -32,6 +43,7 @@ pipeline {
       steps {
         container('sbt-container') {
           unstash "pdnd_trust_store"
+          unstash "sbt_folder"
           script {
 
             sh '''
@@ -83,28 +95,6 @@ pipeline {
         }
       }
     }
-
-//     stage('Publish client') {
-//       agent { label 'sbt-template' }
-//       environment {
-//         NEXUS = 'gateway.interop.pdnd.dev'
-//         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-//         PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
-//       }
-//       steps {
-//         container('sbt-container') {
-//           unstash "pdnd_trust_store"
-//           script {
-//             sh '''#!/bin/bash
-//             export NEXUS_HOST=${NEXUS}
-//             export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
-//             export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
-//             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} clean compile "project client" publish
-//             '''
-//           }
-//         }
-//       }
-//     }
   }
 
 }

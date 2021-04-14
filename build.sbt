@@ -1,5 +1,3 @@
-//import scala.sys.process.Process
-
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
@@ -9,9 +7,6 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
   else
     m
 )
-//ThisBuild / version := {
-//  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
-//}
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -75,13 +70,7 @@ lazy val client = project
       else
         m
     ),
-    credentials += {
-      for {
-        host <- Option(System.getenv("NEXUS_HOST"))
-        user <- Option( System.getenv("NEXUS_USER"))
-        password <- Option(System.getenv("NEXUS_PASSWORD"))
-      } yield Credentials( "Sonatype Nexus Repository Manager",host,user,password)
-    },
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
