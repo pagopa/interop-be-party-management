@@ -7,8 +7,6 @@ pipeline {
     stage('Initialize') {
       agent { label 'sbt-template' }
       environment {
-       NEXUS = 'gateway.interop.pdnd.dev'
-       NEXUS_CREDENTIALS = credentials('pdnd-nexus')
        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
@@ -20,12 +18,6 @@ pipeline {
           keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
           '''
           stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
-        }
-        script {
-          sh '''
-          echo "realm=Sonatype Nexus Repository Manager\nhost=${NEXUS}\nuser=${NEXUS_CREDENTIALS_USR}\npassword=${NEXUS_CREDENTIALS_PSW}" > .credentials
-          '''
-          stash includes: ".credentials", name: "nexus_credentials"
         }
       }
     }
@@ -40,10 +32,10 @@ pipeline {
       steps {
         container('sbt-container') {
           unstash "pdnd_trust_store"
-          unstash "nexus_credentials"
           script {
 
             sh '''
+
               curl -sL https://deb.nodesource.com/setup_10.x | bash -
               apt-get install -y nodejs
               npm install @openapitools/openapi-generator-cli -g
@@ -58,11 +50,9 @@ pipeline {
 
             sh '''#!/bin/bash
             export DOCKER_REPO=$NEXUS
-            export NEXUS_HOST=${NEXUS}
-            export NEXUS_USER=${NEXUS_CREDENTIALS_USR}
-            export NEXUS_PASSWORD=${NEXUS_CREDENTIALS_PSW}
+            export MAVEN_REPO=${NEXUS}
+            echo "realm=Sonatype Nexus Repository Manager\nhost=${NEXUS}\nuser=${NEXUS_CREDENTIALS_USR}\npassword=${NEXUS_CREDENTIALS_PSW}" > /home/sbtuser/.sbt/.credentials
             sbt -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} generateCode "project root" docker:publish
-            rm -f .credentials
             '''
 
           }

@@ -67,7 +67,7 @@ lazy val client = project
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
-      val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
+      val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
 
       if (isSnapshot.value)
         Some("snapshots" at nexus + "maven-snapshots/")
