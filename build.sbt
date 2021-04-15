@@ -57,20 +57,14 @@ lazy val client = project
     name := "pdnd-interop-uservice-party-management",
     scalacOptions := Seq(),
     scalafmtOnCompile := true,
-    version := s"${
-      val buildVersion = (version in ThisBuild).value
-      if (buildVersion == "latest")
-        buildVersion
-      else
-        s"$buildVersion"
-    }",
+    version := (version in ThisBuild).value,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
       else
         m
     ),
-    credentials += Credentials(file(".") / ".credentials"),
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("NEXUS_HOST")}/nexus/repository/"
@@ -88,17 +82,11 @@ lazy val root = (project in file("."))
     parallelExecution in Test := false,
     dockerBuildOptions ++= Seq("--network=host"),
     dockerRepository in Docker := Some(System.getenv("DOCKER_REPO")),
-    version in Docker := s"${
-      val buildVersion = (version in ThisBuild).value
-      if (buildVersion == "latest")
-        buildVersion
-      else
-        s"$buildVersion"
-    }",
+    version in Docker := (version in ThisBuild).value,
     packageName in Docker := s"services/${name.value}",
     daemonUser in Docker := "daemon",
     dockerExposedPorts in Docker := Seq(8080),
-    dockerBaseImage in Docker := "openjdk:8-jre-alpine",
+    dockerBaseImage in Docker := "openjdk:11-jre-alpine",
     dockerUpdateLatest in Docker := true,
     wartremoverErrors ++= Warts.unsafe,
     scalafmtOnCompile := true
