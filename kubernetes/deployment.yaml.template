@@ -20,6 +20,9 @@ spec:
       containers:
         - name: {{name}}
           image: gateway.interop.pdnd.dev/services/{{name}}:{{version}}
+          volumeMounts:
+            - mountPath: /opt/docker/snapshots
+              name: snapshots-volume
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
@@ -56,6 +59,9 @@ spec:
                 secretKeyRef:
                   name: vault
                   key: VAULT_TOKEN
+      volumes:
+      - name: snapshots-volume
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
