@@ -261,6 +261,6 @@ object PartyPersistentBehavior {
       emptyState = State.empty,
       commandHandler = commandHandler,
       eventHandler = eventHandler
-    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 100, keepNSnapshots = 1))
+    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 10000, keepNSnapshots = 1))
       .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
 }
