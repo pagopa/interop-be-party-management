@@ -14,9 +14,13 @@ import scala.util.{Failure, Success, Try}
 
 package object utils {
   private final val sha1: MessageDigest = MessageDigest.getInstance("SHA-1")
+  private final val md5: MessageDigest  = MessageDigest.getInstance("MD5")
 
   def toSha1(text: String): String =
     Base64.getEncoder.encodeToString(sha1.digest(text.getBytes(StandardCharsets.UTF_8)))
+
+  def toMd5(text: String): String =
+    Base64.getEncoder.encodeToString(md5.digest(text.getBytes(StandardCharsets.UTF_8)))
 
   implicit class EitherOps[A](val either: Either[Throwable, A]) extends AnyVal {
     def toFuture: Future[A] = either.fold(e => Future.failed(e), a => Future.successful(a))
@@ -31,6 +35,8 @@ package object utils {
   }
 
   final val formatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+
+  def toOffsetDateTime(str: String): OffsetDateTime = OffsetDateTime.parse(str, formatter)
 
   implicit val uuidFormat: JsonFormat[UUID] =
     new JsonFormat[UUID] {
@@ -54,7 +60,7 @@ package object utils {
 
       override def read(json: JsValue): OffsetDateTime = json match {
         case JsString(s) =>
-          Try(OffsetDateTime.parse(s, formatter)) match {
+          Try(toOffsetDateTime(s)) match {
             case Success(result) => result
             case Failure(exception) =>
               deserializationError(s"could not parse $s as java OffsetDateTime", exception)

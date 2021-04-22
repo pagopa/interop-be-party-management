@@ -42,16 +42,16 @@ object PartyPersistentBehavior {
     }
 
     def invalidateToken(token: Token): State =
-      changeTokenStatus(token, TokenStatus.Invalid)
+      changeTokenStatus(token, Invalid)
 
     def consumeToken(token: Token): State =
-      changeTokenStatus(token, TokenStatus.Consumed)
+      changeTokenStatus(token, Consumed)
 
     private def changeTokenStatus(token: Token, status: TokenStatus): State = {
       val modified = tokens.get(token.seed).map(t => t.copy(status = status))
 
       modified match {
-        case Some(t) if status == TokenStatus.Consumed =>
+        case Some(t) if status == Consumed =>
           val managerRelationShip  = relationShips(token.manager).copy(status = PartyRelationShipStatus.Active)
           val delegateRelationShip = relationShips(token.delegate).copy(status = PartyRelationShipStatus.Active)
           copy(
@@ -72,7 +72,7 @@ object PartyPersistentBehavior {
   }
 
   /* Command */
-  sealed trait Command                  extends CborSerializable
+  sealed trait Command
   sealed trait PartyCommand             extends Command
   sealed trait PartyRelationShipCommand extends Command
   sealed trait TokenCommand             extends Command
@@ -102,25 +102,6 @@ object PartyPersistentBehavior {
   final case class InvalidateToken(token: Token, replyTo: ActorRef[StatusReply[State]]) extends TokenCommand
 
   final case class ConsumeToken(token: Token, replyTo: ActorRef[StatusReply[State]]) extends TokenCommand
-
-  /* Event */
-  sealed trait Event                  extends CborSerializable
-  sealed trait PartyEvent             extends Event
-  sealed trait PartyRelationShipEvent extends Event
-  sealed trait TokenEvent             extends Event
-
-  /* Party Event */
-  final case class PartyAdded(party: Party)   extends PartyEvent
-  final case class PartyDeleted(party: Party) extends PartyEvent
-
-  /* PartyRelationShip Event */
-  final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)  extends PartyRelationShipEvent
-  final case class PartyRelationShipDeleted(relationShipId: PartyRelationShipId) extends PartyRelationShipEvent
-
-  /* Token Event */
-  final case class TokenAdded(token: Token)       extends TokenEvent
-  final case class TokenInvalidated(token: Token) extends TokenEvent
-  final case class TokenConsumed(token: Token)    extends TokenEvent
 
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
@@ -203,7 +184,7 @@ object PartyPersistentBehavior {
 
       case AddToken(token, replyTo) =>
         state.tokens.get(token.seed) match {
-          case Some(t) if t.status == TokenStatus.Invalid =>
+          case Some(t) if t.status == Invalid =>
             Effect
               .persist(TokenAdded(token))
               .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
@@ -231,7 +212,7 @@ object PartyPersistentBehavior {
     event: Token => Event
   ): EffectBuilder[Event, State] = {
     token match {
-      case Some(t) if t.status == TokenStatus.Waiting =>
+      case Some(t) if t.status == Waiting =>
         Effect
           .persist(event(t))
           .thenRun(_ => replyTo ! StatusReply.Success(output))

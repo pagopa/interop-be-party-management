@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+import "scalapb/scalapb.proto";
+
+import "v1/party.proto";
+import "v1/relationship.proto";
+import "v1/token.proto";
+
+option (scalapb.options) = {
+  package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1"
+};
+
+message PartyAddedV1 {
+  required PartyV1 party = 1;
+}
+
+message PartyDeletedV1 {
+  required PartyV1 party = 1;
+}
+
+
+message PartyRelationShipAddedV1 {
+  required PartyRelationShipV1 partyRelationShip = 1;
+}
+
+message PartyRelationShipDeletedV1 {
+  required PartyRelationShipIdV1 partyRelationShipId = 1;
+}
+
+message TokenAddedV1 {
+  required TokenV1 token = 1;
+}
+
+message TokenInvalidatedV1 {
+  required TokenV1 token = 1;
+}
+
+message TokenConsumedV1 {
+  required TokenV1 token = 1;
+}
+
+
+

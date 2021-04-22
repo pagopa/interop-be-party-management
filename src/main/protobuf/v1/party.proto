@@ -1,0 +1,34 @@
+syntax = "proto2";
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1"
+};
+
+message PartyV1 {
+  oneof sealed_value {
+    PersonPartyV1 personParty = 1;
+    InstitutionPartyV1 institutionParty = 2;
+  }
+}
+
+message PersonPartyV1 {
+  required string id = 1;
+  required string externalId = 2;
+  required string name = 3;
+  required string surname = 4;
+  required string start = 5;
+  optional string end = 6;
+}
+
+message InstitutionPartyV1 {
+  required string id = 1;
+  required string externalId = 2;
+  required string description = 3;
+  required string digitalAddress = 4;
+  required string manager = 5;
+  required string start = 6;
+  optional string end = 7;
+}
+
