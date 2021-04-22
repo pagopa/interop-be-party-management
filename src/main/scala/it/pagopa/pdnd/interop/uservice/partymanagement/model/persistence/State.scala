@@ -1,15 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
-  Consumed,
-  Invalid,
-  Party,
-  PartyRelationShip,
-  PartyRelationShipId,
-  PartyRelationShipStatus,
-  Token,
-  TokenStatus
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 
 import java.util.UUID
 
@@ -18,7 +9,7 @@ final case class State(
   indexes: Map[String, UUID],
   tokens: Map[UUID, Token],
   relationShips: Map[PartyRelationShipId, PartyRelationShip]
-) extends CborSerializable {
+) {
 
   def addParty(party: Party): State =
     copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))

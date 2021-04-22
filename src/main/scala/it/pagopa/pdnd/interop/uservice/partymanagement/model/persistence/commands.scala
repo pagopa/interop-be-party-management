@@ -9,7 +9,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, Toke
 import java.util.UUID
 
 /* Command */
-sealed trait Command                  extends CborSerializable
+sealed trait Command
 sealed trait PartyCommand             extends Command
 sealed trait PartyRelationShipCommand extends Command
 sealed trait TokenCommand             extends Command
