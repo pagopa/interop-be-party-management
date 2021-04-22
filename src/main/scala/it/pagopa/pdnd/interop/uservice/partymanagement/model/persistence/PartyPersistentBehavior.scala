@@ -11,65 +11,12 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, TokenText}
 import org.slf4j.LoggerFactory
 
-import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
 object PartyPersistentBehavior {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-
-  final case class State(
-    parties: Map[UUID, Party],
-    indexes: Map[String, UUID],
-    tokens: Map[UUID, Token],
-    relationShips: Map[PartyRelationShipId, PartyRelationShip]
-  ) extends CborSerializable {
-
-    def addParty(party: Party): State =
-      copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
-
-    def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
-
-    def addPartyRelationShip(relationShip: PartyRelationShip): State =
-      copy(relationShips = relationShips + (relationShip.id -> relationShip))
-
-    def deletePartyRelationShip(relationShipId: PartyRelationShipId): State =
-      copy(relationShips = relationShips - relationShipId)
-
-    def addToken(token: Token): State = {
-      copy(tokens = tokens + (token.seed -> token))
-    }
-
-    def invalidateToken(token: Token): State =
-      changeTokenStatus(token, Invalid)
-
-    def consumeToken(token: Token): State =
-      changeTokenStatus(token, Consumed)
-
-    private def changeTokenStatus(token: Token, status: TokenStatus): State = {
-      val modified = tokens.get(token.seed).map(t => t.copy(status = status))
-
-      modified match {
-        case Some(t) if status == Consumed =>
-          val managerRelationShip  = relationShips(token.manager).copy(status = PartyRelationShipStatus.Active)
-          val delegateRelationShip = relationShips(token.delegate).copy(status = PartyRelationShipStatus.Active)
-          copy(
-            relationShips =
-              relationShips ++ Map(token.manager -> managerRelationShip, token.delegate -> delegateRelationShip),
-            tokens = tokens + (t.seed -> t)
-          )
-        case Some(t) => copy(tokens = tokens + (t.seed -> t))
-        case None    => this
-      }
-
-    }
-
-  }
-
-  object State {
-    val empty: State = State(parties = Map.empty, indexes = Map.empty, relationShips = Map.empty, tokens = Map.empty)
-  }
 
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {

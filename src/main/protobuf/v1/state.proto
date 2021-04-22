@@ -1,0 +1,38 @@
+syntax = "proto2";
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1"
+};
+
+import "v1/party.proto";
+import "v1/relationship.proto";
+import "v1/token.proto";
+
+message StateV1 {
+  repeated PartiesV1 parties = 1;
+  repeated IndexesV1 indexes = 2;
+  repeated TokensV1 tokens = 3;
+  repeated RelationShipsV1 relationShips = 4;
+}
+
+message PartiesV1 {
+  required  string key = 1;
+  required PartyV1 value = 2;
+}
+
+message IndexesV1 {
+  required string key = 1;
+  required string value = 2;
+}
+
+message TokensV1 {
+  required string key = 1;
+  required TokenV1 value = 2;
+}
+
+message RelationShipsV1 {
+  required PartyRelationShipIdV1 key = 1;
+  required PartyRelationShipV1 value = 2;
+}

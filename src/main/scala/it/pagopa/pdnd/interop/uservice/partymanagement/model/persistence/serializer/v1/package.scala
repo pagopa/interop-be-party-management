@@ -14,6 +14,12 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyRelationShipV1,
   PartyRoleV1
 }
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state.{
+  IndexesV1,
+  PartiesV1,
+  RelationShipsV1,
+  TokensV1
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{TokenStatusV1, TokenV1}
 
 import java.util.UUID
@@ -128,4 +134,24 @@ package object v1 {
       seed = UUID.fromString(tokenV1.seed)
     )
   }
+
+  // State
+
+  implicit class PartiesV1Ops(val partiesV1: Seq[PartiesV1]) extends AnyVal {
+    def toParties: Map[UUID, Party] = partiesV1.map(p => UUID.fromString(p.key) -> p.value.toParty).toMap
+  }
+
+  implicit class IndexesV1Ops(val indexesV1: Seq[IndexesV1]) extends AnyVal {
+    def toIndexes: Map[String, UUID] = indexesV1.map(p => p.key -> UUID.fromString(p.value)).toMap
+  }
+
+  implicit class TokensV1Ops(val tokensV1: Seq[TokensV1]) extends AnyVal {
+    def toTokens: Map[UUID, Token] = tokensV1.map(p => UUID.fromString(p.key) -> p.value.toToken).toMap
+  }
+
+  implicit class RelationShipsV1Ops(val relationShipsV1: Seq[RelationShipsV1]) extends AnyVal {
+    def toRelationShips: Map[PartyRelationShipId, PartyRelationShip] =
+      relationShipsV1.map(p => p.key.toPartyRelationShipId -> p.value.toPartyRelationShip).toMap
+  }
+
 }

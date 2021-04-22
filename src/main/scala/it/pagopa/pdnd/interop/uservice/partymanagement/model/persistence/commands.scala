@@ -3,9 +3,8 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, TokenText}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationShipId, PartyRole, Token}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.State
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, TokenText}
 
 import java.util.UUID
 

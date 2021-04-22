@@ -11,8 +11,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApiParty, 
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationShip => _, _}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.State
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{PartyPersistentBehavior, _}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -151,7 +150,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     relationShipSeed: RelationShipSeed
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
     logger.info(s"Creating relationship ${relationShipSeed.toString}")
-    val result: Future[StatusReply[PartyPersistentBehavior.State]] = for {
+    val result: Future[StatusReply[State]] = for {
       from <- commander.ask(ref => GetParty(relationShipSeed.from, ref))
       _ = logger.info(s"From retrieved ${from.toString()}")
       to <- commander.ask(ref => GetParty(relationShipSeed.to, ref))

@@ -1,9 +1,14 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer
 
 import akka.serialization.SerializerWithStringManifest
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyAdded
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.State
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.PartyOps
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.State
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state.{
+  IndexesV1,
+  PartiesV1,
+  RelationShipsV1,
+  TokensV1
+}
 
 import java.io.NotSerializableException
 
@@ -13,21 +18,38 @@ class StateSerializer extends SerializerWithStringManifest {
 
   final val currentVersion: String = version1
 
-  override def identifier: Int = 10000
+  override def identifier: Int = 40000
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
   final val StateManifest: String = classOf[State].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case PartyAdded(party) => v1.events.PartyAddedV1(party.toPartyV1).toByteArray
+    case State(parties, indexes, tokens, relationShips) =>
+      v1.state
+        .StateV1(
+          parties = parties.iterator.map { case (k, v) => PartiesV1(k.toString, v.toPartyV1) }.toSeq,
+          indexes = indexes.iterator.map { case (k, v) => IndexesV1(k, v.toString) }.toSeq,
+          tokens = tokens.iterator.map { case (k, v) => TokensV1(k.toString, v.toTokenV1) }.toSeq,
+          relationShips = relationShips.iterator.map { case (k, v) =>
+            RelationShipsV1(k.toPartyRelationShipIdV1, v.toPartyRelationShipV1)
+          }.toSeq
+        )
+        .toByteArray
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
 
     manifest.split('|').toList match {
       case StateManifest :: `version1` :: Nil =>
-        fromBytes(v1.events.PartyAddedV1, bytes) { msg => PartyAdded(msg.party.toParty) }
+        fromBytes(v1.state.StateV1, bytes) { msg =>
+          State(
+            parties = msg.parties.toParties,
+            indexes = msg.indexes.toIndexes,
+            tokens = msg.tokens.toTokens,
+            relationShips = msg.relationShips.toRelationShips
+          )
+        }
       case _ =>
         throw new NotSerializableException(
           s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
