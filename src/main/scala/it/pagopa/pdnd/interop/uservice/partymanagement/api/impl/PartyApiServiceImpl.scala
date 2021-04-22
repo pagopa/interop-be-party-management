@@ -11,8 +11,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApiParty, 
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationShip => _, _}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior.State
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{PartyPersistentBehavior, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
 

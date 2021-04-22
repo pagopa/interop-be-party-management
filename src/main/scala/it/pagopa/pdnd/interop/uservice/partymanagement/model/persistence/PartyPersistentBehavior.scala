@@ -71,38 +71,6 @@ object PartyPersistentBehavior {
     val empty: State = State(parties = Map.empty, indexes = Map.empty, relationShips = Map.empty, tokens = Map.empty)
   }
 
-  /* Command */
-  sealed trait Command
-  sealed trait PartyCommand             extends Command
-  sealed trait PartyRelationShipCommand extends Command
-  sealed trait TokenCommand             extends Command
-
-  /* Party Command */
-  final case class AddParty(entity: Party, replyTo: ActorRef[StatusReply[ApiParty]])      extends PartyCommand
-  final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[State]])      extends PartyCommand
-  final case class GetParty(id: String, replyTo: ActorRef[StatusReply[Option[ApiParty]]]) extends PartyCommand
-
-  /* PartyRelationShip Command */
-  final case class AddPartyRelationShip(
-    from: UUID,
-    to: UUID,
-    partyRole: PartyRole,
-    replyTo: ActorRef[StatusReply[State]]
-  ) extends PartyRelationShipCommand
-
-  final case class DeletePartyRelationShip(relationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[State]])
-      extends PartyRelationShipCommand
-
-  final case class GetPartyRelationShip(taxCode: UUID, replyTo: ActorRef[StatusReply[List[RelationShip]]])
-      extends PartyRelationShipCommand
-
-  /* Party Command */
-  final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
-
-  final case class InvalidateToken(token: Token, replyTo: ActorRef[StatusReply[State]]) extends TokenCommand
-
-  final case class ConsumeToken(token: Token, replyTo: ActorRef[StatusReply[State]]) extends TokenCommand
-
   val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
     command match {
       case AddParty(party, replyTo) =>
@@ -242,6 +210,6 @@ object PartyPersistentBehavior {
       emptyState = State.empty,
       commandHandler = commandHandler,
       eventHandler = eventHandler
-    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 10000, keepNSnapshots = 1))
+    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 1, keepNSnapshots = 1))
       .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
 }
