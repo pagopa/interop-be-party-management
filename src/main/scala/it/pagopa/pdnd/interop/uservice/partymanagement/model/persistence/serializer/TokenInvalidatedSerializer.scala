@@ -19,14 +19,35 @@ class TokenInvalidatedSerializer extends SerializerWithStringManifest {
   final val TokenInvalidatedManifest: String = classOf[TokenInvalidated].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case TokenInvalidated(token) => v1.events.TokenInvalidatedV1(token.toTokenV1).toByteArray
+    case TokenInvalidated(token) =>
+      v1.events
+        .TokenInvalidatedV1(
+          ProtobufSerializer
+            .to(token)
+            .getOrElse(
+              throw new NotSerializableException(
+                s"Unable to handle manifest: [[$TokenInvalidatedManifest]], currentVersion: [[$currentVersion]] "
+              )
+            )
+        )
+        .toByteArray
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
 
     manifest.split('|').toList match {
       case TokenInvalidatedManifest :: `version1` :: Nil =>
-        fromBytes(v1.events.TokenInvalidatedV1, bytes) { msg => TokenInvalidated(msg.token.toToken) }
+        fromBytes(v1.events.TokenInvalidatedV1, bytes) { msg =>
+          TokenInvalidated(
+            ProtobufDeserializer
+              .from(msg.token)
+              .getOrElse(
+                throw new NotSerializableException(
+                  s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
+                )
+              )
+          )
+        }
 
       case _ =>
         throw new NotSerializableException(

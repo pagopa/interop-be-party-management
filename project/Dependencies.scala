@@ -47,8 +47,9 @@ object Dependencies {
   object Jars {
     lazy val `server`: Seq[ModuleID] = Seq(
       // For making Java 12 happy
-      "javax.annotation"    % "javax.annotation-api" % "1.3.2" % "compile",
-      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
+      "javax.annotation"      % "javax.annotation-api" % "1.3.2"                                 % "compile",
+      "com.thesamet.scalapb" %% "scalapb-runtime"      % scalapb.compiler.Version.scalapbVersion % "protobuf",
+      "org.typelevel"        %% "cats-core"            % "2.3.0"                                 % Compile,
       //
       akka.actorTyped    % Compile,
       akka.actor         % Compile,

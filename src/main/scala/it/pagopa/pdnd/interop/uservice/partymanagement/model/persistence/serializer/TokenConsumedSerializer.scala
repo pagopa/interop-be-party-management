@@ -19,14 +19,35 @@ class TokenConsumedSerializer extends SerializerWithStringManifest {
   final val TokenConsumedManifest: String = classOf[TokenConsumed].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case TokenConsumed(token) => v1.events.TokenConsumedV1(token.toTokenV1).toByteArray
+    case TokenConsumed(token) =>
+      v1.events
+        .TokenConsumedV1(
+          ProtobufSerializer
+            .to(token)
+            .getOrElse(
+              throw new NotSerializableException(
+                s"Unable to handle manifest: [[$TokenConsumedManifest]], currentVersion: [[$currentVersion]] "
+              )
+            )
+        )
+        .toByteArray
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
 
     manifest.split('|').toList match {
       case TokenConsumedManifest :: `version1` :: Nil =>
-        fromBytes(v1.events.TokenConsumedV1, bytes) { msg => TokenConsumed(msg.token.toToken) }
+        fromBytes(v1.events.TokenConsumedV1, bytes) { msg =>
+          TokenConsumed(
+            ProtobufDeserializer
+              .from(msg.token)
+              .getOrElse(
+                throw new NotSerializableException(
+                  s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
+                )
+              )
+          )
+        }
       case _ =>
         throw new NotSerializableException(
           s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "

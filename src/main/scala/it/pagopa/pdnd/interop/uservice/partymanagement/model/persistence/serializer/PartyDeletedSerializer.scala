@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 import akka.serialization.SerializerWithStringManifest
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyDeleted
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
+
 import java.io.NotSerializableException
 
 class PartyDeletedSerializer extends SerializerWithStringManifest {
@@ -18,14 +19,35 @@ class PartyDeletedSerializer extends SerializerWithStringManifest {
   final val PartyDeletedManifest: String = classOf[PartyDeleted].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case PartyDeleted(party) => v1.events.PartyDeletedV1(party.toPartyV1).toByteArray
+    case PartyDeleted(party) =>
+      v1.events
+        .PartyDeletedV1(
+          ProtobufSerializer
+            .to(party)
+            .getOrElse(
+              throw new NotSerializableException(
+                s"Unable to handle manifest: [[$PartyDeletedManifest]], currentVersion: [[$currentVersion]] "
+              )
+            )
+        )
+        .toByteArray
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
 
     manifest.split('|').toList match {
       case PartyDeletedManifest :: `version1` :: Nil =>
-        fromBytes(v1.events.PartyAddedV1, bytes) { msg => PartyDeleted(msg.party.toParty) }
+        fromBytes(v1.events.PartyAddedV1, bytes) { msg =>
+          PartyDeleted(
+            ProtobufDeserializer
+              .from(msg.party)
+              .getOrElse(
+                throw new NotSerializableException(
+                  s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
+                )
+              )
+          )
+        }
       case _ =>
         throw new NotSerializableException(
           s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "

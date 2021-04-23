@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 import akka.serialization.SerializerWithStringManifest
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyRelationShipAdded
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
+
 import java.io.NotSerializableException
 
 class PartyRelationShipAddedSerializer extends SerializerWithStringManifest {
@@ -19,7 +20,17 @@ class PartyRelationShipAddedSerializer extends SerializerWithStringManifest {
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case PartyRelationShipAdded(partyRelationShip) =>
-      v1.events.PartyRelationShipAddedV1(partyRelationShip.toPartyRelationShipV1).toByteArray
+      v1.events
+        .PartyRelationShipAddedV1(
+          ProtobufSerializer
+            .to(partyRelationShip)
+            .getOrElse(
+              throw new NotSerializableException(
+                s"Unable to handle manifest: [[$PartyRelationShipAddedManifest]], currentVersion: [[$currentVersion]] "
+              )
+            )
+        )
+        .toByteArray
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
@@ -27,7 +38,15 @@ class PartyRelationShipAddedSerializer extends SerializerWithStringManifest {
     manifest.split('|').toList match {
       case PartyRelationShipAddedManifest :: `version1` :: Nil =>
         fromBytes(v1.events.PartyRelationShipAddedV1, bytes) { msg =>
-          PartyRelationShipAdded(msg.partyRelationShip.toPartyRelationShip)
+          PartyRelationShipAdded(
+            ProtobufDeserializer
+              .from(msg.partyRelationShip)
+              .getOrElse(
+                throw new NotSerializableException(
+                  s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
+                )
+              )
+          )
         }
       case _ =>
         throw new NotSerializableException(

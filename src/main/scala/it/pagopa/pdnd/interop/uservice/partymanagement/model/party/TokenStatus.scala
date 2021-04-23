@@ -18,10 +18,11 @@ case object Consumed extends TokenStatus
 
 object TokenStatus {
 
-  def apply(str: String): TokenStatus = str match {
-    case "Waiting"  => Waiting
-    case "Invalid"  => Invalid
-    case "Consumed" => Consumed
+  def fromText(str: String): Either[Throwable, TokenStatus] = str match {
+    case "Waiting"  => Right(Waiting)
+    case "Invalid"  => Right(Invalid)
+    case "Consumed" => Right(Consumed)
+    case _          => Left(new RuntimeException("Deserialization from protobuf failed"))
   }
 
   implicit val format: JsonFormat[TokenStatus] = new JsonFormat[TokenStatus] {

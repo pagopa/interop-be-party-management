@@ -3,12 +3,6 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 import akka.serialization.SerializerWithStringManifest
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.State
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state.{
-  IndexesV1,
-  PartiesV1,
-  RelationShipsV1,
-  TokensV1
-}
 
 import java.io.NotSerializableException
 
@@ -25,15 +19,13 @@ class StateSerializer extends SerializerWithStringManifest {
   final val StateManifest: String = classOf[State].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case State(parties, indexes, tokens, relationShips) =>
-      v1.state
-        .StateV1(
-          parties = parties.iterator.map { case (k, v) => PartiesV1(k.toString, v.toPartyV1) }.toSeq,
-          indexes = indexes.iterator.map { case (k, v) => IndexesV1(k, v.toString) }.toSeq,
-          tokens = tokens.iterator.map { case (k, v) => TokensV1(k.toString, v.toTokenV1) }.toSeq,
-          relationShips = relationShips.iterator.map { case (k, v) =>
-            RelationShipsV1(k.toPartyRelationShipIdV1, v.toPartyRelationShipV1)
-          }.toSeq
+    case s: State =>
+      ProtobufSerializer
+        .to(s)
+        .getOrElse(
+          throw new NotSerializableException(
+            s"Unable to handle manifest: [[$StateManifest]], currentVersion: [[$currentVersion]] "
+          )
         )
         .toByteArray
   }
@@ -43,12 +35,13 @@ class StateSerializer extends SerializerWithStringManifest {
     manifest.split('|').toList match {
       case StateManifest :: `version1` :: Nil =>
         fromBytes(v1.state.StateV1, bytes) { msg =>
-          State(
-            parties = msg.parties.toParties,
-            indexes = msg.indexes.toIndexes,
-            tokens = msg.tokens.toTokens,
-            relationShips = msg.relationShips.toRelationShips
-          )
+          ProtobufDeserializer
+            .from(msg)
+            .getOrElse(
+              throw new NotSerializableException(
+                s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
+              )
+            )
         }
       case _ =>
         throw new NotSerializableException(
