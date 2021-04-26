@@ -19,41 +19,17 @@ class PartyDeletedSerializer extends SerializerWithStringManifest {
   final val PartyDeletedManifest: String = classOf[PartyDeleted].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case PartyDeleted(party) =>
-      v1.events
-        .PartyDeletedV1(
-          ProtobufSerializer
-            .to(party)
-            .getOrElse(
-              throw new NotSerializableException(
-                s"Unable to handle manifest: [[$PartyDeletedManifest]], currentVersion: [[$currentVersion]] "
-              )
-            )
-        )
-        .toByteArray
+    case event: PartyDeleted => serialize(event, PartyDeletedManifest, currentVersion)
+
   }
 
-  override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
-
-    manifest.split('|').toList match {
-      case PartyDeletedManifest :: `version1` :: Nil =>
-        fromBytes(v1.events.PartyAddedV1, bytes) { msg =>
-          PartyDeleted(
-            ProtobufDeserializer
-              .from(msg.party)
-              .getOrElse(
-                throw new NotSerializableException(
-                  s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
-                )
-              )
-          )
-        }
-      case _ =>
-        throw new NotSerializableException(
-          s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
-        )
-
-    }
+  override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
+    case PartyDeletedManifest :: `version1` :: Nil =>
+      deserialize(v1.events.PartyAddedV1, bytes, manifest, currentVersion)
+    case _ =>
+      throw new NotSerializableException(
+        s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
+      )
 
   }
 

@@ -8,7 +8,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
 }
 
 /* Event */
-sealed trait Event
+sealed trait Event                  extends Persistable
 sealed trait PartyEvent             extends Event
 sealed trait PartyRelationShipEvent extends Event
 sealed trait TokenEvent             extends Event

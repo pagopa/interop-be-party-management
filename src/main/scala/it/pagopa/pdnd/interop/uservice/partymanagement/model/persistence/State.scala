@@ -9,7 +9,7 @@ final case class State(
   indexes: Map[String, UUID],
   tokens: Map[UUID, Token],
   relationShips: Map[PartyRelationShipId, PartyRelationShip]
-) {
+) extends Persistable {
 
   def addParty(party: Party): State =
     copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))

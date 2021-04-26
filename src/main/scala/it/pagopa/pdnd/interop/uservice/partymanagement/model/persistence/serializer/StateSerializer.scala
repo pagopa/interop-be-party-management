@@ -19,37 +19,18 @@ class StateSerializer extends SerializerWithStringManifest {
   final val StateManifest: String = classOf[State].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case s: State =>
-      ProtobufSerializer
-        .to(s)
-        .getOrElse(
-          throw new NotSerializableException(
-            s"Unable to handle manifest: [[$StateManifest]], currentVersion: [[$currentVersion]] "
-          )
-        )
-        .toByteArray
+    case s: State => serialize(s, StateManifest, currentVersion)
   }
 
-  override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
-
+  override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef =
     manifest.split('|').toList match {
       case StateManifest :: `version1` :: Nil =>
-        fromBytes(v1.state.StateV1, bytes) { msg =>
-          ProtobufDeserializer
-            .from(msg)
-            .getOrElse(
-              throw new NotSerializableException(
-                s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
-              )
-            )
-        }
+        deserialize(v1.state.StateV1, bytes, manifest, currentVersion)
       case _ =>
         throw new NotSerializableException(
           s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
         )
 
     }
-
-  }
 
 }
