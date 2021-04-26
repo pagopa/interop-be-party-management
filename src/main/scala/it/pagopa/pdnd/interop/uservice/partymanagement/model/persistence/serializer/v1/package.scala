@@ -1,6 +1,13 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer
 
 import cats.implicits._
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
+  Party,
+  PartyRelationShip,
+  PartyRelationShipId,
+  Token
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
@@ -14,17 +21,17 @@ package object v1 {
     state =>
       for {
         parties <- state.parties
-          .traverse(ps => getParty(ps.value).map(p => UUID.fromString(ps.key) -> p))
+          .traverse[ErrorOr, (UUID, Party)](ps => getParty(ps.value).map(p => UUID.fromString(ps.key) -> p))
           .map(_.toMap)
         indexes <- Right(state.indexes.map(p => p.key -> UUID.fromString(p.value)).toMap)
         tokens <- state.tokens
-          .traverse(ts => getToken(ts.value).map(t => UUID.fromString(ts.key) -> t))
+          .traverse[ErrorOr, (UUID, Token)](ts => getToken(ts.value).map(t => UUID.fromString(ts.key) -> t))
           .map(_.toMap)
         relationShips <- state.relationShips
-          .traverse(x =>
+          .traverse[ErrorOr, (PartyRelationShipId, PartyRelationShip)](rl =>
             for {
-              k <- getPartyRelationShipId(x.key)
-              v <- getPartyRelationShip(x.value)
+              k <- getPartyRelationShipId(rl.key)
+              v <- getPartyRelationShip(rl.value)
             } yield k -> v
           )
           .map(_.toMap)
@@ -33,13 +40,15 @@ package object v1 {
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state =>
       for {
-        parties <- state.parties.toSeq.traverse { case (k, v) =>
+        parties <- state.parties.toSeq.traverse[ErrorOr, PartiesV1] { case (k, v) =>
           getPartyV1(v).map(party => PartiesV1(k.toString, party))
         }
         indexes <- Right(state.indexes.map { case (k, v) => IndexesV1(k, v.toString) }.toSeq)
-        tokens  <- state.tokens.toSeq.traverse { case (k, v) => getTokenV1(v).map(token => TokensV1(k.toString, token)) }
+        tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
+          getTokenV1(v).map(token => TokensV1(k.toString, token))
+        }
         relationShips <- state.relationShips.toSeq
-          .traverse { case (key, value) =>
+          .traverse[ErrorOr, RelationShipsV1] { case (key, value) =>
             for {
               k <- getPartyRelationShipIdV1(key)
               v <- getPartyRelationShipV1(value)

@@ -5,6 +5,8 @@ import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 import java.io.NotSerializableException
 
 package object serializer {
+
+  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   def serialize[A, B <: GeneratedMessage](a: A, manifest: String, currentVersion: String)(implicit
     ps: PersistEventSerializer[A, B]
   ): Array[Byte] =
@@ -17,6 +19,7 @@ package object serializer {
       )
       .toByteArray
 
+  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   def deserialize[A <: GeneratedMessage, P <: Persistable](
     msg: GeneratedMessageCompanion[A],
     bytes: Array[Byte],

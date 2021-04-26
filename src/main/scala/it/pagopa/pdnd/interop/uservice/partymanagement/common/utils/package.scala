@@ -16,6 +16,8 @@ package object utils {
   private final val sha1: MessageDigest = MessageDigest.getInstance("SHA-1")
   private final val md5: MessageDigest  = MessageDigest.getInstance("MD5")
 
+  type ErrorOr[A] = Either[Throwable, A]
+
   def toSha1(text: String): String =
     Base64.getEncoder.encodeToString(sha1.digest(text.getBytes(StandardCharsets.UTF_8)))
 

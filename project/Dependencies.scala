@@ -18,6 +18,16 @@ object Dependencies {
 
   }
 
+  private[this] object scalpb {
+    lazy val namespace = "com.thesamet.scalapb"
+    lazy val core      = namespace %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion
+  }
+
+  private[this] object cats {
+    lazy val namespace = "org.typelevel"
+    lazy val core      = namespace %% "cats-core" % catsVersion
+  }
+
   private[this] object json4s {
     lazy val namespace = "org.json4s"
     lazy val jackson   = namespace %% "json4s-jackson" % "3.6.11"
@@ -47,9 +57,7 @@ object Dependencies {
   object Jars {
     lazy val `server`: Seq[ModuleID] = Seq(
       // For making Java 12 happy
-      "javax.annotation"      % "javax.annotation-api" % "1.3.2"                                 % "compile",
-      "com.thesamet.scalapb" %% "scalapb-runtime"      % scalapb.compiler.Version.scalapbVersion % "protobuf",
-      "org.typelevel"        %% "cats-core"            % "2.3.0"                                 % Compile,
+      "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       //
       akka.actorTyped    % Compile,
       akka.actor         % Compile,
@@ -59,10 +67,13 @@ object Dependencies {
       akka.http          % Compile,
       akka.httpJson      % Compile,
       akka.management    % Compile,
+      cats.core          % Compile,
+      akka.management    % Compile,
       logback.classic    % Compile,
       akka.slf4j         % Compile,
       kamon.bundle       % Compile,
       kamon.prometheus   % Compile,
+      scalpb.core        % "protobuf",
       scalatest.core     % Test,
       scalamock.core     % Test
     )

@@ -8,11 +8,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
     m
 )
 
-
-PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
-)
-
+PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value)
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -94,7 +90,8 @@ lazy val root = (project in file("."))
     dockerExposedPorts in Docker := Seq(8080),
     dockerBaseImage in Docker := "openjdk:11-jre-alpine",
     dockerUpdateLatest in Docker := true,
-//    wartremoverErrors ++= Warts.unsafe,
+    wartremoverErrors ++= Warts.unsafe,
+    wartremoverExcluded += sourceManaged.value,
     scalafmtOnCompile := true
   )
   .aggregate(client)

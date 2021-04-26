@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1
 
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{formatter, toOffsetDateTime}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{ErrorOr, formatter, toOffsetDateTime}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
@@ -20,7 +20,7 @@ import java.util.UUID
 
 object utils {
 
-  def getParty(partyV1: PartyV1): Either[Throwable, Party] = partyV1 match {
+  def getParty(partyV1: PartyV1): ErrorOr[Party] = partyV1 match {
     case p: PersonPartyV1 =>
       Right(
         PersonParty(
@@ -47,7 +47,7 @@ object utils {
     case Empty => Left(new RuntimeException("Deserialization from protobuf failed"))
   }
 
-  def getPartyV1(party: Party): Either[Throwable, PartyV1] = party match {
+  def getPartyV1(party: Party): ErrorOr[PartyV1] = party match {
     case p: PersonParty =>
       Right(
         PersonPartyV1(
@@ -73,7 +73,7 @@ object utils {
       )
   }
 
-  def getPartyRelationShipId(partyRelationShipIdV1: PartyRelationShipIdV1): Either[Throwable, PartyRelationShipId] =
+  def getPartyRelationShipId(partyRelationShipIdV1: PartyRelationShipIdV1): ErrorOr[PartyRelationShipId] =
     PartyRole
       .fromText(partyRelationShipIdV1.status.name)
       .map(role =>
@@ -84,16 +84,14 @@ object utils {
         )
       )
 
-  def getPartyRelationShipIdV1(
-    partyRelationShipId: PartyRelationShipId
-  ): Either[RuntimeException, PartyRelationShipIdV1] = {
+  def getPartyRelationShipIdV1(partyRelationShipId: PartyRelationShipId): ErrorOr[PartyRelationShipIdV1] = {
     PartyRoleV1
       .fromName(partyRelationShipId.role.stringify)
       .toRight(new RuntimeException("Deserialization from protobuf failed"))
       .map(role => PartyRelationShipIdV1(partyRelationShipId.from.toString, partyRelationShipId.to.toString, role))
   }
 
-  def getPartyRelationShip(partyRelationShipV1: PartyRelationShipV1): Either[Throwable, PartyRelationShip] = {
+  def getPartyRelationShip(partyRelationShipV1: PartyRelationShipV1): ErrorOr[PartyRelationShip] = {
     for {
       id     <- getPartyRelationShipId(partyRelationShipV1.id)
       status <- PartyRelationShipStatus.fromText(partyRelationShipV1.status.name)
@@ -105,7 +103,7 @@ object utils {
     )
   }
 
-  def getPartyRelationShipV1(partyRelationShip: PartyRelationShip): Either[RuntimeException, PartyRelationShipV1] = {
+  def getPartyRelationShipV1(partyRelationShip: PartyRelationShip): ErrorOr[PartyRelationShipV1] = {
     for {
       id <- getPartyRelationShipIdV1(partyRelationShip.id)
       status <- PartyRelationShipStatusV1
@@ -120,7 +118,7 @@ object utils {
 
   }
 
-  def getToken(tokenV1: TokenV1): Either[Throwable, Token] = {
+  def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
       manager  <- getPartyRelationShipId(tokenV1.manager)
       delegate <- getPartyRelationShipId(tokenV1.delegate)
@@ -134,7 +132,7 @@ object utils {
     )
   }
 
-  def getTokenV1(token: Token): Either[RuntimeException, TokenV1] = {
+  def getTokenV1(token: Token): ErrorOr[TokenV1] = {
     for {
       manager  <- getPartyRelationShipIdV1(token.manager)
       delegate <- getPartyRelationShipIdV1(token.delegate)

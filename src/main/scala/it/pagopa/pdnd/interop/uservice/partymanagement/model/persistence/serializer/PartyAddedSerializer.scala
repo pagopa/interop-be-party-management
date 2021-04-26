@@ -22,6 +22,7 @@ class PartyAddedSerializer extends SerializerWithStringManifest {
     case event: PartyAdded => serialize(event, PartyAddedManifest, currentVersion)
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case PartyAddedManifest :: `version1` :: Nil =>
       deserialize(v1.events.PartyAddedV1, bytes, manifest, currentVersion)

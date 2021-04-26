@@ -22,6 +22,7 @@ class TokenInvalidatedSerializer extends SerializerWithStringManifest {
     case event: TokenInvalidated => serialize(event, TokenInvalidatedManifest, currentVersion)
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case TokenInvalidatedManifest :: `version1` :: Nil =>
       deserialize(v1.events.TokenInvalidatedV1, bytes, manifest, currentVersion)
