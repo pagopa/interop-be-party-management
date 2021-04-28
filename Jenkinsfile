@@ -62,6 +62,12 @@ pipeline {
 
     stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
+      environment {
+          AWS_SECRET_ACCESS_KEY = credentials('jenkins-aws')
+          AWS_ACCESS_KEY_ID = credentials('jenkins-aws')
+          CASSANDRA_USER = credentials('cassandra-db')
+          CASSANDRA_PWD = credentials('cassandra-db')
+        }
       steps{
         // we should use a container with kubectl preinstalled
         container('sbt-container') {
