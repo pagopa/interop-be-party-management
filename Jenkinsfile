@@ -63,18 +63,19 @@ pipeline {
     stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
       environment {
-          AWS_SECRET_ACCESS_KEY = credentials('jenkins-aws')
-          AWS_ACCESS_KEY_ID = credentials('jenkins-aws')
-          CASSANDRA_USER = credentials('cassandra-db')
-          CASSANDRA_PWD = credentials('cassandra-db')
-        }
+        AWS_SECRET_ACCESS = credentials('jenkins-aws')
+        CASSANDRA = credentials('cassandra-db')
+      }
       steps{
         // we should use a container with kubectl preinstalled
         container('sbt-container') {
 
           withKubeConfig([credentialsId: 'kube-config']) {
-
             sh '''
+            export AWS_ACCESS_KEY_ID=$AWS_SECRET_ACCESS_USR
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_PSW
+            export CASSANDRA_USER=$CASSANDRA_USR
+            export CASSANDRA_PWD=$CASSANDRA_PSW
             cd kubernetes
             curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod u+x ./kubectl
