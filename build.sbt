@@ -1,3 +1,5 @@
+import com.typesafe.sbt.packager.docker.Cmd
+
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
