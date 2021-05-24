@@ -219,18 +219,7 @@ class ApiInvoker(formats: Formats)(implicit system: ActorSystem) extends CustomC
           }
           .map(value => responseForState(state, value))
       case None | Some(_) =>
-        Unmarshal(response.entity)
-        .to[Problem]
-        .flatMap(problem => Future.failed(ApiError(response.status.intValue, problem.title, problem.detail)))
-        .recoverWith(ex =>
-          Future.failed(
-            ApiError(
-              response.status.intValue,
-              s"Unexpected response code ${Option(ex.getMessage) getOrElse (ex.toString)}",
-             Some(response.entity.toString)
-            )
-          )
-        )
+          Future.failed(ApiError(response.status.intValue, "Unexpected response code", Some(response.entity.toString)))
     }
   }
 }
