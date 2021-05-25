@@ -12,7 +12,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
 
 PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value)
 
-ThisBuild / version := "0.1.1-SNAPSHOT"
+ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -68,7 +68,7 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
@@ -94,6 +94,7 @@ lazy val root = (project in file("."))
     dockerUpdateLatest in Docker := true,
     wartremoverErrors ++= Warts.unsafe,
     wartremoverExcluded += sourceManaged.value,
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     scalafmtOnCompile := true
   )
   .aggregate(client)

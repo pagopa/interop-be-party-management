@@ -11,7 +11,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   PartyApiServiceImpl
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{Authenticator, classicActorSystem}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{Authenticator, CorsSupport, classicActorSystem}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
@@ -20,7 +20,7 @@ import kamon.Kamon
 
 import scala.concurrent.Future
 
-object Main extends App {
+object Main extends App with CorsSupport {
 
   Kamon.init()
 
@@ -47,6 +47,6 @@ object Main extends App {
   val controller: Controller = new Controller(healthApi, partyApi)
 
   val bindingFuture: Future[Http.ServerBinding] =
-    Http().newServerAt("0.0.0.0", 8088).bind(controller.routes)
+    Http().newServerAt("0.0.0.0", 8088).bind(corsHandler(controller.routes))
 
 }
