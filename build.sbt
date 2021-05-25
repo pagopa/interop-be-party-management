@@ -68,7 +68,7 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
