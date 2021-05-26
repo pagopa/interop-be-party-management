@@ -200,7 +200,45 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-
+  /organizations/{organizationId}/attributes:
+    patch:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Retrieve the organization attributes for the given organizationId
+      description: Return ok
+      operationId: addOrganizationAttributes
+      parameters:
+        - name: organizationId
+          in: path
+          description: The ID of the Organization to retrieve
+          required: true
+          schema:
+            description: to be defined
+            example: age
+            maxLength: 32
+            # pattern: '[a-z]{2,3}'
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributeRecords'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /relationships:
     post:
       #      security:
@@ -470,11 +508,14 @@ components:
           maxLength: 20
           format: email
           type: string
+        attributes:
+          $ref: '#/components/schemas/AttributeRecords'
       required:
         - institutionId
         - description
         - manager
         - digitalAddress
+        - attributes
       additionalProperties: false
     Organization:
       type: object
@@ -504,13 +545,34 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
           maxLength: 36
+        attributes:
+          $ref: '#/components/schemas/AttributeRecords'
       required:
         - institutionId
         - description
         - manager
         - digitalAddress
         - partyId
+        - attributes
       additionalProperties: false
+    Attributes:
+      type: array
+      items:
+        type: string
+    AttributeRecord:
+      type: object
+      properties:
+        kind:
+          type: string
+        attributes:
+          $ref: '#/components/schemas/Attributes'
+      required:
+        - kind
+        - attributes
+    AttributeRecords:
+      type: array
+      items:
+        $ref: '#/components/schemas/AttributeRecord'
     RelationShipSeed:
       type: object
       properties:

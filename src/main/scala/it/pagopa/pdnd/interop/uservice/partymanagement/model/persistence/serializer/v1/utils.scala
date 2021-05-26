@@ -40,6 +40,7 @@ object utils {
           description = i.description,
           digitalAddress = i.digitalAddress,
           manager = i.manager,
+          attributes = Set.empty,
           start = toOffsetDateTime(i.start),
           end = i.end.map(toOffsetDateTime)
         )

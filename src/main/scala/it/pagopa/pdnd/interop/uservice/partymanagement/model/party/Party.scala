@@ -13,9 +13,25 @@ sealed trait Party {
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 
+  def addAttributes(attributes: Attributes): Either[Throwable, Party] = this match {
+    case _: PersonParty => Left(new RuntimeException("Attributes do not exist for person party"))
+    case institutionParty: InstitutionParty => {
+      val updated: Set[Attributes] = institutionParty.attributes.map {
+        case xs if xs.kind == attributes.kind => xs.copy(values = xs.values.union(attributes.values))
+        case xs                               => xs
+      }
+      Right(institutionParty.copy(attributes = updated))
+    }
+  }
+
 }
 
 object Party {
+
+  def addAttributes(party: Party, attributes: Set[Attributes]): Either[Throwable, Party] = {
+    val zero: Either[Throwable, Party] = Right(party)
+    attributes.foldLeft(zero)((current, attrs) => current.flatMap(p => p.addAttributes(attrs)))
+  }
 
   def convertToApi(party: Party): ApiParty =
     party match {
@@ -35,7 +51,8 @@ object Party {
             institutionId = institutionParty.externalId,
             manager = institutionParty.manager,
             digitalAddress = institutionParty.digitalAddress,
-            partyId = institutionParty.id.toString
+            partyId = institutionParty.id.toString,
+            attributes = institutionParty.attributes.map(_.toApi).toSeq
           )
         )
     }
@@ -68,18 +85,22 @@ final case class InstitutionParty(
   description: String,
   digitalAddress: String,
   manager: String,
+  attributes: Set[Attributes],
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
 ) extends Party
 
 object InstitutionParty {
-  def fromApi(organization: OrganizationSeed, uuidSupplier: UUIDSupplier): InstitutionParty = InstitutionParty(
-    id = uuidSupplier.get,
-    externalId = organization.institutionId,
-    description = organization.description,
-    digitalAddress = organization.digitalAddress,
-    manager = organization.manager,
-    start = OffsetDateTime.now(),
-    end = None
-  )
+  def fromApi(organization: OrganizationSeed, uuidSupplier: UUIDSupplier): InstitutionParty = {
+    InstitutionParty(
+      id = uuidSupplier.get,
+      externalId = organization.institutionId,
+      description = organization.description,
+      digitalAddress = organization.digitalAddress,
+      manager = organization.manager,
+      attributes = organization.attributes.map(Attributes.fromApi).toSet,
+      start = OffsetDateTime.now(),
+      end = None
+    )
+  }
 }

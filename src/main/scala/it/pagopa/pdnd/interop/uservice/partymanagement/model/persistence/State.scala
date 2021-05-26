@@ -16,6 +16,9 @@ final case class State(
 
   def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
 
+  def updateParty(party: Party): State =
+    copy(parties = parties + (party.id -> party))
+
   def addPartyRelationShip(relationShip: PartyRelationShip): State =
     copy(relationShips = relationShips + (relationShip.id -> relationShip))
 

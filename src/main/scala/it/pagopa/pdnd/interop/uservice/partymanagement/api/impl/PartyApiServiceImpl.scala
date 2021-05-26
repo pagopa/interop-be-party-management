@@ -85,6 +85,30 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
 
   }
 
+  /** Code: 200, Message: successful operation, DataType: Organization
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  override def addOrganizationAttributes(organizationId: String, attributeRecord: Seq[AttributeRecord])(implicit
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+  ): Route = {
+
+    val result = commander.ask(ref => AddAttributes(organizationId, attributeRecord, ref))
+
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        statusReply.getValue.swap
+          .fold(
+            _ => createOrganization400(Problem(detail = None, status = 400, title = "some error")),
+            organization => createOrganization201(organization)
+          )
+      case statusReply =>
+        createOrganization400(
+          Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error")
+        )
+    }
+  }
+
   /** Code: 201, Message: successful operation, DataType: Person
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */

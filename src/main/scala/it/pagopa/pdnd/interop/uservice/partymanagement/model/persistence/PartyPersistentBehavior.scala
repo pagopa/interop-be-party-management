@@ -53,6 +53,37 @@ object PartyPersistentBehavior {
 
         Effect.none
 
+      case AddAttributes(organizationId, attributeRecords, replyTo) =>
+        val party: Option[Party] = for {
+          uuid <- state.indexes.get(organizationId)
+          _ = logger.info(s"Found $organizationId/${uuid.toString}")
+          party <- state.parties.get(uuid)
+        } yield party
+
+        val attributes: Set[Attributes] = attributeRecords.map(Attributes.fromApi).toSet
+        party
+          .map { p =>
+            val updated: Either[Throwable, Party] = Party.addAttributes(p, attributes)
+            updated.fold[Effect[AttributesAdded, State]](
+              ex => {
+                replyTo ! StatusReply.Error(
+                  s"Something goes wrong trying to update attributes for party ${organizationId}: ${ex.getMessage}"
+                )
+                Effect.none[AttributesAdded, State]
+              },
+              p => {
+                val party: ApiParty = Party.convertToApi(p)
+                Effect
+                  .persist(AttributesAdded(p))
+                  .thenRun(_ => replyTo ! StatusReply.Success(party))
+              }
+            )
+          }
+          .getOrElse {
+            replyTo ! StatusReply.Error(s"Party ${organizationId} not found")
+            Effect.none[AttributesAdded, State]
+          }
+
       case AddPartyRelationShip(from, to, role, replyTo) =>
         val isEligible = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
 
@@ -149,6 +180,7 @@ object PartyPersistentBehavior {
     event match {
       case PartyAdded(party)                         => state.addParty(party)
       case PartyDeleted(party)                       => state.deleteParty(party)
+      case AttributesAdded(party)                    => state.updateParty(party)
       case PartyRelationShipAdded(partyRelationShip) => state.addPartyRelationShip(partyRelationShip)
       case PartyRelationShipDeleted(relationShipId)  => state.deletePartyRelationShip(relationShipId)
       case TokenAdded(token)                         => state.addToken(token)

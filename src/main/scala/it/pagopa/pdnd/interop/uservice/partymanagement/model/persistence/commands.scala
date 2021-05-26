@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationShipId, PartyRole, Token}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, TokenText}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{AttributeRecord, RelationShip, TokenText}
 
 import java.util.UUID
 
@@ -18,6 +18,11 @@ sealed trait TokenCommand             extends Command
 final case class AddParty(entity: Party, replyTo: ActorRef[StatusReply[ApiParty]])      extends PartyCommand
 final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[State]])      extends PartyCommand
 final case class GetParty(id: String, replyTo: ActorRef[StatusReply[Option[ApiParty]]]) extends PartyCommand
+final case class AddAttributes(
+  organizationId: String,
+  attributeRecords: Seq[AttributeRecord],
+  replyTo: ActorRef[StatusReply[ApiParty]]
+) extends PartyCommand
 
 /* PartyRelationShip Command */
 final case class AddPartyRelationShip(from: UUID, to: UUID, partyRole: PartyRole, replyTo: ActorRef[StatusReply[State]])
