@@ -124,8 +124,7 @@ object utils {
       delegate <- getPartyRelationShipId(tokenV1.delegate)
       status   <- TokenStatus.fromText(tokenV1.status.name)
     } yield Token(
-      manager = manager,
-      delegate = delegate,
+      legals = Seq(manager, delegate),
       validity = toOffsetDateTime(tokenV1.validity),
       status = status,
       seed = UUID.fromString(tokenV1.seed)
@@ -134,8 +133,10 @@ object utils {
 
   def getTokenV1(token: Token): ErrorOr[TokenV1] = {
     for {
-      manager  <- getPartyRelationShipIdV1(token.manager)
-      delegate <- getPartyRelationShipIdV1(token.delegate)
+      managerL  <- token.legals.find(_.role == Manager).toRight(new RuntimeException("No manager found in legals"))
+      delegateL <- token.legals.find(_.role == Delegate).toRight(new RuntimeException("No delegate found in legals"))
+      manager   <- getPartyRelationShipIdV1(managerL)
+      delegate  <- getPartyRelationShipIdV1(delegateL)
       status <- TokenStatusV1
         .fromName(token.status.stringify)
         .toRight(new RuntimeException("Deserialization from protobuf failed"))

@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+import "scalapb/scalapb.proto";
+
+import "v2/token.proto";
+
+option (scalapb.options) = {
+  package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v2"
+};
+
+message TokenAddedV2 {
+  required TokenV2 token = 1;
+}
+
+message TokenInvalidatedV2 {
+  required TokenV2 token = 1;
+}
+
+message TokenConsumedV2 {
+  required TokenV2 token = 1;
+}
+
+
+

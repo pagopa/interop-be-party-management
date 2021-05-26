@@ -9,42 +9,34 @@ import java.nio.charset.StandardCharsets
 import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.Try
+import cats.implicits._
 
-final case class Token(
-  manager: PartyRelationShipId,
-  delegate: PartyRelationShipId,
-  validity: OffsetDateTime,
-  status: TokenStatus,
-  seed: UUID
-) {
+final case class Token(legals: Seq[PartyRelationShipId], validity: OffsetDateTime, status: TokenStatus, seed: UUID) {
   def isValid: Boolean = OffsetDateTime.now().isBefore(validity) && status == Waiting
 
 }
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val format: RootJsonFormat[Token] = jsonFormat5(Token.apply)
+  implicit val format: RootJsonFormat[Token] = jsonFormat4(Token.apply)
 
   final val validityHours: Long = 24L
 
   def generate(tokenSeed: TokenSeed): Either[Throwable, Token] = {
-    for {
-      managerRole  <- PartyRole.fromText(tokenSeed.manager.role.value)
-      delegateRole <- PartyRole.fromText(tokenSeed.delegate.role.value)
-    } yield Token(
-      seed = UUID.fromString(tokenSeed.seed),
-      manager = PartyRelationShipId(
-        UUID.fromString(tokenSeed.manager.from),
-        UUID.fromString(tokenSeed.manager.to),
-        managerRole
-      ),
-      delegate = PartyRelationShipId(
-        UUID.fromString(tokenSeed.delegate.from),
-        UUID.fromString(tokenSeed.delegate.to),
-        delegateRole
-      ),
-      validity = OffsetDateTime.now().plusHours(validityHours),
-      status = Waiting
+    val parties: Either[Throwable, Seq[PartyRelationShipId]] = tokenSeed.tokenUsers.traverse(tokenUser =>
+      PartyRole
+        .fromText(tokenUser.role.value)
+        .map(role => PartyRelationShipId(UUID.fromString(tokenUser.from), UUID.fromString(tokenUser.to), role))
+    )
+
+    parties.map(pts =>
+      Token(
+        seed = UUID.fromString(tokenSeed.seed),
+        legals = pts,
+        validity = OffsetDateTime.now().plusHours(validityHours),
+        status = Waiting
+      )
     )
 
   }

@@ -9,8 +9,9 @@ import java.io.NotSerializableException
 class TokenConsumedSerializer extends SerializerWithStringManifest {
 
   final val version1: String = "1"
+  final val version2: String = "2"
 
-  final val currentVersion: String = version1
+  final val currentVersion: String = version2
 
   override def identifier: Int = 30002
 
@@ -26,6 +27,8 @@ class TokenConsumedSerializer extends SerializerWithStringManifest {
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case TokenConsumedManifest :: `version1` :: Nil =>
       deserialize(v1.events.TokenConsumedV1, bytes, manifest, currentVersion)
+    case TokenConsumedManifest :: `version2` :: Nil =>
+      deserialize(v2.events.TokenConsumedV2, bytes, manifest, currentVersion)
     case _ =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "

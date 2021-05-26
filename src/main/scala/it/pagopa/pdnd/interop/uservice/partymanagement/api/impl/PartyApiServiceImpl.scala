@@ -218,6 +218,26 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
 
   }
 
+  /** Code: 200, Message: successful operation
+    * Code: 404, Message: Token not found, DataType: Problem
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    */
+  override def verifyToken(token: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
+    val result: Future[StatusReply[Option[Token]]] = for {
+      token <- Future.fromTry(Token.decode(token))
+      res   <- commander.ask(ref => VerifyToken(token, ref))
+    } yield res
+
+    onComplete(result) {
+      case Success(statusReply) if statusReply.isError =>
+        verifyToken400(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
+      case Success(token) if token.getValue.nonEmpty => verifyToken200
+      case Success(_)                                => verifyToken404(Problem(detail = None, status = 404, title = "Token not found"))
+      case Failure(ex) =>
+        verifyToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+    }
+  }
+
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
@@ -231,10 +251,10 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
 
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
-        consumeToken400(Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error"))
+        consumeToken400(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
       case Success(_) => consumeToken201
       case Failure(ex) =>
-        consumeToken400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+        consumeToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }

@@ -32,6 +32,8 @@ final case class GetPartyRelationShip(taxCode: UUID, replyTo: ActorRef[StatusRep
 /* Party Command */
 final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
 
+final case class VerifyToken(token: Token, replyTo: ActorRef[StatusReply[Option[Token]]]) extends TokenCommand
+
 final case class InvalidateToken(token: Token, replyTo: ActorRef[StatusReply[State]]) extends TokenCommand
 
 final case class ConsumeToken(token: Token, replyTo: ActorRef[StatusReply[State]]) extends TokenCommand

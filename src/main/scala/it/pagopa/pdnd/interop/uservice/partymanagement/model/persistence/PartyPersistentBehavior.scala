@@ -112,6 +112,11 @@ object PartyPersistentBehavior {
             Effect.none[TokenAdded, State]
         }
 
+      case VerifyToken(token, replyTo) =>
+        val verified: Option[Token] = state.tokens.get(token.seed)
+        replyTo ! StatusReply.Success(verified)
+        Effect.none
+
       case InvalidateToken(token, replyTo) =>
         processToken(state.tokens.get(token.seed), replyTo, state, TokenInvalidated)
 

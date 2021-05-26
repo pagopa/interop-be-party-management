@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+import "scalapb/scalapb.proto";
+import "v1/relationship.proto";
+import "v1/token.proto";
+
+option (scalapb.options) = {
+  package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v2"
+};
+
+message TokenV2 {
+  repeated PartyRelationShipIdV1 legals = 1;
+  required string validity = 3;
+  required TokenStatusV1 status = 4;
+  required string seed = 5;
+}

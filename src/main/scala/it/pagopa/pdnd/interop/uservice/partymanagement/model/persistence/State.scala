@@ -37,13 +37,9 @@ final case class State(
 
     modified match {
       case Some(t) if status == Consumed =>
-        val managerRelationShip  = relationShips(token.manager).copy(status = PartyRelationShipStatus.Active)
-        val delegateRelationShip = relationShips(token.delegate).copy(status = PartyRelationShipStatus.Active)
-        copy(
-          relationShips =
-            relationShips ++ Map(token.manager -> managerRelationShip, token.delegate -> delegateRelationShip),
-          tokens = tokens + (t.seed -> t)
-        )
+        val updated: Seq[PartyRelationShip] =
+          token.legals.map(legal => relationShips(legal).copy(status = PartyRelationShipStatus.Active))
+        copy(relationShips = relationShips ++ updated.map(p => p.id -> p).toMap, tokens = tokens + (t.seed -> t))
       case Some(t) => copy(tokens = tokens + (t.seed -> t))
       case None    => this
     }
