@@ -53,6 +53,8 @@ cleanFiles += baseDirectory.value / "generated" / "src"
 
 cleanFiles += baseDirectory.value / "client" / "src"
 
+credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+
 lazy val generated = project.in(file("generated")).settings(scalacOptions := Seq(), scalafmtOnCompile := true)
 
 lazy val client = project
@@ -68,7 +70,6 @@ lazy val client = project
       else
         m
     ),
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
@@ -94,7 +95,6 @@ lazy val root = (project in file("."))
     dockerUpdateLatest in Docker := true,
     wartremoverErrors ++= Warts.unsafe,
     wartremoverExcluded += sourceManaged.value,
-    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     scalafmtOnCompile := true
   )
   .aggregate(client)
