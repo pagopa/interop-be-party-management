@@ -25,7 +25,7 @@ package object v1 {
           .map(_.toMap)
         indexes <- Right(state.indexes.map(p => p.key -> UUID.fromString(p.value)).toMap)
         tokens <- state.tokens
-          .traverse[ErrorOr, (UUID, Token)](ts => getToken(ts.value).map(t => UUID.fromString(ts.key) -> t))
+          .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
           .map(_.toMap)
         relationShips <- state.relationShips
           .traverse[ErrorOr, (PartyRelationShipId, PartyRelationShip)](rl =>
@@ -45,7 +45,7 @@ package object v1 {
         }
         indexes <- Right(state.indexes.map { case (k, v) => IndexesV1(k, v.toString) }.toSeq)
         tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
-          getTokenV1(v).map(token => TokensV1(k.toString, token))
+          getTokenV1(v).map(token => TokensV1(k, token))
         }
         relationShips <- state.relationShips.toSeq
           .traverse[ErrorOr, RelationShipsV1] { case (key, value) =>

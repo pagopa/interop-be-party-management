@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationShipId, PartyRole, Token}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{AttributeRecord, RelationShip, TokenText}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{AttributeRecord, RelationShip, TokenSeed, TokenText}
 
 import java.util.UUID
 
@@ -31,11 +31,14 @@ final case class AddPartyRelationShip(from: UUID, to: UUID, partyRole: PartyRole
 final case class DeletePartyRelationShip(relationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[State]])
     extends PartyRelationShipCommand
 
-final case class GetPartyRelationShip(taxCode: UUID, replyTo: ActorRef[StatusReply[List[RelationShip]]])
+final case class GetPartyRelationShips(from: UUID, replyTo: ActorRef[StatusReply[List[RelationShip]]])
+    extends PartyRelationShipCommand
+
+final case class GetPartyRelationShip(from: UUID, to: UUID, replyTo: ActorRef[StatusReply[Option[RelationShip]]])
     extends PartyRelationShipCommand
 
 /* Party Command */
-final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
+final case class AddToken(token: TokenSeed, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
 
 final case class VerifyToken(token: Token, replyTo: ActorRef[StatusReply[Option[Token]]]) extends TokenCommand
 

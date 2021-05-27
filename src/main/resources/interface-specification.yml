@@ -578,15 +578,16 @@ components:
       properties:
         from:
           type: string
-          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
+          description: tax code
         to:
           type: string
-          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
+          description: institution id
         role:
-          type: enum
-          $ref: '#/components/schemas/Role'
+          type: string
+          enum:
+            - Manager
+            - Delegate
+            - Operator
       additionalProperties: false
       required:
         - from
@@ -625,35 +626,16 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
           maxLength: 36
-        tokenUsers:
-          $ref: '#/components/schemas/TokenUsers'
+        relationShipSeeds:
+          $ref: '#/components/schemas/RelationShipSeeds'
       additionalProperties: false
       required:
         - seed
-        - tokenUsers
-    TokenUser:
-      type: object
-      properties:
-        from:
-          type: string
-          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
-        to:
-          type: string
-          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
-        role:
-          type: enum
-          $ref: '#/components/schemas/Role'
-      additionalProperties: false
-      required:
-        - from
-        - to
-        - role
-    TokenUsers:
+        - relationShipSeeds
+    RelationShipSeeds:
       type: array
       items:
-        $ref: '#/components/schemas/TokenUser'
+        $ref: '#/components/schemas/RelationShipSeed'
       additionalProperties: false
       required:
         - items
@@ -666,17 +648,6 @@ components:
       additionalProperties: false
       required:
         - token
-    Role:
-      properties:
-        value:
-          type: string
-          enum:
-            - Manager
-            - Delegate
-            - Operator
-      additionalProperties: false
-      required:
-        - value
     Problem:
       properties:
         detail:

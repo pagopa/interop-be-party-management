@@ -31,7 +31,7 @@ package object v2 {
           .map(_.toMap)
         indexes <- Right(state.indexes.map(p => p.key -> UUID.fromString(p.value)).toMap)
         tokens <- state.tokens
-          .traverse[ErrorOr, (UUID, Token)](ts => getToken(ts.value).map(t => UUID.fromString(ts.key) -> t))
+          .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
           .map(_.toMap)
         relationShips <- state.relationShips
           .traverse[ErrorOr, (PartyRelationShipId, PartyRelationShip)](rl =>

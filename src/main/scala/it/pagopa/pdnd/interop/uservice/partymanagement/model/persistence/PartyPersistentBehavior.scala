@@ -4,6 +4,7 @@ import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EffectBuilder, EventSourcedBehavior, RetentionCriteria}
+import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Party.convertToApi
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationShipStatus.Active
@@ -111,7 +112,7 @@ object PartyPersistentBehavior {
           .persist(PartyRelationShipDeleted(relationShipId))
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
-      case GetPartyRelationShip(from, replyTo) =>
+      case GetPartyRelationShips(from, replyTo) =>
         val relationShips: List[RelationShip] =
           state.relationShips.filter(_._1.from == from).values.toList.flatMap { rl =>
             for {
@@ -128,31 +129,69 @@ object PartyPersistentBehavior {
 
         Effect.none
 
-      case AddToken(token, replyTo) =>
-        state.tokens.get(token.seed) match {
-          case Some(t) if t.status == Invalid =>
-            Effect
-              .persist(TokenAdded(token))
-              .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
-          case None =>
-            Effect
-              .persist(TokenAdded(token))
-              .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
-          case Some(t) =>
-            replyTo ! StatusReply.Error(s"Invalid token status ${t.status.toString}: token seed ${t.seed.toString}")
+      case GetPartyRelationShip(from, to, replyTo) =>
+        val partyRelationShip: Option[PartyRelationShip] =
+          state.relationShips
+            .find(relationShip => relationShip._1.from == from && relationShip._1.to == to)
+            .map(_._2)
+
+        val relationShip: Option[RelationShip] = partyRelationShip.flatMap { rl =>
+          for {
+            from <- state.parties.get(rl.id.from)
+            to   <- state.parties.get(rl.id.to)
+          } yield RelationShip(
+            taxCode = from.externalId,
+            institutionId = to.externalId,
+            role = rl.id.role.stringify,
+            status = rl.status.stringify
+          )
+        }
+        replyTo ! StatusReply.Success(relationShip)
+
+        Effect.none
+
+      case AddToken(tokenSeed, replyTo) =>
+        val parties: Either[RuntimeException, Seq[PartyRelationShipId]] =
+          tokenSeed.relationShipSeeds
+            .traverse(relationShipSeed =>
+              for {
+                fromIdx <- state.indexes.get(relationShipSeed.from)
+                from    <- state.parties.get(fromIdx)
+                toIdx   <- state.indexes.get(relationShipSeed.to)
+                to      <- state.parties.get(toIdx)
+                role    <- PartyRole.fromText(relationShipSeed.role).toOption
+              } yield PartyRelationShipId(from.id, to.id, role)
+            )
+            .toRight(new RuntimeException(s"Parties found"))
+
+        val token: Either[Throwable, Token] = parties.flatMap(pts => Token.generate(tokenSeed.seed, pts))
+
+        token match {
+          case Right(tk) =>
+            val canBeInsert = state.tokens.get(tk.id).exists(t => t.isValid && t.status == Invalid)
+            if (canBeInsert) {
+              Effect
+                .persist(TokenAdded(tk))
+                .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(tk))))
+            } else {
+              replyTo ! StatusReply.Error(s"Invalid token status ${tk.status.toString}: token seed ${tk.seed.toString}")
+              Effect.none[TokenAdded, State]
+            }
+          case Left(ex) =>
+            replyTo ! StatusReply.Error(s"Token creation failed due: ${ex.getMessage}")
             Effect.none[TokenAdded, State]
         }
 
       case VerifyToken(token, replyTo) =>
-        val verified: Option[Token] = state.tokens.get(token.seed)
+        val verified: Option[Token] = state.tokens.get(token.id)
         replyTo ! StatusReply.Success(verified)
         Effect.none
 
       case InvalidateToken(token, replyTo) =>
-        processToken(state.tokens.get(token.seed), replyTo, state, TokenInvalidated)
+        processToken(state.tokens.get(token.id), replyTo, state, TokenInvalidated)
 
       case ConsumeToken(token, replyTo) =>
-        processToken(state.tokens.get(token.seed), replyTo, state, TokenConsumed)
+        processToken(state.tokens.get(token.id), replyTo, state, TokenConsumed)
     }
 
   }

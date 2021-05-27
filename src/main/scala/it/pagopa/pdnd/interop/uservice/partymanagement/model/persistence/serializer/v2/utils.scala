@@ -126,6 +126,7 @@ object utils {
       legals <- tokenV2.legals.traverse(legal => getPartyRelationShipId(legal))
       status <- TokenStatus.fromText(tokenV2.status.name)
     } yield Token(
+      id = tokenV2.id,
       legals = legals,
       validity = toOffsetDateTime(tokenV2.validity),
       status = status,
@@ -140,6 +141,7 @@ object utils {
         .fromName(token.status.stringify)
         .toRight(new RuntimeException("Deserialization from protobuf failed"))
     } yield TokenV2(
+      id = token.id,
       legals = legals,
       validity = token.validity.format(formatter),
       status = status,

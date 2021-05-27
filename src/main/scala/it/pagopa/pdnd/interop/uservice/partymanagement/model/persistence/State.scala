@@ -7,7 +7,7 @@ import java.util.UUID
 final case class State(
   parties: Map[UUID, Party],
   indexes: Map[String, UUID],
-  tokens: Map[UUID, Token],
+  tokens: Map[String, Token],
   relationShips: Map[PartyRelationShipId, PartyRelationShip]
 ) extends Persistable {
 
@@ -25,9 +25,7 @@ final case class State(
   def deletePartyRelationShip(relationShipId: PartyRelationShipId): State =
     copy(relationShips = relationShips - relationShipId)
 
-  def addToken(token: Token): State = {
-    copy(tokens = tokens + (token.seed -> token))
-  }
+  def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
 
   def invalidateToken(token: Token): State =
     changeTokenStatus(token, Invalid)
@@ -36,14 +34,14 @@ final case class State(
     changeTokenStatus(token, Consumed)
 
   private def changeTokenStatus(token: Token, status: TokenStatus): State = {
-    val modified = tokens.get(token.seed).map(t => t.copy(status = status))
+    val modified = tokens.get(token.id).map(t => t.copy(status = status))
 
     modified match {
       case Some(t) if status == Consumed =>
         val updated: Seq[PartyRelationShip] =
           token.legals.map(legal => relationShips(legal).copy(status = PartyRelationShipStatus.Active))
-        copy(relationShips = relationShips ++ updated.map(p => p.id -> p).toMap, tokens = tokens + (t.seed -> t))
-      case Some(t) => copy(tokens = tokens + (t.seed -> t))
+        copy(relationShips = relationShips ++ updated.map(p => p.id -> p).toMap, tokens = tokens + (t.id -> t))
+      case Some(t) => copy(tokens = tokens + (t.id -> t))
       case None    => this
     }
 

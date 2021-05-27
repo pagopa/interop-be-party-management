@@ -42,11 +42,11 @@ object PartyRole extends DefaultJsonProtocol {
 
   }
 
-  def apply(str: String): PartyRole = str match {
-    case "Manager"  => Manager
-    case "Delegate" => Delegate
-    case "Operator" => Operator
-  }
+//  def apply(str: String): PartyRole = str match {
+//    case "Manager"  => Manager
+//    case "Delegate" => Delegate
+//    case "Operator" => Operator
+//  }
 
   def fromText(str: String): Either[Throwable, PartyRole] = str match {
     case "Manager"  => Right(Manager)

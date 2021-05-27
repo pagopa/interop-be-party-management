@@ -126,6 +126,7 @@ object utils {
       delegate <- getPartyRelationShipId(tokenV1.delegate)
       status   <- TokenStatus.fromText(tokenV1.status.name)
     } yield Token(
+      id = manager.stringify,
       legals = Seq(manager, delegate),
       validity = toOffsetDateTime(tokenV1.validity),
       status = status,

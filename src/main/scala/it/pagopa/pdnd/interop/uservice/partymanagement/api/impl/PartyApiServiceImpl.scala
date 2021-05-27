@@ -181,7 +181,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
       _ = logger.info(s"To retrieved ${to.toString()}")
       parties <- extractParties(from, to)
       _ = logger.info(s"Parties retrieved ${parties.toString()}")
-      role <- PartyRole.fromText(relationShipSeed.role.value).toFuture
+      role <- PartyRole.fromText(relationShipSeed.role).toFuture
       res <- commander.ask(ref =>
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )
@@ -209,7 +209,7 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
 
     logger.info(s"Getting relationships for $from")
     val result: Future[StatusReply[List[RelationShip]]] =
-      commander.ask(ref => GetPartyRelationShip(UUID.fromString(from), ref))
+      commander.ask(ref => GetPartyRelationShips(UUID.fromString(from), ref))
 
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
@@ -233,10 +233,8 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     toEntityMarshallerTokenText: ToEntityMarshaller[TokenText]
   ): Route = {
     logger.info(s"Creating token ${tokenSeed.toString}")
-    val result: Future[StatusReply[TokenText]] = for {
-      token <- Token.generate(tokenSeed).toFuture
-      res   <- commander.ask(ref => AddToken(token, ref))
-    } yield res
+
+    val result: Future[StatusReply[TokenText]] = commander.ask(ref => AddToken(tokenSeed, ref))
 
     manageCreationResponse(result, createToken201, createToken400)
 
