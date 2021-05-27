@@ -253,7 +253,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelationShipSeed'
+              $ref: '#/components/schemas/RelationShip'
       responses:
         '201':
           description: successful operation
@@ -573,7 +573,7 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/AttributeRecord'
-    RelationShipSeed:
+    RelationShip:
       type: object
       properties:
         from:
@@ -588,27 +588,13 @@ components:
             - Manager
             - Delegate
             - Operator
+        status:
+          type: string
       additionalProperties: false
       required:
         - from
         - to
         - role
-    RelationShip:
-      type: object
-      properties:
-        taxCode:
-          type: string
-        institutionId:
-          type: string
-        role:
-          type: string
-        status:
-          type: string
-      required:
-        - taxCode
-        - institutionId
-        - role
-        - status
     RelationShips:
       type: object
       properties:
@@ -626,19 +612,12 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
           maxLength: 36
-        relationShipSeeds:
-          $ref: '#/components/schemas/RelationShipSeeds'
+        relationShips:
+          $ref: '#/components/schemas/RelationShips'
       additionalProperties: false
       required:
         - seed
-        - relationShipSeeds
-    RelationShipSeeds:
-      type: array
-      items:
-        $ref: '#/components/schemas/RelationShipSeed'
-      additionalProperties: false
-      required:
-        - items
+        - relationShips
     TokenText:
       properties:
         token:

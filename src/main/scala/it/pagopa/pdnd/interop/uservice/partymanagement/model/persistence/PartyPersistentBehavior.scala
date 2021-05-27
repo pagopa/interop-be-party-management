@@ -119,10 +119,10 @@ object PartyPersistentBehavior {
               from <- state.parties.get(rl.id.from)
               to   <- state.parties.get(rl.id.to)
             } yield RelationShip(
-              taxCode = from.externalId,
-              institutionId = to.externalId,
+              from = from.externalId,
+              to = to.externalId,
               role = rl.id.role.stringify,
-              status = rl.status.stringify
+              status = Some(rl.status.stringify)
             )
           }
         replyTo ! StatusReply.Success(relationShips)
@@ -140,10 +140,10 @@ object PartyPersistentBehavior {
             from <- state.parties.get(rl.id.from)
             to   <- state.parties.get(rl.id.to)
           } yield RelationShip(
-            taxCode = from.externalId,
-            institutionId = to.externalId,
+            from = from.externalId,
+            to = to.externalId,
             role = rl.id.role.stringify,
-            status = rl.status.stringify
+            status = Some(rl.status.stringify)
           )
         }
         replyTo ! StatusReply.Success(relationShip)
@@ -152,14 +152,14 @@ object PartyPersistentBehavior {
 
       case AddToken(tokenSeed, replyTo) =>
         val parties: Either[RuntimeException, Seq[PartyRelationShipId]] =
-          tokenSeed.relationShipSeeds
-            .traverse(relationShipSeed =>
+          tokenSeed.relationShips.items
+            .traverse(relationShip =>
               for {
-                fromIdx <- state.indexes.get(relationShipSeed.from)
+                fromIdx <- state.indexes.get(relationShip.from)
                 from    <- state.parties.get(fromIdx)
-                toIdx   <- state.indexes.get(relationShipSeed.to)
+                toIdx   <- state.indexes.get(relationShip.to)
                 to      <- state.parties.get(toIdx)
-                role    <- PartyRole.fromText(relationShipSeed.role).toOption
+                role    <- PartyRole.fromText(relationShip.role).toOption
               } yield PartyRelationShipId(from.id, to.id, role)
             )
             .toRight(new RuntimeException(s"Parties found"))

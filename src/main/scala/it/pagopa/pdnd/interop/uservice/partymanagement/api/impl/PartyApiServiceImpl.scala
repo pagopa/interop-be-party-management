@@ -171,17 +171,17 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     * Code: 400, Message: Invalid ID supplied, DataType: ErrorResponse
     */
   override def createRelationShip(
-    relationShipSeed: RelationShipSeed
+    relationShip: RelationShip
   )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
-    logger.info(s"Creating relationship ${relationShipSeed.toString}")
+    logger.info(s"Creating relationship ${relationShip.toString}")
     val result: Future[StatusReply[State]] = for {
-      from <- commander.ask(ref => GetParty(relationShipSeed.from, ref))
+      from <- commander.ask(ref => GetParty(relationShip.from, ref))
       _ = logger.info(s"From retrieved ${from.toString()}")
-      to <- commander.ask(ref => GetParty(relationShipSeed.to, ref))
+      to <- commander.ask(ref => GetParty(relationShip.to, ref))
       _ = logger.info(s"To retrieved ${to.toString()}")
       parties <- extractParties(from, to)
       _ = logger.info(s"Parties retrieved ${parties.toString()}")
-      role <- PartyRole.fromText(relationShipSeed.role).toFuture
+      role <- PartyRole.fromText(relationShip.role).toFuture
       res <- commander.ask(ref =>
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )

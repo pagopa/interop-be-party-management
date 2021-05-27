@@ -9,6 +9,9 @@ import spray.json._
 
 class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
 
+  override implicit def fromEntityUnmarshallerRelationShip: FromEntityUnmarshaller[RelationShip] =
+    sprayJsonUnmarshaller[RelationShip]
+
   override implicit def fromEntityUnmarshallerAttributeRecordList: FromEntityUnmarshaller[Seq[AttributeRecord]] =
     sprayJsonUnmarshaller[Seq[AttributeRecord]]
 
@@ -30,9 +33,6 @@ class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport wi
 
   override implicit def fromEntityUnmarshallerOrganizationSeed: FromEntityUnmarshaller[OrganizationSeed] =
     sprayJsonUnmarshaller[OrganizationSeed]
-
-  override implicit def fromEntityUnmarshallerRelationShipSeed: FromEntityUnmarshaller[RelationShipSeed] =
-    sprayJsonUnmarshaller[RelationShipSeed]
 
   override implicit def toEntityMarshallerRelationShips: ToEntityMarshaller[RelationShips] =
     sprayJsonMarshaller[RelationShips]
