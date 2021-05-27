@@ -143,9 +143,9 @@ object RelationshipPartyApiServiceSpec {
   lazy final val organizationSeed3 =
     OrganizationSeed(institutionId3, "Institutions Seven", "Alex Murphy", "mail7@mail.org", Seq.empty)
 
-  lazy final val seed1 = RelationShipSeed(from = taxCode1, to = institutionId1, role = Role("Manager"))
-  lazy final val seed2 = RelationShipSeed(from = taxCode2, to = institutionId2, role = Role("Manager"))
-  lazy final val seed3 = RelationShipSeed(from = taxCode3, to = institutionId3, role = Role("Manager"))
+  lazy final val seed1 = RelationShipSeed(from = taxCode1, to = institutionId1, role = "Manager")
+  lazy final val seed2 = RelationShipSeed(from = taxCode2, to = institutionId2, role = "Manager")
+  lazy final val seed3 = RelationShipSeed(from = taxCode3, to = institutionId3, role = "Manager")
 
   lazy final val expected1 = RelationShips(
     Seq(RelationShip(taxCode = taxCode2, institutionId = institutionId2, role = "Manager", status = "Pending"))
