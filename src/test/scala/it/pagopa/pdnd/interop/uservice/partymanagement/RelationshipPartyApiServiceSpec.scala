@@ -137,11 +137,11 @@ object RelationshipPartyApiServiceSpec {
   lazy final val personSeed3 = PersonSeed(taxCode = taxCode3, surname = "Murphy", name = "Alex")
 
   lazy final val organizationSeed1 =
-    OrganizationSeed(institutionId1, "Institutions Five", "Ellen Ripley", "mail5@mail.org")
+    OrganizationSeed(institutionId1, "Institutions Five", "Ellen Ripley", "mail5@mail.org", Seq.empty)
   lazy final val organizationSeed2 =
-    OrganizationSeed(institutionId2, "Institutions Six", "Eikichi Onizuka", "mail6@mail.org")
+    OrganizationSeed(institutionId2, "Institutions Six", "Eikichi Onizuka", "mail6@mail.org", Seq.empty)
   lazy final val organizationSeed3 =
-    OrganizationSeed(institutionId3, "Institutions Seven", "Alex Murphy", "mail7@mail.org")
+    OrganizationSeed(institutionId3, "Institutions Seven", "Alex Murphy", "mail7@mail.org", Seq.empty)
 
   lazy final val seed1 = RelationShipSeed(from = taxCode1, to = institutionId1, role = Role("Manager"))
   lazy final val seed2 = RelationShipSeed(from = taxCode2, to = institutionId2, role = Role("Manager"))
