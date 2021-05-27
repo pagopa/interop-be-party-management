@@ -9,8 +9,9 @@ import java.io.NotSerializableException
 class PartyRelationShipDeletedSerializer extends SerializerWithStringManifest {
 
   final val version1: String = "1"
+  final val version2: String = "2"
 
-  final val currentVersion: String = version1
+  final val currentVersion: String = version2
 
   override def identifier: Int = 20002
 
@@ -25,7 +26,9 @@ class PartyRelationShipDeletedSerializer extends SerializerWithStringManifest {
   @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case PartyRelationShipDeletedManifest :: `version1` :: Nil =>
-      deserialize(v1.events.PartyRelationShipDeletedV1, bytes, manifest, currentVersion)
+      deserialize(v1.events.PartyRelationShipDeletedV1, bytes, manifest, version1)
+    case PartyRelationShipDeletedManifest :: `version2` :: Nil =>
+      deserialize(v2.events.PartyRelationShipDeletedV2, bytes, manifest, version2)
     case _ =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "

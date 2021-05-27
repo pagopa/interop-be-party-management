@@ -8,13 +8,14 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationShipIdV1.PartyRoleV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationShipV1.PartyRelationShipStatusV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
   PartyRelationShipIdV1,
-  PartyRelationShipStatusV1,
-  PartyRelationShipV1,
-  PartyRoleV1
+  PartyRelationShipV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{TokenStatusV1, TokenV1}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1.TokenStatusV1
 
 import java.util.UUID
 

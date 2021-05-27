@@ -13,10 +13,11 @@ message TokenV1 {
   required string validity = 3;
   required TokenStatusV1 status = 4;
   required string seed = 5;
+
+  enum TokenStatusV1 {
+    Waiting = 0;
+    Invalid = 1;
+    Consumed = 2;
+  }
 }
 
-enum TokenStatusV1 {
-  Waiting = 0;
-  Invalid = 1;
-  Consumed = 2;
-}
