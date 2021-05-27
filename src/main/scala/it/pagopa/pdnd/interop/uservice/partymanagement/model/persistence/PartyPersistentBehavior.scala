@@ -168,8 +168,10 @@ object PartyPersistentBehavior {
 
         token match {
           case Right(tk) =>
-            val canBeInsert = state.tokens.get(tk.id).exists(t => t.isValid && t.status == Invalid)
-            if (canBeInsert) {
+            val itCanBeInsert: Boolean =
+              state.tokens.get(tk.id).exists(t => t.isValid && t.status == Invalid) || !state.tokens.contains(tk.id)
+
+            if (itCanBeInsert) {
               Effect
                 .persist(TokenAdded(tk))
                 .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(tk))))
