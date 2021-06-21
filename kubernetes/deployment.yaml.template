@@ -114,10 +114,10 @@ metadata:
   namespace: {{name}}
 spec:
   rules:
-    - http:
+    - host: gateway.interop.pdnd.dev
+      http:
         paths:
           - path: /{{name}}
             backend:
               serviceName: {{name}}
               servicePort: 8088
-
