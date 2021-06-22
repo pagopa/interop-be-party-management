@@ -65,6 +65,7 @@ pipeline {
       environment {
         AWS_SECRET_ACCESS = credentials('jenkins-aws')
         CASSANDRA = credentials('cassandra-db')
+        DOCKER_REPO = 'gateway.interop.pdnd.dev'
       }
       steps{
         // we should use a container with kubectl preinstalled
