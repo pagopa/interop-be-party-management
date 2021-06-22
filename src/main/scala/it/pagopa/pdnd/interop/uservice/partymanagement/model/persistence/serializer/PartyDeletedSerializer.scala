@@ -13,7 +13,7 @@ class PartyDeletedSerializer extends SerializerWithStringManifest {
 
   final val currentVersion: String = version2
 
-  override def identifier: Int = 10001
+  override def identifier: Int = 100001
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 

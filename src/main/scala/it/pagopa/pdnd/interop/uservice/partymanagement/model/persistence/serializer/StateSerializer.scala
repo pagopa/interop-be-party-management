@@ -13,7 +13,7 @@ class StateSerializer extends SerializerWithStringManifest {
 
   final val currentVersion: String = version2
 
-  override def identifier: Int = 40000
+  override def identifier: Int = 400000
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 

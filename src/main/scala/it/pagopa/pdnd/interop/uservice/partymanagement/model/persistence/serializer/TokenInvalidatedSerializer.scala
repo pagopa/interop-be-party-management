@@ -13,7 +13,7 @@ class TokenInvalidatedSerializer extends SerializerWithStringManifest {
 
   final val currentVersion: String = version2
 
-  override def identifier: Int = 30003
+  override def identifier: Int = 300002
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 

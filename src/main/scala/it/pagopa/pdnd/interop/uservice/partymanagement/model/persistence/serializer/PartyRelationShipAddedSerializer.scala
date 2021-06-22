@@ -13,7 +13,7 @@ class PartyRelationShipAddedSerializer extends SerializerWithStringManifest {
 
   final val currentVersion: String = version2
 
-  override def identifier: Int = 20001
+  override def identifier: Int = 200000
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
