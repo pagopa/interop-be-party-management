@@ -19,7 +19,7 @@ spec:
         - name: regcred
       containers:
         - name: {{name}}
-          image: gateway.interop.pdnd.dev/services/{{name}}:{{version}}
+          image: {{repository}}/services/{{name}}:{{version}}
           volumeMounts:
             - mountPath: /opt/docker/snapshots
               name: snapshots-volume
