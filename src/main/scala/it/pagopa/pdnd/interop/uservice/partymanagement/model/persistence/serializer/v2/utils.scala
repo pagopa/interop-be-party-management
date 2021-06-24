@@ -130,7 +130,8 @@ object utils {
       legals = legals,
       validity = toOffsetDateTime(tokenV2.validity),
       status = status,
-      seed = UUID.fromString(tokenV2.seed)
+      seed = UUID.fromString(tokenV2.seed),
+      checksum = tokenV2.checksum
     )
   }
 
@@ -145,7 +146,8 @@ object utils {
       legals = legals,
       validity = token.validity.format(formatter),
       status = status,
-      seed = token.seed.toString
+      seed = token.seed.toString,
+      checksum = token.checksum
     )
   }
 }

@@ -13,6 +13,7 @@ message TokenV2 {
   required string validity = 3;
   required TokenStatusV2 status = 4;
   required string seed = 5;
+  required string checksum = 6;
 
   enum TokenStatusV2 {
     Waiting = 0;

@@ -164,7 +164,7 @@ object PartyPersistentBehavior {
             )
             .toRight(new RuntimeException(s"Parties found"))
 
-        val token: Either[Throwable, Token] = parties.flatMap(pts => Token.generate(tokenSeed.seed, pts))
+        val token: Either[Throwable, Token] = parties.flatMap(pts => Token.generate(tokenSeed, pts))
 
         token match {
           case Right(tk) =>

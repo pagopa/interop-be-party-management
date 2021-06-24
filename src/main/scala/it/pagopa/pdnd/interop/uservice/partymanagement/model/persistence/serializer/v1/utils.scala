@@ -128,6 +128,7 @@ object utils {
     } yield Token(
       id = manager.stringify,
       legals = Seq(manager, delegate),
+      checksum = tokenV1.checksum,
       validity = toOffsetDateTime(tokenV1.validity),
       status = status,
       seed = UUID.fromString(tokenV1.seed)
@@ -148,7 +149,8 @@ object utils {
       delegate = delegate,
       validity = token.validity.format(formatter),
       status = status,
-      seed = token.seed.toString
+      seed = token.seed.toString,
+      checksum = token.checksum
     )
   }
 

@@ -321,7 +321,7 @@ paths:
         '201':
           description: successful operation
           content:
-            application/problem+json:
+            application/octet-stream:
               schema:
                 $ref: '#/components/schemas/TokenText'
         '400':
@@ -614,10 +614,13 @@ components:
           maxLength: 36
         relationShips:
           $ref: '#/components/schemas/RelationShips'
+        checksum:
+          type: string
       additionalProperties: false
       required:
         - seed
         - relationShips
+        - checksum
     TokenText:
       properties:
         token:

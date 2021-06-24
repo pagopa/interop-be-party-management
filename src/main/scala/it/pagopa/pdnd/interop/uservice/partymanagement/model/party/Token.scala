@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{offsetDateTimeFormat, uuidFormat}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenSeed
 import spray.json._
 
 import java.nio.charset.StandardCharsets
@@ -14,6 +15,7 @@ final case class Token(
   legals: Seq[PartyRelationShipId],
   validity: OffsetDateTime,
   status: TokenStatus,
+  checksum: String,
   seed: UUID
 ) {
   def isValid: Boolean = OffsetDateTime.now().isBefore(validity) && status == Waiting
@@ -23,18 +25,19 @@ final case class Token(
 @SuppressWarnings(Array("org.wartremover.warts.Any"))
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val format: RootJsonFormat[Token] = jsonFormat5(Token.apply)
+  implicit val format: RootJsonFormat[Token] = jsonFormat6(Token.apply)
 
   final val validityHours: Long = 24L
 
-  def generate(seed: String, parties: Seq[PartyRelationShipId]): Either[Throwable, Token] =
+  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationShipId]): Either[Throwable, Token] =
     parties
       .find(_.role == Manager)
       .map(manager =>
         Token(
           id = manager.stringify,
-          seed = UUID.fromString(seed),
+          seed = UUID.fromString(tokenSeed.seed),
           legals = parties,
+          checksum = tokenSeed.checksum,
           validity = OffsetDateTime.now().plusHours(validityHours),
           status = Waiting
         )

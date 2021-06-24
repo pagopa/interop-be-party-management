@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 sealed trait Party {
-  def id: UUID // TODO probably not necessary
+  def id: UUID
   def externalId: String
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
