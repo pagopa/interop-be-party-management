@@ -9,7 +9,7 @@ import java.util.UUID
 
 sealed trait Party {
   def id: UUID
-  def externalId: String
+  def externalId: String //TODO describe also the type CF|askjasjdas
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 

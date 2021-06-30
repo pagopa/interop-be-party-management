@@ -5,8 +5,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import java.util.UUID
 
 final case class State(
-  parties: Map[UUID, Party],
-  indexes: Map[String, UUID],
+  parties: Map[UUID, Party],  //TODO use String instead of UUID
+  indexes: Map[String, UUID], //TODO use String instead of UUID
   tokens: Map[String, Token],
   relationShips: Map[PartyRelationShipId, PartyRelationShip]
 ) extends Persistable {

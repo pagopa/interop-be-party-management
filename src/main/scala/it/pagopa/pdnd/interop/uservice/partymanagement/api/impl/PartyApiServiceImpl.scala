@@ -1,13 +1,14 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api.impl
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.actor.typed.ActorSystem
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
+import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApiParty, executionContext, scheduler, timeout}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{executionContext, timeout}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationShip => _, _}
@@ -19,21 +20,39 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSupplier) extends PartyApiService {
+class PartyApiServiceImpl(
+  system: ActorSystem[_],
+  sharding: ClusterSharding,
+  entity: Entity[Command, ShardingEnvelope[Command]],
+  uuidSupplier: UUIDSupplier
+) extends PartyApiService {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  private val settings: ClusterShardingSettings = entity.settings match {
+    case None    => ClusterShardingSettings(system)
+    case Some(s) => s
+  }
+
+  def getCommander(entityId: String): EntityRef[Command] =
+    sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(entityId))
+
+  @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
 
   /** Code: 200, Message: successful operation
     * Code: 404, Message: Organization not found
     */
   override def existsOrganization(organizationId: String): Route = {
     logger.info(s"Verify organization $organizationId")
-    val result: Future[StatusReply[Option[ApiParty]]] = commander.ask(ref => GetParty(organizationId, ref))
 
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(existsOrganization404)(party =>
-        party.swap
-          .fold(_ => existsOrganization404, _ => existsOrganization200)
-      )
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
+
+    val results: Future[Option[Party]] = commanders.getParty(organizationId)
+
+    onSuccess(results) {
+      case Some(party) => Party.convertToApi(party).swap.fold(_ => existsOrganization404, _ => existsOrganization200)
+      case None        => existsOrganization404
     }
 
   }
@@ -43,17 +62,22 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def getOrganization(organizationId: String)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
-    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]
+    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Retrieve organization $organizationId")
-    val result = commander.ask(ref => GetParty(organizationId, ref))
+
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
+    val results: Future[Option[Party]] = commanders.getParty(organizationId)
 
     val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(getOrganization404(errorResponse))(party =>
-        party.swap
-          .fold(_ => getOrganization404(errorResponse), institution => getOrganization200(institution))
-      )
+
+    onSuccess(results) {
+      case Some(party) =>
+        Party.convertToApi(party).swap.fold(_ => getOrganization404(errorResponse), o => getOrganization200(o))
+      case None => getOrganization404(errorResponse)
     }
 
   }
@@ -63,16 +87,22 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def createOrganization(organizationSeed: OrganizationSeed)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Creating organization ${organizationSeed.description}")
     val party: Party = InstitutionParty.fromApi(organizationSeed, uuidSupplier)
 
-    val result: Future[StatusReply[ApiParty]] = commander.ask(ref => AddParty(party, ref))
+    val commander: EntityRef[Command] =
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(party.id.toString))
+
+    val result: Future[StatusReply[Party]] = commander.ask(ref => AddParty(party, ref))
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
-        statusReply.getValue.swap
+        Party
+          .convertToApi(statusReply.getValue)
+          .swap
           .fold(
             _ => createOrganization400(Problem(detail = None, status = 400, title = "some error")),
             organization => createOrganization201(organization)
@@ -90,23 +120,36 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def addOrganizationAttributes(organizationId: String, attributeRecord: Seq[AttributeRecord])(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
 
-    val result = commander.ask(ref => AddAttributes(organizationId, attributeRecord, ref))
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
 
-    onSuccess(result) {
-      case statusReply if statusReply.isSuccess =>
-        statusReply.getValue.swap
-          .fold(
-            _ => createOrganization400(Problem(detail = None, status = 400, title = "some error")),
-            organization => createOrganization201(organization)
+    val results: Future[Seq[StatusReply[Party]]] =
+      Future.sequence(commanders.map(entity => entity.ask(ref => AddAttributes(organizationId, attributeRecord, ref))))
+
+    onSuccess(results) { rs =>
+      rs.toList.headOption match {
+        case Some(x) if x.isSuccess =>
+          Party
+            .convertToApi(x.getValue)
+            .swap
+            .fold(
+              _ => addOrganizationAttributes404(Problem(detail = None, status = 400, title = "some error")),
+              organization => addOrganizationAttributes200(organization)
+            )
+        case Some(x) =>
+          addOrganizationAttributes404(
+            Problem(detail = Option(x.getError.getMessage), status = 404, title = "some error")
           )
-      case statusReply =>
-        createOrganization400(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error")
-        )
+        case None =>
+          addOrganizationAttributes404(Problem(detail = None, status = 404, title = "some error"))
+      }
     }
+
   }
 
   /** Code: 201, Message: successful operation, DataType: Person
@@ -114,16 +157,22 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def createPerson(personSeed: PersonSeed)(implicit
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Creating person ${personSeed.name}/${personSeed.surname}")
+
     val party: Party = PersonParty.fromApi(personSeed, uuidSupplier)
 
-    val result: Future[StatusReply[ApiParty]] = commander.ask(ref => AddParty(party, ref))
+    val commander: EntityRef[Command] =
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(party.id.toString))
+
+    val result: Future[StatusReply[Party]] = commander.ask(ref => AddParty(party, ref))
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
-        statusReply.getValue
+        Party
+          .convertToApi(statusReply.getValue)
           .fold(
             _ => createPerson400(Problem(detail = None, status = 400, title = "some error")),
             person => createPerson201(person)
@@ -139,10 +188,16 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def existsPerson(taxCode: String): Route = {
     logger.info(s"Verify person $taxCode")
-    val result: Future[StatusReply[Option[ApiParty]]] = commander.ask(ref => GetParty(taxCode, ref))
 
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(existsPerson404)(party => party.fold(_ => existsPerson404, _ => existsPerson200))
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
+
+    val results: Future[Option[Party]] = commanders.getParty(taxCode)
+
+    onSuccess(results) {
+      case Some(party) => Party.convertToApi(party).fold(_ => existsPerson404, _ => existsPerson200)
+      case None        => existsPerson404
     }
 
   }
@@ -152,17 +207,21 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def getPerson(taxCode: String)(implicit
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
-    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]
+    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Retrieving person $taxCode")
-    val result: Future[StatusReply[Option[ApiParty]]] = commander.ask(ref => GetParty(taxCode, ref))
 
-    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
 
-    onSuccess(result) { statusReply =>
-      statusReply.getValue.fold(getPerson404(errorResponse))(party =>
-        party.fold(_ => getPerson404(errorResponse), person => getPerson200(person))
-      )
+    val results: Future[Option[Party]] = commanders.getParty(taxCode)
+    val errorResponse: Problem         = Problem(detail = None, status = 404, title = "some error")
+
+    onSuccess(results) {
+      case Some(party) => Party.convertToApi(party).fold(_ => getPerson404(errorResponse), p => getPerson200(p))
+      case None        => getPerson404(errorResponse)
     }
 
   }
@@ -172,17 +231,22 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def createRelationShip(
     relationShip: RelationShip
-  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem]): Route = {
+  )(implicit toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
+
     logger.info(s"Creating relationship ${relationShip.toString}")
     val result: Future[StatusReply[State]] = for {
-      from <- commander.ask(ref => GetParty(relationShip.from, ref))
-      _ = logger.info(s"From retrieved ${from.toString()}")
-      to <- commander.ask(ref => GetParty(relationShip.to, ref))
-      _ = logger.info(s"To retrieved ${to.toString()}")
+      from <- commanders.getParty(relationShip.from)
+      _ = logger.info(s"From retrieved ${from.toString}")
+      to <- commanders.getParty(relationShip.to)
+      _ = logger.info(s"To retrieved ${to.toString}")
       parties <- extractParties(from, to)
       _ = logger.info(s"Parties retrieved ${parties.toString()}")
       role <- PartyRole.fromText(relationShip.role).toFuture
-      res <- commander.ask(ref =>
+      res <- getCommander(parties._1.partyId).ask(ref =>
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )
     } yield res
@@ -204,10 +268,15 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def getRelationShips(from: String)(implicit
     toEntityMarshallerRelationShips: ToEntityMarshaller[RelationShips],
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
 
     logger.info(s"Getting relationships for $from")
+
+    val commander: EntityRef[Command] =
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(from))
+
     val result: Future[StatusReply[List[RelationShip]]] =
       commander.ask(ref => GetPartyRelationShips(UUID.fromString(from), ref))
 
@@ -230,9 +299,13 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def createToken(tokenSeed: TokenSeed)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerTokenText: ToEntityMarshaller[TokenText]
+    toEntityMarshallerTokenText: ToEntityMarshaller[TokenText],
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Creating token ${tokenSeed.toString}")
+
+    val commander: EntityRef[Command] =
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(tokenSeed.seed)) //TODO which key?
 
     val result: Future[StatusReply[TokenText]] = commander.ask(ref => AddToken(tokenSeed, ref))
 
@@ -244,10 +317,14 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     * Code: 404, Message: Token not found, DataType: Problem
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def verifyToken(token: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
+  override def verifyToken(
+    token: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+
     val result: Future[StatusReply[Option[Token]]] = for {
       token <- Future.fromTry(Token.decode(token))
-      res   <- commander.ask(ref => VerifyToken(token, ref))
+      commander = sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(token.seed.toString))
+      res <- commander.ask(ref => VerifyToken(token, ref))
     } yield res
 
     onComplete(result) {
@@ -263,9 +340,12 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def consumeToken(token: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
+  override def consumeToken(
+    token: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     val result: Future[StatusReply[State]] = for {
       token <- Future.fromTry(Token.decode(token))
+      commander = sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(token.seed.toString))
       res <-
         if (token.isValid) commander.ask(ref => ConsumeToken(token, ref))
         else commander.ask(ref => InvalidateToken(token, ref))
@@ -286,10 +366,11 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
     */
   override def invalidateToken(
     token: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route = {
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     val result: Future[StatusReply[State]] = for {
       token <- Future.fromTry(Token.decode(token))
-      res   <- commander.ask(ref => InvalidateToken(token, ref))
+      commander = sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(token.seed.toString))
+      res <- commander.ask(ref => InvalidateToken(token, ref))
     } yield res
 
     onComplete(result) {
@@ -305,25 +386,16 @@ class PartyApiServiceImpl(commander: ActorRef[Command], uuidSupplier: UUIDSuppli
   }
 
   //TODO Improve this part
-  private def extractParties(
-    from: StatusReply[Option[ApiParty]],
-    to: StatusReply[Option[ApiParty]]
-  ): Future[(Person, Organization)] =
+  private def extractParties(from: Option[Party], to: Option[Party]): Future[(Person, Organization)] =
     Future.fromTry {
+      val parties: Option[(Person, Organization)] = for {
+        fromParty    <- from
+        person       <- Party.convertToApi(fromParty).toOption
+        toParty      <- to
+        organization <- Party.convertToApi(toParty).swap.toOption
+      } yield (person, organization)
+      parties.map(Success(_)).getOrElse(Failure(new RuntimeException("Party extraction from ApiParty failed")))
 
-      if (from.isError || to.isError)
-        Failure(new RuntimeException("Party extraction from ApiParty failed"))
-      else {
-        val parties: Option[(Person, Organization)] = for {
-          apiPartyFrom <- from.getValue
-          person       <- apiPartyFrom.toOption
-          apiPartyTo   <- to.getValue
-          organization <- apiPartyTo.swap.toOption
-        } yield (person, organization)
-
-        parties.map(Success(_)).getOrElse(Failure(new RuntimeException("Party extraction from ApiParty failed")))
-
-      }
     }
 
   private def manageCreationResponse[A](

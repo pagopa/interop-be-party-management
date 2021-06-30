@@ -1,25 +1,32 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EffectBuilder, EventSourcedBehavior, RetentionCriteria}
 import cats.implicits.toTraverseOps
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Party.convertToApi
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationShipStatus.Active
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, TokenText}
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.duration.DurationInt
+import java.time.temporal.ChronoUnit
+import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
 
 object PartyPersistentBehavior {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  val commandHandler: (State, Command) => Effect[Event, State] = { (state, command) =>
+  def commandHandler(
+    shard: ActorRef[ClusterSharding.ShardCommand],
+    context: ActorContext[Command]
+  ): (State, Command) => Effect[Event, State] = { (state, command) =>
+    val idleTimeout =
+      context.system.settings.config.getDuration("uservice-party-management.idle-timeout")
+    context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddParty(party, replyTo) =>
         logger.info(s"Adding party ${party.externalId}")
@@ -33,7 +40,7 @@ object PartyPersistentBehavior {
           .getOrElse {
             Effect
               .persist(PartyAdded(party))
-              .thenRun(_ => replyTo ! StatusReply.Success(convertToApi(party)))
+              .thenRun(_ => replyTo ! StatusReply.Success(party))
           }
 
       case DeleteParty(party, replyTo) =>
@@ -44,13 +51,13 @@ object PartyPersistentBehavior {
       case GetParty(id, replyTo) =>
         logger.info(s"Getting party $id")
 
-        val party: Option[ApiParty] = for {
+        val party: Option[Party] = for {
           uuid <- state.indexes.get(id)
           _ = logger.info(s"Found $id/${uuid.toString}")
           party <- state.parties.get(uuid)
-        } yield convertToApi(party)
+        } yield party
 
-        replyTo ! StatusReply.Success(party)
+        replyTo ! party
 
         Effect.none
 
@@ -68,20 +75,19 @@ object PartyPersistentBehavior {
             updated.fold[Effect[AttributesAdded, State]](
               ex => {
                 replyTo ! StatusReply.Error(
-                  s"Something goes wrong trying to update attributes for party ${organizationId}: ${ex.getMessage}"
+                  s"Something goes wrong trying to update attributes for party $organizationId: ${ex.getMessage}"
                 )
                 Effect.none[AttributesAdded, State]
               },
               p => {
-                val party: ApiParty = Party.convertToApi(p)
                 Effect
                   .persist(AttributesAdded(p))
-                  .thenRun(_ => replyTo ! StatusReply.Success(party))
+                  .thenRun(_ => replyTo ! StatusReply.Success(p))
               }
             )
           }
           .getOrElse {
-            replyTo ! StatusReply.Error(s"Party ${organizationId} not found")
+            replyTo ! StatusReply.Error(s"Party $organizationId not found")
             Effect.none[AttributesAdded, State]
           }
 
@@ -194,6 +200,11 @@ object PartyPersistentBehavior {
 
       case ConsumeToken(token, replyTo) =>
         processToken(state.tokens.get(token.id), replyTo, state, TokenConsumed)
+
+      case Idle =>
+        shard ! ClusterSharding.Passivate(context.self)
+        context.log.error(s"Passivate shard: ${shard.path.name}")
+        Effect.none[Event, State]
     }
 
   }
@@ -229,12 +240,24 @@ object PartyPersistentBehavior {
       case TokenConsumed(token)                      => state.consumeToken(token)
     }
 
-  def apply(): Behavior[Command] =
-    EventSourcedBehavior[Command, Event, State](
-      persistenceId = PersistenceId.ofUniqueId("uservice-party-management-persistence-party"),
-      emptyState = State.empty,
-      commandHandler = commandHandler,
-      eventHandler = eventHandler
-    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 1000, keepNSnapshots = 1))
-      .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
+  val TypeKey: EntityTypeKey[Command] =
+    EntityTypeKey[Command]("uservice-party-management-persistence-party")
+
+  def apply(shard: ActorRef[ClusterSharding.ShardCommand], persistenceId: PersistenceId): Behavior[Command] = {
+    Behaviors.setup { context =>
+      context.log.error(s"Starting EService Shard ${persistenceId.id}")
+      val numberOfEvents =
+        context.system.settings.config
+          .getInt("uservice-party-management.number-of-events-before-snapshot")
+      EventSourcedBehavior[Command, Event, State](
+        persistenceId = persistenceId,
+        emptyState = State.empty,
+        commandHandler = commandHandler(shard, context),
+        eventHandler = eventHandler
+      ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = numberOfEvents, keepNSnapshots = 1))
+        .withTagger(_ => Set(persistenceId.id))
+        .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
+    }
+  }
+
 }
