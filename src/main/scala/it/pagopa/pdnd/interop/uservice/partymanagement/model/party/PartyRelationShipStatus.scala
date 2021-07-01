@@ -8,7 +8,14 @@ sealed trait PartyRelationShipStatus {
     case PartyRelationShipStatus.Deleted  => "Deleted"
   }
 }
-
+@SuppressWarnings(
+  Array(
+    "org.wartremover.warts.Any",
+    "org.wartremover.warts.Nothing",
+    "org.wartremover.warts.Equals",
+    "org.wartremover.warts.ToString"
+  )
+)
 object PartyRelationShipStatus {
 
   case object Pending  extends PartyRelationShipStatus

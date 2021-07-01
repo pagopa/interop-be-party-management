@@ -27,6 +27,7 @@ object Dependencies {
       "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
     lazy val clusterHttp = "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion
     lazy val slf4j       = namespace                       %% "akka-slf4j"                   % akkaVersion
+    lazy val testkit     = namespace                       %% "akka-actor-testkit-typed"     % akkaVersion
 
   }
 
@@ -102,6 +103,7 @@ object Dependencies {
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
       scalpb.core                  % "protobuf",
+      akka.testkit                 % Test,
       scalatest.core               % Test,
       scalamock.core               % Test
     )

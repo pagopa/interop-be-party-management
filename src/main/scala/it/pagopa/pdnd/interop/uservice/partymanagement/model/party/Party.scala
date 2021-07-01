@@ -7,6 +7,14 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings(
+  Array(
+    "org.wartremover.warts.Any",
+    "org.wartremover.warts.Nothing",
+    "org.wartremover.warts.Equals",
+    "org.wartremover.warts.ToString"
+  )
+)
 sealed trait Party {
   def id: UUID
   def externalId: String //TODO describe also the type CF|askjasjdas
@@ -26,6 +34,14 @@ sealed trait Party {
 
 }
 
+@SuppressWarnings(
+  Array(
+    "org.wartremover.warts.Any",
+    "org.wartremover.warts.Nothing",
+    "org.wartremover.warts.Equals",
+    "org.wartremover.warts.ToString"
+  )
+)
 object Party {
 
   def addAttributes(party: Party, attributes: Set[Attributes]): Either[Throwable, Party] = {

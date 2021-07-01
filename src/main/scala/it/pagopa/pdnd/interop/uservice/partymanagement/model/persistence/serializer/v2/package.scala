@@ -22,7 +22,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import java.util.UUID
 
 package object v2 {
-
+  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV2PersistEventDeserializer: PersistEventDeserializer[StateV2, State] =
     state =>
       for {
@@ -43,6 +43,7 @@ package object v2 {
           .map(_.toMap)
       } yield State(parties, indexes, tokens, relationShips)
 
+  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV2PersistEventSerializer: PersistEventSerializer[State, StateV2] =
     state =>
       for {
@@ -51,7 +52,7 @@ package object v2 {
         }
         indexes <- Right(state.indexes.map { case (k, v) => IndexesV2(k, v.toString) }.toSeq)
         tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV2] { case (k, v) =>
-          getTokenV2(v).map(token => TokensV2(k.toString, token))
+          getTokenV2(v).map(token => TokensV2(k, token))
         }
         relationShips <- state.relationShips.toSeq
           .traverse[ErrorOr, RelationShipsV2] { case (key, value) =>

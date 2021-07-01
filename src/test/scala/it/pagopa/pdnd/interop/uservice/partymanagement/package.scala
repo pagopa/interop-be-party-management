@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice
 
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.classicActorSystem
@@ -12,8 +13,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 package object partymanagement extends MockFactory {
-  val uuidSupplier: UUIDSupplier = mock[UUIDSupplier]
-  final lazy val url: String     = "http://localhost:18088/pdnd-interop-uservice-party-management/0.0.1"
+  val uuidSupplier: UUIDSupplier              = mock[UUIDSupplier]
+  final lazy val url: String                  = "http://localhost:8088/pdnd-interop-uservice-party-management/0.0.1"
+  final val authorization: Seq[Authorization] = Seq(headers.Authorization(OAuth2BearerToken("token")))
 
   def createOrganization(data: Source[ByteString, Any]): HttpResponse = create(data, "organizations")
 
@@ -27,10 +29,12 @@ package object partymanagement extends MockFactory {
         HttpRequest(
           uri = s"$url/$path",
           method = HttpMethods.POST,
-          entity = HttpEntity(ContentTypes.`application/json`, data)
+          entity = HttpEntity(ContentTypes.`application/json`, data),
+          headers = authorization
         )
       ),
       Duration.Inf
     )
   }
+
 }

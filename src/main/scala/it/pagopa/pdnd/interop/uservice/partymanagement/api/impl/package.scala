@@ -5,7 +5,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.util.Timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Party
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{Command, GetParty}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{Command, GetPartyByExternalId}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,10 +24,21 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val tokenTextFormat: RootJsonFormat[TokenText]               = jsonFormat1(TokenText)
 
   implicit class CommandersOps(val commanders: Seq[EntityRef[Command]]) extends AnyVal {
-    def getParty(id: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[Party]] = {
+//    def getParty(id: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[Party]] = {
+//      Future
+//        .sequence(commanders.map(commander => commander.ask(ref => GetParty(id, ref))))
+//        .map(_.flatten.headOption)
+//    }
+    def getParty(externalId: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[Party]] = {
+//      commanders
+//        .map(ref => ref.ask(ref => GetPartyByExternalId(externalId, ref)))
+//        .map(Await.result(_, Duration.Inf))
+//        .find(_.isDefined)
+//        .flatten
+
       Future
-        .sequence(commanders.map(commander => commander.ask(ref => GetParty(id, ref))))
-        .map(_.flatten.headOption)
+        .traverse(commanders)(commanders => commanders.ask(ref => GetPartyByExternalId(externalId, ref)))
+        .map(_.find(_.isDefined).flatten)
     }
   }
 

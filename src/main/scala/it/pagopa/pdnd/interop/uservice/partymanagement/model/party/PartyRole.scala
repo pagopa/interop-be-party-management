@@ -18,6 +18,9 @@ case object Manager extends PartyRole
 
 case object Operator extends PartyRole
 
+@SuppressWarnings(
+  Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals", "org.wartremover.warts.ToString")
+)
 object PartyRole extends DefaultJsonProtocol {
 
   implicit val format: JsonFormat[PartyRole] = new JsonFormat[PartyRole] {

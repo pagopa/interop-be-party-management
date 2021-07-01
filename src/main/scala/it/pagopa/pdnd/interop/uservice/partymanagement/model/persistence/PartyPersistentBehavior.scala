@@ -7,15 +7,22 @@ import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EffectBuilder, EventSourcedBehavior, RetentionCriteria}
 import cats.implicits.toTraverseOps
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationShipStatus.Active
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationShip, TokenText}
 import org.slf4j.LoggerFactory
 
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
-
+@SuppressWarnings(
+  Array(
+    "org.wartremover.warts.Nothing",
+    "org.wartremover.warts.StringPlusAny",
+    "org.wartremover.warts.Equals",
+    "org.wartremover.warts.ToString"
+  )
+)
 object PartyPersistentBehavior {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -30,7 +37,6 @@ object PartyPersistentBehavior {
     command match {
       case AddParty(party, replyTo) =>
         logger.info(s"Adding party ${party.externalId}")
-
         state.indexes
           .get(party.externalId)
           .map { _ =>
@@ -48,12 +54,19 @@ object PartyPersistentBehavior {
           .persist(PartyDeleted(party))
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
-      case GetParty(id, replyTo) =>
-        logger.info(s"Getting party $id")
+      case GetParty(uuid, replyTo) =>
+        logger.info(s"Getting party ${uuid.toString}")
+        val party: Option[Party] = state.parties.get(uuid)
 
+        replyTo ! party
+
+        Effect.none
+
+      case GetPartyByExternalId(externalId, replyTo) =>
+        logger.info(s"Getting party $externalId")
         val party: Option[Party] = for {
-          uuid <- state.indexes.get(id)
-          _ = logger.info(s"Found $id/${uuid.toString}")
+          uuid <- state.indexes.get(externalId)
+          _ = logger.info(s"Found $externalId/${uuid.toString}")
           party <- state.parties.get(uuid)
         } yield party
 
@@ -92,10 +105,8 @@ object PartyPersistentBehavior {
           }
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
-        val isEligible = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
-
+        val isEligible                           = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
         val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
-
         state.relationShips
           .get(partyRelationShip.id)
           .map { _ =>
@@ -106,7 +117,9 @@ object PartyPersistentBehavior {
             if (isEligible || Set[PartyRole](Manager, Delegate).contains(role))
               Effect
                 .persist(PartyRelationShipAdded(partyRelationShip))
-                .thenRun(state => replyTo ! StatusReply.Success(state))
+                .thenRun(state => {
+                  replyTo ! StatusReply.Success(state)
+                })
             else {
               replyTo ! StatusReply.Error(s"Operator without manager")
               Effect.none[PartyAdded, State]
@@ -119,42 +132,48 @@ object PartyPersistentBehavior {
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
       case GetPartyRelationShips(from, replyTo) =>
-        val relationShips: List[RelationShip] =
-          state.relationShips.filter(_._1.from == from).values.toList.flatMap { rl =>
-            for {
-              from <- state.parties.get(rl.id.from)
-              to   <- state.parties.get(rl.id.to)
-            } yield RelationShip(
-              from = from.externalId,
-              to = to.externalId,
-              role = rl.id.role.stringify,
-              status = Some(rl.status.stringify)
-            )
-          }
-        replyTo ! StatusReply.Success(relationShips)
-
+        val relationShips: List[PartyRelationShip] = state.relationShips.filter(_._1.from == from).values.toList
+        replyTo ! relationShips
         Effect.none
 
-      case GetPartyRelationShip(from, to, replyTo) =>
-        val partyRelationShip: Option[PartyRelationShip] =
-          state.relationShips
-            .find(relationShip => relationShip._1.from == from && relationShip._1.to == to)
-            .map(_._2)
-
-        val relationShip: Option[RelationShip] = partyRelationShip.flatMap { rl =>
-          for {
-            from <- state.parties.get(rl.id.from)
-            to   <- state.parties.get(rl.id.to)
-          } yield RelationShip(
-            from = from.externalId,
-            to = to.externalId,
-            role = rl.id.role.stringify,
-            status = Some(rl.status.stringify)
-          )
-        }
-        replyTo ! StatusReply.Success(relationShip)
-
-        Effect.none
+//      case GetPartyRelationShips(from, replyTo) =>
+//        val relationShips: List[RelationShip] =
+//          state.relationShips.filter(_._1.from == from).values.toList.flatMap { rl =>
+//            for {
+//              from <- state.parties.get(rl.id.from)
+//              to   <- state.parties.get(rl.id.to)
+//            } yield RelationShip(
+//              from = from.externalId,
+//              to = to.externalId,
+//              role = rl.id.role.stringify,
+//              status = Some(rl.status.stringify)
+//            )
+//          }
+//        println(relationShips)
+//        replyTo ! StatusReply.Success(relationShips)
+//
+//        Effect.none
+//
+//      case GetPartyRelationShip(from, to, replyTo) =>
+//        val partyRelationShip: Option[PartyRelationShip] =
+//          state.relationShips
+//            .find(relationShip => relationShip._1.from == from && relationShip._1.to == to)
+//            .map(_._2)
+//
+//        val relationShip: Option[RelationShip] = partyRelationShip.flatMap { rl =>
+//          for {
+//            from <- state.parties.get(rl.id.from)
+//            to   <- state.parties.get(rl.id.to)
+//          } yield RelationShip(
+//            from = from.externalId,
+//            to = to.externalId,
+//            role = rl.id.role.stringify,
+//            status = Some(rl.status.stringify)
+//          )
+//        }
+//        replyTo ! StatusReply.Success(relationShip)
+//
+//        Effect.none
 
       case AddToken(tokenSeed, replyTo) =>
         val parties: Either[RuntimeException, Seq[PartyRelationShipId]] =

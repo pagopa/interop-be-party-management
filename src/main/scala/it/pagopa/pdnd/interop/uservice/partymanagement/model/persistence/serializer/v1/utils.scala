@@ -18,7 +18,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1.TokenStatusV1
 
 import java.util.UUID
-
+@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
 object utils {
 
   def getParty(partyV1: PartyV1): ErrorOr[Party] = partyV1 match {

@@ -4,6 +4,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 
 import java.util.UUID
 
+@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
 final case class State(
   parties: Map[UUID, Party],  //TODO use String instead of UUID
   indexes: Map[String, UUID], //TODO use String instead of UUID
@@ -50,5 +51,11 @@ final case class State(
 }
 
 object State {
-  val empty: State = State(parties = Map.empty, indexes = Map.empty, relationShips = Map.empty, tokens = Map.empty)
+  val empty: State =
+    State(
+      parties = Map.empty[UUID, Party],
+      indexes = Map.empty[String, UUID],
+      relationShips = Map.empty[PartyRelationShipId, PartyRelationShip],
+      tokens = Map.empty[String, Token]
+    )
 }

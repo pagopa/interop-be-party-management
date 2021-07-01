@@ -20,6 +20,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 
 import java.util.UUID
 
+@SuppressWarnings(Array("org.wartremover.warts.Nothing"))
 object utils {
 
   def getParty(partyV2: PartyV2): ErrorOr[Party] = partyV2 match {

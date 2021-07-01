@@ -16,7 +16,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import java.util.UUID
 
 package object v1 {
-
+  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state =>
       for {
@@ -36,7 +36,7 @@ package object v1 {
           )
           .map(_.toMap)
       } yield State(parties, indexes, tokens, relationShips)
-
+  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state =>
       for {

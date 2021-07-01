@@ -11,7 +11,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{executionContext, timeout}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationShip => _, _}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
@@ -20,6 +20,7 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
+@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
 class PartyApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,
@@ -242,9 +243,9 @@ class PartyApiServiceImpl(
       from <- commanders.getParty(relationShip.from)
       _ = logger.info(s"From retrieved ${from.toString}")
       to <- commanders.getParty(relationShip.to)
-      _ = logger.info(s"To retrieved ${to.toString}")
+//      _ = logger.error(s"To retrieved ${to.toString}")
       parties <- extractParties(from, to)
-      _ = logger.info(s"Parties retrieved ${parties.toString()}")
+//      _ = logger.error(s"Parties retrieved ${parties.toString()}")
       role <- PartyRole.fromText(relationShip.role).toFuture
       res <- getCommander(parties._1.partyId).ask(ref =>
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
@@ -272,22 +273,48 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    logger.info(s"Getting relationships for $from")
+    logger.error(s"Getting relationships for $from")
 
-    val commander: EntityRef[Command] =
-      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(from))
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
 
-    val result: Future[StatusReply[List[RelationShip]]] =
-      commander.ask(ref => GetPartyRelationShips(UUID.fromString(from), ref))
+    def createRelationships(
+      person: Person,
+      relationShips: List[PartyRelationShip]
+    ): Future[List[Option[RelationShip]]] = {
+      Future.traverse(relationShips)(rl =>
+        getCommander(rl.id.to.toString)
+          .ask(ref => GetParty(rl.id.to, ref))
+          .map(p =>
+            p.map(r =>
+              RelationShip(
+                from = person.taxCode,
+                to = r.externalId,
+                role = rl.id.role.stringify,
+                status = Some(rl.status.stringify)
+              )
+            )
+          )
+      )
+
+    }
+
+    val result: Future[List[RelationShip]] = for {
+      fromParty <- commanders.getParty(from)
+      party <- fromParty.fold(Future.failed[Party](new RuntimeException(s"Party ${from} not found")))(p =>
+        Future.successful(p)
+      )
+      person = Party.convertToApi(party).toOption.get //TODO remove get
+      partyRelationships <- getCommander(person.partyId).ask(ref =>
+        GetPartyRelationShips(UUID.fromString(person.partyId), ref)
+      )
+      relationships <- createRelationships(person, partyRelationships)
+    } yield relationships.flatten
 
     onComplete(result) {
-      case Success(statusReply) if statusReply.isError =>
-        getRelationShips400(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error")
-        )
-      case Success(result) if result.getValue.isEmpty =>
-        getRelationShips404(Problem(detail = None, status = 404, title = "some error"))
-      case Success(result) => getRelationShips200(RelationShips(result.getValue))
+      case Success(relationships) => getRelationShips200(RelationShips(relationships))
+
       case Failure(ex) =>
         getRelationShips400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }

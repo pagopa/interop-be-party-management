@@ -16,6 +16,7 @@ case object Waiting  extends TokenStatus
 case object Invalid  extends TokenStatus
 case object Consumed extends TokenStatus
 
+@SuppressWarnings(Array("org.wartremover.warts.Nothing"))
 object TokenStatus {
 
   def fromText(str: String): Either[Throwable, TokenStatus] = str match {

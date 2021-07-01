@@ -10,6 +10,9 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.Try
 
+@SuppressWarnings(
+  Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals", "org.wartremover.warts.ToString")
+)
 final case class Token(
   id: String,
   legals: Seq[PartyRelationShipId],
@@ -22,7 +25,14 @@ final case class Token(
 
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
+@SuppressWarnings(
+  Array(
+    "org.wartremover.warts.Any",
+    "org.wartremover.warts.Nothing",
+    "org.wartremover.warts.Equals",
+    "org.wartremover.warts.ToString"
+  )
+)
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val format: RootJsonFormat[Token] = jsonFormat6(Token.apply)

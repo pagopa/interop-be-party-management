@@ -44,6 +44,14 @@ object Main extends App with CorsSupport {
 
   Kamon.init()
 
+  def buildPersistentEntity(): Entity[Command, ShardingEnvelope[Command]] =
+    Entity(typeKey = PartyPersistentBehavior.TypeKey) { entityContext =>
+      PartyPersistentBehavior(
+        entityContext.shard,
+        PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
+      )
+    }
+
   locally {
     val _ = ActorSystem[Nothing](
       Behaviors.setup[Nothing] { context =>
@@ -55,13 +63,7 @@ object Main extends App with CorsSupport {
 
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
-        val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
-          Entity(typeKey = PartyPersistentBehavior.TypeKey) { entityContext =>
-            PartyPersistentBehavior(
-              entityContext.shard,
-              PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
-            )
-          }
+        val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] = buildPersistentEntity()
 
         val _ = sharding.init(partyPersistentEntity)
 
