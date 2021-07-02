@@ -23,6 +23,8 @@ package object partymanagement extends MockFactory {
 
   def createRelationShip(data: Source[ByteString, Any]): HttpResponse = create(data, "relationships")
 
+  def createToken(data: Source[ByteString, Any]): HttpResponse = create(data, "tokens")
+
   private def create(data: Source[ByteString, Any], path: String): HttpResponse = {
     Await.result(
       Http().singleRequest(

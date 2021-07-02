@@ -330,11 +330,28 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Creating token ${tokenSeed.toString}")
+    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    println(tokenSeed.toString)
+    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
+    )
 
-    val commander: EntityRef[Command] =
-      sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(tokenSeed.seed)) //TODO which key?
+    val result: Future[StatusReply[TokenText]] = for {
+      partyRelationShipIds <- Future.traverse(tokenSeed.relationShips.items) { relationShip =>
+        for {
+          from <- commanders.getParty(relationShip.from)
+          _ = println(from.toString)
+          to <- commanders.getParty(relationShip.to)
+          _    = println(from.toString)
+          role = PartyRole.fromText(relationShip.role).toOption
+          _    = println(role.toString)
+        } yield PartyRelationShipId(from.get.id, to.get.id, role.get)
 
-    val result: Future[StatusReply[TokenText]] = commander.ask(ref => AddToken(tokenSeed, ref))
+      }
+
+      token <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationShipIds, ref))
+    } yield token
 
     manageCreationResponse(result, createToken201, createToken400)
 

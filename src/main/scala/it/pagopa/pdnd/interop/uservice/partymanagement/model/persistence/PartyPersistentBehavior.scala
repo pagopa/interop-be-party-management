@@ -6,7 +6,6 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EffectBuilder, EventSourcedBehavior, RetentionCriteria}
-import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationShipStatus.Active
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
@@ -36,6 +35,7 @@ object PartyPersistentBehavior {
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddParty(party, replyTo) =>
+        println(s"Adding party ${party.externalId}")
         logger.info(s"Adding party ${party.externalId}")
         state.indexes
           .get(party.externalId)
@@ -105,6 +105,7 @@ object PartyPersistentBehavior {
           }
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
+        println(s"Adding Relationship ${from.toString}/${to.toString}/${role.stringify}")
         val isEligible                           = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
         val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
         state.relationShips
@@ -136,60 +137,9 @@ object PartyPersistentBehavior {
         replyTo ! relationShips
         Effect.none
 
-//      case GetPartyRelationShips(from, replyTo) =>
-//        val relationShips: List[RelationShip] =
-//          state.relationShips.filter(_._1.from == from).values.toList.flatMap { rl =>
-//            for {
-//              from <- state.parties.get(rl.id.from)
-//              to   <- state.parties.get(rl.id.to)
-//            } yield RelationShip(
-//              from = from.externalId,
-//              to = to.externalId,
-//              role = rl.id.role.stringify,
-//              status = Some(rl.status.stringify)
-//            )
-//          }
-//        println(relationShips)
-//        replyTo ! StatusReply.Success(relationShips)
-//
-//        Effect.none
-//
-//      case GetPartyRelationShip(from, to, replyTo) =>
-//        val partyRelationShip: Option[PartyRelationShip] =
-//          state.relationShips
-//            .find(relationShip => relationShip._1.from == from && relationShip._1.to == to)
-//            .map(_._2)
-//
-//        val relationShip: Option[RelationShip] = partyRelationShip.flatMap { rl =>
-//          for {
-//            from <- state.parties.get(rl.id.from)
-//            to   <- state.parties.get(rl.id.to)
-//          } yield RelationShip(
-//            from = from.externalId,
-//            to = to.externalId,
-//            role = rl.id.role.stringify,
-//            status = Some(rl.status.stringify)
-//          )
-//        }
-//        replyTo ! StatusReply.Success(relationShip)
-//
-//        Effect.none
-
-      case AddToken(tokenSeed, replyTo) =>
-        val parties: Either[RuntimeException, Seq[PartyRelationShipId]] =
-          tokenSeed.relationShips.items
-            .traverse(relationShip =>
-              for {
-                fromIdx <- state.indexes.get(relationShip.from)
-                from    <- state.parties.get(fromIdx)
-                toIdx   <- state.indexes.get(relationShip.to)
-                to      <- state.parties.get(toIdx)
-                role    <- PartyRole.fromText(relationShip.role).toOption
-              } yield PartyRelationShipId(from.id, to.id, role)
-            )
-            .toRight(new RuntimeException(s"Parties found"))
-
-        val token: Either[Throwable, Token] = parties.flatMap(pts => Token.generate(tokenSeed, pts))
+      case AddToken(tokenSeed, partyRelationShipIds, replyTo) =>
+        println(s"Adding Relationship ${tokenSeed.seed}/${partyRelationShipIds.mkString("|")}")
+        val token: Either[Throwable, Token] = Token.generate(tokenSeed, partyRelationShipIds)
 
         token match {
           case Right(tk) =>

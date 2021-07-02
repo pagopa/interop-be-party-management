@@ -15,7 +15,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person, RelationShips}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person, RelationShips, TokenSeed}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -282,7 +282,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = Await.result(
         Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/${taxCode1}", method = HttpMethods.GET, headers = authorization)
+          HttpRequest(uri = s"$url/relationships/$taxCode1", method = HttpMethods.GET, headers = authorization)
         ),
         Duration.Inf
       )
@@ -300,7 +300,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = Await.result(
         Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/${taxCode1}", method = HttpMethods.GET, headers = authorization)
+          HttpRequest(uri = s"$url/relationships/$taxCode1", method = HttpMethods.GET, headers = authorization)
         ),
         Duration.Inf
       )
@@ -393,4 +393,47 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
   }
 
+  "Working on token" must {
+    import TokenApiServiceData._
+
+    "create a token" in {
+
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid0)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
+
+      val personData = Await.result(Marshal(personSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val _ = createPerson(personData)
+
+      val organizationData = Await.result(Marshal(organizationSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val _ = createOrganization(organizationData)
+
+      val data1 = Await.result(Marshal(seed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val _ = createRelationShip(data1)
+
+      val data2 = Await.result(Marshal(seed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val _ = createRelationShip(data2)
+
+      val response3 = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/relationships/${seed1.from}", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      val relationships = Await.result(Unmarshal(response3.entity).to[RelationShips], Duration.Inf)
+
+      val tokenSeed = TokenSeed(seed = tokenSeed1, relationShips = relationships, "checksum")
+
+      val tokenData = Await.result(Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val response = createToken(tokenData)
+
+      response.status shouldBe StatusCodes.Created
+    }
+
+  }
 }

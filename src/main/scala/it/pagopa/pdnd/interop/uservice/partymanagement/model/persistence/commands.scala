@@ -43,7 +43,11 @@ final case class GetPartyRelationShips(from: UUID, replyTo: ActorRef[List[PartyR
 //    extends PartyRelationShipCommand
 
 /* Party Command */
-final case class AddToken(token: TokenSeed, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
+final case class AddToken(
+  token: TokenSeed,
+  partyRelationShipIds: Seq[PartyRelationShipId],
+  replyTo: ActorRef[StatusReply[TokenText]]
+) extends TokenCommand
 
 final case class VerifyToken(token: Token, replyTo: ActorRef[StatusReply[Option[Token]]]) extends TokenCommand
 

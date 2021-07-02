@@ -24,18 +24,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val tokenTextFormat: RootJsonFormat[TokenText]               = jsonFormat1(TokenText)
 
   implicit class CommandersOps(val commanders: Seq[EntityRef[Command]]) extends AnyVal {
-//    def getParty(id: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[Party]] = {
-//      Future
-//        .sequence(commanders.map(commander => commander.ask(ref => GetParty(id, ref))))
-//        .map(_.flatten.headOption)
-//    }
-    def getParty(externalId: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[Party]] = {
-//      commanders
-//        .map(ref => ref.ask(ref => GetPartyByExternalId(externalId, ref)))
-//        .map(Await.result(_, Duration.Inf))
-//        .find(_.isDefined)
-//        .flatten
 
+    def getParty(externalId: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[Party]] = {
       Future
         .traverse(commanders)(commanders => commanders.ask(ref => GetPartyByExternalId(externalId, ref)))
         .map(_.find(_.isDefined).flatten)
