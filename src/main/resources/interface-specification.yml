@@ -45,8 +45,6 @@ paths:
           schema:
             description: Il codice fiscale.
             example: RSSMRA75L01H501A
-            maxLength: 16
-            minLength: 11
             #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
             type: string
       responses:
@@ -70,8 +68,6 @@ paths:
           schema:
             description: Il codice fiscale.
             example: RSSMRA75L01H501A
-            maxLength: 16
-            minLength: 11
             #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
             type: string
       responses:
@@ -160,8 +156,6 @@ paths:
           schema:
             description: to be defined
             example: age
-            maxLength: 3
-            # pattern: '[a-z]{2,3}'
             type: string
       responses:
         '200':
@@ -184,8 +178,6 @@ paths:
           schema:
             description: to be defined
             example: age
-            maxLength: 32
-            # pattern: '[a-z]{2,3}'
             type: string
       responses:
         '200':
@@ -217,8 +209,6 @@ paths:
           schema:
             description: to be defined
             example: age
-            maxLength: 32
-            # pattern: '[a-z]{2,3}'
             type: string
       requestBody:
         required: true
@@ -280,8 +270,6 @@ paths:
           schema:
             description: to be defined
             example: age
-            maxLength: 32
-            # pattern: '[a-z]{2,3}'
             type: string
       responses:
         '200':
@@ -435,20 +423,13 @@ components:
         taxCode:
           description: Il codice fiscale.
           example: RSSMRA75L01H501A
-          maxLength: 16
-          minLength: 11
-          pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
           type: string
         surname:
           type: string
           example: Doe
-          pattern: '[a-zA-Z]+' # to improvername
-          maxLength: 12
         name:
           type: string
           example: John
-          format: '[a-zA-Z]+' # to improve
-          maxLength: 12
       required:
         - taxCode
         - name
@@ -460,24 +441,16 @@ components:
         taxCode:
           description: Il codice fiscale.
           example: RSSMRA75L01H501A
-          maxLength: 16
-          minLength: 11
-          pattern: '^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$'
           type: string
         surname:
           type: string
           example: Doe
-          pattern: '[a-zA-Z]+' # to improvername
-          maxLength: 12
         name:
           type: string
           example: John
-          format: '[a-zA-Z]+' # to improve
-          maxLength: 12
         partyId:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
       required:
         - taxCode
         - name
@@ -490,21 +463,15 @@ components:
         institutionId:
           description: DN
           example: aoo=c_f205,o=c_f205,c=it
-          maxLength: 64
-          minLength: 1
           type: string
         description:
           type: string
           example: AGENCY X
-          maxLength: 12
         manager:
           example: Mario Rossi
-          maxLength: 20
-          pattern: ^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
           type: string
         digitalAddress:
           example: email@pec.mail.org
-          maxLength: 120
           format: email
           type: string
         attributes:
@@ -522,27 +489,20 @@ components:
         institutionId:
           description: DN
           example: aoo=c_f205,o=c_f205,c=it
-          maxLength: 64
-          minLength: 1
           type: string
         description:
           type: string
           example: AGENCY X
-          maxLength: 12
         manager:
           example: Mario Rossi
-          maxLength: 20
-          pattern: ^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$
           type: string
         digitalAddress:
           example: email@pec.mail.org
-          maxLength: 20
           format: email
           type: string
         partyId:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
         attributes:
           $ref: '#/components/schemas/AttributeRecords'
       required:
@@ -609,7 +569,6 @@ components:
         seed:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-          maxLength: 36
         relationShips:
           $ref: '#/components/schemas/RelationShips'
         checksum:
@@ -622,8 +581,6 @@ components:
     TokenText:
       properties:
         token:
-          maxLength: 4096
-          pattern: '^.{0,1024}$'
           type: string
       additionalProperties: false
       required:
@@ -634,8 +591,6 @@ components:
           description:
             A human readable explanation specific to this occurrence of the problem.
           example: Request took too long to complete.
-          maxLength: 4096
-          pattern: '^.{0,1024}$'
           type: string
         status:
           description:
@@ -651,8 +606,6 @@ components:
           description:
             A short, summary of the problem type. Written in english and readable
           example: Service Unavailable
-          maxLength: 64
-          pattern: '^[ -~]{0,64}$'
           type: string
       additionalProperties: false
       required:
