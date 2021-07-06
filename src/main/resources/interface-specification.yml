@@ -505,7 +505,7 @@ components:
           type: string
         digitalAddress:
           example: email@pec.mail.org
-          maxLength: 20
+          maxLength: 120
           format: email
           type: string
         attributes:
