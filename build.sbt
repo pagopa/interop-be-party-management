@@ -1,5 +1,3 @@
-import com.typesafe.sbt.packager.docker.Cmd
-
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
@@ -9,9 +7,6 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
   else
     m
 )
-
-PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value)
-
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
@@ -47,7 +42,7 @@ generateCode := {
 
 }
 
-(compile in Compile) := ((compile in Compile) dependsOn generateCode).value
+Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value)
 
 cleanFiles += baseDirectory.value / "generated" / "src"
 
@@ -62,8 +57,6 @@ lazy val client = project
   .settings(
     name := "pdnd-interop-uservice-party-management-client",
     scalacOptions := Seq(),
-    scalafmtOnCompile := true,
-    version := (version in ThisBuild).value,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)

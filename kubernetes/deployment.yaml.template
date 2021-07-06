@@ -14,30 +14,35 @@ spec:
     metadata:
       labels:
         app: {{name}}
+        actorSystemName: {{name}}
     spec:
       imagePullSecrets:
         - name: regcred
+      volumes:
+        - name: application-conf
+          secret:
+            secretName: application.conf
+            defaultMode: 420
       containers:
         - name: {{name}}
           image: {{repository}}/services/{{name}}:{{version}}
-          volumeMounts:
-            - mountPath: /opt/docker/snapshots
-              name: snapshots-volume
+          command: ["bin/{{name}}"]
+          args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
               path: /ready
               port: management
             periodSeconds: 10
-            failureThreshold: 3
-            initialDelaySeconds: 10
+            failureThreshold: 5
+            initialDelaySeconds: 30
           livenessProbe:
             httpGet:
               path: "/alive"
               port: management
             periodSeconds: 10
             failureThreshold: 5
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
           ports:
             - name: management
               containerPort: 8558
@@ -48,27 +53,15 @@ spec:
             - name: monitoring
               containerPort: 9095
               protocol: TCP
+          securityContext:
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
           env:
-            - name: VAULT_ADDR
+            - name: CASSANDRA_HOST
               valueFrom:
                 secretKeyRef:
-                  name: vault
-                  key: VAULT_ADDR
-            - name: VAULT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: vault
-                  key: VAULT_TOKEN
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: aws
-                  key: AWS_ACCESS_KEY_ID
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: aws
-                  key: AWS_SECRET_ACCESS_KEY
+                  name: cassandra
+                  key: CASSANDRA_HOST
             - name: CASSANDRA_USER
               valueFrom:
                 secretKeyRef:
@@ -79,9 +72,15 @@ spec:
                 secretKeyRef:
                   name: cassandra
                   key: CASSANDRA_PWD
-      volumes:
-      - name: snapshots-volume
-        emptyDir: {}
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: REQUIRED_CONTACT_POINT_NR
+              value: "1"
+          volumeMounts:
+            - name: application-conf
+              mountPath: /opt/docker/etc
 ---
 apiVersion: v1
 kind: Service
@@ -104,6 +103,31 @@ spec:
   selector:
     app: {{name}}
 ---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pod-reader
+  namespace: {{name}}
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: read-pods
+  namespace: {{name}}
+subjects:
+# Note the `name` line below. The first default refers to the namespace. The second refers to the service account name.
+# For instance, `name: system:serviceaccount:myns:default` would refer to the default service account in namespace `myns`
+- kind: User
+  name: system:serviceaccount:{{name}}:default
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
@@ -114,7 +138,7 @@ metadata:
   namespace: {{name}}
 spec:
   rules:
-    - host: gateway.interop.pdnd.dev
+    - host: {{repository}}
       http:
         paths:
           - path: /{{name}}
