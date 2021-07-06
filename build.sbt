@@ -84,19 +84,20 @@ lazy val client = project
 lazy val root = (project in file("."))
   .settings(
     name := "pdnd-interop-uservice-party-management",
-    parallelExecution in Test := false,
+    Test / parallelExecution := false,
     dockerBuildOptions ++= Seq("--network=host"),
-    dockerRepository in Docker := Some(System.getenv("DOCKER_REPO")),
-    version in Docker := (version in ThisBuild).value,
-    packageName in Docker := s"services/${name.value}",
-    daemonUser in Docker := "daemon",
-    dockerExposedPorts in Docker := Seq(8080),
-    dockerBaseImage in Docker := "adoptopenjdk:11-jdk-hotspot",
-    dockerUpdateLatest in Docker := true,
-    Compile / compile / wartremoverErrors ++= Warts.unsafe,
-    wartremoverExcluded += sourceManaged.value,
-    scalafmtOnCompile := true
+    dockerRepository := Some(System.getenv("DOCKER_REPO")),
+    dockerBaseImage := "adoptopenjdk:11-jdk-hotspot",
+    dockerUpdateLatest := true,
+    daemonUser := "daemon",
+    Docker / version := (ThisBuild / version).value,
+    Docker / packageName := s"services/${name.value}",
+    Docker / dockerExposedPorts := Seq(8080),
+    wartremoverErrors ++= Warts.all,
+    wartremoverExcluded += sourceManaged.value
   )
   .aggregate(client)
   .dependsOn(generated)
-  .enablePlugins(AshScriptPlugin, DockerPlugin)
+  .enablePlugins(JavaAppPackaging, JavaAgent)
+
+javaAgents += "io.kamon" % "kanela-agent" % "1.0.7"
