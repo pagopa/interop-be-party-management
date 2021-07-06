@@ -35,7 +35,6 @@ object PartyPersistentBehavior {
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddParty(party, replyTo) =>
-        println(s"Adding party ${party.externalId}")
         logger.info(s"Adding party ${party.externalId}")
         state.indexes
           .get(party.externalId)
@@ -105,7 +104,6 @@ object PartyPersistentBehavior {
           }
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
-        println(s"Adding Relationship ${from.toString}/${to.toString}/${role.stringify}")
         val isEligible                           = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
         val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
         state.relationShips
@@ -138,7 +136,6 @@ object PartyPersistentBehavior {
         Effect.none
 
       case AddToken(tokenSeed, partyRelationShipIds, replyTo) =>
-        println(s"Adding Relationship ${tokenSeed.seed}/${partyRelationShipIds.mkString("|")}")
         val token: Either[Throwable, Token] = Token.generate(tokenSeed, partyRelationShipIds)
 
         token match {

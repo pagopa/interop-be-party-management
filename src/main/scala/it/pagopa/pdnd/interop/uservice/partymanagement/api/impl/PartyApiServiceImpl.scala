@@ -242,11 +242,9 @@ class PartyApiServiceImpl(
     val result: Future[StatusReply[State]] = for {
       from <- commanders.getParty(relationShip.from)
       _ = logger.info(s"From retrieved ${from.toString}")
-      to <- commanders.getParty(relationShip.to)
-//      _ = logger.error(s"To retrieved ${to.toString}")
+      to      <- commanders.getParty(relationShip.to)
       parties <- extractParties(from, to)
-//      _ = logger.error(s"Parties retrieved ${parties.toString()}")
-      role <- PartyRole.fromText(relationShip.role).toFuture
+      role    <- PartyRole.fromText(relationShip.role).toFuture
       res <- getCommander(parties._1.partyId).ask(ref =>
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )
@@ -330,9 +328,7 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Creating token ${tokenSeed.toString}")
-    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    println(tokenSeed.toString)
-    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
     val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
       sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(shard.toString))
     )
@@ -341,11 +337,8 @@ class PartyApiServiceImpl(
       partyRelationShipIds <- Future.traverse(tokenSeed.relationShips.items) { relationShip =>
         for {
           from <- commanders.getParty(relationShip.from)
-          _ = println(from.toString)
-          to <- commanders.getParty(relationShip.to)
-          _    = println(from.toString)
+          to   <- commanders.getParty(relationShip.to)
           role = PartyRole.fromText(relationShip.role).toOption
-          _    = println(role.toString)
         } yield PartyRelationShipId(from.get.id, to.get.id, role.get)
 
       }
