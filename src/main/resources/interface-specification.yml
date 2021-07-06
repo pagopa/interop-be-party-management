@@ -496,7 +496,6 @@ components:
         description:
           type: string
           example: AGENCY X
-          format: '[a-zA-Z]+' # to improve
           maxLength: 12
         manager:
           example: Mario Rossi
@@ -529,7 +528,6 @@ components:
         description:
           type: string
           example: AGENCY X
-          format: '[a-zA-Z]+' # to improve
           maxLength: 12
         manager:
           example: Mario Rossi
