@@ -93,7 +93,7 @@ lazy val root = (project in file("."))
     Docker / version := (ThisBuild / version).value,
     Docker / packageName := s"services/${name.value}",
     Docker / dockerExposedPorts := Seq(8080),
-    wartremoverErrors ++= Warts.all,
+    wartremoverErrors ++= Warts.unsafe,
     wartremoverExcluded += sourceManaged.value
   )
   .aggregate(client)
