@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
+import org.slf4j.LoggerFactory
 
 import java.util.UUID
 
@@ -12,8 +13,12 @@ final case class State(
   relationShips: Map[PartyRelationShipId, PartyRelationShip]
 ) extends Persistable {
 
-  def addParty(party: Party): State =
+  private val logger = LoggerFactory.getLogger(this.getClass)
+
+  def addParty(party: Party): State = {
+    logger.error(s"Writing party ${party.externalId} to state")
     copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
+  }
 
   def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
 

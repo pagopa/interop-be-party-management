@@ -14,13 +14,7 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
-import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
-  HealthApiMarshallerImpl,
-  HealthServiceApiImpl,
-  PartyApiMarshallerImpl,
-  PartyApiServiceImpl,
-  _
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl._
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{Authenticator, CorsSupport}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
@@ -35,7 +29,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.UUIDSupplier
 import kamon.Kamon
 import spray.json.{JsValue, enrichAny}
 
-import scala.jdk.CollectionConverters.CollectionHasAsScala
+import scala.jdk.CollectionConverters._
 
 @SuppressWarnings(
   Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing", "org.wartremover.warts.Throw")

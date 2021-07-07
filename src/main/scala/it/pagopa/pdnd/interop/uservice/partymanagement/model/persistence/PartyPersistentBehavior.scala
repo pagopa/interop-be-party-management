@@ -35,14 +35,16 @@ object PartyPersistentBehavior {
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddParty(party, replyTo) =>
-        logger.info(s"Adding party ${party.externalId}")
+        logger.error(s"Adding party ${party.externalId}")
         state.indexes
           .get(party.externalId)
           .map { _ =>
+            logger.error(s"Found party ${party.externalId}")
             replyTo ! StatusReply.Error(s"Party ${party.externalId} already exists")
             Effect.none[PartyAdded, State]
           }
           .getOrElse {
+            logger.error(s"Writing party ${party.externalId}")
             Effect
               .persist(PartyAdded(party))
               .thenRun(_ => replyTo ! StatusReply.Success(party))
