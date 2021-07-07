@@ -14,9 +14,14 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
-import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl._
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
+  HealthApiMarshallerImpl,
+  HealthServiceApiImpl,
+  PartyApiMarshallerImpl,
+  PartyApiServiceImpl
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{Authenticator, CorsSupport}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   Command,
@@ -27,14 +32,18 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.UUIDSupplierImpl
 import kamon.Kamon
-import spray.json.{JsValue, enrichAny}
 
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 
 @SuppressWarnings(
-  Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing", "org.wartremover.warts.Throw")
+  Array(
+    "org.wartremover.warts.StringPlusAny",
+    "org.wartremover.warts.Nothing",
+    "org.wartremover.warts.NonUnitStatements"
+  )
 )
-object Main extends App with CorsSupport {
+object Main extends App {
 
   Kamon.init()
 
@@ -51,7 +60,10 @@ object Main extends App with CorsSupport {
       Behaviors.setup[Nothing] { context =>
         import akka.actor.typed.scaladsl.adapter._
         implicit val classicSystem: classic.ActorSystem = context.system.toClassic
-        val cluster: Cluster                            = Cluster(context.system)
+        implicit val executionContext: ExecutionContext = context.system.executionContext
+        val marshallerImpl                              = new PartyApiMarshallerImpl()
+
+        val cluster = Cluster(context.system)
 
         context.log.error("Started [" + context.system + "], cluster.selfAddress = " + cluster.selfMember.address + ")")
 
@@ -84,7 +96,7 @@ object Main extends App with CorsSupport {
 
         val partyApi: PartyApi = new PartyApi(
           new PartyApiServiceImpl(context.system, sharding, partyPersistentEntity, uuidSupplier),
-          new PartyApiMarshallerImpl(),
+          marshallerImpl,
           SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
         )
 
@@ -111,13 +123,12 @@ object Main extends App with CorsSupport {
               println(item.message())
               println(item.severity())
             }
-            val message: JsValue =
-              Problem(Some(e.results().items().asScala.map(_.message()).mkString("\n")), 400, "some error").toJson
-            complete((400, message))
+            val message = e.results().items().asScala.map(_.message()).mkString("\n")
+            complete(400, Problem(Some(message), 400, "bad request"))(marshallerImpl.toEntityMarshallerProblem)
           })
         )
 
-        val _ = Http().newServerAt("0.0.0.0", 8088).bind(corsHandler(controller.routes))
+        val _ = Http().newServerAt("0.0.0.0", 8088).bind(controller.routes)
 
         val listener = context.spawn(
           Behaviors.receive[ClusterEvent.MemberEvent]((ctx, event) => {
@@ -127,7 +138,7 @@ object Main extends App with CorsSupport {
           "listener"
         )
 
-        cluster.subscriptions ! Subscribe(listener, classOf[ClusterEvent.MemberEvent])
+        Cluster(context.system).subscriptions ! Subscribe(listener, classOf[ClusterEvent.MemberEvent])
 
         val _ = AkkaManagement(classicSystem).start()
         ClusterBootstrap.get(classicSystem).start()

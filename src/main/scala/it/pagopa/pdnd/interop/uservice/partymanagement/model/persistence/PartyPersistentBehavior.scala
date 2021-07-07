@@ -34,17 +34,17 @@ object PartyPersistentBehavior {
       context.system.settings.config.getDuration("uservice-party-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
-      case AddParty(party, replyTo) =>
-        logger.error(s"Adding party ${party.externalId}")
+      case AddParty(party, shardId, replyTo) =>
+        logger.error(s"Adding party ${party.externalId} to shard $shardId")
+        logger.error(state.toString)
         state.indexes
           .get(party.externalId)
           .map { _ =>
-            logger.error(s"Found party ${party.externalId}")
+            logger.error(s"AddParty found party ${party.externalId} at shard $shardId")
             replyTo ! StatusReply.Error(s"Party ${party.externalId} already exists")
             Effect.none[PartyAdded, State]
           }
           .getOrElse {
-            logger.error(s"Writing party ${party.externalId}")
             Effect
               .persist(PartyAdded(party))
               .thenRun(_ => replyTo ! StatusReply.Success(party))
@@ -56,18 +56,17 @@ object PartyPersistentBehavior {
           .thenRun(state => replyTo ! StatusReply.Success(state))
 
       case GetParty(uuid, replyTo) =>
-        logger.info(s"Getting party ${uuid.toString}")
         val party: Option[Party] = state.parties.get(uuid)
-
+        party.foreach(p => logger.info(s"Found party ${p.externalId}/${p.id.toString}"))
         replyTo ! party
 
         Effect.none
 
-      case GetPartyByExternalId(externalId, replyTo) =>
-        logger.info(s"Getting party $externalId")
+      case GetPartyByExternalId(externalId, shardId, replyTo) =>
+//        logger.info(s"Asking for party in $shardId")
         val party: Option[Party] = for {
           uuid <- state.indexes.get(externalId)
-          _ = logger.info(s"Found $externalId/${uuid.toString}")
+          _ = logger.info(s"GetPartyByExternalId found $externalId/${uuid.toString} at shard $shardId")
           party <- state.parties.get(uuid)
         } yield party
 
@@ -171,7 +170,7 @@ object PartyPersistentBehavior {
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
-        context.log.error(s"Passivate shard: ${shard.path.name}")
+//        context.log.error(s"Passivate shard: ${shard.path.name}")
         Effect.none[Event, State]
     }
 
@@ -213,7 +212,7 @@ object PartyPersistentBehavior {
 
   def apply(shard: ActorRef[ClusterSharding.ShardCommand], persistenceId: PersistenceId): Behavior[Command] = {
     Behaviors.setup { context =>
-      context.log.error(s"Starting EService Shard ${persistenceId.id}")
+//      context.log.error(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
         context.system.settings.config
           .getInt("uservice-party-management.number-of-events-before-snapshot")

@@ -16,10 +16,11 @@ sealed trait TokenCommand             extends Command
 case object Idle extends Command
 
 /* Party Command */
-final case class AddParty(entity: Party, replyTo: ActorRef[StatusReply[Party]])             extends PartyCommand
-final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[State]])          extends PartyCommand
-final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])                  extends PartyCommand
-final case class GetPartyByExternalId(externalId: String, replyTo: ActorRef[Option[Party]]) extends PartyCommand
+final case class AddParty(entity: Party, shardId: String, replyTo: ActorRef[StatusReply[Party]]) extends PartyCommand
+final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[State]])               extends PartyCommand
+final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])                       extends PartyCommand
+final case class GetPartyByExternalId(externalId: String, shardId: String, replyTo: ActorRef[Option[Party]])
+    extends PartyCommand
 final case class AddAttributes(
   organizationId: String,
   attributeRecords: Seq[AttributeRecord],
@@ -35,12 +36,6 @@ final case class DeletePartyRelationShip(relationShipId: PartyRelationShipId, re
 
 final case class GetPartyRelationShips(from: UUID, replyTo: ActorRef[List[PartyRelationShip]])
     extends PartyRelationShipCommand
-
-//final case class GetPartyRelationShips(from: UUID, replyTo: ActorRef[StatusReply[List[RelationShip]]])
-//    extends PartyRelationShipCommand
-//
-//final case class GetPartyRelationShip(from: UUID, to: UUID, replyTo: ActorRef[StatusReply[Option[RelationShip]]])
-//    extends PartyRelationShipCommand
 
 /* Party Command */
 final case class AddToken(

@@ -17,7 +17,9 @@ final case class State(
 
   def addParty(party: Party): State = {
     logger.error(s"Writing party ${party.externalId} to state")
-    copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
+    val newState = copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
+    logger.info(newState.toString)
+    newState
   }
 
   def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
