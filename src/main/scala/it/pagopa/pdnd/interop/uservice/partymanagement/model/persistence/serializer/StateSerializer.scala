@@ -9,9 +9,8 @@ import java.io.NotSerializableException
 class StateSerializer extends SerializerWithStringManifest {
 
   final val version1: String = "1"
-  final val version2: String = "2"
 
-  final val currentVersion: String = version2
+  final val currentVersion: String = version1
 
   override def identifier: Int = 400000
 
@@ -28,8 +27,6 @@ class StateSerializer extends SerializerWithStringManifest {
     manifest.split('|').toList match {
       case StateManifest :: `version1` :: Nil =>
         deserialize(v1.state.StateV1, bytes, manifest, version1)
-      case StateManifest :: `version2` :: Nil =>
-        deserialize(v2.state.StateV2, bytes, manifest, version2)
       case _ =>
         throw new NotSerializableException(
           s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "

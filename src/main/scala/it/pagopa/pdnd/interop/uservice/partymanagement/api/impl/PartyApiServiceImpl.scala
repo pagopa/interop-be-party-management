@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api.impl
 
-import akka.actor.typed.ActorSystem
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
@@ -213,7 +213,7 @@ class PartyApiServiceImpl(
     relationShip: RelationShip
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
-    val result: Future[StatusReply[State]] = for {
+    val result: Future[StatusReply[Unit]] = for {
       from <- getCommander(relationShip.from).ask(ref =>
         GetPartyByExternalId(relationShip.from, getShard(relationShip.from), ref)
       )
@@ -222,7 +222,7 @@ class PartyApiServiceImpl(
       )
       parties <- extractParties(from, to)
       role    <- PartyRole.fromText(relationShip.role).toFuture
-      res <- getCommander(relationShip.from).ask(ref =>
+      res <- getCommander(parties._1.taxCode).ask(ref => //TODO check if party or external ref
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )
     } yield res
@@ -276,10 +276,8 @@ class PartyApiServiceImpl(
         Future.successful(p)
       )
       person = Party.convertToApi(party).toOption.get //TODO remove get
-      partyRelationships <- getCommander(person.taxCode).ask(ref =>
-        GetPartyRelationShips(UUID.fromString(person.partyId), ref)
-      )
-      relationships <- createRelationships(person, partyRelationships)
+      partyRelationships <- getCommander(party.id.toString).ask(ref => GetPartyRelationShips(party.id, ref))
+      relationships      <- createRelationships(person, partyRelationships)
     } yield relationships.flatten
 
     onComplete(result) {
@@ -339,17 +337,19 @@ class PartyApiServiceImpl(
   override def consumeToken(
     token: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
-    val result: Future[StatusReply[State]] = for {
-      token <- Future.fromTry(Token.decode(token))
-      commander = getCommander(token.seed.toString)
-      res <-
-        if (token.isValid) commander.ask(ref => ConsumeToken(token, ref))
-        else commander.ask(ref => InvalidateToken(token, ref))
-    } yield res
 
-    onComplete(result) {
-      case Success(statusReply) if statusReply.isError =>
-        consumeToken400(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
+    val results: Future[Seq[StatusReply[Unit]]] = for {
+      token <- Future.fromTry(Token.decode(token))
+      results <-
+        if (token.isValid) processRelationShips(token, ConfirmPartyRelationShip)
+        else processRelationShips(token, DeletePartyRelationShip)
+    } yield results
+
+    onComplete(results) {
+      case Success(statusReplies) if statusReplies.exists(_.isError) =>
+        val errors: String =
+          statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
+        consumeToken400(Problem(detail = Option(errors), status = 400, title = "some error"))
       case Success(_) => consumeToken201
       case Failure(ex) =>
         consumeToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
@@ -363,19 +363,19 @@ class PartyApiServiceImpl(
   override def invalidateToken(
     token: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
-    val result: Future[StatusReply[State]] = for {
-      token <- Future.fromTry(Token.decode(token))
-      res   <- getCommander(token.seed.toString).ask(ref => InvalidateToken(token, ref))
-    } yield res
+    val results: Future[Seq[StatusReply[Unit]]] = for {
+      token   <- Future.fromTry(Token.decode(token))
+      results <- processRelationShips(token, DeletePartyRelationShip)
+    } yield results
 
-    onComplete(result) {
-      case Success(statusReply) if statusReply.isError =>
-        invalidateToken400(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
-        )
+    onComplete(results) {
+      case Success(statusReplies) if statusReplies.exists(_.isError) =>
+        val errors: String =
+          statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
+        invalidateToken400(Problem(detail = Option(errors), status = 400, title = "some error"))
       case Success(_) => invalidateToken201
       case Failure(ex) =>
-        invalidateToken400(Problem(detail = Option(ex.getMessage), status = 404, title = "some error"))
+        invalidateToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }
@@ -402,6 +402,23 @@ class PartyApiServiceImpl(
     )
     role = PartyRole.fromText(relationShip.role).toOption
   } yield PartyRelationShipId(from.get.id, to.get.id, role.get)
+
+//  private def deleteToken(token: Token): Future[StatusReply[Unit]] = {
+  //    getCommander(token.seed.toString).ask(ref => DeleteToken(token, ref))
+  //  }
+
+  private def processRelationShips(
+    token: Token,
+    commandFunc: (PartyRelationShipId, ActorRef[StatusReply[Unit]]) => Command
+  ): Future[Seq[StatusReply[Unit]]] = {
+    for {
+      results <- Future.traverse(token.legals) { partyRelationShipId =>
+        getCommander(partyRelationShipId.from.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
+          commandFunc(partyRelationShipId, ref)
+        )
+      } //TODO atomic?
+    } yield results
+  }
 
   private def manageCreationResponse[A](
     result: Future[StatusReply[A]],

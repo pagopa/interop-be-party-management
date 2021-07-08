@@ -18,9 +18,12 @@ message PartyDeletedV1 {
   required PartyV1 party = 1;
 }
 
-
 message PartyRelationShipAddedV1 {
   required PartyRelationShipV1 partyRelationShip = 1;
+}
+
+message PartyRelationShipConfirmedV1 {
+  required PartyRelationShipIdV1 partyRelationShipId = 1;
 }
 
 message PartyRelationShipDeletedV1 {
@@ -31,13 +34,8 @@ message TokenAddedV1 {
   required TokenV1 token = 1;
 }
 
-message TokenInvalidatedV1 {
+message TokenDeletedV1 {
   required TokenV1 token = 1;
 }
-
-message TokenConsumedV1 {
-  required TokenV1 token = 1;
-}
-
 
 

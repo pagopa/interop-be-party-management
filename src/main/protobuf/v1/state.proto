@@ -17,14 +17,15 @@ message StateV1 {
   repeated RelationShipsV1 relationShips = 4;
 }
 
-message PartiesV1 {
-  required  string key = 1;
-  required PartyV1 value = 2;
-}
 
 message IndexesV1 {
   required string key = 1;
   required string value = 2;
+}
+
+message PartiesV1 {
+  required  string key = 1;
+  required PartyV1 value = 2;
 }
 
 message TokensV1 {

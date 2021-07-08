@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1
 
+import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{ErrorOr, formatter, toOffsetDateTime}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
@@ -15,10 +16,10 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyRelationShipV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1.TokenStatusV1
 
 import java.util.UUID
-@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
+
+@SuppressWarnings(Array("org.wartremover.warts.Nothing"))
 object utils {
 
   def getParty(partyV1: PartyV1): ErrorOr[Party] = partyV1 match {
@@ -122,36 +123,25 @@ object utils {
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
-      manager  <- getPartyRelationShipId(tokenV1.manager)
-      delegate <- getPartyRelationShipId(tokenV1.delegate)
-      status   <- TokenStatus.fromText(tokenV1.status.name)
+      legals <- tokenV1.legals.traverse(legal => getPartyRelationShipId(legal))
     } yield Token(
-      id = manager.stringify,
-      legals = Seq(manager, delegate),
-      checksum = tokenV1.checksum,
+      id = tokenV1.id,
+      legals = legals,
       validity = toOffsetDateTime(tokenV1.validity),
-      status = status,
-      seed = UUID.fromString(tokenV1.seed)
+      seed = UUID.fromString(tokenV1.seed),
+      checksum = tokenV1.checksum
     )
   }
 
   def getTokenV1(token: Token): ErrorOr[TokenV1] = {
     for {
-      managerL  <- token.legals.find(_.role == Manager).toRight(new RuntimeException("No manager found in legals"))
-      delegateL <- token.legals.find(_.role == Delegate).toRight(new RuntimeException("No delegate found in legals"))
-      manager   <- getPartyRelationShipIdV1(managerL)
-      delegate  <- getPartyRelationShipIdV1(delegateL)
-      status <- TokenStatusV1
-        .fromName(token.status.stringify)
-        .toRight(new RuntimeException("Deserialization from protobuf failed"))
+      legals <- token.legals.traverse(legal => getPartyRelationShipIdV1(legal))
     } yield TokenV1(
-      manager = manager,
-      delegate = delegate,
+      id = token.id,
+      legals = legals,
       validity = token.validity.format(formatter),
-      status = status,
       seed = token.seed.toString,
       checksum = token.checksum
     )
   }
-
 }

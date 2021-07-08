@@ -5,7 +5,7 @@ import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
-import akka.persistence.typed.scaladsl.{Effect, EffectBuilder, EventSourcedBehavior, RetentionCriteria}
+import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationShipStatus.Active
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
@@ -53,7 +53,7 @@ object PartyPersistentBehavior {
       case DeleteParty(party, replyTo) =>
         Effect
           .persist(PartyDeleted(party))
-          .thenRun(state => replyTo ! StatusReply.Success(state))
+          .thenRun(_ => replyTo ! StatusReply.Success(()))
 
       case GetParty(uuid, replyTo) =>
         val party: Option[Party] = state.parties.get(uuid)
@@ -63,7 +63,6 @@ object PartyPersistentBehavior {
         Effect.none
 
       case GetPartyByExternalId(externalId, shardId, replyTo) =>
-//        logger.info(s"Asking for party in $shardId")
         val party: Option[Party] = for {
           uuid <- state.indexes.get(externalId)
           _ = logger.info(s"GetPartyByExternalId found $externalId/${uuid.toString} at shard $shardId")
@@ -105,31 +104,42 @@ object PartyPersistentBehavior {
           }
 
       case AddPartyRelationShip(from, to, role, replyTo) =>
-        val isEligible                           = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
+        val isEligible = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
+
         val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
         state.relationShips
           .get(partyRelationShip.id)
           .map { _ =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationShip.id.stringify} already exists")
-            Effect.none[PartyAdded, State]
+            Effect.none[PartyRelationShipAdded, State]
           }
           .getOrElse {
             if (isEligible || Set[PartyRole](Manager, Delegate).contains(role))
               Effect
                 .persist(PartyRelationShipAdded(partyRelationShip))
-                .thenRun(state => {
-                  replyTo ! StatusReply.Success(state)
-                })
+                .thenRun(_ => replyTo ! StatusReply.Success(()))
             else {
               replyTo ! StatusReply.Error(s"Operator without manager")
-              Effect.none[PartyAdded, State]
+              Effect.none[PartyRelationShipAdded, State]
             }
           }
 
-      case DeletePartyRelationShip(relationShipId, replyTo) =>
+      case ConfirmPartyRelationShip(partyRelationShipId, replyTo) =>
+        state.relationShips
+          .get(partyRelationShipId)
+          .fold {
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationShipId.stringify} not found")
+            Effect.none[PartyRelationShipConfirmed, State]
+          } { t =>
+            Effect
+              .persist(PartyRelationShipConfirmed(t.id))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          }
+
+      case DeletePartyRelationShip(partyRelationShipId, replyTo) =>
         Effect
-          .persist(PartyRelationShipDeleted(relationShipId))
-          .thenRun(state => replyTo ! StatusReply.Success(state))
+          .persist(PartyRelationShipDeleted(partyRelationShipId))
+          .thenRun(_ => replyTo ! StatusReply.Success(()))
 
       case GetPartyRelationShips(from, replyTo) =>
         val relationShips: List[PartyRelationShip] = state.relationShips.filter(_._1.from == from).values.toList
@@ -142,14 +152,14 @@ object PartyPersistentBehavior {
         token match {
           case Right(tk) =>
             val itCanBeInsert: Boolean =
-              state.tokens.get(tk.id).exists(t => t.isValid && t.status == Invalid) || !state.tokens.contains(tk.id)
+              state.tokens.get(tk.id).exists(t => t.isValid) || !state.tokens.contains(tk.id)
 
             if (itCanBeInsert) {
               Effect
                 .persist(TokenAdded(tk))
                 .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(tk))))
             } else {
-              replyTo ! StatusReply.Error(s"Invalid token status ${tk.status.toString}: token seed ${tk.seed.toString}")
+              replyTo ! StatusReply.Error(s"Token is expired: token seed ${tk.seed.toString}")
               Effect.none[TokenAdded, State]
             }
           case Left(ex) =>
@@ -162,11 +172,10 @@ object PartyPersistentBehavior {
         replyTo ! StatusReply.Success(verified)
         Effect.none
 
-      case InvalidateToken(token, replyTo) =>
-        processToken(state.tokens.get(token.id), replyTo, state, TokenInvalidated)
-
-      case ConsumeToken(token, replyTo) =>
-        processToken(state.tokens.get(token.id), replyTo, state, TokenConsumed)
+      case DeleteToken(token, replyTo) =>
+        Effect
+          .persist(TokenDeleted(token))
+          .thenRun(_ => replyTo ! StatusReply.Success(()))
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
@@ -175,36 +184,17 @@ object PartyPersistentBehavior {
     }
 
   }
-  private def processToken[A](
-    token: Option[Token],
-    replyTo: ActorRef[StatusReply[A]],
-    output: A,
-    event: Token => Event
-  ): EffectBuilder[Event, State] = {
-    token match {
-      case Some(t) if t.status == Waiting =>
-        Effect
-          .persist(event(t))
-          .thenRun(_ => replyTo ! StatusReply.Success(output))
-      case Some(t) =>
-        replyTo ! StatusReply.Error(s"Invalid token status ${t.status.toString}: token seed ${t.seed.toString}")
-        Effect.none[Event, State]
-      case None =>
-        replyTo ! StatusReply.Error(s"Token not found")
-        Effect.none[Event, State]
-    }
-  }
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case PartyAdded(party)                         => state.addParty(party)
-      case PartyDeleted(party)                       => state.deleteParty(party)
-      case AttributesAdded(party)                    => state.updateParty(party)
-      case PartyRelationShipAdded(partyRelationShip) => state.addPartyRelationShip(partyRelationShip)
-      case PartyRelationShipDeleted(relationShipId)  => state.deletePartyRelationShip(relationShipId)
-      case TokenAdded(token)                         => state.addToken(token)
-      case TokenInvalidated(token)                   => state.invalidateToken(token)
-      case TokenConsumed(token)                      => state.consumeToken(token)
+      case PartyAdded(party)                          => state.addParty(party)
+      case PartyDeleted(party)                        => state.deleteParty(party)
+      case AttributesAdded(party)                     => state.updateParty(party)
+      case PartyRelationShipAdded(partyRelationShip)  => state.addPartyRelationShip(partyRelationShip)
+      case PartyRelationShipConfirmed(relationShipId) => state.confirmPartyRelationShip(relationShipId)
+      case PartyRelationShipDeleted(relationShipId)   => state.deletePartyRelationShip(relationShipId)
+      case TokenAdded(token)                          => state.addToken(token)
+      case TokenDeleted(token)                        => state.deleteToken(token)
     }
 
   val TypeKey: EntityTypeKey[Command] =

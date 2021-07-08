@@ -19,10 +19,12 @@ final case class PartyDeleted(party: Party)    extends PartyEvent
 final case class AttributesAdded(party: Party) extends PartyEvent
 
 /* PartyRelationShip Event */
-final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)  extends PartyRelationShipEvent
-final case class PartyRelationShipDeleted(relationShipId: PartyRelationShipId) extends PartyRelationShipEvent
+final case class PartyRelationShipAdded(partyRelationShip: PartyRelationShip)         extends PartyRelationShipEvent
+final case class PartyRelationShipConfirmed(partyRelationShipId: PartyRelationShipId) extends PartyRelationShipEvent
+final case class PartyRelationShipDeleted(partyRelationShipId: PartyRelationShipId)   extends PartyRelationShipEvent
 
 /* Token Event */
-final case class TokenAdded(token: Token)       extends TokenEvent
-final case class TokenInvalidated(token: Token) extends TokenEvent
-final case class TokenConsumed(token: Token)    extends TokenEvent
+final case class TokenAdded(token: Token)   extends TokenEvent
+final case class TokenDeleted(token: Token) extends TokenEvent
+//final case class TokenInvalidated(token: Token) extends TokenEvent
+//final case class TokenConsumed(token: Token)    extends TokenEvent
