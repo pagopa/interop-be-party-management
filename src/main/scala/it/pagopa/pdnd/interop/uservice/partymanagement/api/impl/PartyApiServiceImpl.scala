@@ -9,16 +9,16 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.timeout
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
-
+import cats.implicits._
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
 class PartyApiServiceImpl(
@@ -222,7 +222,7 @@ class PartyApiServiceImpl(
       )
       parties <- extractParties(from, to)
       role    <- PartyRole.fromText(relationShip.role).toFuture
-      res <- getCommander(parties._1.taxCode).ask(ref => //TODO check if party or external ref
+      res <- getCommander(parties._1.partyId).ask(ref => //TODO check if party or external ref
         AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
       )
     } yield res
@@ -250,34 +250,52 @@ class PartyApiServiceImpl(
 
     logger.error(s"Getting relationships for $from")
 
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    //TODO simplify here
+    def createRelationship(person: Person, relationShip: PartyRelationShip): Future[List[Option[RelationShip]]] = {
+      Future.traverse(commanders) { commander =>
+        for {
+          party <- commander.ask(ref => GetParty(relationShip.id.to, ref))
+        } yield party.map(r =>
+          RelationShip(
+            from = person.taxCode,
+            to = r.externalId,
+            role = relationShip.id.role.stringify,
+            status = Some(relationShip.status.stringify)
+          )
+        )
+
+      }
+    }
+
+    //TODO simplify here
     def createRelationships(
       person: Person,
       relationShips: List[PartyRelationShip]
-    ): Future[List[Option[RelationShip]]] = {
-      Future.traverse(relationShips)(rl =>
-        getCommander(rl.id.to.toString)
-          .ask(ref => GetParty(rl.id.to, ref))
-          .map(p =>
-            p.map(r =>
-              RelationShip(
-                from = person.taxCode,
-                to = r.externalId,
-                role = rl.id.role.stringify,
-                status = Some(rl.status.stringify)
-              )
-            )
-          )
-      )
+    ): Future[List[Option[RelationShip]]] =
+      relationShips.flatTraverse(relationShip => createRelationship(person, relationShip))
 
-    }
-    val result: Future[List[RelationShip]] = for {
+    val result = for {
       fromParty <- getCommander(from).ask(ref => GetPartyByExternalId(from, getShard(from), ref))
       party <- fromParty.fold(Future.failed[Party](new RuntimeException(s"Party $from not found")))(p =>
         Future.successful(p)
       )
-      person = Party.convertToApi(party).toOption.get //TODO remove get
+      _ = logger.error(s"Party found ${party.toString}")
+      person <- Party
+        .convertToApi(party)
+        .fold(
+          _ =>
+            Future
+              .failed(new RuntimeException(s"Invalid party ${party.toString}: expected Person, found Organization")),
+          Future.successful
+        )
+      _ = logger.error(s"Person found ${person.toString}")
       partyRelationships <- getCommander(party.id.toString).ask(ref => GetPartyRelationShips(party.id, ref))
-      relationships      <- createRelationships(person, partyRelationships)
+      _ = logger.error(s"PartyRelationships found ${partyRelationships.toString}")
+      relationships <- createRelationships(person, partyRelationships)
     } yield relationships.flatten
 
     onComplete(result) {
