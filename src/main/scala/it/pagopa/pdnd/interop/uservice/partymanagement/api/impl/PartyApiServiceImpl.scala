@@ -391,7 +391,7 @@ class PartyApiServiceImpl(
         val errors: String =
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
         invalidateToken400(Problem(detail = Option(errors), status = 400, title = "some error"))
-      case Success(_) => invalidateToken201
+      case Success(_) => invalidateToken200
       case Failure(ex) =>
         invalidateToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
