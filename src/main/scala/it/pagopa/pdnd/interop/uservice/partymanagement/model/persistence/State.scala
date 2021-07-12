@@ -30,30 +30,18 @@ final case class State(
   def addPartyRelationShip(relationShip: PartyRelationShip): State =
     copy(relationShips = relationShips + (relationShip.id -> relationShip))
 
+  def confirmPartyRelationShip(relationShipId: PartyRelationShipId): State = {
+    val updated: Map[PartyRelationShipId, PartyRelationShip] =
+      relationShips.updated(relationShipId, relationShips(relationShipId).copy(status = PartyRelationShipStatus.Active))
+    copy(relationShips = updated)
+  }
+
   def deletePartyRelationShip(relationShipId: PartyRelationShipId): State =
     copy(relationShips = relationShips - relationShipId)
 
   def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
 
-  def invalidateToken(token: Token): State =
-    changeTokenStatus(token, Invalid)
-
-  def consumeToken(token: Token): State =
-    changeTokenStatus(token, Consumed)
-
-  private def changeTokenStatus(token: Token, status: TokenStatus): State = {
-    val modified = tokens.get(token.id).map(t => t.copy(status = status))
-
-    modified match {
-      case Some(t) if status == Consumed =>
-        val updated: Seq[PartyRelationShip] =
-          token.legals.map(legal => relationShips(legal).copy(status = PartyRelationShipStatus.Active))
-        copy(relationShips = relationShips ++ updated.map(p => p.id -> p).toMap, tokens = tokens + (t.id -> t))
-      case Some(t) => copy(tokens = tokens + (t.id -> t))
-      case None    => this
-    }
-
-  }
+  def deleteToken(token: Token): State = copy(tokens = tokens - token.id)
 
 }
 

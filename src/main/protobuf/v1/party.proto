@@ -30,5 +30,11 @@ message InstitutionPartyV1 {
   required string manager = 5;
   required string start = 6;
   optional string end = 7;
+  repeated AttributesV1 attributes = 8;
+}
+
+message AttributesV1 {
+  required string key = 1;
+  repeated string values = 2;
 }
 

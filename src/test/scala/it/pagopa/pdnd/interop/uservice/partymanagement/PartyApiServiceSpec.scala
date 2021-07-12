@@ -15,6 +15,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Token
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person, RelationShips, TokenSeed}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
@@ -125,25 +126,23 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "create a new person" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(personUuid1)).once()
 
-      val data     = Await.result(Marshal(seed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-      val response = createPerson(data)
+      val response = prepareTest(personSeed1)
 
       val body = Await.result(Unmarshal(response.entity).to[Person], Duration.Inf)
 
       response.status shouldBe StatusCodes.Created
 
-      body shouldBe expected1
+      body shouldBe personExpected1
 
     }
 
     "return 200 if the person exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid2)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(personUuid2)).once()
 
-      val data = Await.result(Marshal(seed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-      val _    = createPerson(data)
+      val _ = prepareTest(personSeed2)
 
       val response = Await.result(
         Http().singleRequest(
@@ -157,10 +156,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return the person if exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid3)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(personUuid3)).once()
 
-      val data = Await.result(Marshal(seed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-      val _    = createPerson(data)
+      val _ = prepareTest(personSeed3)
 
       val response = Await.result(
         Http().singleRequest(
@@ -173,17 +171,17 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       response.status shouldBe StatusCodes.OK
 
-      body shouldBe expected2
+      body shouldBe personExpected2
     }
 
     "return 400 if person already exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid4)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid5)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(personUuid4)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(personUuid5)).once()
 
-      val data = Await.result(Marshal(seed4).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+      val _ = prepareTest(personSeed4)
 
-      val _ = createPerson(data)
+      val data = Await.result(Marshal(personSeed4).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
       val response = createPerson(data)
 
@@ -208,11 +206,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "create a new organization" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(orgUuid1)).once()
 
-      val data = Await.result(Marshal(seed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val response = createOrganization(data)
+      val response = prepareTest(orgSeed1)
 
       val body = Await.result(Unmarshal(response.entity).to[Organization], Duration.Inf)
 
@@ -224,11 +220,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 200 if the organization exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid2)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(orgUuid2)).once()
 
-      val data = Await.result(Marshal(seed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createOrganization(data)
+      val _ = prepareTest(orgSeed2)
 
       val response = Await.result(
         Http().singleRequest(
@@ -242,10 +236,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return the organization if exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid3)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(orgUuid3)).once()
 
-      val data = Await.result(Marshal(seed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-      val _    = createOrganization(data)
+      val _ = prepareTest(orgSeed3)
 
       val response = Await.result(
         Http().singleRequest(
@@ -263,11 +256,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 400 if organization already exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid4)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid5)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(orgUuid4)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(orgUuid5)).once()
 
-      val data     = Await.result(Marshal(seed4).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-      val _        = createOrganization(data)
+      val _ = prepareTest(orgSeed4)
+
+      val data = Await.result(Marshal(orgSeed4).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
       val response = createOrganization(data)
 
       response.status shouldBe StatusCodes.BadRequest
@@ -292,7 +287,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 200 with if the relationships do not exist" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid1)).once()
 
       val personData = Await.result(Marshal(personSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -311,25 +306,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       response.status shouldBe StatusCodes.OK
 
-      body shouldBe expected0
+      body shouldBe rlExpected1
     }
 
     "create a new relationship" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid2)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid2)).once()
 
-      val personData = Await.result(Marshal(personSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createPerson(personData)
-
-      val organizationData = Await.result(Marshal(organizationSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createOrganization(organizationData)
-
-      val data = Await.result(Marshal(seed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val response = createRelationShip(data)
+      val response = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed1, relationShip = rlSeed1)
 
       response.status shouldBe StatusCodes.Created
 
@@ -337,20 +322,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return the relationship if exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid3)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid4)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid3)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid4)).once()
 
-      val personData = Await.result(Marshal(personSeed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createPerson(personData)
-
-      val organizationData = Await.result(Marshal(organizationSeed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createOrganization(organizationData)
-
-      val data = Await.result(Marshal(seed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createRelationShip(data)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed2, relationShip = rlSeed2)
 
       val response = Await.result(
         Http().singleRequest(
@@ -362,29 +337,22 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         ),
         Duration.Inf
       )
+
       val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
 
       response.status shouldBe StatusCodes.OK
 
-      body shouldBe expected1
+      body shouldBe rlExpected2
     }
 
     "return 400 if relationship already exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid5)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid6)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid5)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid6)).once()
 
-      val personData = Await.result(Marshal(personSeed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+      val _ = prepareTest(personSeed = personSeed3, organizationSeed = orgSeed3, relationShip = rlSeed3)
 
-      val _ = createPerson(personData)
-
-      val organizationData = Await.result(Marshal(organizationSeed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createOrganization(organizationData)
-
-      val data = Await.result(Marshal(seed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createRelationShip(data)
+      val data = Await.result(Marshal(rlSeed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
       val response = createRelationShip(data)
 
@@ -398,41 +366,87 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "create a token" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid0)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid0)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid1)).once()
 
-      val personData = Await.result(Marshal(personSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+      val relationShipResponse = prepareTest(personSeed1, organizationSeed1, relationShip1, relationShip2)
 
-      val _ = createPerson(personData)
+      val relationships = Await.result(Unmarshal(relationShipResponse.entity).to[RelationShips], Duration.Inf)
 
-      val organizationData = Await.result(Marshal(organizationSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createOrganization(organizationData)
-
-      val data1 = Await.result(Marshal(seed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createRelationShip(data1)
-
-      val data2 = Await.result(Marshal(seed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
-
-      val _ = createRelationShip(data2)
-
-      val response3 = Await.result(
-        Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/${seed1.from}", method = HttpMethods.GET, headers = authorization)
-        ),
-        Duration.Inf
-      )
-
-      val relationships = Await.result(Unmarshal(response3.entity).to[RelationShips], Duration.Inf)
-
-      val tokenSeed = TokenSeed(seed = tokenSeed1, relationShips = relationships, "checksum")
+      val tokenSeed = TokenSeed(seed = tokenSeedId1, relationShips = relationships, "checksum")
 
       val tokenData = Await.result(Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
       val response = createToken(tokenData)
 
       response.status shouldBe StatusCodes.Created
+    }
+
+    "consume a token" in {
+
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid2)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid3)).once()
+
+      val relationShipResponse = prepareTest(personSeed2, organizationSeed2, relationShip3, relationShip4)
+
+      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[RelationShips], Duration.Inf)
+
+      val tokenData = Await.result(Marshal(tokenSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val _ = createToken(tokenData)
+
+      val tokenText = Token.encode(token1)
+
+      val consumedResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/tokens/$tokenText", method = HttpMethods.POST, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      consumedResponse.status shouldBe StatusCodes.Created
+
+    }
+
+    "invalidate a token" in {
+
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid4)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid5)).once()
+
+      val relationShipResponse = prepareTest(personSeed3, organizationSeed3, relationShip5, relationShip6)
+
+      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[RelationShips], Duration.Inf)
+
+      val tokenData = Await.result(Marshal(tokenSeed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+
+      val _ = createToken(tokenData)
+
+      val tokenText = Token.encode(token2)
+
+      val consumedResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/tokens/$tokenText", method = HttpMethods.DELETE, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      consumedResponse.status shouldBe StatusCodes.OK
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${personSeed3.taxCode}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
+
+      body shouldBe RelationShips(Seq.empty)
+
     }
 
   }

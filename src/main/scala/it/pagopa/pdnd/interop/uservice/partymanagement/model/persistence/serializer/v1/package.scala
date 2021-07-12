@@ -11,7 +11,15 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils.{
+  getParty,
+  getPartyRelationShip,
+  getPartyRelationShipId,
+  getPartyRelationShipIdV1,
+  getPartyRelationShipV1,
+  getToken,
+  _
+}
 
 import java.util.UUID
 
@@ -36,6 +44,7 @@ package object v1 {
           )
           .map(_.toMap)
       } yield State(parties, indexes, tokens, relationShips)
+
   @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state =>
@@ -72,6 +81,14 @@ package object v1 {
     : PersistEventDeserializer[PartyRelationShipAddedV1, PartyRelationShipAdded] = event =>
     getPartyRelationShip(event.partyRelationShip).map(PartyRelationShipAdded)
 
+  implicit def partyRelationShipConfirmedV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationShipConfirmed, PartyRelationShipConfirmedV1] =
+    event => getPartyRelationShipIdV1(event.partyRelationShipId).map(PartyRelationShipConfirmedV1.of)
+
+  implicit def partyRelationShipConfirmedV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationShipConfirmedV1, PartyRelationShipConfirmed] = event =>
+    getPartyRelationShipId(event.partyRelationShipId).map(PartyRelationShipConfirmed)
+
   implicit def partyRelationShipAddedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationShipAdded, PartyRelationShipAddedV1] =
     event => getPartyRelationShipV1(event.partyRelationShip).map(PartyRelationShipAddedV1.of)
@@ -82,7 +99,7 @@ package object v1 {
 
   implicit def partyRelationShipDeletedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationShipDeleted, PartyRelationShipDeletedV1] =
-    event => getPartyRelationShipIdV1(event.relationShipId).map(PartyRelationShipDeletedV1.of)
+    event => getPartyRelationShipIdV1(event.partyRelationShipId).map(PartyRelationShipDeletedV1.of)
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)
@@ -90,16 +107,10 @@ package object v1 {
   implicit def tokenAddedV1PersistEventSerializer: PersistEventSerializer[TokenAdded, TokenAddedV1] =
     event => getTokenV1(event.token).map(TokenAddedV1.of)
 
-  implicit def tokenConsumedV1PersistEventDeserializer: PersistEventDeserializer[TokenConsumedV1, TokenConsumed] =
-    event => getToken(event.token).map(TokenConsumed)
+  implicit def tokenDeletedV1PersistEventDeserializer: PersistEventDeserializer[TokenDeletedV1, TokenDeleted] = event =>
+    getToken(event.token).map(TokenDeleted)
 
-  implicit def tokenConsumedV1PersistEventSerializer: PersistEventSerializer[TokenConsumed, TokenConsumedV1] =
-    event => getTokenV1(event.token).map(TokenConsumedV1.of)
+  implicit def tokenDeletedV1PersistEventSerializer: PersistEventSerializer[TokenDeleted, TokenDeletedV1] =
+    event => getTokenV1(event.token).map(TokenDeletedV1.of)
 
-  implicit def tokenInvalidatedV1PersistEventDeserializer
-    : PersistEventDeserializer[TokenInvalidatedV1, TokenInvalidated] =
-    event => getToken(event.token).map(TokenInvalidated)
-
-  implicit def tokenInvalidatedV1PersistEventSerializer: PersistEventSerializer[TokenInvalidated, TokenInvalidatedV1] =
-    event => getTokenV1(event.token).map(TokenInvalidatedV1.of)
 }
