@@ -13,6 +13,9 @@ option (scalapb.options) = {
 message PartyAddedV1 {
   required PartyV1 party = 1;
 }
+message AttributesAddedV1 {
+  required PartyV1 party = 1;
+}
 
 message PartyDeletedV1 {
   required PartyV1 party = 1;

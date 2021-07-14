@@ -21,15 +21,12 @@ sealed trait Party {
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 
-  def addAttributes(attributes: Attributes): Either[Throwable, Party] = this match {
+  def addAttributes(attributes: Set[String]): Either[Throwable, Party] = this match {
     case _: PersonParty => Left(new RuntimeException("Attributes do not exist for person party"))
-    case institutionParty: InstitutionParty => {
-      val updated: Set[Attributes] = institutionParty.attributes.map {
-        case xs if xs.kind == attributes.kind => xs.copy(values = xs.values.union(attributes.values))
-        case xs                               => xs
-      }
+    case institutionParty: InstitutionParty =>
+      val updated: Set[String] = institutionParty.attributes ++ attributes
       Right(institutionParty.copy(attributes = updated))
-    }
+
   }
 
 }
@@ -44,10 +41,10 @@ sealed trait Party {
 )
 object Party {
 
-  def addAttributes(party: Party, attributes: Set[Attributes]): Either[Throwable, Party] = {
-    val zero: Either[Throwable, Party] = Right(party)
-    attributes.foldLeft(zero)((current, attrs) => current.flatMap(p => p.addAttributes(attrs)))
-  }
+//  def addAttributes(party: Party, attributes: Set[String]): Either[Throwable, Party] = {
+//    val zero: Either[Throwable, Party] = Right(party)
+//    attributes.foldLeft(zero)((current, attrs) => current.flatMap(p => p.addAttributes(attrs)))
+//  }
 
   def convertToApi(party: Party): ApiParty =
     party match {
@@ -65,10 +62,11 @@ object Party {
           Organization(
             description = institutionParty.description,
             institutionId = institutionParty.externalId,
-            manager = institutionParty.manager,
+            managerName = institutionParty.managerName,
+            managerSurname = institutionParty.managerSurname,
             digitalAddress = institutionParty.digitalAddress,
             partyId = institutionParty.id.toString,
-            attributes = institutionParty.attributes.map(_.toApi).toSeq
+            attributes = institutionParty.attributes.toSeq
           )
         )
     }
@@ -100,8 +98,9 @@ final case class InstitutionParty(
   externalId: String,
   description: String,
   digitalAddress: String,
-  manager: String,
-  attributes: Set[Attributes],
+  managerName: String,
+  managerSurname: String,
+  attributes: Set[String],
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
 ) extends Party
@@ -113,8 +112,9 @@ object InstitutionParty {
       externalId = organization.institutionId,
       description = organization.description,
       digitalAddress = organization.digitalAddress,
-      manager = organization.manager,
-      attributes = organization.attributes.map(Attributes.fromApi).toSet,
+      managerName = organization.managerName,
+      managerSurname = organization.managerSurname,
+      attributes = organization.attributes.toSet,
       start = OffsetDateTime.now(),
       end = None
     )

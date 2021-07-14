@@ -21,16 +21,17 @@ object OrganizationsPartyApiServiceData {
   lazy final val institutionId3 = "id3"
   lazy final val institutionId4 = "id4"
 
-  lazy final val orgSeed1 = OrganizationSeed(institutionId1, "Institutions One", "John Doe", "mail1@mail.org", Seq.empty)
-  lazy final val orgSeed2 = OrganizationSeed(institutionId2, "Institutions Two", "Tyler Durden", "mail2@mail.org", Seq.empty)
-  lazy final val orgSeed3 = OrganizationSeed(institutionId3, "Institutions Three", "Kaiser Soze", "mail3@mail.org", Seq.empty)
-  lazy final val orgSeed4 = OrganizationSeed(institutionId4, "Institutions Four", "Snake Plissken", "mail4@mail.org", Seq.empty)
+  lazy final val orgSeed1 = OrganizationSeed(institutionId1, "Institutions One", "John", "Doe", "mail1@mail.org", Seq.empty)
+  lazy final val orgSeed2 = OrganizationSeed(institutionId2, "Institutions Two", "Tyler", "Durden", "mail2@mail.org", Seq.empty)
+  lazy final val orgSeed3 = OrganizationSeed(institutionId3, "Institutions Three", "Kaiser", "Soze", "mail3@mail.org", Seq.empty)
+  lazy final val orgSeed4 = OrganizationSeed(institutionId4, "Institutions Four", "Snake", "Plissken", "mail4@mail.org", Seq.empty)
 
   // format: on
   lazy final val expected1 = Organization(
     institutionId = institutionId1,
     description = "Institutions One",
-    manager = "John Doe",
+    managerName = "John",
+    managerSurname = "Doe",
     digitalAddress = "mail1@mail.org",
     partyId = orgUuid1,
     attributes = Seq.empty
@@ -39,7 +40,8 @@ object OrganizationsPartyApiServiceData {
   lazy final val expected3 = Organization(
     institutionId = institutionId3,
     description = "Institutions Three",
-    manager = "Kaiser Soze",
+    managerName = "Kaiser",
+    managerSurname = "Soze",
     digitalAddress = "mail3@mail.org",
     partyId = orgUuid3,
     attributes = Seq.empty

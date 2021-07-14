@@ -215,7 +215,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AttributeRecords'
+              $ref: '#/components/schemas/Attributes'
       responses:
         '200':
           description: successful operation
@@ -467,19 +467,23 @@ components:
         description:
           type: string
           example: AGENCY X
-        manager:
-          example: Mario Rossi
+        managerName:
+          example: Mario
+          type: string
+        managerSurname:
+          example: Mario
           type: string
         digitalAddress:
           example: email@pec.mail.org
           format: email
           type: string
         attributes:
-          $ref: '#/components/schemas/AttributeRecords'
+          $ref: '#/components/schemas/Attributes'
       required:
         - institutionId
         - description
-        - manager
+        - managerName
+        - managerSurname
         - digitalAddress
         - attributes
       additionalProperties: false
@@ -493,8 +497,11 @@ components:
         description:
           type: string
           example: AGENCY X
-        manager:
+        managerName:
           example: Mario Rossi
+          type: string
+        managerSurname:
+          example: Rossi
           type: string
         digitalAddress:
           example: email@pec.mail.org
@@ -504,11 +511,12 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         attributes:
-          $ref: '#/components/schemas/AttributeRecords'
+          $ref: '#/components/schemas/Attributes'
       required:
         - institutionId
         - description
-        - manager
+        - managerName
+        - managerSurname
         - digitalAddress
         - partyId
         - attributes
@@ -517,20 +525,6 @@ components:
       type: array
       items:
         type: string
-    AttributeRecord:
-      type: object
-      properties:
-        kind:
-          type: string
-        attributes:
-          $ref: '#/components/schemas/Attributes'
-      required:
-        - kind
-        - attributes
-    AttributeRecords:
-      type: array
-      items:
-        $ref: '#/components/schemas/AttributeRecord'
     RelationShip:
       type: object
       properties:

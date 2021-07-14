@@ -3,7 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{AttributeRecord, TokenSeed, TokenText}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{TokenSeed, TokenText}
 
 import java.util.UUID
 
@@ -21,11 +21,8 @@ final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[Unit]]
 final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])                       extends PartyCommand
 final case class GetPartyByExternalId(externalId: String, shardId: String, replyTo: ActorRef[Option[Party]])
     extends PartyCommand
-final case class AddAttributes(
-  organizationId: String,
-  attributeRecords: Seq[AttributeRecord],
-  replyTo: ActorRef[StatusReply[Party]]
-) extends PartyCommand
+final case class AddAttributes(organizationId: String, attributes: Seq[String], replyTo: ActorRef[StatusReply[Party]])
+    extends PartyCommand
 
 /* PartyRelationShip Command */
 final case class AddPartyRelationShip(from: UUID, to: UUID, partyRole: PartyRole, replyTo: ActorRef[StatusReply[Unit]])

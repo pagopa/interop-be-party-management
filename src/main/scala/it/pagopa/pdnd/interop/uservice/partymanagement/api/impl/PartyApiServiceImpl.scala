@@ -113,14 +113,14 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: Organization
     * Code: 404, Message: Organization not found, DataType: Problem
     */
-  override def addOrganizationAttributes(organizationId: String, attributeRecord: Seq[AttributeRecord])(implicit
+  override def addOrganizationAttributes(organizationId: String, requestBody: Seq[String])(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
     val result: Future[StatusReply[Party]] =
-      getCommander(organizationId).ask(ref => AddAttributes(organizationId, attributeRecord, ref))
+      getCommander(organizationId).ask(ref => AddAttributes(organizationId, requestBody, ref))
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>

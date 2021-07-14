@@ -27,14 +27,10 @@ message InstitutionPartyV1 {
   required string externalId = 2;
   required string description = 3;
   required string digitalAddress = 4;
-  required string manager = 5;
-  required string start = 6;
-  optional string end = 7;
-  repeated AttributesV1 attributes = 8;
-}
-
-message AttributesV1 {
-  required string key = 1;
-  repeated string values = 2;
+  required string managerName = 5;
+  required string managerSurname = 6;
+  required string start = 7;
+  optional string end = 8;
+  repeated string attributes = 9;
 }
 

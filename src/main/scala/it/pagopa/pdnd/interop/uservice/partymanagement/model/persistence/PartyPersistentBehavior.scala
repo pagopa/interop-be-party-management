@@ -73,17 +73,16 @@ object PartyPersistentBehavior {
 
         Effect.none
 
-      case AddAttributes(organizationId, attributeRecords, replyTo) =>
+      case AddAttributes(organizationId, attributes, replyTo) =>
         val party: Option[Party] = for {
           uuid <- state.indexes.get(organizationId)
           _ = logger.info(s"Found $organizationId/${uuid.toString}")
           party <- state.parties.get(uuid)
         } yield party
 
-        val attributes: Set[Attributes] = attributeRecords.map(Attributes.fromApi).toSet
         party
           .map { p =>
-            val updated: Either[Throwable, Party] = Party.addAttributes(p, attributes)
+            val updated: Either[Throwable, Party] = p.addAttributes(attributes.toSet)
             updated.fold[Effect[AttributesAdded, State]](
               ex => {
                 replyTo ! StatusReply.Error(

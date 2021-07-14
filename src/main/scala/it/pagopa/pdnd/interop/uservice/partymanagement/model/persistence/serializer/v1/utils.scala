@@ -41,8 +41,9 @@ object utils {
           externalId = i.externalId,
           description = i.description,
           digitalAddress = i.digitalAddress,
-          manager = i.manager,
-          attributes = Set.empty,
+          managerName = i.managerName,
+          managerSurname = i.managerSurname,
+          attributes = i.attributes.toSet,
           start = toOffsetDateTime(i.start),
           end = i.end.map(toOffsetDateTime)
         )
@@ -69,7 +70,9 @@ object utils {
           externalId = i.externalId,
           description = i.description,
           digitalAddress = i.digitalAddress,
-          manager = i.manager,
+          managerName = i.managerName,
+          managerSurname = i.managerSurname,
+          attributes = i.attributes.toSeq,
           start = i.start.format(formatter),
           end = i.end.map(_.format(formatter))
         )
