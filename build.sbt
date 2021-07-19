@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / scalaVersion := "2.13.6"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
 ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
@@ -93,4 +93,4 @@ lazy val root = (project in file("."))
   .dependsOn(generated)
   .enablePlugins(JavaAppPackaging, JavaAgent)
 
-javaAgents += "io.kamon" % "kanela-agent" % "1.0.7"
+javaAgents += "io.kamon" % "kanela-agent" % "1.0.11"
