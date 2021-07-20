@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer
 
 import akka.serialization.SerializerWithStringManifest
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{PartyRelationShipConfirmed, PartyRelationShipDeleted}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.PartyRelationShipConfirmed
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
 
 import java.io.NotSerializableException
