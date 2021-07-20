@@ -1,6 +1,6 @@
-CREATE KEYSPACE IF NOT EXISTS uservice_party_management WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1': '3'}  AND durable_writes = true;
+CREATE KEYSPACE IF NOT EXISTS party_management_persistence WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1': '3'}  AND durable_writes = true;
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.tag_views (
+CREATE TABLE IF NOT EXISTS party_management_persistence.tag_views (
     tag_name text,
     timebucket bigint,
     timestamp timeuuid,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.tag_views (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.messages (
+CREATE TABLE IF NOT EXISTS party_management_persistence.messages (
     persistence_id text,
     partition_nr bigint,
     sequence_nr bigint,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.messages (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.tag_scanning (
+CREATE TABLE IF NOT EXISTS party_management_persistence.tag_scanning (
     persistence_id text PRIMARY KEY,
     sequence_nr bigint
 ) WITH bloom_filter_fp_chance = 0.01
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.tag_scanning (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.all_persistence_ids (
+CREATE TABLE IF NOT EXISTS party_management_persistence.all_persistence_ids (
     persistence_id text PRIMARY KEY
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.all_persistence_ids (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.offset_store (
+CREATE TABLE IF NOT EXISTS party_management_persistence.offset_store (
     projection_name text,
     partition int,
     projection_key text,
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.offset_store (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.tag_write_progress (
+CREATE TABLE IF NOT EXISTS party_management_persistence.tag_write_progress (
     persistence_id text,
     tag text,
     offset timeuuid,
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.tag_write_progress (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.metadata (
+CREATE TABLE IF NOT EXISTS party_management_persistence.metadata (
     persistence_id text PRIMARY KEY,
     deleted_to bigint,
     properties map<text, text>
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.metadata (
     AND speculative_retry = '99PERCENTILE';
 
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.snapshots (
+CREATE TABLE IF NOT EXISTS party_management_persistence.snapshots (
     persistence_id text,
     sequence_nr bigint,
     meta blob,
@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.snapshots (
     AND speculative_retry = '99PERCENTILE';
 
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.projection_management (
+CREATE TABLE IF NOT EXISTS party_management_persistence.projection_management (
     projection_name text,
     partition int,
     projection_key text,
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS uservice_party_management.projection_management (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE IF NOT EXISTS uservice_party_management.offset_store (
+CREATE TABLE IF NOT EXISTS party_management_persistence.offset_store (
     projection_name text,
     partition int,
     projection_key text,
