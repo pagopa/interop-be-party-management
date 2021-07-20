@@ -19,7 +19,7 @@ class PartyRelationShipConfirmedSerializer extends SerializerWithStringManifest 
   final val PartyRelationShipConfirmedManifest: String = classOf[PartyRelationShipConfirmed].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: PartyRelationShipDeleted => serialize(event, PartyRelationShipConfirmedManifest, currentVersion)
+    case event: PartyRelationShipConfirmed => serialize(event, PartyRelationShipConfirmedManifest, currentVersion)
   }
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw"))
