@@ -7,18 +7,19 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
+import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.timeout
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
-import cats.implicits._
+
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
 class PartyApiServiceImpl(
@@ -455,4 +456,36 @@ class PartyApiServiceImpl(
         failure(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
+
+  /** Code: 200, Message: Party Attributes, DataType: Seq[String]
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Party not found, DataType: Problem
+    */
+  override def getPartyAttributes(
+    id: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val futures: Future[List[StatusReply[Seq[String]]]] = Future.traverse(commanders) { commander =>
+      for {
+        attributesF <- commander.ask(ref => GetPartyAttributes(UUID.fromString(id), ref)) //TODO make this UUID better
+      } yield attributesF
+    }
+
+    onComplete(futures) {
+      case Success(result) => {
+        result
+          .find(_.isSuccess)
+          .fold(getPartyAttributes404(Problem(Option(s"Party ${id} Not Found"), status = 404, "party not found"))) {
+            reply =>
+              getPartyAttributes200(reply.getValue)
+          }
+      }
+      case Failure(ex) => getPartyAttributes404(Problem(Option(ex.getMessage), status = 404, "party not found"))
+    }
+  }
+
 }

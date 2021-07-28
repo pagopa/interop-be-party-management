@@ -21,7 +21,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   PartyApiServiceImpl
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApplicationConfiguration, Authenticator}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   Command,
@@ -128,7 +128,7 @@ object Main extends App {
           })
         )
 
-        val _ = Http().newServerAt("0.0.0.0", 8088).bind(controller.routes)
+        val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
 
         val listener = context.spawn(
           Behaviors.receive[ClusterEvent.MemberEvent]((ctx, event) => {
