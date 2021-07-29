@@ -7,7 +7,6 @@ import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationShipStatus.Active
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import org.slf4j.LoggerFactory
 
@@ -116,10 +115,7 @@ object PartyPersistentBehavior {
             Effect.none[AttributesAdded, State]
           }
 
-      case AddPartyRelationShip(from, to, role, replyTo) =>
-        val isEligible = state.relationShips.exists(p => p._1.to == to && p._1.role == Manager && p._2.status == Active)
-
-        val partyRelationShip: PartyRelationShip = PartyRelationShip.create(from, to, role)
+      case AddPartyRelationShip(partyRelationShip, replyTo) =>
         state.relationShips
           .get(partyRelationShip.id)
           .map { _ =>
@@ -127,14 +123,11 @@ object PartyPersistentBehavior {
             Effect.none[PartyRelationShipAdded, State]
           }
           .getOrElse {
-            if (isEligible || Set[PartyRole](Manager, Delegate).contains(role))
-              Effect
-                .persist(PartyRelationShipAdded(partyRelationShip))
-                .thenRun(_ => replyTo ! StatusReply.Success(()))
-            else {
-              replyTo ! StatusReply.Error(s"Operator without manager")
-              Effect.none[PartyRelationShipAdded, State]
-            }
+
+            Effect
+              .persist(PartyRelationShipAdded(partyRelationShip))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+
           }
 
       case ConfirmPartyRelationShip(partyRelationShipId, replyTo) =>
@@ -154,8 +147,13 @@ object PartyPersistentBehavior {
           .persist(PartyRelationShipDeleted(partyRelationShipId))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-      case GetPartyRelationShips(from, replyTo) =>
+      case GetPartyRelationShipsByFrom(from, replyTo) =>
         val relationShips: List[PartyRelationShip] = state.relationShips.filter(_._1.from == from).values.toList
+        replyTo ! relationShips
+        Effect.none
+
+      case GetPartyRelationShipsByTo(to, replyTo) =>
+        val relationShips: List[PartyRelationShip] = state.relationShips.filter(_._1.to == to).values.toList
         replyTo ! relationShips
         Effect.none
 

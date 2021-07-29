@@ -26,7 +26,7 @@ final case class AddAttributes(organizationId: String, attributes: Seq[String], 
     extends PartyCommand
 
 /* PartyRelationShip Command */
-final case class AddPartyRelationShip(from: UUID, to: UUID, partyRole: PartyRole, replyTo: ActorRef[StatusReply[Unit]])
+final case class AddPartyRelationShip(partyRelationShip: PartyRelationShip, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationShipCommand
 
 final case class ConfirmPartyRelationShip(relationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[Unit]])
@@ -35,7 +35,10 @@ final case class ConfirmPartyRelationShip(relationShipId: PartyRelationShipId, r
 final case class DeletePartyRelationShip(relationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationShipCommand
 
-final case class GetPartyRelationShips(from: UUID, replyTo: ActorRef[List[PartyRelationShip]])
+final case class GetPartyRelationShipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationShip]])
+    extends PartyRelationShipCommand
+
+final case class GetPartyRelationShipsByTo(to: UUID, replyTo: ActorRef[List[PartyRelationShip]])
     extends PartyRelationShipCommand
 
 /* Party Command */

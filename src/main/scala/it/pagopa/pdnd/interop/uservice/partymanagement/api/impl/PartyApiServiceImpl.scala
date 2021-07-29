@@ -214,6 +214,10 @@ class PartyApiServiceImpl(
     relationShip: RelationShip
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
     val result: Future[StatusReply[Unit]] = for {
       from <- getCommander(relationShip.from).ask(ref =>
         GetPartyByExternalId(relationShip.from, getShard(relationShip.from), ref)
@@ -223,10 +227,21 @@ class PartyApiServiceImpl(
       )
       parties <- extractParties(from, to)
       role    <- PartyRole.fromText(relationShip.role).toFuture
-      res <- getCommander(parties._1.partyId).ask(ref => //TODO check if party or external ref
-        AddPartyRelationShip(UUID.fromString(parties._1.partyId), UUID.fromString(parties._2.partyId), role, ref)
+      partyRelationShip = PartyRelationShip.create(
+        UUID.fromString(parties._1.partyId),
+        UUID.fromString(parties._2.partyId),
+        role
       )
-    } yield res
+      legals <- Future.traverse(commanders)(commander =>
+        commander.ask(ref => GetPartyRelationShipsByTo(UUID.fromString(parties._2.partyId), ref))
+      )
+      completed <-
+        if (isEligible(legals.flatten, partyRelationShip.id.role))
+          getCommander(parties._1.partyId).ask(ref => //TODO check if party or external ref
+            AddPartyRelationShip(partyRelationShip, ref)
+          )
+        else Future.failed(new RuntimeException("Operator without active manager"))
+    } yield completed
 
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
@@ -294,7 +309,7 @@ class PartyApiServiceImpl(
           Future.successful
         )
       _ = logger.error(s"Person found ${person.toString}")
-      partyRelationships <- getCommander(party.id.toString).ask(ref => GetPartyRelationShips(party.id, ref))
+      partyRelationships <- getCommander(party.id.toString).ask(ref => GetPartyRelationShipsByFrom(party.id, ref))
       _ = logger.error(s"PartyRelationships found ${partyRelationships.toString}")
       relationships <- createRelationships(person, partyRelationships)
     } yield relationships.flatten
@@ -422,9 +437,10 @@ class PartyApiServiceImpl(
     role = PartyRole.fromText(relationShip.role).toOption
   } yield PartyRelationShipId(from.get.id, to.get.id, role.get)
 
-//  private def deleteToken(token: Token): Future[StatusReply[Unit]] = {
-  //    getCommander(token.seed.toString).ask(ref => DeleteToken(token, ref))
-  //  }
+  private def isEligible(legals: List[PartyRelationShip], role: PartyRole) = {
+    legals.exists(_.status == PartyRelationShipStatus.Active) ||
+    Set[PartyRole](Manager, Delegate).contains(role)
+  }
 
   private def processRelationShips(
     token: Token,
