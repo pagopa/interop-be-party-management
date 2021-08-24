@@ -7,7 +7,6 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
-import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
@@ -258,61 +257,34 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: RelationShips
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def getRelationShips(from: String)(implicit
+  override def getRelationShips(from: Option[String], to: Option[String])(implicit
     toEntityMarshallerRelationShips: ToEntityMarshaller[RelationShips],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
-    logger.error(s"Getting relationships for $from")
+    logger.error(s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}")
 
-    val commanders = (0 to settings.numberOfShards)
+    val allCommanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    //TODO simplify here
-    def createRelationship(person: Person, relationShip: PartyRelationShip): Future[List[Option[RelationShip]]] = {
-      Future.traverse(commanders) { commander =>
-        for {
-          party <- commander.ask(ref => GetParty(relationShip.id.to, ref))
-        } yield party.map(r =>
-          RelationShip(
-            from = person.taxCode,
-            to = r.externalId,
-            role = relationShip.id.role.stringify,
-            status = Some(relationShip.status.stringify)
-          )
-        )
+    val result: Future[List[RelationShip]] = (from, to) match {
+      case (Some(f), Some(t)) =>
+        val commander: EntityRef[Command] = getCommander(f)
+        getRelationShips(f, commander, allCommanders)(id => commander.ask(ref => GetPartyRelationShipsByFrom(id, ref)))
+          .map(_.filter(_.to == t))
 
-      }
+      case (Some(f), None) =>
+        val commander: EntityRef[Command] = getCommander(f)
+        getRelationShips(f, commander, allCommanders)(id => commander.ask(ref => GetPartyRelationShipsByFrom(id, ref)))
+
+      case (None, Some(t)) =>
+        val commander: EntityRef[Command] = getCommander(t)
+        getRelationShips(t, commander, allCommanders)(allCommanders.askForPartyRelationShips)
+
+      case _ => Future.successful(List.empty)
     }
-
-    //TODO simplify here
-    def createRelationships(
-      person: Person,
-      relationShips: List[PartyRelationShip]
-    ): Future[List[Option[RelationShip]]] =
-      relationShips.flatTraverse(relationShip => createRelationship(person, relationShip))
-
-    val result = for {
-      fromParty <- getCommander(from).ask(ref => GetPartyByExternalId(from, getShard(from), ref))
-      party <- fromParty.fold(Future.failed[Party](new RuntimeException(s"Party $from not found")))(p =>
-        Future.successful(p)
-      )
-      _ = logger.error(s"Party found ${party.toString}")
-      person <- Party
-        .convertToApi(party)
-        .fold(
-          _ =>
-            Future
-              .failed(new RuntimeException(s"Invalid party ${party.toString}: expected Person, found Organization")),
-          Future.successful
-        )
-      _ = logger.error(s"Person found ${person.toString}")
-      partyRelationships <- getCommander(party.id.toString).ask(ref => GetPartyRelationShipsByFrom(party.id, ref))
-      _ = logger.error(s"PartyRelationships found ${partyRelationships.toString}")
-      relationships <- createRelationships(person, partyRelationships)
-    } yield relationships.flatten
 
     onComplete(result) {
       case Success(relationships) => getRelationShips200(RelationShips(relationships))
@@ -440,6 +412,21 @@ class PartyApiServiceImpl(
   private def isEligible(legals: List[PartyRelationShip], role: PartyRole) = {
     legals.exists(_.status == PartyRelationShipStatus.Active) ||
     Set[PartyRole](Manager, Delegate).contains(role)
+  }
+
+  private def getRelationShips(
+    externalId: String,
+    commander: EntityRef[Command],
+    allCommanders: List[EntityRef[Command]]
+  )(partyRelationShipsExtractor: UUID => Future[List[PartyRelationShip]]): Future[List[RelationShip]] = {
+    for {
+      found <- commander.ask(ref => GetPartyByExternalId(externalId, getShard(externalId), ref))
+      party <- found.fold(Future.failed[Party](new RuntimeException(s"Party $externalId not found")))(p =>
+        Future.successful(p)
+      )
+      partyRelationShips <- partyRelationShipsExtractor(party.id)
+      relationShips      <- allCommanders.extractRelationships(partyRelationShips)
+    } yield relationShips
   }
 
   private def processRelationShips(
