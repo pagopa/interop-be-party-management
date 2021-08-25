@@ -283,7 +283,7 @@ class PartyApiServiceImpl(
         val commander: EntityRef[Command] = getCommander(t)
         getRelationShips(t, commander, allCommanders)(allCommanders.askForPartyRelationShips)
 
-      case _ => Future.successful(List.empty)
+      case _ => Future.failed(new RuntimeException("At least one query parameter must be passed"))
     }
 
     onComplete(result) {
