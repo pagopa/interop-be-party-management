@@ -1,11 +1,12 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api
 
+import akka.actor.typed.ActorRef
 import akka.cluster.sharding.typed.scaladsl.EntityRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.util.Timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationShip}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{Command, GetParty, GetPartyRelationShipsByTo}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{Command, GetParty, PartyRelationShipCommand}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import java.util.UUID
@@ -24,15 +25,15 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit class CommandersOps(val commanders: List[EntityRef[Command]]) extends AnyVal {
 
-    def extractRelationships(
+    def convertToRelationships(
       partyRelationShips: List[PartyRelationShip]
     )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[RelationShip]] =
-      Future.traverse(partyRelationShips)(commanders.extractRelationship).map(_.flatten)
+      Future.traverse(partyRelationShips)(commanders.convertToRelationship).map(_.flatten)
 
-    def extractRelationship(
+    def convertToRelationship(
       partyRelationShip: PartyRelationShip
     )(implicit ec: ExecutionContext, timeout: Timeout): Future[Option[RelationShip]] = {
-      val partiesExtracted: Future[List[(Option[Party], Option[Party])]] = Future.traverse(commanders) { commander =>
+      val partiesRetrieved: Future[List[(Option[Party], Option[Party])]] = Future.traverse(commanders) { commander =>
         for {
           from <- commander.ask(ref => GetParty(partyRelationShip.id.from, ref))
           to   <- commander.ask(ref => GetParty(partyRelationShip.id.to, ref))
@@ -40,7 +41,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
       }
 
-      partiesExtracted.map { parties =>
+      partiesRetrieved.map { parties =>
         for {
           from <- parties.find(_._1.isDefined).flatMap(_._1)
           to   <- parties.find(_._2.isDefined).flatMap(_._2)
@@ -54,10 +55,26 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
     }
 
-    def askForPartyRelationShips(
-      id: UUID
-    )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[PartyRelationShip]] =
-      Future.traverse(commanders)(commander => commander.ask(ref => GetPartyRelationShipsByTo(id, ref))).map(_.flatten)
+    def getPartyRelationShips(
+      id: UUID,
+      commandFunc: (UUID, ActorRef[List[PartyRelationShip]]) => PartyRelationShipCommand
+    )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[PartyRelationShip]] = {
+      Future
+        .traverse(commanders)(commander =>
+          commander.ask[List[PartyRelationShip]](ref => commandFunc(id, ref))
+        )
+        .map(_.flatten)
+    }
+
+    def getRelationShips(
+      party: Party,
+      commandFunc: (UUID, ActorRef[List[PartyRelationShip]]) => PartyRelationShipCommand
+    )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[RelationShip]] = {
+      for {
+        partyRelationShips <- commanders.getPartyRelationShips(party.id, commandFunc)
+        relationShips      <- commanders.convertToRelationships(partyRelationShips)
+      } yield relationShips
+    }
   }
 
 }

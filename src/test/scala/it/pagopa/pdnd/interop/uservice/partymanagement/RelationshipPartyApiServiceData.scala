@@ -10,24 +10,32 @@ import scala.concurrent.{Await, ExecutionContext}
 
 object RelationshipPartyApiServiceData {
 
-  lazy final val rlUuid1 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9219"
-  lazy final val rlUuid2 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9220"
-  lazy final val rlUuid3 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9221"
-  lazy final val rlUuid4 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9222"
-  lazy final val rlUuid5 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9223"
-  lazy final val rlUuid6 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9224"
+  lazy final val uuid1 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9219"
+  lazy final val uuid2 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9220"
+  lazy final val uuid3 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9221"
+  lazy final val uuid4 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9222"
+  lazy final val uuid5 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9223"
+  lazy final val uuid6 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9224"
+  lazy final val uuid7 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9225"
+  lazy final val uuid8 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9226"
+  lazy final val uuid9 = "27f8dce0-0a5b-476b-9fdd-a7a658eb9227"
 
   lazy final val taxCode1 = "RSSMRA75L01H501E"
   lazy final val taxCode2 = "RSSMRA75L01H501F"
   lazy final val taxCode3 = "RSSMRA75L01H501G"
+  lazy final val taxCode4 = "RSSMRA75L01H501R"
+  lazy final val taxCode5 = "RSSMRA75L01H501T"
 
   lazy final val institutionId1 = "id5"
   lazy final val institutionId2 = "id6"
   lazy final val institutionId3 = "id7"
+  lazy final val institutionId4 = "id8"
 
   lazy final val personSeed1 = PersonSeed(taxCode = taxCode1, surname = "Ripley", name = "Ellen")
   lazy final val personSeed2 = PersonSeed(taxCode = taxCode2, surname = "Onizuka", name = "Eikichi")
   lazy final val personSeed3 = PersonSeed(taxCode = taxCode3, surname = "Murphy", name = "Alex")
+  lazy final val personSeed4 = PersonSeed(taxCode = taxCode4, surname = "Cartman", name = "Eric")
+  lazy final val personSeed5 = PersonSeed(taxCode = taxCode5, surname = "Wick", name = "John")
 
   lazy final val orgSeed1 =
     OrganizationSeed(institutionId1, "Institutions Five", "Ellen", "Ripley", "mail5@mail.org", Seq.empty)
@@ -35,14 +43,24 @@ object RelationshipPartyApiServiceData {
     OrganizationSeed(institutionId2, "Institutions Six", "Eikichi", "Onizuka", "mail6@mail.org", Seq.empty)
   lazy final val orgSeed3 =
     OrganizationSeed(institutionId3, "Institutions Seven", "Alex", "Murphy", "mail7@mail.org", Seq.empty)
+  lazy final val orgSeed4 =
+    OrganizationSeed(institutionId4, "Institutions Eight", "Eric", "Cartman", "mail8@mail.org", Seq.empty)
 
   lazy final val rlSeed1 = RelationShip(from = taxCode1, to = institutionId1, role = "Manager", None)
   lazy final val rlSeed2 = RelationShip(from = taxCode2, to = institutionId2, role = "Manager", None)
   lazy final val rlSeed3 = RelationShip(from = taxCode3, to = institutionId3, role = "Manager", None)
+  lazy final val rlSeed4 = RelationShip(from = taxCode4, to = institutionId4, role = "Manager", None)
+  lazy final val rlSeed5 = RelationShip(from = taxCode5, to = institutionId4, role = "Delegate", None)
 
   lazy final val rlExpected1 = RelationShips(Seq.empty)
   lazy final val rlExpected2 = RelationShips(
     Seq(RelationShip(from = taxCode2, to = institutionId2, role = "Manager", status = Some("Pending")))
+  )
+  lazy final val rlExpected3 = RelationShips(
+    Seq(
+      RelationShip(from = taxCode4, to = institutionId4, role = "Manager", status = Some("Pending")),
+      RelationShip(from = taxCode5, to = institutionId4, role = "Delegate", status = Some("Pending"))
+    )
   )
 
   def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationShip: RelationShip)(implicit

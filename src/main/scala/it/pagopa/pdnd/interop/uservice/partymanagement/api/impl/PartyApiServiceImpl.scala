@@ -7,6 +7,7 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
+import akka.util.Timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
@@ -218,27 +219,14 @@ class PartyApiServiceImpl(
       .toList
 
     val result: Future[StatusReply[Unit]] = for {
-      from <- getCommander(relationShip.from).ask(ref =>
-        GetPartyByExternalId(relationShip.from, getShard(relationShip.from), ref)
-      )
-      to <- getCommander(relationShip.to).ask(ref =>
-        GetPartyByExternalId(relationShip.to, getShard(relationShip.to), ref)
-      )
-      parties <- extractParties(from, to)
-      role    <- PartyRole.fromText(relationShip.role).toFuture
-      partyRelationShip = PartyRelationShip.create(
-        UUID.fromString(parties._1.partyId),
-        UUID.fromString(parties._2.partyId),
-        role
-      )
-      legals <- Future.traverse(commanders)(commander =>
-        commander.ask(ref => GetPartyRelationShipsByTo(UUID.fromString(parties._2.partyId), ref))
-      )
+      from <- getParty(relationShip.from)
+      to   <- getParty(relationShip.to)
+      role <- PartyRole.fromText(relationShip.role).toFuture
+      partyRelationShip = PartyRelationShip.create(from.id, to.id, role)
+      currentPartyRelationShips <- commanders.getPartyRelationShips(to.id, GetPartyRelationShipsByTo)
       completed <-
-        if (isEligible(legals.flatten, partyRelationShip.id.role))
-          getCommander(parties._1.partyId).ask(ref => //TODO check if party or external ref
-            AddPartyRelationShip(partyRelationShip, ref)
-          )
+        if (isEligible(currentPartyRelationShips, partyRelationShip.id.role))
+          getCommander(from.id.toString).ask(ref => AddPartyRelationShip(partyRelationShip, ref))
         else Future.failed(new RuntimeException("Operator without active manager"))
     } yield completed
 
@@ -265,30 +253,27 @@ class PartyApiServiceImpl(
 
     logger.error(s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}")
 
-    val allCommanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
+    val commanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
+    def retrieveRelationShips(
+      externalId: String,
+      commandFunc: (UUID, ActorRef[List[PartyRelationShip]]) => PartyRelationShipCommand
+    ): Future[List[RelationShip]] = for {
+      party <- getParty(externalId)
+      re    <- commanders.getRelationShips(party, commandFunc)
+    } yield re
+
     val result: Future[List[RelationShip]] = (from, to) match {
-      case (Some(f), Some(t)) =>
-        val commander: EntityRef[Command] = getCommander(f)
-        getRelationShips(f, commander, allCommanders)(id => commander.ask(ref => GetPartyRelationShipsByFrom(id, ref)))
-          .map(_.filter(_.to == t))
-
-      case (Some(f), None) =>
-        val commander: EntityRef[Command] = getCommander(f)
-        getRelationShips(f, commander, allCommanders)(id => commander.ask(ref => GetPartyRelationShipsByFrom(id, ref)))
-
-      case (None, Some(t)) =>
-        val commander: EntityRef[Command] = getCommander(t)
-        getRelationShips(t, commander, allCommanders)(allCommanders.askForPartyRelationShips)
-
-      case _ => Future.failed(new RuntimeException("At least one query parameter must be passed"))
+      case (Some(f), Some(t)) => retrieveRelationShips(f, GetPartyRelationShipsByFrom).map(_.filter(_.to == t))
+      case (Some(f), None)    => retrieveRelationShips(f, GetPartyRelationShipsByFrom)
+      case (None, Some(t))    => retrieveRelationShips(t, GetPartyRelationShipsByTo)
+      case _                  => Future.failed(new RuntimeException("At least one query parameter must be passed"))
     }
 
     onComplete(result) {
       case Success(relationships) => getRelationShips200(RelationShips(relationships))
-
       case Failure(ex) =>
         getRelationShips400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
@@ -386,18 +371,12 @@ class PartyApiServiceImpl(
 
   }
 
-  //TODO Improve this part
-  private def extractParties(from: Option[Party], to: Option[Party]): Future[(Person, Organization)] =
-    Future.fromTry {
-      val parties: Option[(Person, Organization)] = for {
-        fromParty    <- from
-        person       <- Party.convertToApi(fromParty).toOption
-        toParty      <- to
-        organization <- Party.convertToApi(toParty).swap.toOption
-      } yield (person, organization)
-      parties.map(Success(_)).getOrElse(Failure(new RuntimeException("Party extraction from ApiParty failed")))
-
-    }
+  private def getParty(externalId: String)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
+    found <- getCommander(externalId).ask(ref => GetPartyByExternalId(externalId, getShard(externalId), ref))
+    party <- found.fold(Future.failed[Party](new RuntimeException(s"Party $externalId not found")))(p =>
+      Future.successful(p)
+    )
+  } yield party
 
   private def getPartyRelationShipId(relationShip: RelationShip): Future[PartyRelationShipId] = for {
     from <- getCommander(relationShip.from).ask(ref =>
@@ -409,24 +388,9 @@ class PartyApiServiceImpl(
     role = PartyRole.fromText(relationShip.role).toOption
   } yield PartyRelationShipId(from.get.id, to.get.id, role.get)
 
-  private def isEligible(legals: List[PartyRelationShip], role: PartyRole) = {
-    legals.exists(_.status == PartyRelationShipStatus.Active) ||
+  private def isEligible(partyRelationShips: List[PartyRelationShip], role: PartyRole) = {
+    partyRelationShips.exists(_.status == PartyRelationShipStatus.Active) ||
     Set[PartyRole](Manager, Delegate).contains(role)
-  }
-
-  private def getRelationShips(
-    externalId: String,
-    commander: EntityRef[Command],
-    allCommanders: List[EntityRef[Command]]
-  )(partyRelationShipsExtractor: UUID => Future[List[PartyRelationShip]]): Future[List[RelationShip]] = {
-    for {
-      found <- commander.ask(ref => GetPartyByExternalId(externalId, getShard(externalId), ref))
-      party <- found.fold(Future.failed[Party](new RuntimeException(s"Party $externalId not found")))(p =>
-        Future.successful(p)
-      )
-      partyRelationShips <- partyRelationShipsExtractor(party.id)
-      relationShips      <- allCommanders.extractRelationships(partyRelationShips)
-    } yield relationShips
   }
 
   private def processRelationShips(
@@ -472,21 +436,18 @@ class PartyApiServiceImpl(
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val futures: Future[List[StatusReply[Seq[String]]]] = Future.traverse(commanders) { commander =>
-      for {
-        attributesF <- commander.ask(ref => GetPartyAttributes(UUID.fromString(id), ref)) //TODO make this UUID better
-      } yield attributesF
+    val attributes: Future[List[StatusReply[Seq[String]]]] = Future.traverse(commanders) { commander =>
+      commander.ask(ref => GetPartyAttributes(UUID.fromString(id), ref)) //TODO make this UUID better
     }
 
-    onComplete(futures) {
-      case Success(result) => {
+    onComplete(attributes) {
+      case Success(result) =>
         result
           .find(_.isSuccess)
-          .fold(getPartyAttributes404(Problem(Option(s"Party ${id} Not Found"), status = 404, "party not found"))) {
+          .fold(getPartyAttributes404(Problem(Option(s"Party $id Not Found"), status = 404, "party not found"))) {
             reply =>
               getPartyAttributes200(reply.getValue)
           }
-      }
       case Failure(ex) => getPartyAttributes404(Problem(Option(ex.getMessage), status = 404, "party not found"))
     }
   }

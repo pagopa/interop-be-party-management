@@ -277,7 +277,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = Await.result(
         Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/$taxCode1", method = HttpMethods.GET, headers = authorization)
+          HttpRequest(uri = s"$url/relationships?from=$taxCode1", method = HttpMethods.GET, headers = authorization)
         ),
         Duration.Inf
       )
@@ -285,9 +285,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.BadRequest
     }
 
-    "return 200 with if the relationships do not exist" in {
+    "return 200 if the relationships do not exist" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
 
       val personData = Await.result(Marshal(personSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -295,7 +295,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = Await.result(
         Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/$taxCode1", method = HttpMethods.GET, headers = authorization)
+          HttpRequest(uri = s"$url/relationships?from=$taxCode1", method = HttpMethods.GET, headers = authorization)
         ),
         Duration.Inf
       )
@@ -311,8 +311,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "create a new relationship" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid1)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid2)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid2)).once()
 
       val response = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed1, relationShip = rlSeed1)
 
@@ -322,15 +322,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return the relationship if exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid3)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid4)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid3)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid4)).once()
 
       val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed2, relationShip = rlSeed2)
 
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
-            uri = s"$url/relationships/${personSeed2.taxCode}",
+            uri = s"$url/relationships?from=${personSeed2.taxCode}",
             method = HttpMethods.GET,
             headers = authorization
           )
@@ -347,8 +347,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 400 if relationship already exists" in {
 
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid5)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(rlUuid6)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid5)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid6)).once()
 
       val _ = prepareTest(personSeed = personSeed3, organizationSeed = orgSeed3, relationShip = rlSeed3)
 
@@ -358,6 +358,33 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       response.status shouldBe StatusCodes.BadRequest
 
+    }
+
+    "return the relationship using `to` party" in {
+
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid7)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid8)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid9)).once()
+
+      val _ = prepareTest(personSeed = personSeed4, organizationSeed = orgSeed4, relationShip = rlSeed4)
+      val _ = prepareTest(personSeed = personSeed5, organizationSeed = orgSeed4, relationShip = rlSeed5)
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships?to=${orgSeed4.institutionId}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
+
+      response.status shouldBe StatusCodes.OK
+
+      body shouldBe rlExpected3
     }
   }
 
@@ -435,7 +462,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
-            uri = s"$url/relationships/${personSeed3.taxCode}",
+            uri = s"$url/relationships?from=${personSeed3.taxCode}",
             method = HttpMethods.GET,
             headers = authorization
           )

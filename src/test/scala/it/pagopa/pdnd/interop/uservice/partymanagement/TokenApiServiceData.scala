@@ -91,7 +91,7 @@ object TokenApiServiceData {
     Await.result(
       Http().singleRequest(
         HttpRequest(
-          uri = s"$url/relationships/${relationShipOne.from}",
+          uri = s"$url/relationships?from=${relationShipOne.from}",
           method = HttpMethods.GET,
           headers = authorization
         )
