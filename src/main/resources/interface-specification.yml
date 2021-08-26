@@ -564,6 +564,11 @@ components:
             - Operator
         status:
           type: string
+          enum:
+            - Pending
+            - Active
+            - Inactive
+            - Deleted
       additionalProperties: false
       required:
         - from
