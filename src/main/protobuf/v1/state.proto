@@ -14,7 +14,7 @@ message StateV1 {
   repeated PartiesV1 parties = 1;
   repeated IndexesV1 indexes = 2;
   repeated TokensV1 tokens = 3;
-  repeated RelationShipsV1 relationShips = 4;
+  repeated RelationshipsV1 relationShips = 4;
 }
 
 
@@ -33,7 +33,7 @@ message TokensV1 {
   required TokenV1 value = 2;
 }
 
-message RelationShipsV1 {
-  required PartyRelationShipIdV1 key = 1;
-  required PartyRelationShipV1 value = 2;
+message RelationshipsV1 {
+  required PartyRelationshipIdV1 key = 1;
+  required PartyRelationshipV1 value = 2;
 }

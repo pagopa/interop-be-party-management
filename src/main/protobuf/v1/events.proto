@@ -21,16 +21,16 @@ message PartyDeletedV1 {
   required PartyV1 party = 1;
 }
 
-message PartyRelationShipAddedV1 {
-  required PartyRelationShipV1 partyRelationShip = 1;
+message PartyRelationshipAddedV1 {
+  required PartyRelationshipV1 partyRelationship = 1;
 }
 
-message PartyRelationShipConfirmedV1 {
-  required PartyRelationShipIdV1 partyRelationShipId = 1;
+message PartyRelationshipConfirmedV1 {
+  required PartyRelationshipIdV1 partyRelationshipId = 1;
 }
 
-message PartyRelationShipDeletedV1 {
-  required PartyRelationShipIdV1 partyRelationShipId = 1;
+message PartyRelationshipDeletedV1 {
+  required PartyRelationshipIdV1 partyRelationshipId = 1;
 }
 
 message TokenAddedV1 {

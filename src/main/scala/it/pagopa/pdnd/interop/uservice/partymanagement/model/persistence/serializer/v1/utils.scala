@@ -9,11 +9,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationShipIdV1.PartyRoleV1
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationShipV1.PartyRelationShipStatusV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipIdV1.PartyRoleV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
-  PartyRelationShipIdV1,
-  PartyRelationShipV1
+  PartyRelationshipIdV1,
+  PartyRelationshipV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1
 
@@ -79,46 +79,46 @@ object utils {
       )
   }
 
-  def getPartyRelationShipId(partyRelationShipIdV1: PartyRelationShipIdV1): ErrorOr[PartyRelationShipId] =
+  def getPartyRelationshipId(partyRelationshipIdV1: PartyRelationshipIdV1): ErrorOr[PartyRelationshipId] =
     PartyRole
-      .fromText(partyRelationShipIdV1.status.name)
+      .fromText(partyRelationshipIdV1.status.name)
       .map(role =>
-        PartyRelationShipId(
-          UUID.fromString(partyRelationShipIdV1.from),
-          UUID.fromString(partyRelationShipIdV1.to),
+        PartyRelationshipId(
+          UUID.fromString(partyRelationshipIdV1.from),
+          UUID.fromString(partyRelationshipIdV1.to),
           role
         )
       )
 
-  def getPartyRelationShipIdV1(partyRelationShipId: PartyRelationShipId): ErrorOr[PartyRelationShipIdV1] = {
+  def getPartyRelationshipIdV1(partyRelationshipId: PartyRelationshipId): ErrorOr[PartyRelationshipIdV1] = {
     PartyRoleV1
-      .fromName(partyRelationShipId.role.stringify)
+      .fromName(partyRelationshipId.role.stringify)
       .toRight(new RuntimeException("Deserialization from protobuf failed"))
-      .map(role => PartyRelationShipIdV1(partyRelationShipId.from.toString, partyRelationShipId.to.toString, role))
+      .map(role => PartyRelationshipIdV1(partyRelationshipId.from.toString, partyRelationshipId.to.toString, role))
   }
 
-  def getPartyRelationShip(partyRelationShipV1: PartyRelationShipV1): ErrorOr[PartyRelationShip] = {
+  def getPartyRelationship(partyRelationshipV1: PartyRelationshipV1): ErrorOr[PartyRelationship] = {
     for {
-      id     <- getPartyRelationShipId(partyRelationShipV1.id)
-      status <- PartyRelationShipStatus.fromText(partyRelationShipV1.status.name)
-    } yield PartyRelationShip(
+      id     <- getPartyRelationshipId(partyRelationshipV1.id)
+      status <- PartyRelationshipStatus.fromText(partyRelationshipV1.status.name)
+    } yield PartyRelationship(
       id = id,
-      start = toOffsetDateTime(partyRelationShipV1.start),
-      end = partyRelationShipV1.end.map(toOffsetDateTime),
+      start = toOffsetDateTime(partyRelationshipV1.start),
+      end = partyRelationshipV1.end.map(toOffsetDateTime),
       status = status
     )
   }
 
-  def getPartyRelationShipV1(partyRelationShip: PartyRelationShip): ErrorOr[PartyRelationShipV1] = {
+  def getPartyRelationshipV1(partyRelationship: PartyRelationship): ErrorOr[PartyRelationshipV1] = {
     for {
-      id <- getPartyRelationShipIdV1(partyRelationShip.id)
-      status <- PartyRelationShipStatusV1
-        .fromName(partyRelationShip.status.stringify)
+      id <- getPartyRelationshipIdV1(partyRelationship.id)
+      status <- PartyRelationshipStatusV1
+        .fromName(partyRelationship.status.stringify)
         .toRight(new RuntimeException("Deserialization from protobuf failed"))
-    } yield PartyRelationShipV1(
+    } yield PartyRelationshipV1(
       id = id,
-      start = partyRelationShip.start.format(formatter),
-      end = partyRelationShip.end.map(_.format(formatter)),
+      start = partyRelationship.start.format(formatter),
+      end = partyRelationship.end.map(_.format(formatter)),
       status = status
     )
 
@@ -126,7 +126,7 @@ object utils {
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
-      legals <- tokenV1.legals.traverse(legal => getPartyRelationShipId(legal))
+      legals <- tokenV1.legals.traverse(legal => getPartyRelationshipId(legal))
     } yield Token(
       id = tokenV1.id,
       legals = legals,
@@ -138,7 +138,7 @@ object utils {
 
   def getTokenV1(token: Token): ErrorOr[TokenV1] = {
     for {
-      legals <- token.legals.traverse(legal => getPartyRelationShipIdV1(legal))
+      legals <- token.legals.traverse(legal => getPartyRelationshipIdV1(legal))
     } yield TokenV1(
       id = token.id,
       legals = legals,

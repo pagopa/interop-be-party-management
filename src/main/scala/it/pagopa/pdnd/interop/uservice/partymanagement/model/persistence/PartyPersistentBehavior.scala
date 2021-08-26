@@ -115,50 +115,50 @@ object PartyPersistentBehavior {
             Effect.none[AttributesAdded, State]
           }
 
-      case AddPartyRelationShip(partyRelationShip, replyTo) =>
+      case AddPartyRelationship(partyRelationship, replyTo) =>
         state.relationShips
-          .get(partyRelationShip.id)
+          .get(partyRelationship.id)
           .map { _ =>
-            replyTo ! StatusReply.Error(s"Relationship ${partyRelationShip.id.stringify} already exists")
-            Effect.none[PartyRelationShipAdded, State]
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationship.id.stringify} already exists")
+            Effect.none[PartyRelationshipAdded, State]
           }
           .getOrElse {
 
             Effect
-              .persist(PartyRelationShipAdded(partyRelationShip))
+              .persist(PartyRelationshipAdded(partyRelationship))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
 
           }
 
-      case ConfirmPartyRelationShip(partyRelationShipId, replyTo) =>
+      case ConfirmPartyRelationship(partyRelationshipId, replyTo) =>
         state.relationShips
-          .get(partyRelationShipId)
+          .get(partyRelationshipId)
           .fold {
-            replyTo ! StatusReply.Error(s"Relationship ${partyRelationShipId.stringify} not found")
-            Effect.none[PartyRelationShipConfirmed, State]
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.stringify} not found")
+            Effect.none[PartyRelationshipConfirmed, State]
           } { t =>
             Effect
-              .persist(PartyRelationShipConfirmed(t.id))
+              .persist(PartyRelationshipConfirmed(t.id))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           }
 
-      case DeletePartyRelationShip(partyRelationShipId, replyTo) =>
+      case DeletePartyRelationship(partyRelationshipId, replyTo) =>
         Effect
-          .persist(PartyRelationShipDeleted(partyRelationShipId))
+          .persist(PartyRelationshipDeleted(partyRelationshipId))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-      case GetPartyRelationShipsByFrom(from, replyTo) =>
-        val relationShips: List[PartyRelationShip] = state.relationShips.filter(_._1.from == from).values.toList
+      case GetPartyRelationshipsByFrom(from, replyTo) =>
+        val relationShips: List[PartyRelationship] = state.relationShips.filter(_._1.from == from).values.toList
         replyTo ! relationShips
         Effect.none
 
-      case GetPartyRelationShipsByTo(to, replyTo) =>
-        val relationShips: List[PartyRelationShip] = state.relationShips.filter(_._1.to == to).values.toList
+      case GetPartyRelationshipsByTo(to, replyTo) =>
+        val relationShips: List[PartyRelationship] = state.relationShips.filter(_._1.to == to).values.toList
         replyTo ! relationShips
         Effect.none
 
-      case AddToken(tokenSeed, partyRelationShipIds, replyTo) =>
-        val token: Either[Throwable, Token] = Token.generate(tokenSeed, partyRelationShipIds)
+      case AddToken(tokenSeed, partyRelationshipIds, replyTo) =>
+        val token: Either[Throwable, Token] = Token.generate(tokenSeed, partyRelationshipIds)
 
         token match {
           case Right(tk) =>
@@ -201,9 +201,9 @@ object PartyPersistentBehavior {
       case PartyAdded(party)                          => state.addParty(party)
       case PartyDeleted(party)                        => state.deleteParty(party)
       case AttributesAdded(party)                     => state.updateParty(party)
-      case PartyRelationShipAdded(partyRelationShip)  => state.addPartyRelationShip(partyRelationShip)
-      case PartyRelationShipConfirmed(relationShipId) => state.confirmPartyRelationShip(relationShipId)
-      case PartyRelationShipDeleted(relationShipId)   => state.deletePartyRelationShip(relationShipId)
+      case PartyRelationshipAdded(partyRelationship)  => state.addPartyRelationship(partyRelationship)
+      case PartyRelationshipConfirmed(relationShipId) => state.confirmPartyRelationship(relationShipId)
+      case PartyRelationshipDeleted(relationShipId)   => state.deletePartyRelationship(relationShipId)
       case TokenAdded(token)                          => state.addToken(token)
       case TokenDeleted(token)                        => state.deleteToken(token)
     }
