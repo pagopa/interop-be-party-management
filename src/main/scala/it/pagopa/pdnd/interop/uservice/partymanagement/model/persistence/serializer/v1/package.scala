@@ -35,7 +35,7 @@ package object v1 {
         tokens <- state.tokens
           .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
           .map(_.toMap)
-        relationShips <- state.relationShips
+        relationships <- state.relationships
           .traverse[ErrorOr, (PartyRelationshipId, PartyRelationship)](rl =>
             for {
               k <- getPartyRelationshipId(rl.key)
@@ -43,7 +43,7 @@ package object v1 {
             } yield k -> v
           )
           .map(_.toMap)
-      } yield State(parties, indexes, tokens, relationShips)
+      } yield State(parties, indexes, tokens, relationships)
 
   @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
@@ -56,14 +56,14 @@ package object v1 {
         tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
           getTokenV1(v).map(token => TokensV1(k, token))
         }
-        relationShips <- state.relationShips.toSeq
+        relationships <- state.relationships.toSeq
           .traverse[ErrorOr, RelationshipsV1] { case (key, value) =>
             for {
               k <- getPartyRelationshipIdV1(key)
               v <- getPartyRelationshipV1(value)
             } yield RelationshipsV1(k, v)
           }
-      } yield StateV1(parties, indexes, tokens, relationShips)
+      } yield StateV1(parties, indexes, tokens, relationships)
 
   implicit def partyAddedV1PersistEventDeserializer: PersistEventDeserializer[PartyAddedV1, PartyAdded] = event =>
     getParty(event.party).map(PartyAdded)

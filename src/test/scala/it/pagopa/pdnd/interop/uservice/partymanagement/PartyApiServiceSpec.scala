@@ -314,7 +314,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid2)).once()
 
-      val response = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed1, relationShip = rlSeed1)
+      val response = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed1, relationship = rlSeed1)
 
       response.status shouldBe StatusCodes.Created
 
@@ -325,7 +325,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid3)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid4)).once()
 
-      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed2, relationShip = rlSeed2)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed2, relationship = rlSeed2)
 
       val response = Await.result(
         Http().singleRequest(
@@ -350,7 +350,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid5)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid6)).once()
 
-      val _ = prepareTest(personSeed = personSeed3, organizationSeed = orgSeed3, relationShip = rlSeed3)
+      val _ = prepareTest(personSeed = personSeed3, organizationSeed = orgSeed3, relationship = rlSeed3)
 
       val data = Await.result(Marshal(rlSeed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -366,8 +366,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid8)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid9)).once()
 
-      val _ = prepareTest(personSeed = personSeed4, organizationSeed = orgSeed4, relationShip = rlSeed4)
-      val _ = prepareTest(personSeed = personSeed5, organizationSeed = orgSeed4, relationShip = rlSeed5)
+      val _ = prepareTest(personSeed = personSeed4, organizationSeed = orgSeed4, relationship = rlSeed4)
+      val _ = prepareTest(personSeed = personSeed5, organizationSeed = orgSeed4, relationship = rlSeed5)
 
       val response = Await.result(
         Http().singleRequest(
@@ -396,11 +396,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid0)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid1)).once()
 
-      val relationShipResponse = prepareTest(personSeed1, organizationSeed1, relationShip1, relationShip2)
+      val relationshipResponse = prepareTest(personSeed1, organizationSeed1, relationship1, relationship2)
 
-      val relationships = Await.result(Unmarshal(relationShipResponse.entity).to[Relationships], Duration.Inf)
+      val relationships = Await.result(Unmarshal(relationshipResponse.entity).to[Relationships], Duration.Inf)
 
-      val tokenSeed = TokenSeed(seed = tokenSeedId1, relationShips = relationships, "checksum")
+      val tokenSeed = TokenSeed(seed = tokenSeedId1, relationships = relationships, "checksum")
 
       val tokenData = Await.result(Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -414,9 +414,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid2)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid3)).once()
 
-      val relationShipResponse = prepareTest(personSeed2, organizationSeed2, relationShip3, relationShip4)
+      val relationshipResponse = prepareTest(personSeed2, organizationSeed2, relationship3, relationship4)
 
-      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[Relationships], Duration.Inf)
+      val _ = Await.result(Unmarshal(relationshipResponse.entity).to[Relationships], Duration.Inf)
 
       val tokenData = Await.result(Marshal(tokenSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -440,9 +440,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid4)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid5)).once()
 
-      val relationShipResponse = prepareTest(personSeed3, organizationSeed3, relationShip5, relationShip6)
+      val relationshipResponse = prepareTest(personSeed3, organizationSeed3, relationship5, relationship6)
 
-      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[Relationships], Duration.Inf)
+      val _ = Await.result(Unmarshal(relationshipResponse.entity).to[Relationships], Duration.Inf)
 
       val tokenData = Await.result(Marshal(tokenSeed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 

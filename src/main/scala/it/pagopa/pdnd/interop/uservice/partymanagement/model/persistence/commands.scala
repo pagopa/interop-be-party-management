@@ -29,10 +29,10 @@ final case class AddAttributes(organizationId: String, attributes: Seq[String], 
 final case class AddPartyRelationship(partyRelationship: PartyRelationship, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class ConfirmPartyRelationship(relationShipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
+final case class ConfirmPartyRelationship(relationshipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class DeletePartyRelationship(relationShipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
+final case class DeletePartyRelationship(relationshipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationship]])

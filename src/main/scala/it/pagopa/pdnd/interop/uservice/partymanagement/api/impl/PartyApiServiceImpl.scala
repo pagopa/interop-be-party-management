@@ -211,7 +211,7 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
   override def createRelationship(
-    relationShip: Relationship
+    relationship: Relationship
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
     val commanders = (0 to settings.numberOfShards)
@@ -219,9 +219,9 @@ class PartyApiServiceImpl(
       .toList
 
     val result: Future[StatusReply[Unit]] = for {
-      from <- getParty(relationShip.from)
-      to   <- getParty(relationShip.to)
-      role <- PartyRole.fromText(relationShip.role).toFuture
+      from <- getParty(relationship.from)
+      to   <- getParty(relationship.to)
+      role <- PartyRole.fromText(relationship.role).toFuture
       partyRelationship = PartyRelationship.create(from.id, to.id, role)
       currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
@@ -376,14 +376,14 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationshipId(relationShip: Relationship): Future[PartyRelationshipId] = for {
-    from <- getCommander(relationShip.from).ask(ref =>
-      GetPartyByExternalId(relationShip.from, getShard(relationShip.from), ref)
+  private def getPartyRelationshipId(relationship: Relationship): Future[PartyRelationshipId] = for {
+    from <- getCommander(relationship.from).ask(ref =>
+      GetPartyByExternalId(relationship.from, getShard(relationship.from), ref)
     )
-    to <- getCommander(relationShip.to).ask(ref =>
-      GetPartyByExternalId(relationShip.to, getShard(relationShip.to), ref)
+    to <- getCommander(relationship.to).ask(ref =>
+      GetPartyByExternalId(relationship.to, getShard(relationship.to), ref)
     )
-    role = PartyRole.fromText(relationShip.role).toOption
+    role = PartyRole.fromText(relationship.role).toOption
   } yield PartyRelationshipId(from.get.id, to.get.id, role.get)
 
   private def isRelationshipAllowed(
