@@ -269,7 +269,7 @@ class PartyApiServiceImpl(
       case (Some(f), Some(t)) => retrieveRelationShips(f, GetPartyRelationShipsByFrom).map(_.filter(_.to == t))
       case (Some(f), None)    => retrieveRelationShips(f, GetPartyRelationShipsByFrom)
       case (None, Some(t))    => retrieveRelationShips(t, GetPartyRelationShipsByTo)
-      case _                  => Future.failed(new RuntimeException("At least one query parameter must be passed"))
+      case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 
     onComplete(result) {
