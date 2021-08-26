@@ -10,7 +10,7 @@ final case class State(
   parties: Map[UUID, Party],  //TODO use String instead of UUID
   indexes: Map[String, UUID], //TODO use String instead of UUID
   tokens: Map[String, Token],
-  relationShips: Map[PartyRelationshipId, PartyRelationship]
+  relationships: Map[PartyRelationshipId, PartyRelationship]
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -27,17 +27,17 @@ final case class State(
   def updateParty(party: Party): State =
     copy(parties = parties + (party.id -> party))
 
-  def addPartyRelationship(relationShip: PartyRelationship): State =
-    copy(relationShips = relationShips + (relationShip.id -> relationShip))
+  def addPartyRelationship(relationship: PartyRelationship): State =
+    copy(relationships = relationships + (relationship.id -> relationship))
 
-  def confirmPartyRelationship(relationShipId: PartyRelationshipId): State = {
+  def confirmPartyRelationship(relationshipId: PartyRelationshipId): State = {
     val updated: Map[PartyRelationshipId, PartyRelationship] =
-      relationShips.updated(relationShipId, relationShips(relationShipId).copy(status = PartyRelationshipStatus.Active))
-    copy(relationShips = updated)
+      relationships.updated(relationshipId, relationships(relationshipId).copy(status = PartyRelationshipStatus.Active))
+    copy(relationships = updated)
   }
 
-  def deletePartyRelationship(relationShipId: PartyRelationshipId): State =
-    copy(relationShips = relationShips - relationShipId)
+  def deletePartyRelationship(relationshipId: PartyRelationshipId): State =
+    copy(relationships = relationships - relationshipId)
 
   def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
 
@@ -50,7 +50,7 @@ object State {
     State(
       parties = Map.empty[UUID, Party],
       indexes = Map.empty[String, UUID],
-      relationShips = Map.empty[PartyRelationshipId, PartyRelationship],
+      relationships = Map.empty[PartyRelationshipId, PartyRelationship],
       tokens = Map.empty[String, Token]
     )
 }

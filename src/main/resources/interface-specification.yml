@@ -230,7 +230,7 @@ paths:
       #        - bearerAuth: [ ]
       tags:
         - party
-      summary: Create a new reletion ship between a Person and an Organization
+      summary: Create a new relationship between a Person and an Organization
       description: Return ok
       operationId: createRelationship
       requestBody:
@@ -253,7 +253,7 @@ paths:
       #        - bearerAuth: [ ]
       tags:
         - party
-      summary: Create a new reletion ship between a Person and an Organization
+      summary: Return a list of relationships
       description: Return ok
       operationId: getRelationships
       parameters:
@@ -564,6 +564,10 @@ components:
             - Operator
         status:
           type: string
+          enum:
+            - Pending
+            - Active
+            - Inactive
       additionalProperties: false
       required:
         - from

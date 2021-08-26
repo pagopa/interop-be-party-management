@@ -14,7 +14,7 @@ message StateV1 {
   repeated PartiesV1 parties = 1;
   repeated IndexesV1 indexes = 2;
   repeated TokensV1 tokens = 3;
-  repeated RelationshipsV1 relationShips = 4;
+  repeated RelationshipsV1 relationships = 4;
 }
 
 

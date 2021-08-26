@@ -63,7 +63,7 @@ object RelationshipPartyApiServiceData {
     )
   )
 
-  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationShip: Relationship)(implicit
+  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationship: Relationship)(implicit
     as: ActorSystem,
     mp: Marshaller[PersonSeed, MessageEntity],
     mo: Marshaller[OrganizationSeed, MessageEntity],
@@ -78,7 +78,7 @@ object RelationshipPartyApiServiceData {
 
     val _ = createOrganization(organizationData)
 
-    val rlRequestData = Await.result(Marshal(relationShip).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+    val rlRequestData = Await.result(Marshal(relationship).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
     createRelationship(rlRequestData)
 

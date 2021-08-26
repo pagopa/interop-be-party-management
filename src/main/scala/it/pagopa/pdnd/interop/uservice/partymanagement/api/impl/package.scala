@@ -17,8 +17,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val personFormat: RootJsonFormat[Person]                     = jsonFormat4(Person)
   implicit val organizationSeedFormat: RootJsonFormat[OrganizationSeed] = jsonFormat6(OrganizationSeed)
   implicit val organizationFormat: RootJsonFormat[Organization]         = jsonFormat7(Organization)
-  implicit val relationShipFormat: RootJsonFormat[Relationship]         = jsonFormat4(Relationship)
-  implicit val relationShipsFormat: RootJsonFormat[Relationships]       = jsonFormat1(Relationships)
+  implicit val relationshipFormat: RootJsonFormat[Relationship]         = jsonFormat4(Relationship)
+  implicit val relationshipsFormat: RootJsonFormat[Relationships]       = jsonFormat1(Relationships)
   implicit val problemFormat: RootJsonFormat[Problem]                   = jsonFormat3(Problem)
   implicit val tokenFeedFormat: RootJsonFormat[TokenSeed]               = jsonFormat3(TokenSeed)
   implicit val tokenTextFormat: RootJsonFormat[TokenText]               = jsonFormat1(TokenText)
@@ -72,8 +72,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
     )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[Relationship]] = {
       for {
         partyRelationships <- commanders.getPartyRelationships(party.id, commandFunc)
-        relationShips      <- commanders.convertToRelationships(partyRelationships)
-      } yield relationShips
+        relationships      <- commanders.convertToRelationships(partyRelationships)
+      } yield relationships
     }
   }
 
