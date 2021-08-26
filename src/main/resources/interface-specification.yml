@@ -278,43 +278,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  #  /relationships/{taxCode}:
-  #    get:
-  #      #      security:
-  #      #        - bearerAuth: [ ]
-  #      tags:
-  #        - party
-  #      summary: Create a new reletion ship between a Person and an Organization
-  #      description: Return ok
-  #      operationId: getRelationShips
-  #      parameters:
-  #        - name: taxCode
-  #          in: path
-  #          description: The ID of Person
-  #          required: true
-  #          schema:
-  #            description: to be defined
-  #            example: age
-  #            type: string
-  #      responses:
-  #        '200':
-  #          description: successful operation
-  #          content:
-  #            application/json:
-  #              schema:
-  #                $ref: '#/components/schemas/RelationShips'
-  #        '404':
-  #          description: Relationship not found
-  #          content:
-  #            application/problem+json:
-  #              schema:
-  #                $ref: '#/components/schemas/Problem'
-  #        '400':
-  #          description: Invalid ID supplied
-  #          content:
-  #            application/problem+json:
-  #              schema:
-  #                $ref: '#/components/schemas/Problem'
   /tokens:
     post:
       #      security:
