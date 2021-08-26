@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.{Marshal, Marshaller}
 import akka.http.scaladsl.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Delegate, Manager, PartyRelationShipId, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Delegate, Manager, PartyRelationshipId, Token}
 
 import java.util.UUID
 import scala.concurrent.duration.Duration
@@ -42,34 +42,34 @@ object TokenApiServiceData {
   lazy final val organizationSeed2 = OrganizationSeed(institutionId2, "Institutions Ten", "Melandri","Ranbaudo", "mail10@mail.org", Seq.empty)
   lazy final val organizationSeed3 = OrganizationSeed(institutionId3, "Institutions Eleven", "Perozzi","Giorgio", "mail11@mail.org", Seq.empty)
 
-  lazy final val relationShip1 = RelationShip(from = taxCode1, to = institutionId1, role = "Manager", None)
-  lazy final val relationShip2 = RelationShip(from = taxCode1, to = institutionId1, role = "Delegate", None)
-  lazy final val relationShip3 = RelationShip(from = taxCode2, to = institutionId2, role = "Manager", None)
-  lazy final val relationShip4 = RelationShip(from = taxCode2, to = institutionId2, role = "Delegate", None)
-  lazy final val relationShip5 = RelationShip(from = taxCode3, to = institutionId3, role = "Manager", None)
-  lazy final val relationShip6 = RelationShip(from = taxCode3, to = institutionId3, role = "Delegate", None)
+  lazy final val relationShip1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager", None)
+  lazy final val relationShip2 = Relationship(from = taxCode1, to = institutionId1, role = "Delegate", None)
+  lazy final val relationShip3 = Relationship(from = taxCode2, to = institutionId2, role = "Manager", None)
+  lazy final val relationShip4 = Relationship(from = taxCode2, to = institutionId2, role = "Delegate", None)
+  lazy final val relationShip5 = Relationship(from = taxCode3, to = institutionId3, role = "Manager", None)
+  lazy final val relationShip6 = Relationship(from = taxCode3, to = institutionId3, role = "Delegate", None)
 
-  lazy final val partyRelationShipId1 = PartyRelationShipId(from = UUID.fromString(createTokenUuid2), to = UUID.fromString(createTokenUuid3), role = Manager)
-  lazy final val partyRelationShipId2 = PartyRelationShipId(from = UUID.fromString(createTokenUuid2), to = UUID.fromString(createTokenUuid3), role = Delegate)
-  lazy final val partyRelationShipId3 = PartyRelationShipId(from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Manager)
-  lazy final val partyRelationShipId4 = PartyRelationShipId(from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Delegate)
+  lazy final val partyRelationshipId1 = PartyRelationshipId(from = UUID.fromString(createTokenUuid2), to = UUID.fromString(createTokenUuid3), role = Manager)
+  lazy final val partyRelationshipId2 = PartyRelationshipId(from = UUID.fromString(createTokenUuid2), to = UUID.fromString(createTokenUuid3), role = Delegate)
+  lazy final val partyRelationshipId3 = PartyRelationshipId(from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Manager)
+  lazy final val partyRelationshipId4 = PartyRelationshipId(from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Delegate)
 
-  lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationShips = RelationShips(Seq(relationShip3, relationShip4)), "checksum")
-  lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationShips = RelationShips(Seq(relationShip5, relationShip6)), "checksum")
+  lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationShips = Relationships(Seq(relationShip3, relationShip4)), "checksum")
+  lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationShips = Relationships(Seq(relationShip5, relationShip6)), "checksum")
 
-  lazy val token1: Token = Token.generate(tokenSeed1, Seq(partyRelationShipId1, partyRelationShipId2)).toOption.get
-  lazy val token2: Token = Token.generate(tokenSeed2, Seq(partyRelationShipId3, partyRelationShipId4)).toOption.get
+  lazy val token1: Token = Token.generate(tokenSeed1, Seq(partyRelationshipId1, partyRelationshipId2)).toOption.get
+  lazy val token2: Token = Token.generate(tokenSeed2, Seq(partyRelationshipId3, partyRelationshipId4)).toOption.get
 
   def prepareTest(
     personSeed: PersonSeed,
     organizationSeed: OrganizationSeed,
-    relationShipOne: RelationShip,
-    relationShipTwo: RelationShip
+    relationShipOne: Relationship,
+    relationShipTwo: Relationship
   )(implicit
     as: ActorSystem,
     mp: Marshaller[PersonSeed, MessageEntity],
     mo: Marshaller[OrganizationSeed, MessageEntity],
-    mr: Marshaller[RelationShip, MessageEntity],
+    mr: Marshaller[Relationship, MessageEntity],
     ec: ExecutionContext
   ): HttpResponse = {
     val personRequestData = Await.result(Marshal(personSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
@@ -82,11 +82,11 @@ object TokenApiServiceData {
 
     val rlRequestData1 = Await.result(Marshal(relationShipOne).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
-    val _ = createRelationShip(rlRequestData1)
+    val _ = createRelationship(rlRequestData1)
 
     val rlRequestData2 = Await.result(Marshal(relationShipTwo).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
-    val _ = createRelationShip(rlRequestData2)
+    val _ = createRelationship(rlRequestData2)
 
     Await.result(
       Http().singleRequest(

@@ -10,7 +10,7 @@ import java.util.UUID
 /* Command */
 sealed trait Command
 sealed trait PartyCommand             extends Command
-sealed trait PartyRelationShipCommand extends Command
+sealed trait PartyRelationshipCommand extends Command
 sealed trait TokenCommand             extends Command
 
 case object Idle extends Command
@@ -25,26 +25,26 @@ final case class GetPartyByExternalId(externalId: String, shardId: String, reply
 final case class AddAttributes(organizationId: String, attributes: Seq[String], replyTo: ActorRef[StatusReply[Party]])
     extends PartyCommand
 
-/* PartyRelationShip Command */
-final case class AddPartyRelationShip(partyRelationShip: PartyRelationShip, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationShipCommand
+/* PartyRelationship Command */
+final case class AddPartyRelationship(partyRelationship: PartyRelationship, replyTo: ActorRef[StatusReply[Unit]])
+    extends PartyRelationshipCommand
 
-final case class ConfirmPartyRelationShip(relationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationShipCommand
+final case class ConfirmPartyRelationship(relationShipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
+    extends PartyRelationshipCommand
 
-final case class DeletePartyRelationShip(relationShipId: PartyRelationShipId, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationShipCommand
+final case class DeletePartyRelationship(relationShipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
+    extends PartyRelationshipCommand
 
-final case class GetPartyRelationShipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationShip]])
-    extends PartyRelationShipCommand
+final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationship]])
+    extends PartyRelationshipCommand
 
-final case class GetPartyRelationShipsByTo(to: UUID, replyTo: ActorRef[List[PartyRelationShip]])
-    extends PartyRelationShipCommand
+final case class GetPartyRelationshipsByTo(to: UUID, replyTo: ActorRef[List[PartyRelationship]])
+    extends PartyRelationshipCommand
 
 /* Party Command */
 final case class AddToken(
   token: TokenSeed,
-  partyRelationShipIds: Seq[PartyRelationShipId],
+  partyRelationshipIds: Seq[PartyRelationshipId],
   replyTo: ActorRef[StatusReply[TokenText]]
 )                                                                                         extends TokenCommand
 final case class DeleteToken(token: Token, replyTo: ActorRef[StatusReply[Unit]])          extends TokenCommand

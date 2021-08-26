@@ -232,13 +232,13 @@ paths:
         - party
       summary: Create a new reletion ship between a Person and an Organization
       description: Return ok
-      operationId: createRelationShip
+      operationId: createRelationship
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelationShip'
+              $ref: '#/components/schemas/Relationship'
       responses:
         '201':
           description: successful operation
@@ -255,7 +255,7 @@ paths:
         - party
       summary: Create a new reletion ship between a Person and an Organization
       description: Return ok
-      operationId: getRelationShips
+      operationId: getRelationships
       parameters:
         - in: query
           name: from
@@ -271,7 +271,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RelationShips'
+                $ref: '#/components/schemas/Relationships'
         '400':
           description: Invalid ID supplied
           content:
@@ -547,7 +547,7 @@ components:
       type: array
       items:
         type: string
-    RelationShip:
+    Relationship:
       type: object
       properties:
         from:
@@ -569,13 +569,13 @@ components:
         - from
         - to
         - role
-    RelationShips:
+    Relationships:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/RelationShip'
+            $ref: '#/components/schemas/Relationship'
       additionalProperties: false
       required:
         - items
@@ -585,14 +585,14 @@ components:
         seed:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-        relationShips:
-          $ref: '#/components/schemas/RelationShips'
+        relationships:
+          $ref: '#/components/schemas/Relationships'
         checksum:
           type: string
       additionalProperties: false
       required:
         - seed
-        - relationShips
+        - relationships
         - checksum
     TokenText:
       properties:

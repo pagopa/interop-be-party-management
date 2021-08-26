@@ -9,7 +9,7 @@ option (scalapb.options) = {
 
 message TokenV1 {
   required string id = 1;
-  repeated PartyRelationShipIdV1 legals = 2;
+  repeated PartyRelationshipIdV1 legals = 2;
   required string validity = 3;
   required string seed = 4;
   required string checksum = 5;

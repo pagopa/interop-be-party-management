@@ -210,8 +210,8 @@ class PartyApiServiceImpl(
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def createRelationShip(
-    relationShip: RelationShip
+  override def createRelationship(
+    relationShip: Relationship
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
     val commanders = (0 to settings.numberOfShards)
@@ -222,31 +222,29 @@ class PartyApiServiceImpl(
       from <- getParty(relationShip.from)
       to   <- getParty(relationShip.to)
       role <- PartyRole.fromText(relationShip.role).toFuture
-      partyRelationShip = PartyRelationShip.create(from.id, to.id, role)
-      currentPartyRelationShips <- commanders.getPartyRelationShips(to.id, GetPartyRelationShipsByTo)
-      completed <-
-        if (isEligible(currentPartyRelationShips, partyRelationShip.id.role))
-          getCommander(from.id.toString).ask(ref => AddPartyRelationShip(partyRelationShip, ref))
-        else Future.failed(new RuntimeException("Operator without active manager"))
-    } yield completed
+      partyRelationship = PartyRelationship.create(from.id, to.id, role)
+      currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
+      verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
+      added                     <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
+    } yield added
 
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
-        createRelationShip400(
+        createRelationship400(
           Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
         )
-      case Success(_) => createRelationShip201
+      case Success(_) => createRelationship201
       case Failure(ex) =>
-        createRelationShip400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        createRelationship400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }
 
-  /** Code: 200, Message: successful operation, DataType: RelationShips
+  /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def getRelationShips(from: Option[String], to: Option[String])(implicit
-    toEntityMarshallerRelationShips: ToEntityMarshaller[RelationShips],
+  override def getRelationships(from: Option[String], to: Option[String])(implicit
+    toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
@@ -257,25 +255,25 @@ class PartyApiServiceImpl(
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    def retrieveRelationShips(
+    def retrieveRelationships(
       externalId: String,
-      commandFunc: (UUID, ActorRef[List[PartyRelationShip]]) => PartyRelationShipCommand
-    ): Future[List[RelationShip]] = for {
+      commandFunc: (UUID, ActorRef[List[PartyRelationship]]) => PartyRelationshipCommand
+    ): Future[List[Relationship]] = for {
       party <- getParty(externalId)
-      re    <- commanders.getRelationShips(party, commandFunc)
+      re    <- commanders.getRelationships(party, commandFunc)
     } yield re
 
-    val result: Future[List[RelationShip]] = (from, to) match {
-      case (Some(f), Some(t)) => retrieveRelationShips(f, GetPartyRelationShipsByFrom).map(_.filter(_.to == t))
-      case (Some(f), None)    => retrieveRelationShips(f, GetPartyRelationShipsByFrom)
-      case (None, Some(t))    => retrieveRelationShips(t, GetPartyRelationShipsByTo)
+    val result: Future[List[Relationship]] = (from, to) match {
+      case (Some(f), Some(t)) => retrieveRelationships(f, GetPartyRelationshipsByFrom).map(_.filter(_.to == t))
+      case (Some(f), None)    => retrieveRelationships(f, GetPartyRelationshipsByFrom)
+      case (None, Some(t))    => retrieveRelationships(t, GetPartyRelationshipsByTo)
       case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 
     onComplete(result) {
-      case Success(relationships) => getRelationShips200(RelationShips(relationships))
+      case Success(relationships) => getRelationships200(Relationships(relationships))
       case Failure(ex) =>
-        getRelationShips400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getRelationships400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }
@@ -291,8 +289,8 @@ class PartyApiServiceImpl(
     logger.info(s"Creating token ${tokenSeed.toString}")
 
     val result: Future[StatusReply[TokenText]] = for {
-      partyRelationShipIds <- Future.traverse(tokenSeed.relationShips.items)(getPartyRelationShipId)
-      token                <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationShipIds, ref))
+      partyRelationshipIds <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationshipId)
+      token                <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationshipIds, ref))
     } yield token
 
     manageCreationResponse(result, createToken201, createToken400)
@@ -332,8 +330,8 @@ class PartyApiServiceImpl(
     val results: Future[Seq[StatusReply[Unit]]] = for {
       token <- Future.fromTry(Token.decode(token))
       results <-
-        if (token.isValid) processRelationShips(token, ConfirmPartyRelationShip)
-        else processRelationShips(token, DeletePartyRelationShip)
+        if (token.isValid) processRelationships(token, ConfirmPartyRelationship)
+        else processRelationships(token, DeletePartyRelationship)
     } yield results
 
     onComplete(results) {
@@ -356,7 +354,7 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     val results: Future[Seq[StatusReply[Unit]]] = for {
       token   <- Future.fromTry(Token.decode(token))
-      results <- processRelationShips(token, DeletePartyRelationShip)
+      results <- processRelationships(token, DeletePartyRelationship)
     } yield results
 
     onComplete(results) {
@@ -378,7 +376,7 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationShipId(relationShip: RelationShip): Future[PartyRelationShipId] = for {
+  private def getPartyRelationshipId(relationShip: Relationship): Future[PartyRelationshipId] = for {
     from <- getCommander(relationShip.from).ask(ref =>
       GetPartyByExternalId(relationShip.from, getShard(relationShip.from), ref)
     )
@@ -386,21 +384,30 @@ class PartyApiServiceImpl(
       GetPartyByExternalId(relationShip.to, getShard(relationShip.to), ref)
     )
     role = PartyRole.fromText(relationShip.role).toOption
-  } yield PartyRelationShipId(from.get.id, to.get.id, role.get)
+  } yield PartyRelationshipId(from.get.id, to.get.id, role.get)
 
-  private def isEligible(partyRelationShips: List[PartyRelationShip], role: PartyRole) = {
-    partyRelationShips.exists(_.status == PartyRelationShipStatus.Active) ||
-    Set[PartyRole](Manager, Delegate).contains(role)
+  private def isRelationshipAllowed(
+    currentPartyRelationships: List[PartyRelationship],
+    partyRelationships: PartyRelationship
+  ): Future[PartyRelationship] = Future.fromTry {
+    Either
+      .cond(
+        currentPartyRelationships.exists(_.status == PartyRelationshipStatus.Active) ||
+          Set[PartyRole](Manager, Delegate).contains(partyRelationships.id.role),
+        partyRelationships,
+        new RuntimeException("Operator without active manager")
+      )
+      .toTry
   }
 
-  private def processRelationShips(
+  private def processRelationships(
     token: Token,
-    commandFunc: (PartyRelationShipId, ActorRef[StatusReply[Unit]]) => Command
+    commandFunc: (PartyRelationshipId, ActorRef[StatusReply[Unit]]) => Command
   ): Future[Seq[StatusReply[Unit]]] = {
     for {
-      results <- Future.traverse(token.legals) { partyRelationShipId =>
-        getCommander(partyRelationShipId.from.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          commandFunc(partyRelationShipId, ref)
+      results <- Future.traverse(token.legals) { partyRelationshipId =>
+        getCommander(partyRelationshipId.from.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
+          commandFunc(partyRelationshipId, ref)
         )
       } //TODO atomic?
     } yield results

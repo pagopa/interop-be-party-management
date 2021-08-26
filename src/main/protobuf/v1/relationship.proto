@@ -6,13 +6,13 @@ option (scalapb.options) = {
   package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1"
 };
 
-message PartyRelationShipV1 {
-  required PartyRelationShipIdV1 id = 1;
+message PartyRelationshipV1 {
+  required PartyRelationshipIdV1 id = 1;
   required string start = 2;
   optional string end = 3;
-  required PartyRelationShipStatusV1 status = 4;
+  required PartyRelationshipStatusV1 status = 4;
 
-  enum PartyRelationShipStatusV1 {
+  enum PartyRelationshipStatusV1 {
     Pending = 0;
     Active = 1;
     Inactive = 2;
@@ -20,7 +20,7 @@ message PartyRelationShipV1 {
   }
 }
 
-message PartyRelationShipIdV1 {
+message PartyRelationshipIdV1 {
   required string from = 1;
   required string to = 2;
   required PartyRoleV1 status = 3;

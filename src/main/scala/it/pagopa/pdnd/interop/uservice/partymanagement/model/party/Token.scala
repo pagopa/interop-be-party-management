@@ -15,7 +15,7 @@ import scala.util.Try
 )
 final case class Token(
   id: String,
-  legals: Seq[PartyRelationShipId],
+  legals: Seq[PartyRelationshipId],
   validity: OffsetDateTime,
   checksum: String,
   seed: UUID
@@ -38,7 +38,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
   final val validityHours: Long = 24L
 
-  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationShipId]): Either[Throwable, Token] =
+  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationshipId]): Either[Throwable, Token] =
     parties
       .find(_.role == Manager)
       .map(manager =>

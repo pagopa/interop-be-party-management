@@ -1,11 +1,11 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
-sealed trait PartyRelationShipStatus {
+sealed trait PartyRelationshipStatus {
   def stringify: String = this match {
-    case PartyRelationShipStatus.Pending  => "Pending"
-    case PartyRelationShipStatus.Active   => "Active"
-    case PartyRelationShipStatus.Inactive => "Inactive"
-    case PartyRelationShipStatus.Deleted  => "Deleted"
+    case PartyRelationshipStatus.Pending  => "Pending"
+    case PartyRelationshipStatus.Active   => "Active"
+    case PartyRelationshipStatus.Inactive => "Inactive"
+    case PartyRelationshipStatus.Deleted  => "Deleted"
   }
 }
 @SuppressWarnings(
@@ -16,14 +16,14 @@ sealed trait PartyRelationShipStatus {
     "org.wartremover.warts.ToString"
   )
 )
-object PartyRelationShipStatus {
+object PartyRelationshipStatus {
 
-  case object Pending  extends PartyRelationShipStatus
-  case object Active   extends PartyRelationShipStatus
-  case object Inactive extends PartyRelationShipStatus
-  case object Deleted  extends PartyRelationShipStatus
+  case object Pending  extends PartyRelationshipStatus
+  case object Active   extends PartyRelationshipStatus
+  case object Inactive extends PartyRelationshipStatus
+  case object Deleted  extends PartyRelationshipStatus
 
-  def fromText(str: String): Either[Throwable, PartyRelationShipStatus] = str match {
+  def fromText(str: String): Either[Throwable, PartyRelationshipStatus] = str match {
     case "Pending"  => Right(Pending)
     case "Active"   => Right(Active)
     case "Inactive" => Right(Inactive)

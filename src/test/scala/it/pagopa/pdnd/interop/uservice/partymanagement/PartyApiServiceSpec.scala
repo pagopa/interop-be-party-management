@@ -16,7 +16,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshal
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Token
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person, RelationShips, TokenSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person, Relationships, TokenSeed}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -302,7 +302,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       response.status shouldBe StatusCodes.OK
 
-      val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
+      val body = Await.result(Unmarshal(response.entity).to[Relationships], Duration.Inf)
 
       response.status shouldBe StatusCodes.OK
 
@@ -338,7 +338,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         Duration.Inf
       )
 
-      val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
+      val body = Await.result(Unmarshal(response.entity).to[Relationships], Duration.Inf)
 
       response.status shouldBe StatusCodes.OK
 
@@ -354,7 +354,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val data = Await.result(Marshal(rlSeed3).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
-      val response = createRelationShip(data)
+      val response = createRelationship(data)
 
       response.status shouldBe StatusCodes.BadRequest
 
@@ -380,7 +380,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         Duration.Inf
       )
 
-      val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
+      val body = Await.result(Unmarshal(response.entity).to[Relationships], Duration.Inf)
 
       response.status shouldBe StatusCodes.OK
 
@@ -398,7 +398,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val relationShipResponse = prepareTest(personSeed1, organizationSeed1, relationShip1, relationShip2)
 
-      val relationships = Await.result(Unmarshal(relationShipResponse.entity).to[RelationShips], Duration.Inf)
+      val relationships = Await.result(Unmarshal(relationShipResponse.entity).to[Relationships], Duration.Inf)
 
       val tokenSeed = TokenSeed(seed = tokenSeedId1, relationShips = relationships, "checksum")
 
@@ -416,7 +416,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val relationShipResponse = prepareTest(personSeed2, organizationSeed2, relationShip3, relationShip4)
 
-      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[RelationShips], Duration.Inf)
+      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[Relationships], Duration.Inf)
 
       val tokenData = Await.result(Marshal(tokenSeed1).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -442,7 +442,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val relationShipResponse = prepareTest(personSeed3, organizationSeed3, relationShip5, relationShip6)
 
-      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[RelationShips], Duration.Inf)
+      val _ = Await.result(Unmarshal(relationShipResponse.entity).to[Relationships], Duration.Inf)
 
       val tokenData = Await.result(Marshal(tokenSeed2).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
@@ -470,9 +470,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         Duration.Inf
       )
 
-      val body = Await.result(Unmarshal(response.entity).to[RelationShips], Duration.Inf)
+      val body = Await.result(Unmarshal(response.entity).to[Relationships], Duration.Inf)
 
-      body shouldBe RelationShips(Seq.empty)
+      body shouldBe Relationships(Seq.empty)
 
     }
 

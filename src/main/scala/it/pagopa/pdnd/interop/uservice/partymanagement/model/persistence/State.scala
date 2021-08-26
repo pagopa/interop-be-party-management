@@ -10,7 +10,7 @@ final case class State(
   parties: Map[UUID, Party],  //TODO use String instead of UUID
   indexes: Map[String, UUID], //TODO use String instead of UUID
   tokens: Map[String, Token],
-  relationShips: Map[PartyRelationShipId, PartyRelationShip]
+  relationShips: Map[PartyRelationshipId, PartyRelationship]
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -27,16 +27,16 @@ final case class State(
   def updateParty(party: Party): State =
     copy(parties = parties + (party.id -> party))
 
-  def addPartyRelationShip(relationShip: PartyRelationShip): State =
+  def addPartyRelationship(relationShip: PartyRelationship): State =
     copy(relationShips = relationShips + (relationShip.id -> relationShip))
 
-  def confirmPartyRelationShip(relationShipId: PartyRelationShipId): State = {
-    val updated: Map[PartyRelationShipId, PartyRelationShip] =
-      relationShips.updated(relationShipId, relationShips(relationShipId).copy(status = PartyRelationShipStatus.Active))
+  def confirmPartyRelationship(relationShipId: PartyRelationshipId): State = {
+    val updated: Map[PartyRelationshipId, PartyRelationship] =
+      relationShips.updated(relationShipId, relationShips(relationShipId).copy(status = PartyRelationshipStatus.Active))
     copy(relationShips = updated)
   }
 
-  def deletePartyRelationShip(relationShipId: PartyRelationShipId): State =
+  def deletePartyRelationship(relationShipId: PartyRelationshipId): State =
     copy(relationShips = relationShips - relationShipId)
 
   def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
@@ -50,7 +50,7 @@ object State {
     State(
       parties = Map.empty[UUID, Party],
       indexes = Map.empty[String, UUID],
-      relationShips = Map.empty[PartyRelationShipId, PartyRelationShip],
+      relationShips = Map.empty[PartyRelationshipId, PartyRelationship],
       tokens = Map.empty[String, Token]
     )
 }

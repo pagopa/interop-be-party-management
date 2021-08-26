@@ -46,28 +46,28 @@ object RelationshipPartyApiServiceData {
   lazy final val orgSeed4 =
     OrganizationSeed(institutionId4, "Institutions Eight", "Eric", "Cartman", "mail8@mail.org", Seq.empty)
 
-  lazy final val rlSeed1 = RelationShip(from = taxCode1, to = institutionId1, role = "Manager", None)
-  lazy final val rlSeed2 = RelationShip(from = taxCode2, to = institutionId2, role = "Manager", None)
-  lazy final val rlSeed3 = RelationShip(from = taxCode3, to = institutionId3, role = "Manager", None)
-  lazy final val rlSeed4 = RelationShip(from = taxCode4, to = institutionId4, role = "Manager", None)
-  lazy final val rlSeed5 = RelationShip(from = taxCode5, to = institutionId4, role = "Delegate", None)
+  lazy final val rlSeed1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager", None)
+  lazy final val rlSeed2 = Relationship(from = taxCode2, to = institutionId2, role = "Manager", None)
+  lazy final val rlSeed3 = Relationship(from = taxCode3, to = institutionId3, role = "Manager", None)
+  lazy final val rlSeed4 = Relationship(from = taxCode4, to = institutionId4, role = "Manager", None)
+  lazy final val rlSeed5 = Relationship(from = taxCode5, to = institutionId4, role = "Delegate", None)
 
-  lazy final val rlExpected1 = RelationShips(Seq.empty)
-  lazy final val rlExpected2 = RelationShips(
-    Seq(RelationShip(from = taxCode2, to = institutionId2, role = "Manager", status = Some("Pending")))
+  lazy final val rlExpected1 = Relationships(Seq.empty)
+  lazy final val rlExpected2 = Relationships(
+    Seq(Relationship(from = taxCode2, to = institutionId2, role = "Manager", status = Some("Pending")))
   )
-  lazy final val rlExpected3 = RelationShips(
+  lazy final val rlExpected3 = Relationships(
     Seq(
-      RelationShip(from = taxCode4, to = institutionId4, role = "Manager", status = Some("Pending")),
-      RelationShip(from = taxCode5, to = institutionId4, role = "Delegate", status = Some("Pending"))
+      Relationship(from = taxCode4, to = institutionId4, role = "Manager", status = Some("Pending")),
+      Relationship(from = taxCode5, to = institutionId4, role = "Delegate", status = Some("Pending"))
     )
   )
 
-  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationShip: RelationShip)(implicit
+  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationShip: Relationship)(implicit
     as: ActorSystem,
     mp: Marshaller[PersonSeed, MessageEntity],
     mo: Marshaller[OrganizationSeed, MessageEntity],
-    mr: Marshaller[RelationShip, MessageEntity],
+    mr: Marshaller[Relationship, MessageEntity],
     ec: ExecutionContext
   ): HttpResponse = {
     val personData = Await.result(Marshal(personSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
@@ -80,7 +80,7 @@ object RelationshipPartyApiServiceData {
 
     val rlRequestData = Await.result(Marshal(relationShip).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
-    createRelationShip(rlRequestData)
+    createRelationship(rlRequestData)
 
   }
 
