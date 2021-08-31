@@ -4,7 +4,7 @@ info:
   description: This service is the party manager
   version: 0.0.1
   contact:
-    givenName: API Support
+    name: API Support
     url: 'http://www.example.com/support'
     email: support@example.com
   termsOfService: 'http://swagger.io/terms/'
@@ -14,12 +14,12 @@ servers:
   - url: 'https://gateway.interop.pdnd.dev/pdnd-interop-uservice-party-management/0.0.1'
     description: This service is the party manager
 tags:
-  - givenName: party
+  - name: party
     description: Manipulate party information
     externalDocs:
       description: Find out more
       url: 'http://swagger.io'
-  - givenName: health
+  - name: health
     description: Verify service status
     externalDocs:
       description: Find out more
@@ -33,7 +33,7 @@ paths:
       description: Return ok
       operationId: existsPerson
       parameters:
-        - givenName: taxCode
+        - name: taxCode
           in: path
           description: The fiscal code of the Person to check
           required: true
@@ -56,7 +56,7 @@ paths:
       description: Return ok
       operationId: getPerson
       parameters:
-        - givenName: taxCode
+        - name: taxCode
           in: path
           description: The fiscal code of the Person to retrieve
           required: true
@@ -144,7 +144,7 @@ paths:
       description: Return ok
       operationId: existsOrganization
       parameters:
-        - givenName: organizationId
+        - name: organizationId
           in: path
           description: The ID of the Organization to check
           required: true
@@ -166,7 +166,7 @@ paths:
       description: Return ok
       operationId: getOrganization
       parameters:
-        - givenName: organizationId
+        - name: organizationId
           in: path
           description: The ID of the Organization to retrieve
           required: true
@@ -197,7 +197,7 @@ paths:
       description: Return ok
       operationId: addOrganizationAttributes
       parameters:
-        - givenName: organizationId
+        - name: organizationId
           in: path
           description: The ID of the Organization to retrieve
           required: true
@@ -258,11 +258,11 @@ paths:
       operationId: getRelationships
       parameters:
         - in: query
-          givenName: from
+          name: from
           schema:
             type: string
         - in: query
-          givenName: to
+          name: to
           schema:
             type: string
       responses:
@@ -316,7 +316,7 @@ paths:
       description: Return ok
       operationId: verifyToken
       parameters:
-        - givenName: token
+        - name: token
           in: path
           description: The token to verify
           required: true
@@ -347,7 +347,7 @@ paths:
       description: Return ok
       operationId: consumeToken
       parameters:
-        - givenName: token
+        - name: token
           in: path
           description: The token to consume
           required: true
@@ -372,7 +372,7 @@ paths:
       description: Return ok
       operationId: invalidateToken
       parameters:
-        - givenName: token
+        - name: token
           in: path
           description: The token to invalidate
           required: true
@@ -408,7 +408,7 @@ paths:
       - schema:
           type: string
           format: uuid
-        givenName: id
+        name: id
         in: path
         required: true
         description: UUID of the party
