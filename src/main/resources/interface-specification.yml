@@ -4,7 +4,7 @@ info:
   description: This service is the party manager
   version: 0.0.1
   contact:
-    name: API Support
+    givenName: API Support
     url: 'http://www.example.com/support'
     email: support@example.com
   termsOfService: 'http://swagger.io/terms/'
@@ -14,12 +14,12 @@ servers:
   - url: 'https://gateway.interop.pdnd.dev/pdnd-interop-uservice-party-management/0.0.1'
     description: This service is the party manager
 tags:
-  - name: party
+  - givenName: party
     description: Manipulate party information
     externalDocs:
       description: Find out more
       url: 'http://swagger.io'
-  - name: health
+  - givenName: health
     description: Verify service status
     externalDocs:
       description: Find out more
@@ -33,7 +33,7 @@ paths:
       description: Return ok
       operationId: existsPerson
       parameters:
-        - name: taxCode
+        - givenName: taxCode
           in: path
           description: The fiscal code of the Person to check
           required: true
@@ -56,7 +56,7 @@ paths:
       description: Return ok
       operationId: getPerson
       parameters:
-        - name: taxCode
+        - givenName: taxCode
           in: path
           description: The fiscal code of the Person to retrieve
           required: true
@@ -144,7 +144,7 @@ paths:
       description: Return ok
       operationId: existsOrganization
       parameters:
-        - name: organizationId
+        - givenName: organizationId
           in: path
           description: The ID of the Organization to check
           required: true
@@ -166,7 +166,7 @@ paths:
       description: Return ok
       operationId: getOrganization
       parameters:
-        - name: organizationId
+        - givenName: organizationId
           in: path
           description: The ID of the Organization to retrieve
           required: true
@@ -197,7 +197,7 @@ paths:
       description: Return ok
       operationId: addOrganizationAttributes
       parameters:
-        - name: organizationId
+        - givenName: organizationId
           in: path
           description: The ID of the Organization to retrieve
           required: true
@@ -258,11 +258,11 @@ paths:
       operationId: getRelationships
       parameters:
         - in: query
-          name: from
+          givenName: from
           schema:
             type: string
         - in: query
-          name: to
+          givenName: to
           schema:
             type: string
       responses:
@@ -316,7 +316,7 @@ paths:
       description: Return ok
       operationId: verifyToken
       parameters:
-        - name: token
+        - givenName: token
           in: path
           description: The token to verify
           required: true
@@ -347,7 +347,7 @@ paths:
       description: Return ok
       operationId: consumeToken
       parameters:
-        - name: token
+        - givenName: token
           in: path
           description: The token to consume
           required: true
@@ -372,7 +372,7 @@ paths:
       description: Return ok
       operationId: invalidateToken
       parameters:
-        - name: token
+        - givenName: token
           in: path
           description: The token to invalidate
           required: true
@@ -408,7 +408,7 @@ paths:
       - schema:
           type: string
           format: uuid
-        name: id
+        givenName: id
         in: path
         required: true
         description: UUID of the party
@@ -446,16 +446,16 @@ components:
           description: Il codice fiscale.
           example: RSSMRA75L01H501A
           type: string
-        surname:
+        familyName:
           type: string
           example: Doe
-        name:
+        givenName:
           type: string
           example: John
       required:
         - taxCode
-        - name
-        - surname
+        - givenName
+        - familyName
       additionalProperties: false
     Person:
       type: object
@@ -464,10 +464,10 @@ components:
           description: Il codice fiscale.
           example: RSSMRA75L01H501A
           type: string
-        surname:
+        familyName:
           type: string
           example: Doe
-        name:
+        givenName:
           type: string
           example: John
         partyId:
@@ -475,8 +475,8 @@ components:
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
       required:
         - taxCode
-        - name
-        - surname
+        - givenName
+        - familyName
         - partyId
       additionalProperties: false
     OrganizationSeed:
@@ -489,10 +489,10 @@ components:
         description:
           type: string
           example: AGENCY X
-        managerName:
+        managerGivenName:
           example: Mario
           type: string
-        managerSurname:
+        managerFamilyName:
           example: Mario
           type: string
         digitalAddress:
@@ -504,8 +504,8 @@ components:
       required:
         - institutionId
         - description
-        - managerName
-        - managerSurname
+        - managerGivenName
+        - managerFamilyName
         - digitalAddress
         - attributes
       additionalProperties: false
@@ -519,10 +519,10 @@ components:
         description:
           type: string
           example: AGENCY X
-        managerName:
+        managerGivenName:
           example: Mario Rossi
           type: string
-        managerSurname:
+        managerFamilyName:
           example: Rossi
           type: string
         digitalAddress:
@@ -537,8 +537,8 @@ components:
       required:
         - institutionId
         - description
-        - managerName
-        - managerSurname
+        - managerGivenName
+        - managerFamilyName
         - digitalAddress
         - partyId
         - attributes
@@ -634,4 +634,3 @@ components:
 #      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
 #      scheme: bearer
 #      bearerFormat: JWTly in the editor.
-
