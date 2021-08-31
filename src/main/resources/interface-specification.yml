@@ -562,6 +562,8 @@ components:
             - Manager
             - Delegate
             - Operator
+            - APIOperator
+            - SecurityOperator
         status:
           type: string
           enum:

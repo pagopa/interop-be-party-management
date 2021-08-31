@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationshipStatus.{Active, Pending}
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -18,6 +19,11 @@ object PartyRelationship {
       PartyRelationshipId(from = from, to = to, role = role),
       start = OffsetDateTime.now(),
       end = None,
-      status = if (role == Operator) PartyRelationshipStatus.Active else PartyRelationshipStatus.Pending
+      status = role match {
+        case Operator         => Active
+        case APIOperator      => Active
+        case SecurityOperator => Active
+        case _                => Pending
+      }
     )
 }

@@ -6,17 +6,19 @@ import scala.util.{Failure, Success, Try}
 
 sealed trait PartyRole {
   def stringify: String = this match {
-    case Manager  => "Manager"
-    case Delegate => "Delegate"
-    case Operator => "Operator"
+    case Manager          => "Manager"
+    case Delegate         => "Delegate"
+    case Operator         => "Operator"
+    case APIOperator      => "APIOperator"
+    case SecurityOperator => "SecurityOperator"
   }
 }
 
-case object Delegate extends PartyRole
-
-case object Manager extends PartyRole
-
-case object Operator extends PartyRole
+case object Delegate         extends PartyRole
+case object Manager          extends PartyRole
+case object Operator         extends PartyRole
+case object APIOperator      extends PartyRole
+case object SecurityOperator extends PartyRole
 
 @SuppressWarnings(
   Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals", "org.wartremover.warts.ToString")
@@ -25,18 +27,22 @@ object PartyRole extends DefaultJsonProtocol {
 
   implicit val format: JsonFormat[PartyRole] = new JsonFormat[PartyRole] {
     override def write(obj: PartyRole): JsValue = obj match {
-      case Manager  => JsString("Manager")
-      case Delegate => JsString("Delegate")
-      case Operator => JsString("Operator")
+      case Manager          => JsString("Manager")
+      case Delegate         => JsString("Delegate")
+      case Operator         => JsString("Operator")
+      case APIOperator      => JsString("APIOperator")
+      case SecurityOperator => JsString("SecurityOperator")
     }
 
     override def read(json: JsValue): PartyRole = json match {
       case JsString(s) =>
         val res: Try[PartyRole] = s match {
-          case "Manager"  => Success(Manager)
-          case "Delegate" => Success(Delegate)
-          case "Operator" => Success(Operator)
-          case _          => Failure(new RuntimeException("Invalid token status"))
+          case "Manager"          => Success(Manager)
+          case "Delegate"         => Success(Delegate)
+          case "Operator"         => Success(Operator)
+          case "APIOperator"      => Success(APIOperator)
+          case "SecurityOperator" => Success(SecurityOperator)
+          case _                  => Failure(new RuntimeException("Invalid token status"))
         }
         res.fold(ex => deserializationError(msg = ex.getMessage, cause = ex), identity)
       case notAJsString =>
@@ -45,16 +51,12 @@ object PartyRole extends DefaultJsonProtocol {
 
   }
 
-//  def apply(str: String): PartyRole = str match {
-//    case "Manager"  => Manager
-//    case "Delegate" => Delegate
-//    case "Operator" => Operator
-//  }
-
   def fromText(str: String): Either[Throwable, PartyRole] = str match {
-    case "Manager"  => Right(Manager)
-    case "Delegate" => Right(Delegate)
-    case "Operator" => Right(Operator)
-    case _          => Left(new RuntimeException("Invalid PartyRole")) //TODO meaningful error
+    case "Manager"          => Right(Manager)
+    case "Delegate"         => Right(Delegate)
+    case "Operator"         => Right(Operator)
+    case "APIOperator"      => Right(APIOperator)
+    case "SecurityOperator" => Right(SecurityOperator)
+    case _                  => Left(new RuntimeException("Invalid PartyRole")) //TODO meaningful error
   }
 }
