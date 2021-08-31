@@ -35,13 +35,10 @@ paths:
       parameters:
         - name: taxCode
           in: path
-          description: The fiscal code of the Person to check
+          description: The tax code of the Person to check
           required: true
           schema:
-            description: Il codice fiscale.
-            example: RSSMRA75L01H501A
-            #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
-            type: string
+              $ref: "#/components/schemas/TaxCode"
       responses:
         '200':
           description: Person exists
@@ -61,10 +58,7 @@ paths:
           description: The fiscal code of the Person to retrieve
           required: true
           schema:
-            description: Il codice fiscale.
-            example: RSSMRA75L01H501A
-            #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
-            type: string
+            $ref: "#/components/schemas/TaxCode"
       responses:
         '200':
           description: Person exists
@@ -439,13 +433,16 @@ paths:
       description: 'returns the attributes of the identified party, if any.'
 components:
   schemas:
+    TaxCode:
+      description: Il codice fiscale.
+      example: RSSMRA75L01H501A
+      type: string
+      maxLength: 16
     PersonSeed:
       type: object
       properties:
         taxCode:
-          description: Il codice fiscale.
-          example: RSSMRA75L01H501A
-          type: string
+          $ref: "#/components/schemas/TaxCode"
         surname:
           type: string
           example: Doe
@@ -461,9 +458,7 @@ components:
       type: object
       properties:
         taxCode:
-          description: Il codice fiscale.
-          example: RSSMRA75L01H501A
-          type: string
+          $ref: "#/components/schemas/TaxCode"
         surname:
           type: string
           example: Doe
@@ -634,4 +629,3 @@ components:
 #      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
 #      scheme: bearer
 #      bearerFormat: JWTly in the editor.
-
