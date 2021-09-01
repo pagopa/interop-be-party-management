@@ -20,7 +20,6 @@ object PartyRelationship {
       start = OffsetDateTime.now(),
       end = None,
       status = role match {
-        case Operator         => Active
         case APIOperator      => Active
         case SecurityOperator => Active
         case _                => Pending

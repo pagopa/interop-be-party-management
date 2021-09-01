@@ -28,7 +28,8 @@ message PartyRelationshipIdV1 {
   enum PartyRoleV1 {
     Delegate = 0;
     Manager = 1;
-    Operator = 2;
+    APIOperator = 2;
+    SecurityOperator = 3;
   }
 }
 

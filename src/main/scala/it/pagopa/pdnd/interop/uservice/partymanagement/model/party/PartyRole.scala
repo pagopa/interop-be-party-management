@@ -8,7 +8,6 @@ sealed trait PartyRole {
   def stringify: String = this match {
     case Manager          => "Manager"
     case Delegate         => "Delegate"
-    case Operator         => "Operator"
     case APIOperator      => "APIOperator"
     case SecurityOperator => "SecurityOperator"
   }
@@ -16,7 +15,6 @@ sealed trait PartyRole {
 
 case object Delegate         extends PartyRole
 case object Manager          extends PartyRole
-case object Operator         extends PartyRole
 case object APIOperator      extends PartyRole
 case object SecurityOperator extends PartyRole
 
@@ -29,7 +27,6 @@ object PartyRole extends DefaultJsonProtocol {
     override def write(obj: PartyRole): JsValue = obj match {
       case Manager          => JsString("Manager")
       case Delegate         => JsString("Delegate")
-      case Operator         => JsString("Operator")
       case APIOperator      => JsString("APIOperator")
       case SecurityOperator => JsString("SecurityOperator")
     }
@@ -39,7 +36,6 @@ object PartyRole extends DefaultJsonProtocol {
         val res: Try[PartyRole] = s match {
           case "Manager"          => Success(Manager)
           case "Delegate"         => Success(Delegate)
-          case "Operator"         => Success(Operator)
           case "APIOperator"      => Success(APIOperator)
           case "SecurityOperator" => Success(SecurityOperator)
           case _                  => Failure(new RuntimeException("Invalid token status"))
@@ -54,7 +50,6 @@ object PartyRole extends DefaultJsonProtocol {
   def fromText(str: String): Either[Throwable, PartyRole] = str match {
     case "Manager"          => Right(Manager)
     case "Delegate"         => Right(Delegate)
-    case "Operator"         => Right(Operator)
     case "APIOperator"      => Right(APIOperator)
     case "SecurityOperator" => Right(SecurityOperator)
     case _                  => Left(new RuntimeException("Invalid PartyRole")) //TODO meaningful error
