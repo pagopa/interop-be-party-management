@@ -222,7 +222,7 @@ class PartyApiServiceImpl(
       from <- getParty(relationship.from)
       to   <- getParty(relationship.to)
       role <- PartyRole.fromText(relationship.role).toFuture
-      partyRelationship = PartyRelationship.create(from.id, to.id, role)
+      partyRelationship = PartyRelationship.create(from.id, to.id, role, relationship.platformRole)
       currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       added                     <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -384,7 +384,7 @@ class PartyApiServiceImpl(
       GetPartyByExternalId(relationship.to, getShard(relationship.to), ref)
     )
     role = PartyRole.fromText(relationship.role).toOption
-  } yield PartyRelationshipId(from.get.id, to.get.id, role.get)
+  } yield PartyRelationshipId(from.get.id, to.get.id, role.get, relationship.platformRole)
 
   private def isRelationshipAllowed(
     currentPartyRelationships: List[PartyRelationship],

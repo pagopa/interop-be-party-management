@@ -46,20 +46,20 @@ object RelationshipPartyApiServiceData {
   lazy final val orgSeed4 =
     OrganizationSeed(institutionId4, "Institutions Eight", "Eric", "Cartman", "mail8@mail.org", Seq.empty)
 
-  lazy final val rlSeed1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager", None)
-  lazy final val rlSeed2 = Relationship(from = taxCode2, to = institutionId2, role = "Manager", None)
-  lazy final val rlSeed3 = Relationship(from = taxCode3, to = institutionId3, role = "Manager", None)
-  lazy final val rlSeed4 = Relationship(from = taxCode4, to = institutionId4, role = "Manager", None)
-  lazy final val rlSeed5 = Relationship(from = taxCode5, to = institutionId4, role = "Delegate", None)
+  lazy final val rlSeed1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager", "admin", None)
+  lazy final val rlSeed2 = Relationship(from = taxCode2, to = institutionId2, role = "Manager", "admin", None)
+  lazy final val rlSeed3 = Relationship(from = taxCode3, to = institutionId3, role = "Manager", "admin", None)
+  lazy final val rlSeed4 = Relationship(from = taxCode4, to = institutionId4, role = "Manager", "admin", None)
+  lazy final val rlSeed5 = Relationship(from = taxCode5, to = institutionId4, role = "Delegate", "admin", None)
 
   lazy final val rlExpected1 = Relationships(Seq.empty)
   lazy final val rlExpected2 = Relationships(
-    Seq(Relationship(from = taxCode2, to = institutionId2, role = "Manager", status = Some("Pending")))
+    Seq(Relationship(from = taxCode2, to = institutionId2, role = "Manager", "admin", status = Some("Pending")))
   )
   lazy final val rlExpected3 = Relationships(
     Seq(
-      Relationship(from = taxCode4, to = institutionId4, role = "Manager", status = Some("Pending")),
-      Relationship(from = taxCode5, to = institutionId4, role = "Delegate", status = Some("Pending"))
+      Relationship(from = taxCode4, to = institutionId4, role = "Manager", "admin", status = Some("Pending")),
+      Relationship(from = taxCode5, to = institutionId4, role = "Delegate", "admin", status = Some("Pending"))
     )
   )
 

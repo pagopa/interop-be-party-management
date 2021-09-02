@@ -14,16 +14,14 @@ final case class PartyRelationship(
 object PartyRelationship {
 
   //TODO add role check
-  def create(from: UUID, to: UUID, role: PartyRole): PartyRelationship =
+  def create(from: UUID, to: UUID, role: PartyRole, platformRole: String): PartyRelationship =
     PartyRelationship(
-      PartyRelationshipId(from = from, to = to, role = role),
+      PartyRelationshipId(from = from, to = to, role = role, platformRole = platformRole),
       start = OffsetDateTime.now(),
       end = None,
       status = role match {
-        case Operator         => Active
-        case APIOperator      => Active
-        case SecurityOperator => Active
-        case _                => Pending
+        case Operator => Active
+        case _        => Pending
       }
     )
 }

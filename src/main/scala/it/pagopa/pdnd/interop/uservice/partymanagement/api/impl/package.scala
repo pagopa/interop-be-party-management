@@ -17,7 +17,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val personFormat: RootJsonFormat[Person]                     = jsonFormat4(Person)
   implicit val organizationSeedFormat: RootJsonFormat[OrganizationSeed] = jsonFormat6(OrganizationSeed)
   implicit val organizationFormat: RootJsonFormat[Organization]         = jsonFormat7(Organization)
-  implicit val relationshipFormat: RootJsonFormat[Relationship]         = jsonFormat4(Relationship)
+  implicit val relationshipFormat: RootJsonFormat[Relationship]         = jsonFormat5(Relationship)
   implicit val relationshipsFormat: RootJsonFormat[Relationships]       = jsonFormat1(Relationships)
   implicit val problemFormat: RootJsonFormat[Problem]                   = jsonFormat3(Problem)
   implicit val tokenFeedFormat: RootJsonFormat[TokenSeed]               = jsonFormat3(TokenSeed)
@@ -49,6 +49,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
           from = from.externalId,
           to = to.externalId,
           role = partyRelationship.id.role.stringify,
+          platformRole = partyRelationship.id.platformRole,
           status = Some(partyRelationship.status.stringify)
         )
       }
@@ -60,9 +61,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
       commandFunc: (UUID, ActorRef[List[PartyRelationship]]) => PartyRelationshipCommand
     )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[PartyRelationship]] = {
       Future
-        .traverse(commanders)(commander =>
-          commander.ask[List[PartyRelationship]](ref => commandFunc(id, ref))
-        )
+        .traverse(commanders)(commander => commander.ask[List[PartyRelationship]](ref => commandFunc(id, ref)))
         .map(_.flatten)
     }
 
