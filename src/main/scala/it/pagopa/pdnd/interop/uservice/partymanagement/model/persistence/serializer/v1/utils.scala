@@ -81,12 +81,13 @@ object utils {
 
   def getPartyRelationshipId(partyRelationshipIdV1: PartyRelationshipIdV1): ErrorOr[PartyRelationshipId] =
     PartyRole
-      .fromText(partyRelationshipIdV1.status.name)
+      .fromText(partyRelationshipIdV1.role.name)
       .map(role =>
         PartyRelationshipId(
           UUID.fromString(partyRelationshipIdV1.from),
           UUID.fromString(partyRelationshipIdV1.to),
-          role
+          role,
+          partyRelationshipIdV1.platformRole
         )
       )
 
@@ -94,7 +95,14 @@ object utils {
     PartyRoleV1
       .fromName(partyRelationshipId.role.stringify)
       .toRight(new RuntimeException("Deserialization from protobuf failed"))
-      .map(role => PartyRelationshipIdV1(partyRelationshipId.from.toString, partyRelationshipId.to.toString, role))
+      .map(role =>
+        PartyRelationshipIdV1(
+          partyRelationshipId.from.toString,
+          partyRelationshipId.to.toString,
+          role,
+          partyRelationshipId.platformRole
+        )
+      )
   }
 
   def getPartyRelationship(partyRelationshipV1: PartyRelationshipV1): ErrorOr[PartyRelationship] = {

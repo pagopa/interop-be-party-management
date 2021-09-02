@@ -558,10 +558,14 @@ components:
           description: institution id
         role:
           type: string
+          description: represents the generic available role types for the relationship
           enum:
             - Manager
             - Delegate
             - Operator
+        platformRole:
+          type: string
+          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles'
         status:
           type: string
           enum:
@@ -573,6 +577,7 @@ components:
         - from
         - to
         - role
+        - platformRole
     Relationships:
       type: object
       properties:
@@ -634,4 +639,3 @@ components:
 #      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
 #      scheme: bearer
 #      bearerFormat: JWTly in the editor.
-
