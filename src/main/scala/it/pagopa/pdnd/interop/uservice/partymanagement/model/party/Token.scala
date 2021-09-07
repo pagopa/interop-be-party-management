@@ -10,12 +10,14 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.Try
 
+final case class PartyRelationshipBinding(partyId: UUID, relationshipId: UUID)
+
 @SuppressWarnings(
   Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals", "org.wartremover.warts.ToString")
 )
 final case class Token(
   id: String,
-  legals: Seq[PartyRelationshipId],
+  legals: Seq[PartyRelationshipBinding],
   validity: OffsetDateTime,
   checksum: String,
   seed: UUID
@@ -34,18 +36,21 @@ final case class Token(
 )
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
+  implicit val partyRelationshipFormat: RootJsonFormat[PartyRelationshipBinding] = jsonFormat2(
+    PartyRelationshipBinding.apply
+  )
   implicit val format: RootJsonFormat[Token] = jsonFormat5(Token.apply)
 
   final val validityHours: Long = 24L
 
-  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationshipId]): Either[Throwable, Token] =
+  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationship]): Either[Throwable, Token] =
     parties
       .find(_.role == Manager)
-      .map(manager =>
+      .map(managerRelationship =>
         Token(
-          id = manager.stringify,
+          id = managerRelationship.applicationId,
           seed = UUID.fromString(tokenSeed.seed),
-          legals = parties,
+          legals = parties.map(r => PartyRelationshipBinding(r.from, r.id)),
           checksum = tokenSeed.checksum,
           validity = OffsetDateTime.now().plusHours(validityHours)
         )

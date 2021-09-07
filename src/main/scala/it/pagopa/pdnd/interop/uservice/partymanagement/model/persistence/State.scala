@@ -10,7 +10,7 @@ final case class State(
   parties: Map[UUID, Party],  //TODO use String instead of UUID
   indexes: Map[String, UUID], //TODO use String instead of UUID
   tokens: Map[String, Token],
-  relationships: Map[PartyRelationshipId, PartyRelationship]
+  relationships: Map[String, PartyRelationship] //TODO String = UUID
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -28,21 +28,35 @@ final case class State(
     copy(parties = parties + (party.id -> party))
 
   def addPartyRelationship(relationship: PartyRelationship): State =
-    copy(relationships = relationships + (relationship.id -> relationship))
+    copy(relationships = relationships + (relationship.id.toString -> relationship))
 
-  def confirmPartyRelationship(relationshipId: PartyRelationshipId): State = {
-    val updated: Map[PartyRelationshipId, PartyRelationship] =
+  def confirmPartyRelationship(id: UUID): State = {
+    val relationshipId = id.toString
+    val updated: Map[String, PartyRelationship] =
       relationships.updated(relationshipId, relationships(relationshipId).copy(status = PartyRelationshipStatus.Active))
     copy(relationships = updated)
   }
 
-  def deletePartyRelationship(relationshipId: PartyRelationshipId): State =
-    copy(relationships = relationships - relationshipId)
+  def deletePartyRelationship(relationshipId: UUID): State =
+    copy(relationships = relationships - relationshipId.toString)
+
+  def getPartyRelationshipByAttributes(
+    from: UUID,
+    to: UUID,
+    role: PartyRole,
+    platformRole: String
+  ): Option[PartyRelationship] = {
+    relationships.values.find(relationship =>
+      from.toString == relationship.from.toString
+        && to.toString == relationship.to.toString
+        && role == relationship.role
+        && platformRole == relationship.platformRole
+    )
+  }
 
   def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
 
   def deleteToken(token: Token): State = copy(tokens = tokens - token.id)
-
 }
 
 object State {
@@ -50,7 +64,7 @@ object State {
     State(
       parties = Map.empty[UUID, Party],
       indexes = Map.empty[String, UUID],
-      relationships = Map.empty[PartyRelationshipId, PartyRelationship],
+      relationships = Map.empty[String, PartyRelationship],
       tokens = Map.empty[String, Token]
     )
 }

@@ -311,6 +311,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "create a new relationship" in {
 
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid1)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid2)).once()
 
@@ -321,7 +322,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "return the relationship if exists" in {
-
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid3)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid4)).once()
 
@@ -364,7 +365,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid7)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid8)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid9)).once()
+      (() => uuidSupplier.get).expects().returning(relationshipId4).once()
+
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(uuid9)).twice()
+      (() => uuidSupplier.get).expects().returning(relationshipId5).once()
 
       val _ = prepareTest(personSeed = personSeed4, organizationSeed = orgSeed4, relationship = rlSeed4)
       val _ = prepareTest(personSeed = personSeed5, organizationSeed = orgSeed4, relationship = rlSeed5)
@@ -392,7 +396,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     import TokenApiServiceData._
 
     "create a token" in {
-
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid0)).once()
       (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid1)).once()
 
@@ -410,9 +414,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "consume a token" in {
-
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid2)).once()
-      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid3)).once()
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid2)).once() //person seed
+      (() => uuidSupplier.get).expects().returning(UUID.fromString(createTokenUuid3)).once() //organization seed
+      (() => uuidSupplier.get).expects().returning(relationshipId1).once()                   //relationship3 id
+      (() => uuidSupplier.get).expects().returning(relationshipId2).once()                   //relationship4 id
 
       val relationshipResponse = prepareTest(personSeed2, organizationSeed2, relationship3, relationship4)
 

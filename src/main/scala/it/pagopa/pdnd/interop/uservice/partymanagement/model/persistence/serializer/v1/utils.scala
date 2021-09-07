@@ -9,15 +9,18 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipIdV1.PartyRoleV1
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
-  PartyRelationshipIdV1,
-  PartyRelationshipV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
+  PartyRelationshipStatusV1,
+  PartyRoleV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.TokenV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
+  PartyRelationshipBindingV1,
+  TokenV1
+}
 
 import java.util.UUID
+import scala.util.Try
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
 object utils {
@@ -79,38 +82,26 @@ object utils {
       )
   }
 
-  def getPartyRelationshipId(partyRelationshipIdV1: PartyRelationshipIdV1): ErrorOr[PartyRelationshipId] =
-    PartyRole
-      .fromText(partyRelationshipIdV1.role.name)
-      .map(role =>
-        PartyRelationshipId(
-          UUID.fromString(partyRelationshipIdV1.from),
-          UUID.fromString(partyRelationshipIdV1.to),
-          role,
-          partyRelationshipIdV1.platformRole
-        )
-      )
+  def stringToUUID(uuidStr: String): ErrorOr[UUID] =
+    Try { UUID.fromString(uuidStr) }.toEither
 
-  def getPartyRelationshipIdV1(partyRelationshipId: PartyRelationshipId): ErrorOr[PartyRelationshipIdV1] = {
-    PartyRoleV1
-      .fromName(partyRelationshipId.role.stringify)
-      .toRight(new RuntimeException("Deserialization from protobuf failed"))
-      .map(role =>
-        PartyRelationshipIdV1(
-          partyRelationshipId.from.toString,
-          partyRelationshipId.to.toString,
-          role,
-          partyRelationshipId.platformRole
-        )
-      )
+  def getPartyRelationshipIdV1(partyRelationshipId: UUID): ErrorOr[String] = {
+    Try { partyRelationshipId.toString }.toEither
   }
 
   def getPartyRelationship(partyRelationshipV1: PartyRelationshipV1): ErrorOr[PartyRelationship] = {
     for {
-      id     <- getPartyRelationshipId(partyRelationshipV1.id)
-      status <- PartyRelationshipStatus.fromText(partyRelationshipV1.status.name)
+      id        <- stringToUUID(partyRelationshipV1.id)
+      from      <- stringToUUID(partyRelationshipV1.from)
+      to        <- stringToUUID(partyRelationshipV1.to)
+      partyRole <- PartyRole.fromText(partyRelationshipV1.role.name)
+      status    <- PartyRelationshipStatus.fromText(partyRelationshipV1.status.name)
     } yield PartyRelationship(
       id = id,
+      from = from,
+      to = to,
+      role = partyRole,
+      platformRole = partyRelationshipV1.platformRole,
       start = toOffsetDateTime(partyRelationshipV1.start),
       end = partyRelationshipV1.end.map(toOffsetDateTime),
       status = status
@@ -123,8 +114,15 @@ object utils {
       status <- PartyRelationshipStatusV1
         .fromName(partyRelationship.status.stringify)
         .toRight(new RuntimeException("Deserialization from protobuf failed"))
+      partyRole <- PartyRoleV1
+        .fromName(partyRelationship.role.stringify)
+        .toRight(new RuntimeException("Deserialization from protobuf failed"))
     } yield PartyRelationshipV1(
       id = id,
+      from = partyRelationship.from.toString,
+      to = partyRelationship.to.toString,
+      role = partyRole,
+      platformRole = partyRelationship.platformRole,
       start = partyRelationship.start.format(formatter),
       end = partyRelationship.end.map(_.format(formatter)),
       status = status
@@ -134,7 +132,7 @@ object utils {
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
-      legals <- tokenV1.legals.traverse(legal => getPartyRelationshipId(legal))
+      legals <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
     } yield Token(
       id = tokenV1.id,
       legals = legals,
@@ -144,15 +142,25 @@ object utils {
     )
   }
 
-  def getTokenV1(token: Token): ErrorOr[TokenV1] = {
+  def partyRelationshipBindingMapper(
+    partyRelationshipBindingV1: PartyRelationshipBindingV1
+  ): ErrorOr[PartyRelationshipBinding] = {
     for {
-      legals <- token.legals.traverse(legal => getPartyRelationshipIdV1(legal))
-    } yield TokenV1(
-      id = token.id,
-      legals = legals,
-      validity = token.validity.format(formatter),
-      seed = token.seed.toString,
-      checksum = token.checksum
+      partyId        <- stringToUUID(partyRelationshipBindingV1.partyId)
+      relationshipId <- stringToUUID(partyRelationshipBindingV1.relationshipId)
+    } yield PartyRelationshipBinding(partyId, relationshipId)
+  }
+
+  def getTokenV1(token: Token): ErrorOr[TokenV1] = {
+    Right[Throwable, TokenV1](
+      TokenV1(
+        id = token.id,
+        legals =
+          token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
+        validity = token.validity.format(formatter),
+        seed = token.seed.toString,
+        checksum = token.checksum
+      )
     )
   }
 }

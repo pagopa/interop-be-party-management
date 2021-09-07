@@ -26,11 +26,11 @@ message PartyRelationshipAddedV1 {
 }
 
 message PartyRelationshipConfirmedV1 {
-  required PartyRelationshipIdV1 partyRelationshipId = 1;
+  required string partyRelationshipId = 1;
 }
 
 message PartyRelationshipDeletedV1 {
-  required PartyRelationshipIdV1 partyRelationshipId = 1;
+  required string partyRelationshipId = 1;
 }
 
 message TokenAddedV1 {

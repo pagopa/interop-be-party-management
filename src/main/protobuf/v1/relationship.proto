@@ -7,10 +7,14 @@ option (scalapb.options) = {
 };
 
 message PartyRelationshipV1 {
-  required PartyRelationshipIdV1 id = 1;
-  required string start = 2;
-  optional string end = 3;
-  required PartyRelationshipStatusV1 status = 4;
+  required string id = 1;
+  required string from = 2;
+  required string to = 3;
+  required PartyRoleV1 role = 4;
+  required string platformRole = 5;
+  required string start = 6;
+  optional string end = 7;
+  required PartyRelationshipStatusV1 status = 8;
 
   enum PartyRelationshipStatusV1 {
     Pending = 0;
@@ -18,13 +22,6 @@ message PartyRelationshipV1 {
     Inactive = 2;
     Deleted = 3;
   }
-}
-
-message PartyRelationshipIdV1 {
-  required string from = 1;
-  required string to = 2;
-  required PartyRoleV1 role = 3;
-  required string platformRole = 4;
 
   enum PartyRoleV1 {
     Delegate = 0;

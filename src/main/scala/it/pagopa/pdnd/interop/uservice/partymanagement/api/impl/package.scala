@@ -35,8 +35,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
     )(implicit ec: ExecutionContext, timeout: Timeout): Future[Option[Relationship]] = {
       val partiesRetrieved: Future[List[(Option[Party], Option[Party])]] = Future.traverse(commanders) { commander =>
         for {
-          from <- commander.ask(ref => GetParty(partyRelationship.id.from, ref))
-          to   <- commander.ask(ref => GetParty(partyRelationship.id.to, ref))
+          from <- commander.ask(ref => GetParty(partyRelationship.from, ref))
+          to   <- commander.ask(ref => GetParty(partyRelationship.to, ref))
         } yield (from, to)
 
       }
@@ -48,12 +48,11 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
         } yield Relationship(
           from = from.externalId,
           to = to.externalId,
-          role = partyRelationship.id.role.stringify,
-          platformRole = partyRelationship.id.platformRole,
+          role = partyRelationship.role.stringify,
+          platformRole = partyRelationship.platformRole,
           status = Some(partyRelationship.status.stringify)
         )
       }
-
     }
 
     def getPartyRelationships(
