@@ -10,7 +10,6 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   getParty,
   getPartyRelationship,
   stringToUUID,
-  getPartyRelationshipIdV1,
   getPartyRelationshipV1,
   getToken,
   _
@@ -82,7 +81,10 @@ package object v1 {
 
   implicit def partyRelationshipConfirmedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipConfirmed, PartyRelationshipConfirmedV1] =
-    event => getPartyRelationshipIdV1(event.partyRelationshipId).map(PartyRelationshipConfirmedV1.of)
+    event =>
+      Right[Throwable, PartyRelationshipConfirmedV1](
+        PartyRelationshipConfirmedV1.of(event.partyRelationshipId.toString)
+      )
 
   implicit def partyRelationshipConfirmedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
@@ -98,7 +100,8 @@ package object v1 {
 
   implicit def partyRelationshipDeletedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipDeleted, PartyRelationshipDeletedV1] =
-    event => getPartyRelationshipIdV1(event.partyRelationshipId).map(PartyRelationshipDeletedV1.of)
+    event =>
+      Right[Throwable, PartyRelationshipDeletedV1](PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString))
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)

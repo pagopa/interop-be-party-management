@@ -85,10 +85,6 @@ object utils {
   def stringToUUID(uuidStr: String): ErrorOr[UUID] =
     Try { UUID.fromString(uuidStr) }.toEither
 
-  def getPartyRelationshipIdV1(partyRelationshipId: UUID): ErrorOr[String] = {
-    Try { partyRelationshipId.toString }.toEither
-  }
-
   def getPartyRelationship(partyRelationshipV1: PartyRelationshipV1): ErrorOr[PartyRelationship] = {
     for {
       id        <- stringToUUID(partyRelationshipV1.id)
@@ -110,7 +106,6 @@ object utils {
 
   def getPartyRelationshipV1(partyRelationship: PartyRelationship): ErrorOr[PartyRelationshipV1] = {
     for {
-      id <- getPartyRelationshipIdV1(partyRelationship.id)
       status <- PartyRelationshipStatusV1
         .fromName(partyRelationship.status.stringify)
         .toRight(new RuntimeException("Deserialization from protobuf failed"))
@@ -118,7 +113,7 @@ object utils {
         .fromName(partyRelationship.role.stringify)
         .toRight(new RuntimeException("Deserialization from protobuf failed"))
     } yield PartyRelationshipV1(
-      id = id,
+      id = partyRelationship.id.toString,
       from = partyRelationship.from.toString,
       to = partyRelationship.to.toString,
       role = partyRole,
