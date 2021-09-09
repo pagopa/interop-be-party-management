@@ -10,7 +10,7 @@ final case class State(
   parties: Map[UUID, Party],  //TODO use String instead of UUID
   indexes: Map[String, UUID], //TODO use String instead of UUID
   tokens: Map[String, Token],
-  relationships: Map[String, PartyRelationship] //TODO String = UUID
+  relationships: Map[String, PartyRelationship]
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
