@@ -12,7 +12,7 @@ import scala.util.Try
 
 /** Models the binding between a party and a relationship.
   * <br>
-  * It is used for persist the proper binding within the token.
+  * It is used to persist the proper binding in the onboarding token.
   *
   * @param partyId
   * @param relationshipId
