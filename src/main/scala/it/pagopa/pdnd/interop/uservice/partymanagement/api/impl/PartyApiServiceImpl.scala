@@ -292,7 +292,7 @@ class PartyApiServiceImpl(
     logger.info(s"Creating token ${tokenSeed.toString}")
 
     val result: Future[StatusReply[TokenText]] = for {
-      partyRelationships <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationshipId)
+      partyRelationships <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationship)
       token              <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationships, ref))
     } yield token
 
@@ -379,7 +379,7 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationshipId(relationship: Relationship): Future[PartyRelationship] = for {
+  private def getPartyRelationship(relationship: Relationship): Future[PartyRelationship] = for {
     from <- getCommander(relationship.from).ask(ref =>
       GetPartyByExternalId(relationship.from, getShard(relationship.from), ref)
     )
