@@ -10,6 +10,14 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.Try
 
+/** Models the binding between a party and a relationship.
+  * <br>
+  * It is used for persist the proper binding within the token.
+  *
+  * @param partyId
+  * @param relationshipId
+  */
+//TODO evaluate an Akka persistence alternative to preserve the same behavior without this case class.
 final case class PartyRelationshipBinding(partyId: UUID, relationshipId: UUID)
 
 @SuppressWarnings(

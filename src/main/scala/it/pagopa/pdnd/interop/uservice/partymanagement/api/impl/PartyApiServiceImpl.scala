@@ -387,7 +387,7 @@ class PartyApiServiceImpl(
       GetPartyByExternalId(relationship.to, getShard(relationship.to), ref)
     )
     role = PartyRole.fromText(relationship.role).toOption
-    relationship <- relationshipByBusinessIdentifiers(
+    relationship <- relationshipByInvolvedParties(
       from = from.get.id,
       to = to.get.id,
       role = role.get,
@@ -414,7 +414,6 @@ class PartyApiServiceImpl(
     commandFunc: (UUID, ActorRef[StatusReply[Unit]]) => Command
   ): Future[Seq[StatusReply[Unit]]] = {
     for {
-      //uuid ->
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           commandFunc(partyRelationshipBinding.relationshipId, ref)
@@ -469,18 +468,8 @@ class PartyApiServiceImpl(
     }
   }
 
-  /** flips result of relationship retrieval from the cluster.
-    *
-    * @return successful future if no relationship has been found
-    */
-  private def isMissingRelationship(from: UUID, to: UUID, role: PartyRole, platformRole: String): Future[Boolean] = {
-    relationshipByBusinessIdentifiers(from, to, role, platformRole).transformWith {
-      case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
-      case Failure(_) => Future.successful(true)
-    }
-  }
-
-  private def relationshipByBusinessIdentifiers(
+  /* does a recursive lookup through the shards until it finds the existing relationship for the involved parties */
+  private def relationshipByInvolvedParties(
     from: UUID,
     to: UUID,
     role: PartyRole,
@@ -517,6 +506,17 @@ class PartyApiServiceImpl(
           case Some(relationship) => Some(relationship)
           case None               => recursiveLookup(tail, from, to, role, platformRole)
         }
+    }
+  }
+
+  /** flips result of relationship retrieval from the cluster.
+    *
+    * @return successful future if no relationship has been found in the cluster.
+    */
+  private def isMissingRelationship(from: UUID, to: UUID, role: PartyRole, platformRole: String): Future[Boolean] = {
+    relationshipByInvolvedParties(from, to, role, platformRole).transformWith {
+      case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
+      case Failure(_) => Future.successful(true)
     }
   }
 
