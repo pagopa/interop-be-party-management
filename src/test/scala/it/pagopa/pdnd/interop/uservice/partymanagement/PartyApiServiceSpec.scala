@@ -16,7 +16,14 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshal
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Token
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, Person, Relationships, TokenSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{
+  Organization,
+  OrganizationSeed,
+  Person,
+  PersonSeed,
+  Relationships,
+  TokenSeed
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -480,6 +487,104 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body shouldBe Relationships(Seq.empty)
 
     }
+  }
 
+  "Lookup a person by UUID" must {
+    "return 404 when the person does not exists" in {
+      //given a random UUID
+      val uuid = UUID.randomUUID().toString
+
+      //when looking up for the corresponding person
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/party/person/$uuid", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+    "return the person payload when it exists" in {
+      //given
+      val personSeed = PersonSeed(taxCode = "CFTEST", surname = "Soze", name = "Keiser")
+      val personId   = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(personId).once()
+      val personRequestData = Await.result(Marshal(personSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+      val _                 = createPerson(personRequestData)
+
+      //when
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/party/person/${personId.toString}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+      val body = Await.result(Unmarshal(response.entity).to[Person], Duration.Inf)
+
+      //then
+      response.status shouldBe StatusCodes.OK
+      body shouldBe Person(taxCode = "CFTEST", surname = "Soze", name = "Keiser", partyId = personId.toString)
+    }
+  }
+
+  "Lookup an organization by UUID" must {
+    "return 404 when the organization does not exists" in {
+      //given a random UUID
+      val uuid = UUID.randomUUID().toString
+
+      //when looking up for the corresponding organization
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/party/organization/$uuid", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+    "return the organization payload when it exists" in {
+      //given
+      val organizationSeed =
+        OrganizationSeed("9999", "ACME Corp.", "Duffy", "Duck", "quack@acme.org", Seq.empty)
+      val organizationUUID = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(organizationUUID).once()
+      val organizationRequestData =
+        Await.result(Marshal(organizationSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+      val _ = createOrganization(organizationRequestData)
+
+      //when
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/party/organization/${organizationUUID.toString}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+      val body = Await.result(Unmarshal(response.entity).to[Organization], Duration.Inf)
+
+      //then
+      response.status shouldBe StatusCodes.OK
+      body shouldBe
+        Organization(
+          "9999",
+          "ACME Corp.",
+          "Duffy",
+          "Duck",
+          "quack@acme.org",
+          partyId = organizationUUID.toString,
+          Seq.empty
+        )
+    }
   }
 }
