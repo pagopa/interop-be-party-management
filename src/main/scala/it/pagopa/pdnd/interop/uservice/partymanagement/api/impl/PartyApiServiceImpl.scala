@@ -9,12 +9,13 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.timeout
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
+import it.pagopa.pdnd.interop.uservice.partymanagement.service._
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
@@ -538,11 +539,12 @@ class PartyApiServiceImpl(
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val attributes: Future[List[Option[Party]]] = Future.traverse(commanders) { commander =>
-      commander.ask(ref => GetParty(UUID.fromString(id), ref))
-    }
+    val organizations = for {
+      organizationUUID <- id.asUUID.toFuture
+      results          <- Future.traverse(commanders) { commander => commander.ask(ref => GetParty(organizationUUID, ref)) }
+    } yield results
 
-    onComplete(attributes) {
+    onComplete(organizations) {
       case Success(result) =>
         result.flatten
           .find(_.id.toString == id)
@@ -570,11 +572,12 @@ class PartyApiServiceImpl(
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val attributes: Future[List[Option[Party]]] = Future.traverse(commanders) { commander =>
-      commander.ask(ref => GetParty(UUID.fromString(id), ref))
-    }
+    val persons = for {
+      personUUID <- id.asUUID.toFuture
+      results    <- Future.traverse(commanders) { commander => commander.ask(ref => GetParty(personUUID, ref)) }
+    } yield results
 
-    onComplete(attributes) {
+    onComplete(persons) {
       case Success(result) =>
         result.flatten
           .find(_.id.toString == id)

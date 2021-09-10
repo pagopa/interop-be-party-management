@@ -490,6 +490,22 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
   }
 
   "Lookup a person by UUID" must {
+    "return 404 when the input parameter is not a valid UUID" in {
+      //given a random UUID
+      val uuid = "YADA-YADA"
+
+      //when looking up for the corresponding person
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/party/person/$uuid", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.NotFound
+    }
+
     "return 404 when the person does not exists" in {
       //given a random UUID
       val uuid = UUID.randomUUID().toString
@@ -534,6 +550,22 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
   }
 
   "Lookup an organization by UUID" must {
+    "return 404 when the input parameter is not a valid UUID" in {
+      //given a random UUID
+      val uuid = "YADA-YADA"
+
+      //when looking up for the corresponding organization
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/party/organization/$uuid", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.NotFound
+    }
+
     "return 404 when the organization does not exists" in {
       //given a random UUID
       val uuid = UUID.randomUUID().toString
