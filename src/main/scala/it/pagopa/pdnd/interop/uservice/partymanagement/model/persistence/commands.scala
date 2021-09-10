@@ -29,10 +29,10 @@ final case class AddAttributes(organizationId: String, attributes: Seq[String], 
 final case class AddPartyRelationship(partyRelationship: PartyRelationship, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class ConfirmPartyRelationship(relationshipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
+final case class ConfirmPartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class DeletePartyRelationship(relationshipId: PartyRelationshipId, replyTo: ActorRef[StatusReply[Unit]])
+final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationship]])
@@ -41,10 +41,18 @@ final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[
 final case class GetPartyRelationshipsByTo(to: UUID, replyTo: ActorRef[List[PartyRelationship]])
     extends PartyRelationshipCommand
 
+final case class GetPartyRelationshipByAttributes(
+  from: UUID,
+  to: UUID,
+  role: PartyRole,
+  platformRole: String,
+  replyTo: ActorRef[Option[PartyRelationship]]
+) extends PartyRelationshipCommand
+
 /* Party Command */
 final case class AddToken(
   token: TokenSeed,
-  partyRelationshipIds: Seq[PartyRelationshipId],
+  partyRelationships: Seq[PartyRelationship],
   replyTo: ActorRef[StatusReply[TokenText]]
 )                                                                                         extends TokenCommand
 final case class DeleteToken(token: Token, replyTo: ActorRef[StatusReply[Unit]])          extends TokenCommand

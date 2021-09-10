@@ -5,6 +5,7 @@ import akka.http.scaladsl.marshalling.{Marshal, Marshaller}
 import akka.http.scaladsl.model.{HttpResponse, MessageEntity}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 
+import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
@@ -45,6 +46,9 @@ object RelationshipPartyApiServiceData {
     OrganizationSeed(institutionId3, "Institutions Seven", "Alex", "Murphy", "mail7@mail.org", Seq.empty)
   lazy final val orgSeed4 =
     OrganizationSeed(institutionId4, "Institutions Eight", "Eric", "Cartman", "mail8@mail.org", Seq.empty)
+
+  lazy final val relationshipId4 = UUID.fromString("84f8dce0-0a5b-476b-9fdd-a7a658eb9227")
+  lazy final val relationshipId5 = UUID.fromString("85f8dce0-0a5b-476b-9fdd-a7a658eb9227")
 
   lazy final val rlSeed1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager", "admin", None)
   lazy final val rlSeed2 = Relationship(from = taxCode2, to = institutionId2, role = "Manager", "admin", None)

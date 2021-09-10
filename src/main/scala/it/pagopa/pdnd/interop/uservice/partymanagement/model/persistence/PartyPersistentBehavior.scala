@@ -117,9 +117,9 @@ object PartyPersistentBehavior {
 
       case AddPartyRelationship(partyRelationship, replyTo) =>
         state.relationships
-          .get(partyRelationship.id)
+          .get(partyRelationship.id.toString)
           .map { _ =>
-            replyTo ! StatusReply.Error(s"Relationship ${partyRelationship.id.stringify} already exists")
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationship.id.toString} already exists")
             Effect.none[PartyRelationshipAdded, State]
           }
           .getOrElse {
@@ -132,9 +132,9 @@ object PartyPersistentBehavior {
 
       case ConfirmPartyRelationship(partyRelationshipId, replyTo) =>
         state.relationships
-          .get(partyRelationshipId)
+          .get(partyRelationshipId.toString)
           .fold {
-            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.stringify} not found")
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none[PartyRelationshipConfirmed, State]
           } { t =>
             Effect
@@ -148,12 +148,12 @@ object PartyPersistentBehavior {
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
       case GetPartyRelationshipsByFrom(from, replyTo) =>
-        val relationships: List[PartyRelationship] = state.relationships.filter(_._1.from == from).values.toList
+        val relationships: List[PartyRelationship] = state.relationships.values.filter(_.from == from).toList
         replyTo ! relationships
         Effect.none
 
       case GetPartyRelationshipsByTo(to, replyTo) =>
-        val relationships: List[PartyRelationship] = state.relationships.filter(_._1.to == to).values.toList
+        val relationships: List[PartyRelationship] = state.relationships.values.filter(_.to == to).toList
         replyTo ! relationships
         Effect.none
 
@@ -187,6 +187,11 @@ object PartyPersistentBehavior {
         Effect
           .persist(TokenDeleted(token))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
+
+      case GetPartyRelationshipByAttributes(from, to, role, platformRole, replyTo) => {
+        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, platformRole)
+        Effect.none[Event, State]
+      }
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)

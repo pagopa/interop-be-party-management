@@ -2,20 +2,14 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 
 import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
-  Party,
-  PartyRelationship,
-  PartyRelationshipId,
-  Token
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationship, Token}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils.{
   getParty,
   getPartyRelationship,
-  getPartyRelationshipId,
-  getPartyRelationshipIdV1,
+  stringToUUID,
   getPartyRelationshipV1,
   getToken,
   _
@@ -36,11 +30,10 @@ package object v1 {
           .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
           .map(_.toMap)
         relationships <- state.relationships
-          .traverse[ErrorOr, (PartyRelationshipId, PartyRelationship)](rl =>
+          .traverse[ErrorOr, (String, PartyRelationship)](rl =>
             for {
-              k <- getPartyRelationshipId(rl.key)
               v <- getPartyRelationship(rl.value)
-            } yield k -> v
+            } yield rl.key -> v
           )
           .map(_.toMap)
       } yield State(parties, indexes, tokens, relationships)
@@ -57,11 +50,10 @@ package object v1 {
           getTokenV1(v).map(token => TokensV1(k, token))
         }
         relationships <- state.relationships.toSeq
-          .traverse[ErrorOr, RelationshipsV1] { case (key, value) =>
+          .traverse[ErrorOr, RelationshipEntryV1] { case (key, value) =>
             for {
-              k <- getPartyRelationshipIdV1(key)
               v <- getPartyRelationshipV1(value)
-            } yield RelationshipsV1(k, v)
+            } yield RelationshipEntryV1(key, v)
           }
       } yield StateV1(parties, indexes, tokens, relationships)
 
@@ -89,11 +81,14 @@ package object v1 {
 
   implicit def partyRelationshipConfirmedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipConfirmed, PartyRelationshipConfirmedV1] =
-    event => getPartyRelationshipIdV1(event.partyRelationshipId).map(PartyRelationshipConfirmedV1.of)
+    event =>
+      Right[Throwable, PartyRelationshipConfirmedV1](
+        PartyRelationshipConfirmedV1.of(event.partyRelationshipId.toString)
+      )
 
   implicit def partyRelationshipConfirmedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
-    getPartyRelationshipId(event.partyRelationshipId).map(PartyRelationshipConfirmed)
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipConfirmed)
 
   implicit def partyRelationshipAddedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipAdded, PartyRelationshipAddedV1] =
@@ -101,11 +96,12 @@ package object v1 {
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
-    getPartyRelationshipId(event.partyRelationshipId).map(PartyRelationshipDeleted)
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipDeleted)
 
   implicit def partyRelationshipDeletedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipDeleted, PartyRelationshipDeletedV1] =
-    event => getPartyRelationshipIdV1(event.partyRelationshipId).map(PartyRelationshipDeletedV1.of)
+    event =>
+      Right[Throwable, PartyRelationshipDeletedV1](PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString))
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)

@@ -1,11 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
-  Party,
-  PartyRelationship,
-  PartyRelationshipId,
-  Token
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationship, Token}
+
+import java.util.UUID
 
 /* Event */
 sealed trait Event                  extends Persistable
@@ -19,9 +16,9 @@ final case class PartyDeleted(party: Party)    extends PartyEvent
 final case class AttributesAdded(party: Party) extends PartyEvent
 
 /* PartyRelationship Event */
-final case class PartyRelationshipAdded(partyRelationship: PartyRelationship)         extends PartyRelationshipEvent
-final case class PartyRelationshipConfirmed(partyRelationshipId: PartyRelationshipId) extends PartyRelationshipEvent
-final case class PartyRelationshipDeleted(partyRelationshipId: PartyRelationshipId)   extends PartyRelationshipEvent
+final case class PartyRelationshipAdded(partyRelationship: PartyRelationship) extends PartyRelationshipEvent
+final case class PartyRelationshipConfirmed(partyRelationshipId: UUID)        extends PartyRelationshipEvent
+final case class PartyRelationshipDeleted(partyRelationshipId: UUID)          extends PartyRelationshipEvent
 
 /* Token Event */
 final case class TokenAdded(token: Token)   extends TokenEvent

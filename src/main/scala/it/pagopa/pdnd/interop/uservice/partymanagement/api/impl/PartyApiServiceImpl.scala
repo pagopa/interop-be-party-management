@@ -18,7 +18,9 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
+import scala.annotation.tailrec
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
@@ -222,7 +224,8 @@ class PartyApiServiceImpl(
       from <- getParty(relationship.from)
       to   <- getParty(relationship.to)
       role <- PartyRole.fromText(relationship.role).toFuture
-      partyRelationship = PartyRelationship.create(from.id, to.id, role, relationship.platformRole)
+      _    <- isMissingRelationship(from.id, to.id, role, relationship.platformRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, relationship.platformRole)
       currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       added                     <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -289,8 +292,8 @@ class PartyApiServiceImpl(
     logger.info(s"Creating token ${tokenSeed.toString}")
 
     val result: Future[StatusReply[TokenText]] = for {
-      partyRelationshipIds <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationshipId)
-      token                <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationshipIds, ref))
+      partyRelationships <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationship)
+      token              <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationships, ref))
     } yield token
 
     manageCreationResponse(result, createToken201, createToken400)
@@ -376,7 +379,7 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationshipId(relationship: Relationship): Future[PartyRelationshipId] = for {
+  private def getPartyRelationship(relationship: Relationship): Future[PartyRelationship] = for {
     from <- getCommander(relationship.from).ask(ref =>
       GetPartyByExternalId(relationship.from, getShard(relationship.from), ref)
     )
@@ -384,7 +387,13 @@ class PartyApiServiceImpl(
       GetPartyByExternalId(relationship.to, getShard(relationship.to), ref)
     )
     role = PartyRole.fromText(relationship.role).toOption
-  } yield PartyRelationshipId(from.get.id, to.get.id, role.get, relationship.platformRole)
+    relationship <- relationshipByInvolvedParties(
+      from = from.get.id,
+      to = to.get.id,
+      role = role.get,
+      platformRole = relationship.platformRole
+    )
+  } yield relationship
 
   private def isRelationshipAllowed(
     currentPartyRelationships: List[PartyRelationship],
@@ -393,7 +402,7 @@ class PartyApiServiceImpl(
     Either
       .cond(
         currentPartyRelationships.exists(_.status == PartyRelationshipStatus.Active) ||
-          Set[PartyRole](Manager, Delegate).contains(partyRelationships.id.role),
+          Set[PartyRole](Manager, Delegate).contains(partyRelationships.role),
         partyRelationships,
         new RuntimeException("Operator without active manager")
       )
@@ -402,12 +411,12 @@ class PartyApiServiceImpl(
 
   private def processRelationships(
     token: Token,
-    commandFunc: (PartyRelationshipId, ActorRef[StatusReply[Unit]]) => Command
+    commandFunc: (UUID, ActorRef[StatusReply[Unit]]) => Command
   ): Future[Seq[StatusReply[Unit]]] = {
     for {
-      results <- Future.traverse(token.legals) { partyRelationshipId =>
-        getCommander(partyRelationshipId.from.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          commandFunc(partyRelationshipId, ref)
+      results <- Future.traverse(token.legals) { partyRelationshipBinding =>
+        getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
+          commandFunc(partyRelationshipBinding.relationshipId, ref)
         )
       } //TODO atomic?
     } yield results
@@ -456,6 +465,58 @@ class PartyApiServiceImpl(
               getPartyAttributes200(reply.getValue)
           }
       case Failure(ex) => getPartyAttributes404(Problem(Option(ex.getMessage), status = 404, "party not found"))
+    }
+  }
+
+  /* does a recursive lookup through the shards until it finds the existing relationship for the involved parties */
+  private def relationshipByInvolvedParties(
+    from: UUID,
+    to: UUID,
+    role: PartyRole,
+    platformRole: String
+  ): Future[PartyRelationship] = {
+    val commanders: List[EntityRef[Command]] =
+      (0 until settings.numberOfShards)
+        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+        .toList
+
+    recursiveLookup(commanders, from, to, role, platformRole) match {
+      case Some(relationship) => Future.successful(relationship)
+      case None               => Future.failed(new RuntimeException("Relationship not found"))
+    }
+  }
+
+  @tailrec
+  private def recursiveLookup(
+    commanders: List[EntityRef[Command]],
+    from: UUID,
+    to: UUID,
+    role: PartyRole,
+    platformRole: String
+  ): Option[PartyRelationship] = {
+    commanders match {
+      case Nil => None
+      case elem :: tail =>
+        Await.result(
+          elem.ask(ref =>
+            GetPartyRelationshipByAttributes(from = from, to = to, role = role, platformRole = platformRole, ref)
+          ),
+          Duration.Inf
+        ) match {
+          case Some(relationship) => Some(relationship)
+          case None               => recursiveLookup(tail, from, to, role, platformRole)
+        }
+    }
+  }
+
+  /** flips result of relationship retrieval from the cluster.
+    *
+    * @return successful future if no relationship has been found in the cluster.
+    */
+  private def isMissingRelationship(from: UUID, to: UUID, role: PartyRole, platformRole: String): Future[Boolean] = {
+    relationshipByInvolvedParties(from, to, role, platformRole).transformWith {
+      case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
+      case Failure(_) => Future.successful(true)
     }
   }
 
