@@ -9,12 +9,13 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.timeout
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
+import it.pagopa.pdnd.interop.uservice.partymanagement.service._
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
@@ -520,4 +521,71 @@ class PartyApiServiceImpl(
     }
   }
 
+  /** Code: 200, Message: Organization, DataType: Organization
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  override def getPartyOrganizationByUUID(id: String)(implicit
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+
+    def notFound = getPartyOrganizationByUUID404(
+      Problem(Option(s"Organization $id Not Found"), status = 404, "organization not found")
+    )
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val organizations = for {
+      organizationUUID <- id.asUUID.toFuture
+      results          <- Future.traverse(commanders) { commander => commander.ask(ref => GetParty(organizationUUID, ref)) }
+    } yield results
+
+    onComplete(organizations) {
+      case Success(result) =>
+        result.flatten
+          .find(_.id.toString == id)
+          .fold(notFound) { reply =>
+            Party.convertToApi(reply).swap.fold(_ => notFound, p => getPartyOrganizationByUUID200(p))
+          }
+      case Failure(ex) =>
+        getPartyOrganizationByUUID404(Problem(Option(ex.getMessage), status = 404, "organization not found"))
+    }
+  }
+
+  /** Code: 200, Message: Person, DataType: Person
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Person not found, DataType: Problem
+    */
+  override def getPartyPersonByUUID(id: String)(implicit
+    toEntityMarshallerPerson: ToEntityMarshaller[Person],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+
+    def notFound = getPartyPersonByUUID404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val persons = for {
+      personUUID <- id.asUUID.toFuture
+      results    <- Future.traverse(commanders) { commander => commander.ask(ref => GetParty(personUUID, ref)) }
+    } yield results
+
+    onComplete(persons) {
+      case Success(result) =>
+        result.flatten
+          .find(_.id.toString == id)
+          .fold(notFound) { reply =>
+            Party.convertToApi(reply).fold(_ => notFound, p => getPartyPersonByUUID200(p))
+          }
+      case Failure(ex) =>
+        getPartyPersonByUUID404(Problem(Option(ex.getMessage), status = 404, "person not found"))
+    }
+  }
 }

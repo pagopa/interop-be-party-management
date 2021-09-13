@@ -437,6 +437,74 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: getPartyAttributes
       description: 'returns the attributes of the identified party, if any.'
+  '/party/organization/{id}':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: internal platform UUID of the organization
+    get:
+      summary: Retrieves organization by plaftorm UUID
+      tags:
+        - party
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getPartyOrganizationByUUID
+      description: 'returns the identified organization, if any.'
+  '/party/person/{id}':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: internal platform UUID of the person
+    get:
+      summary: Retrieves person by plaftorm UUID
+      tags:
+        - party
+      responses:
+        '200':
+          description: Person
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Person not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getPartyPersonByUUID
+      description: 'returns the identified person, if any.'
 components:
   schemas:
     PersonSeed:

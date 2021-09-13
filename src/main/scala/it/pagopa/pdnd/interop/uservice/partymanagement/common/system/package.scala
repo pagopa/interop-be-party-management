@@ -13,19 +13,7 @@ package object system {
 
   implicit val timeout: Timeout = 3.seconds
 
-//  object Authenticator extends Authenticator[Seq[(String, String)]] {
-//
-//    override def apply(credentials: Credentials): Option[Seq[(String, String)]] = {
-//      credentials match {
-//        case Provided(identifier) => Some(Seq("bearer" -> identifier))
-//        case Missing              => None
-//      }
-//    }
-//
-//  }
   object Authenticator extends Authenticator[Seq[(String, String)]] {
-
     override def apply(credentials: Credentials): Option[Seq[(String, String)]] = Some(Seq.empty)
-
   }
 }
