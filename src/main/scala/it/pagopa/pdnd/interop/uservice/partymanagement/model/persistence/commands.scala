@@ -35,6 +35,9 @@ final case class ConfirmPartyRelationship(relationshipId: UUID, replyTo: ActorRe
 final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
+final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PartyRelationship]])
+  extends PartyRelationshipCommand
+
 final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationship]])
     extends PartyRelationshipCommand
 

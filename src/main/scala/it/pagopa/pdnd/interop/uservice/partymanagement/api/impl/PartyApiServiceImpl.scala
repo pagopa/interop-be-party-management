@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import akka.util.Timeout
+import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
@@ -22,7 +23,7 @@ import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
 class PartyApiServiceImpl(
@@ -214,7 +215,7 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
   override def createRelationship(
-    relationship: Relationship
+    seed: RelationshipSeed
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
     val commanders = (0 to settings.numberOfShards)
@@ -222,11 +223,11 @@ class PartyApiServiceImpl(
       .toList
 
     val result: Future[StatusReply[Unit]] = for {
-      from <- getParty(relationship.from)
-      to   <- getParty(relationship.to)
-      role <- PartyRole.fromText(relationship.role).toFuture
-      _    <- isMissingRelationship(from.id, to.id, role, relationship.platformRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, relationship.platformRole)
+      from <- getParty(seed.from)
+      to   <- getParty(seed.to)
+      role <- PartyRole.fromText(seed.role).toFuture
+      _    <- isMissingRelationship(from.id, to.id, role, seed.platformRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
       currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       added                     <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -247,13 +248,15 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def getRelationships(from: Option[String], to: Option[String])(implicit
+  override def getRelationships(from: Option[String], to: Option[String], platformRole: Option[String])(implicit
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
-    logger.error(s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}")
+    logger.error(
+      s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}/${platformRole.getOrElse("Empty")}"
+    )
 
     val commanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -274,7 +277,12 @@ class PartyApiServiceImpl(
       case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 
-    onComplete(result) {
+    val filteredResult = platformRole match {
+      case Some(pr) => result.map(_.filter(_.platformRole == pr))
+      case None     => result
+    }
+
+    onComplete(filteredResult) {
       case Success(relationships) => getRelationships200(Relationships(relationships))
       case Failure(ex) =>
         getRelationships400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
@@ -380,19 +388,19 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationship(relationship: Relationship): Future[PartyRelationship] = for {
-    from <- getCommander(relationship.from).ask(ref =>
-      GetPartyByExternalId(relationship.from, getShard(relationship.from), ref)
+  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] = for {
+    from <- getCommander(relationshipSeed.from).ask(ref =>
+      GetPartyByExternalId(relationshipSeed.from, getShard(relationshipSeed.from), ref)
     )
-    to <- getCommander(relationship.to).ask(ref =>
-      GetPartyByExternalId(relationship.to, getShard(relationship.to), ref)
+    to <- getCommander(relationshipSeed.to).ask(ref =>
+      GetPartyByExternalId(relationshipSeed.to, getShard(relationshipSeed.to), ref)
     )
-    role = PartyRole.fromText(relationship.role).toOption
+    role = PartyRole.fromText(relationshipSeed.role).toOption
     relationship <- relationshipByInvolvedParties(
       from = from.get.id,
       to = to.get.id,
       role = role.get,
-      platformRole = relationship.platformRole
+      platformRole = relationshipSeed.platformRole
     )
   } yield relationship
 
@@ -586,6 +594,36 @@ class PartyApiServiceImpl(
           }
       case Failure(ex) =>
         getPartyPersonByUUID404(Problem(Option(ex.getMessage), status = 404, "person not found"))
+    }
+  }
+
+  /** Code: 200, Message: successful operation, DataType: Relationship
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def getRelationshipById(relationshipId: String)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Retrieving relationship $relationshipId")
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[Option[Relationship]] =
+      for {
+        uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        results <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
+        maybePartyRelationship = results.find(_.isDefined).flatten
+        partyRelationship <- maybePartyRelationship.flatTraverse(commanders.convertToRelationship)
+      } yield partyRelationship
+
+    onComplete(result) {
+      case Success(Some(relationship)) => getRelationshipById200(relationship)
+      case Success(None)               => getRelationshipById404(Problem(detail = None, status = 404, title = "some error"))
+      case Failure(ex) =>
+        getRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
 }

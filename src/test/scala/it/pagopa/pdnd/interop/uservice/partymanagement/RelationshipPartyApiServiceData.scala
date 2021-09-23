@@ -26,17 +26,25 @@ object RelationshipPartyApiServiceData {
   lazy final val taxCode3 = "RSSMRA75L01H501G"
   lazy final val taxCode4 = "RSSMRA75L01H501R"
   lazy final val taxCode5 = "RSSMRA75L01H501T"
+  lazy final val taxCode6 = "RSSMRA75L01H501Z"
+  lazy final val taxCode7 = "RSSMRA75L01H501Y"
+  lazy final val taxCode8 = "RSSMRA75L01H501W"
 
   lazy final val institutionId1 = "id5"
   lazy final val institutionId2 = "id6"
   lazy final val institutionId3 = "id7"
   lazy final val institutionId4 = "id8"
+  lazy final val institutionId5 = "id9"
+  lazy final val institutionId6 = "id20"
 
   lazy final val personSeed1 = PersonSeed(taxCode = taxCode1, surname = "Ripley", name = "Ellen")
   lazy final val personSeed2 = PersonSeed(taxCode = taxCode2, surname = "Onizuka", name = "Eikichi")
   lazy final val personSeed3 = PersonSeed(taxCode = taxCode3, surname = "Murphy", name = "Alex")
   lazy final val personSeed4 = PersonSeed(taxCode = taxCode4, surname = "Cartman", name = "Eric")
   lazy final val personSeed5 = PersonSeed(taxCode = taxCode5, surname = "Wick", name = "John")
+  lazy final val personSeed6 = PersonSeed(taxCode = taxCode6, surname = "Durden", name = "Tyler")
+  lazy final val personSeed7 = PersonSeed(taxCode = taxCode7, surname = "...", name = "...")
+  lazy final val personSeed8 = PersonSeed(taxCode = taxCode8, surname = "....", name = "....")
 
   lazy final val orgSeed1 =
     OrganizationSeed(institutionId1, "Institutions Five", "Ellen", "Ripley", "mail5@mail.org", Seq.empty)
@@ -46,32 +54,74 @@ object RelationshipPartyApiServiceData {
     OrganizationSeed(institutionId3, "Institutions Seven", "Alex", "Murphy", "mail7@mail.org", Seq.empty)
   lazy final val orgSeed4 =
     OrganizationSeed(institutionId4, "Institutions Eight", "Eric", "Cartman", "mail8@mail.org", Seq.empty)
+  lazy final val orgSeed5 =
+    OrganizationSeed(institutionId5, "Institutions Nine", "Tyler", "Durden", "mail9@mail.org", Seq.empty)
+  lazy final val orgSeed6 =
+    OrganizationSeed(institutionId6, "Institutions Ten", "...", "...", "mail10@mail.org", Seq.empty)
 
-  lazy final val relationshipId4 = UUID.fromString("84f8dce0-0a5b-476b-9fdd-a7a658eb9227")
-  lazy final val relationshipId5 = UUID.fromString("85f8dce0-0a5b-476b-9fdd-a7a658eb9227")
 
-  lazy final val rlSeed1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager", "admin", None)
-  lazy final val rlSeed2 = Relationship(from = taxCode2, to = institutionId2, role = "Manager", "admin", None)
-  lazy final val rlSeed3 = Relationship(from = taxCode3, to = institutionId3, role = "Manager", "admin", None)
-  lazy final val rlSeed4 = Relationship(from = taxCode4, to = institutionId4, role = "Manager", "admin", None)
-  lazy final val rlSeed5 = Relationship(from = taxCode5, to = institutionId4, role = "Delegate", "admin", None)
+  lazy final val rlSeed1 = RelationshipSeed(from = taxCode1, to = institutionId1, role = "Manager", "admin")
+  lazy final val rlSeed2 = RelationshipSeed(from = taxCode2, to = institutionId2, role = "Manager", "admin")
+  lazy final val rlSeed3 = RelationshipSeed(from = taxCode3, to = institutionId3, role = "Manager", "admin")
+  lazy final val rlSeed4 = RelationshipSeed(from = taxCode4, to = institutionId4, role = "Manager", "admin")
+  lazy final val rlSeed5 = RelationshipSeed(from = taxCode5, to = institutionId4, role = "Delegate", "admin")
+  lazy final val rlSeed6 = RelationshipSeed(from = taxCode6, to = institutionId5, role = "Manager", "admin")
+  lazy final val rlSeed7 = RelationshipSeed(from = taxCode7, to = institutionId6, role = "Manager", "admin")
+  lazy final val rlSeed8 = RelationshipSeed(from = taxCode8, to = institutionId6, role = "Delegate", "security")
 
   lazy final val rlExpected1 = Relationships(Seq.empty)
   lazy final val rlExpected2 = Relationships(
-    Seq(Relationship(from = taxCode2, to = institutionId2, role = "Manager", "admin", status = Some("Pending")))
+    Seq(
+      Relationship(
+        id = UUID.randomUUID(),
+        from = taxCode2,
+        to = institutionId2,
+        role = "Manager",
+        "admin",
+        status = "Pending"
+      )
+    )
   )
   lazy final val rlExpected3 = Relationships(
     Seq(
-      Relationship(from = taxCode4, to = institutionId4, role = "Manager", "admin", status = Some("Pending")),
-      Relationship(from = taxCode5, to = institutionId4, role = "Delegate", "admin", status = Some("Pending"))
+      Relationship(
+        id = UUID.randomUUID(),
+        from = taxCode4,
+        to = institutionId4,
+        role = "Manager",
+        "admin",
+        status = "Pending"
+      ),
+      Relationship(
+        id = UUID.randomUUID(),
+        from = taxCode5,
+        to = institutionId4,
+        role = "Delegate",
+        "admin",
+        status = "Pending"
+      )
     )
   )
 
-  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationship: Relationship)(implicit
+  lazy final val rlExpected4 = Relationships(
+    Seq(
+      Relationship(
+        id = UUID.randomUUID(),
+        from = taxCode8,
+        to = institutionId6,
+        role = "Delegate",
+        "security",
+        status = "Pending"
+      )
+    )
+  )
+
+  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationshipSeed: RelationshipSeed)(
+    implicit
     as: ActorSystem,
     mp: Marshaller[PersonSeed, MessageEntity],
     mo: Marshaller[OrganizationSeed, MessageEntity],
-    mr: Marshaller[Relationship, MessageEntity],
+    mr: Marshaller[RelationshipSeed, MessageEntity],
     ec: ExecutionContext
   ): HttpResponse = {
     val personData = Await.result(Marshal(personSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
@@ -82,7 +132,7 @@ object RelationshipPartyApiServiceData {
 
     val _ = createOrganization(organizationData)
 
-    val rlRequestData = Await.result(Marshal(relationship).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+    val rlRequestData = Await.result(Marshal(relationshipSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
     createRelationship(rlRequestData)
 

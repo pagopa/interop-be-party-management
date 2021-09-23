@@ -44,12 +44,12 @@ object TokenApiServiceData {
   lazy final val organizationSeed2 = OrganizationSeed(institutionId2, "Institutions Ten", "Melandri","Ranbaudo", "mail10@mail.org", Seq.empty)
   lazy final val organizationSeed3 = OrganizationSeed(institutionId3, "Institutions Eleven", "Perozzi","Giorgio", "mail11@mail.org", Seq.empty)
 
-  lazy final val relationship1 = Relationship(from = taxCode1, to = institutionId1, role = "Manager",  "admin", None)
-  lazy final val relationship2 = Relationship(from = taxCode1, to = institutionId1, role = "Delegate", "admin", None)
-  lazy final val relationship3 = Relationship(from = taxCode2, to = institutionId2, role = "Manager",  "admin", None)
-  lazy final val relationship4 = Relationship(from = taxCode2, to = institutionId2, role = "Delegate", "admin", None)
-  lazy final val relationship5 = Relationship(from = taxCode3, to = institutionId3, role = "Manager",  "admin", None)
-  lazy final val relationship6 = Relationship(from = taxCode3, to = institutionId3, role = "Delegate", "admin", None)
+  lazy final val relationshipSeed1 = RelationshipSeed(from = taxCode1, to = institutionId1, role = "Manager",  "admin")
+  lazy final val relationshipSeed2 = RelationshipSeed(from = taxCode1, to = institutionId1, role = "Delegate", "admin")
+  lazy final val relationshipSeed3 = RelationshipSeed(from = taxCode2, to = institutionId2, role = "Manager",  "admin")
+  lazy final val relationshipSeed4 = RelationshipSeed(from = taxCode2, to = institutionId2, role = "Delegate", "admin")
+  lazy final val relationshipSeed5 = RelationshipSeed(from = taxCode3, to = institutionId3, role = "Manager",  "admin")
+  lazy final val relationshipSeed6 = RelationshipSeed(from = taxCode3, to = institutionId3, role = "Delegate", "admin")
   
   lazy final val relationshipId1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9299")
   lazy final val relationshipId2 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9298")
@@ -60,24 +60,26 @@ object TokenApiServiceData {
   lazy final val partyRelationship3 = PartyRelationship(id = relationshipId3, start = OffsetDateTime.now(), end = None, status = Pending, from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Manager,  platformRole = "admin")
   lazy final val partyRelationship4 = PartyRelationship(id = relationshipId4, start = OffsetDateTime.now(), end = None, status = Pending, from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Delegate, platformRole = "admin")
 
-  lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationships = Relationships(Seq(relationship3, relationship4)), "checksum")
-  lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationships = Relationships(Seq(relationship5, relationship6)), "checksum")
+  lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum")
+  lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum")
 
   lazy val token1: Token = Token.generate(tokenSeed1, Seq(partyRelationship1, partyRelationship2)).toOption.get
   lazy val token2: Token = Token.generate(tokenSeed2, Seq(partyRelationship3, partyRelationship4)).toOption.get
 
+  // format: on
+
   def prepareTest(
-                   personSeed: PersonSeed,
-                   organizationSeed: OrganizationSeed,
-                   relationshipOne: Relationship,
-                   relationshipTwo: Relationship
-                 )(implicit
-                   as: ActorSystem,
-                   mp: Marshaller[PersonSeed, MessageEntity],
-                   mo: Marshaller[OrganizationSeed, MessageEntity],
-                   mr: Marshaller[Relationship, MessageEntity],
-                   ec: ExecutionContext
-                 ): HttpResponse = {
+    personSeed: PersonSeed,
+    organizationSeed: OrganizationSeed,
+    relationshipOne: RelationshipSeed,
+    relationshipTwo: RelationshipSeed
+  )(implicit
+    as: ActorSystem,
+    mp: Marshaller[PersonSeed, MessageEntity],
+    mo: Marshaller[OrganizationSeed, MessageEntity],
+    mr: Marshaller[RelationshipSeed, MessageEntity],
+    ec: ExecutionContext
+  ): HttpResponse = {
     val personRequestData = Await.result(Marshal(personSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
     val _ = createPerson(personRequestData)
