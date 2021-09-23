@@ -399,6 +399,39 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       body shouldBe rlExpected3
     }
+
+    "filter relationships by platform role" in {
+
+      val uuid = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
+
+      (() => uuidSupplier.get).expects().returning(uuid).twice()
+      (() => uuidSupplier.get).expects().returning(rlExpected4.items.head.id).once()
+
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once()
+
+      val _ = prepareTest(personSeed = personSeed7, organizationSeed = orgSeed6, relationshipSeed = rlSeed7)
+      val _ = prepareTest(personSeed = personSeed8, organizationSeed = orgSeed6, relationshipSeed = rlSeed8)
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships?to=${orgSeed6.institutionId}&platformRole=security",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      val body = Await.result(Unmarshal(response.entity).to[Relationships], Duration.Inf)
+
+      response.status shouldBe StatusCodes.OK
+
+      body shouldBe rlExpected4
+    }
   }
 
   "Working on token" must {
@@ -660,8 +693,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       //given
 
-      val uuid1 = UUID.randomUUID()
-      val uuid2 = UUID.randomUUID()
+      val uuid1          = UUID.randomUUID()
+      val uuid2          = UUID.randomUUID()
       val relationshipId = UUID.randomUUID()
       (() => uuidSupplier.get).expects().returning(uuid1).once()
       (() => uuidSupplier.get).expects().returning(uuid2).once()
@@ -672,7 +705,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       //when
       val response = Await.result(
         Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/${relationshipId.toString}", method = HttpMethods.GET, headers = authorization)
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
         ),
         Duration.Inf
       )

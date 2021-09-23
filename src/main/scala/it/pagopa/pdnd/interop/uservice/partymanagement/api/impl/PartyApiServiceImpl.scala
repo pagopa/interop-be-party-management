@@ -248,13 +248,15 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def getRelationships(from: Option[String], to: Option[String])(implicit
+  override def getRelationships(from: Option[String], to: Option[String], platformRole: Option[String])(implicit
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
-    logger.error(s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}")
+    logger.error(
+      s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}/${platformRole.getOrElse("Empty")}"
+    )
 
     val commanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -275,7 +277,12 @@ class PartyApiServiceImpl(
       case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 
-    onComplete(result) {
+    val filteredResult = platformRole match {
+      case Some(pr) => result.map(_.filter(_.platformRole == pr))
+      case None     => result
+    }
+
+    onComplete(filteredResult) {
       case Success(relationships) => getRelationships200(Relationships(relationships))
       case Failure(ex) =>
         getRelationships400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))

@@ -265,6 +265,10 @@ paths:
           name: to
           schema:
             type: string
+        - in: query
+          name: platformRole
+          schema:
+            type: string
       responses:
         '200':
           description: successful operation
