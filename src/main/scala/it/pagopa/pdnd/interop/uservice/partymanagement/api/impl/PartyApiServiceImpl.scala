@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.pattern.StatusReply
 import akka.util.Timeout
+import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
@@ -22,7 +23,7 @@ import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
 class PartyApiServiceImpl(
@@ -586,6 +587,36 @@ class PartyApiServiceImpl(
           }
       case Failure(ex) =>
         getPartyPersonByUUID404(Problem(Option(ex.getMessage), status = 404, "person not found"))
+    }
+  }
+
+  /** Code: 200, Message: successful operation, DataType: Relationship
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def getRelationshipById(relationshipId: String)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Retrieving relationship $relationshipId")
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[Option[Relationship]] =
+      for {
+        uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        results <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
+        maybePartyRelationship = results.find(_.isDefined).flatten
+        partyRelationship <- maybePartyRelationship.flatTraverse(commanders.convertToRelationship)
+      } yield partyRelationship
+
+    onComplete(result) {
+      case Success(Some(relationship)) => getRelationshipById200(relationship)
+      case Success(None)               => getRelationshipById404(Problem(detail = None, status = 404, title = "some error"))
+      case Failure(ex) =>
+        getRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
 }

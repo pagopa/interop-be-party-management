@@ -15,8 +15,17 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Token
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationSeed, Person, PersonSeed, Relationships, RelationshipsSeed, TokenSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationshipStatus, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{
+  Organization,
+  OrganizationSeed,
+  Person,
+  PersonSeed,
+  Relationship,
+  Relationships,
+  RelationshipsSeed,
+  TokenSeed
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -112,7 +121,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   "Working on person" must {
     import PersonPartyApiServiceData._
-    "return 404 if the person does not exists" in {
+    "return 404 if the person does not exist" in {
 
       val response = Await.result(
         Http().singleRequest(
@@ -192,7 +201,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   "Working on organizations" must {
     import OrganizationsPartyApiServiceData._
-    "return 404 if the organization does not exists" in {
+    "return 404 if the organization does not exist" in {
 
       val response = Await.result(
         Http().singleRequest(
@@ -273,7 +282,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
   "Working on relationships" must {
     import RelationshipPartyApiServiceData._
 
-    "return 400 if the party does not exists" in {
+    "return 400 if the party does not exist" in {
 
       val response = Await.result(
         Http().singleRequest(
@@ -559,7 +568,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.NotFound
     }
 
-    "return 404 when the organization does not exists" in {
+    "return 404 when the organization does not exist" in {
       //given a random UUID
       val uuid = UUID.randomUUID().toString
 
@@ -609,6 +618,76 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           "quack@acme.org",
           partyId = organizationUUID.toString,
           Seq.empty
+        )
+    }
+  }
+
+  "Lookup a relationship by UUID" must {
+    "return 400 when the input parameter is not a valid UUID" in {
+      //given a random UUID
+      val uuid = "YADA-YADA"
+
+      //when looking up for the corresponding organization
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/relationships/$uuid", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.BadRequest
+    }
+
+    "return 404 when the relationship does not exist" in {
+      //given a random UUID
+      val uuid = UUID.randomUUID().toString
+
+      //when looking up for the corresponding organization
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/relationships/$uuid", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+    "return the organization payload when it exists" in {
+      import RelationshipPartyApiServiceData._
+
+      //given
+
+      val uuid1 = UUID.randomUUID()
+      val uuid2 = UUID.randomUUID()
+      val relationshipId = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(uuid1).once()
+      (() => uuidSupplier.get).expects().returning(uuid2).once()
+      (() => uuidSupplier.get).expects().returning(relationshipId).once()
+
+      val _ = prepareTest(personSeed = personSeed6, organizationSeed = orgSeed5, relationshipSeed = rlSeed6)
+
+      //when
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/relationships/${relationshipId.toString}", method = HttpMethods.GET, headers = authorization)
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.OK
+      val body = Await.result(Unmarshal(response.entity).to[Relationship], Duration.Inf)
+      body shouldBe
+        Relationship(
+          id = relationshipId,
+          from = personSeed6.taxCode,
+          to = orgSeed5.institutionId,
+          role = rlSeed6.role,
+          platformRole = rlSeed6.platformRole,
+          status = PartyRelationshipStatus.Pending.toString
         )
     }
   }

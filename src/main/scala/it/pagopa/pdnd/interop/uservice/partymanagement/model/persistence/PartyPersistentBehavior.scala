@@ -147,6 +147,11 @@ object PartyPersistentBehavior {
           .persist(PartyRelationshipDeleted(partyRelationshipId))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
+      case GetPartyRelationshipById(uuid, replyTo) =>
+        val relationship: Option[PartyRelationship] = state.relationships.get(uuid.toString)
+        replyTo ! relationship
+        Effect.none
+
       case GetPartyRelationshipsByFrom(from, replyTo) =>
         val relationships: List[PartyRelationship] = state.relationships.values.filter(_.from == from).toList
         replyTo ! relationships

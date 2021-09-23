@@ -278,6 +278,40 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /relationships/{relationshipId}:
+    get:
+      tags:
+        - party
+      summary: Retrieve the relationship for the given relationshipId
+      description: Return relationship
+      operationId: getRelationshipById
+      parameters:
+        - name: relationshipId
+          in: path
+          description: The ID of the Relationship to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /tokens:
     post:
       #      security:
