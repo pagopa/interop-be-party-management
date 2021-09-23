@@ -238,7 +238,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Relationship'
+              $ref: '#/components/schemas/RelationshipSeed'
       responses:
         '201':
           description: successful operation
@@ -615,9 +615,37 @@ components:
       type: array
       items:
         type: string
+    RelationshipSeed:
+      type: object
+      properties:
+        from:
+          type: string
+          description: tax code
+        to:
+          type: string
+          description: institution id
+        role:
+          type: string
+          description: represents the generic available role types for the relationship
+          enum:
+            - Manager
+            - Delegate
+            - Operator
+        platformRole:
+          type: string
+          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles'
+      additionalProperties: false
+      required:
+        - from
+        - to
+        - role
+        - platformRole
     Relationship:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         from:
           type: string
           description: tax code
@@ -642,10 +670,12 @@ components:
             - Inactive
       additionalProperties: false
       required:
+        - id
         - from
         - to
         - role
         - platformRole
+        - status
     Relationships:
       type: object
       properties:
@@ -656,6 +686,16 @@ components:
       additionalProperties: false
       required:
         - items
+    RelationshipsSeed:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationshipSeed'
+      additionalProperties: false
+      required:
+        - items
     TokenSeed:
       type: object
       properties:
@@ -663,7 +703,7 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         relationships:
-          $ref: '#/components/schemas/Relationships'
+          $ref: '#/components/schemas/RelationshipsSeed'
         checksum:
           type: string
       additionalProperties: false

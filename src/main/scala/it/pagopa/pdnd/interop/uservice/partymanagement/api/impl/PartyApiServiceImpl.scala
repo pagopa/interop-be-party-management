@@ -214,7 +214,7 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
   override def createRelationship(
-    relationship: Relationship
+    seed: RelationshipSeed
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
     val commanders = (0 to settings.numberOfShards)
@@ -222,11 +222,11 @@ class PartyApiServiceImpl(
       .toList
 
     val result: Future[StatusReply[Unit]] = for {
-      from <- getParty(relationship.from)
-      to   <- getParty(relationship.to)
-      role <- PartyRole.fromText(relationship.role).toFuture
-      _    <- isMissingRelationship(from.id, to.id, role, relationship.platformRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, relationship.platformRole)
+      from <- getParty(seed.from)
+      to   <- getParty(seed.to)
+      role <- PartyRole.fromText(seed.role).toFuture
+      _    <- isMissingRelationship(from.id, to.id, role, seed.platformRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
       currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       added                     <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -380,19 +380,19 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationship(relationship: Relationship): Future[PartyRelationship] = for {
-    from <- getCommander(relationship.from).ask(ref =>
-      GetPartyByExternalId(relationship.from, getShard(relationship.from), ref)
+  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] = for {
+    from <- getCommander(relationshipSeed.from).ask(ref =>
+      GetPartyByExternalId(relationshipSeed.from, getShard(relationshipSeed.from), ref)
     )
-    to <- getCommander(relationship.to).ask(ref =>
-      GetPartyByExternalId(relationship.to, getShard(relationship.to), ref)
+    to <- getCommander(relationshipSeed.to).ask(ref =>
+      GetPartyByExternalId(relationshipSeed.to, getShard(relationshipSeed.to), ref)
     )
-    role = PartyRole.fromText(relationship.role).toOption
+    role = PartyRole.fromText(relationshipSeed.role).toOption
     relationship <- relationshipByInvolvedParties(
       from = from.get.id,
       to = to.get.id,
       role = role.get,
-      platformRole = relationship.platformRole
+      platformRole = relationshipSeed.platformRole
     )
   } yield relationship
 
