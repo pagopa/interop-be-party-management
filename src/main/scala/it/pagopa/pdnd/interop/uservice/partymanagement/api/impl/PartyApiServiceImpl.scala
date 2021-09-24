@@ -214,15 +214,17 @@ class PartyApiServiceImpl(
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def createRelationship(
-    seed: RelationshipSeed
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def createRelationship(seed: RelationshipSeed)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
 
     val commanders = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val result: Future[StatusReply[Unit]] = for {
+    val result: Future[Relationship] = for {
       from <- getParty(seed.from)
       to   <- getParty(seed.to)
       role <- PartyRole.fromText(seed.role).toFuture
@@ -230,15 +232,19 @@ class PartyApiServiceImpl(
       partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
       currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
-      added                     <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
-    } yield added
+      _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
+      relationship = Relationship(
+        id = verified.id,
+        from = from.externalId,
+        to = to.externalId,
+        role = verified.role.toString,
+        platformRole = verified.platformRole,
+        status = verified.status.toString
+      )
+    } yield relationship
 
     onComplete(result) {
-      case Success(statusReply) if statusReply.isError =>
-        createRelationship400(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
-        )
-      case Success(_) => createRelationship201
+      case Success(relationship) => createRelationship201(relationship)
       case Failure(ex) =>
         createRelationship400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }

@@ -241,7 +241,11 @@ paths:
               $ref: '#/components/schemas/RelationshipSeed'
       responses:
         '201':
-          description: successful operation
+          description: Created Relationship
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
         '400':
           description: Invalid ID supplied
           content:
