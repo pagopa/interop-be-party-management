@@ -515,7 +515,7 @@ paths:
       description: 'returns the identified organization, if any.'
   '/bulk/organizations':
     post:
-      summary: Retrieves a set of organizations
+      summary: Retrieves a collection of organizations
       tags:
         - party
       requestBody:
@@ -526,7 +526,7 @@ paths:
               $ref: '#/components/schemas/BulkPartiesSeed'
       responses:
         '200':
-          description: array of organizations
+          description: collection of organizations
           content:
             application/json:
               schema:
@@ -693,7 +693,7 @@ components:
       properties:
         found:
           type: array
-          description: the identifiers of organizations found.
+          description: the collection of organizations found.
           items:
             $ref: '#/components/schemas/Organization'
         notFound:
