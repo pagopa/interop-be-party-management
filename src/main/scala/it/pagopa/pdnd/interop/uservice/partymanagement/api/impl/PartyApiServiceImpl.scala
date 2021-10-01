@@ -657,7 +657,7 @@ class PartyApiServiceImpl(
 
         val response = BulkOrganizations(
           found = organizations,
-          notFound = organizations.map(_.partyId).diff(bulkPartiesSeed.partyIdentifiers.map(_.toString))
+          notFound = bulkPartiesSeed.partyIdentifiers.map(_.toString).diff(organizations.map(_.partyId))
         )
         bulkOrganizations200(response)
       case Failure(ex) =>
