@@ -513,6 +513,38 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: getPartyOrganizationByUUID
       description: 'returns the identified organization, if any.'
+  '/bulk/parties':
+    post:
+      summary: Retrieves a set of parties
+      tags:
+        - party
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkPartiesSeed'
+      responses:
+        '200':
+          description: array of organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkOrganizations'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: bulkParties
+      description: 'returns a collection of all the parties for the corresponding identifiers.'
   '/party/person/{id}':
     parameters:
       - schema:
@@ -653,6 +685,33 @@ components:
         - partyId
         - attributes
       additionalProperties: false
+    BulkOrganizations:
+      type: object
+      required:
+        - found
+        - notFound
+      properties:
+        found:
+          type: array
+          description: the identifiers of organizations found.
+          items:
+            $ref: '#/components/schemas/Organization'
+        notFound:
+          type: array
+          items:
+            type: string
+          description: the identifiers of organizations not found.
+    BulkPartiesSeed:
+      type: object
+      required:
+        - partyIdentifiers
+      properties:
+        partyIdentifiers:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: the identifiers of party
     Attributes:
       type: array
       items:
