@@ -632,4 +632,37 @@ class PartyApiServiceImpl(
         getRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
+
+  /** Code: 200, Message: array of organizations, DataType: Seq[Organization]
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  override def bulkOrganizations(bulkPartiesSeed: BulkPartiesSeed)(implicit
+    toEntityMarshallerBulkOrganizations: ToEntityMarshaller[BulkOrganizations],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+
+    val result: Future[Seq[Option[Party]]] = Future.traverse(bulkPartiesSeed.partyIdentifiers) { id =>
+      val commander: EntityRef[Command] = {
+        sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(id.toString))
+      }
+      commander.ask(ref => GetParty(id, ref))
+    }
+
+    onComplete(result) {
+      case Success(replies) =>
+        val organizations: Seq[Organization] =
+          replies.flatten.flatMap(p => Party.convertToApi(p).swap.fold(_ => None, org => Some(org)))
+
+        val response = BulkOrganizations(
+          found = organizations,
+          notFound = bulkPartiesSeed.partyIdentifiers.map(_.toString).diff(organizations.map(_.partyId))
+        )
+        bulkOrganizations200(response)
+      case Failure(ex) =>
+        bulkOrganizations404(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+    }
+
+  }
 }
