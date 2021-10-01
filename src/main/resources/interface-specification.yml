@@ -513,9 +513,9 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: getPartyOrganizationByUUID
       description: 'returns the identified organization, if any.'
-  '/bulk/parties':
+  '/bulk/organizations':
     post:
-      summary: Retrieves a set of parties
+      summary: Retrieves a set of organizations
       tags:
         - party
       requestBody:
@@ -538,12 +538,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '404':
-          description: Organization not found
+          description: Organizations not found
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-      operationId: bulkParties
+      operationId: bulkOrganizations
       description: 'returns a collection of all the parties for the corresponding identifiers.'
   '/party/person/{id}':
     parameters:

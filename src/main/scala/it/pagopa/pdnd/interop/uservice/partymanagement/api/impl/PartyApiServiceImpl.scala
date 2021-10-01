@@ -637,7 +637,7 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Organization not found, DataType: Problem
     */
-  override def bulkParties(bulkPartiesSeed: BulkPartiesSeed)(implicit
+  override def bulkOrganizations(bulkPartiesSeed: BulkPartiesSeed)(implicit
     toEntityMarshallerBulkOrganizations: ToEntityMarshaller[BulkOrganizations],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -659,9 +659,9 @@ class PartyApiServiceImpl(
           found = organizations,
           notFound = organizations.map(_.partyId).diff(bulkPartiesSeed.partyIdentifiers.map(_.toString))
         )
-        bulkParties200(response)
+        bulkOrganizations200(response)
       case Failure(ex) =>
-        bulkParties404(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        bulkOrganizations404(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }
