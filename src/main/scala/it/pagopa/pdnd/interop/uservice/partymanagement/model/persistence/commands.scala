@@ -19,6 +19,7 @@ case object Idle extends Command
 final case class AddParty(entity: Party, shardId: String, replyTo: ActorRef[StatusReply[Party]]) extends PartyCommand
 final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[Unit]])                extends PartyCommand
 final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])                       extends PartyCommand
+final case class GetParties(partiesToFind: Seq[UUID], replyTo: ActorRef[Seq[Party]])             extends PartyCommand
 final case class GetPartyAttributes(partyId: UUID, replyTo: ActorRef[StatusReply[Seq[String]]])  extends PartyCommand
 final case class GetPartyByExternalId(externalId: String, shardId: String, replyTo: ActorRef[Option[Party]])
     extends PartyCommand
@@ -36,7 +37,7 @@ final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef
     extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PartyRelationship]])
-  extends PartyRelationshipCommand
+    extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationship]])
     extends PartyRelationshipCommand

@@ -643,17 +643,20 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    val result: Future[Seq[Option[Party]]] = Future.traverse(bulkPartiesSeed.partyIdentifiers) { id =>
-      val commander: EntityRef[Command] = {
-        sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(id.toString))
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[Seq[Party]] = for {
+      results <- Future.traverse(commanders) { commander =>
+        commander.ask(ref => GetParties(bulkPartiesSeed.partyIdentifiers, ref))
       }
-      commander.ask(ref => GetParty(id, ref))
-    }
+    } yield results.flatten
 
     onComplete(result) {
       case Success(replies) =>
         val organizations: Seq[Organization] =
-          replies.flatten.flatMap(p => Party.convertToApi(p).swap.fold(_ => None, org => Some(org)))
+          replies.flatMap(p => Party.convertToApi(p).swap.fold(_ => None, org => Some(org)))
 
         val response = BulkOrganizations(
           found = organizations,
