@@ -67,8 +67,6 @@ object PartyPersistentBehavior {
         }
         foundParties.foreach(p => logger.info(s"Found party ${p.externalId}/${p.id.toString}"))
         replyTo ! foundParties
-        replyTo ! foundParties
-
         Effect.none
 
       case GetPartyAttributes(uuid, replyTo) =>
