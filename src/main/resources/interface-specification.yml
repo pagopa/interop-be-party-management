@@ -768,7 +768,7 @@ components:
           enum:
             - Pending
             - Active
-            - Inactive
+            - Suspended
       additionalProperties: false
       required:
         - id

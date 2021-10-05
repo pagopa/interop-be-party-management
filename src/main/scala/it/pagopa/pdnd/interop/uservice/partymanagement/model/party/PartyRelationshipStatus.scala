@@ -2,9 +2,9 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 sealed trait PartyRelationshipStatus {
   def stringify: String = this match {
-    case PartyRelationshipStatus.Pending  => "Pending"
-    case PartyRelationshipStatus.Active   => "Active"
-    case PartyRelationshipStatus.Inactive => "Inactive"
+    case PartyRelationshipStatus.Pending   => "Pending"
+    case PartyRelationshipStatus.Active    => "Active"
+    case PartyRelationshipStatus.Suspended => "Suspended"
   }
 }
 @SuppressWarnings(
@@ -17,14 +17,14 @@ sealed trait PartyRelationshipStatus {
 )
 object PartyRelationshipStatus {
 
-  case object Pending  extends PartyRelationshipStatus
-  case object Active   extends PartyRelationshipStatus
-  case object Inactive extends PartyRelationshipStatus
+  case object Pending   extends PartyRelationshipStatus
+  case object Active    extends PartyRelationshipStatus
+  case object Suspended extends PartyRelationshipStatus
 
   def fromText(str: String): Either[Throwable, PartyRelationshipStatus] = str match {
-    case "Pending"  => Right(Pending)
-    case "Active"   => Right(Active)
-    case "Inactive" => Right(Inactive)
-    case _          => Left(new RuntimeException("Deserialization from protobuf failed"))
+    case "Pending"   => Right(Pending)
+    case "Active"    => Right(Active)
+    case "Suspended" => Right(Suspended)
+    case _           => Left(new RuntimeException("Deserialization from protobuf failed"))
   }
 }
