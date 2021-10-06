@@ -40,16 +40,20 @@ final case class State(
   def deletePartyRelationship(relationshipId: UUID): State =
     copy(relationships = relationships - relationshipId.toString)
 
-  def suspendRelationship(relationship: PartyRelationship): State =
-    updateRelationshipStatus(relationship, PartyRelationshipStatus.Suspended)
+  def suspendRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Suspended)
 
-  def activateRelationship(relationship: PartyRelationship): State =
-    updateRelationshipStatus(relationship, PartyRelationshipStatus.Active)
+  def activateRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Active)
 
-  private def updateRelationshipStatus(relationship: PartyRelationship, newStatus: PartyRelationshipStatus): State = {
-    val updatedRelationship = relationship.copy(status = newStatus)
-    copy(relationships = relationships + (relationship.id.toString -> updatedRelationship))
-  }
+  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PartyRelationshipStatus): State =
+    relationships.get(relationshipId.toString) match {
+      case Some(relationship) =>
+        val updatedRelationship = relationship.copy(status = newStatus)
+        copy(relationships = relationships + (relationship.id.toString -> updatedRelationship))
+      case None =>
+        this
+    }
 
   def getPartyRelationshipByAttributes(
     from: UUID,

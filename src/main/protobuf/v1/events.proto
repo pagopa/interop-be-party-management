@@ -34,11 +34,11 @@ message PartyRelationshipDeletedV1 {
 }
 
 message PartyRelationshipSuspendedV1 {
-  required PartyRelationshipV1 partyRelationship = 1;
+  required string partyRelationshipId = 1;
 }
 
 message PartyRelationshipActivatedV1 {
-  required PartyRelationshipV1 partyRelationship = 1;
+  required string partyRelationshipId = 1;
 }
 
 message TokenAddedV1 {

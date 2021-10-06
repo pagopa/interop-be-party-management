@@ -161,7 +161,7 @@ object PartyPersistentBehavior {
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipSuspended(rel))
+              .persist(PartyRelationshipSuspended(rel.id))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
@@ -174,7 +174,7 @@ object PartyPersistentBehavior {
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipActivated(rel))
+              .persist(PartyRelationshipActivated(rel.id))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
@@ -227,10 +227,9 @@ object PartyPersistentBehavior {
           .persist(TokenDeleted(token))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-      case GetPartyRelationshipByAttributes(from, to, role, platformRole, replyTo) => {
+      case GetPartyRelationshipByAttributes(from, to, role, platformRole, replyTo) =>
         replyTo ! state.getPartyRelationshipByAttributes(from, to, role, platformRole)
         Effect.none[Event, State]
-      }
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
@@ -248,8 +247,8 @@ object PartyPersistentBehavior {
       case PartyRelationshipAdded(partyRelationship)  => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId) => state.confirmPartyRelationship(relationshipId)
       case PartyRelationshipDeleted(relationshipId)   => state.deletePartyRelationship(relationshipId)
-      case PartyRelationshipSuspended(relationship)   => state.suspendRelationship(relationship)
-      case PartyRelationshipActivated(relationship)   => state.activateRelationship(relationship)
+      case PartyRelationshipSuspended(relationshipId) => state.suspendRelationship(relationshipId)
+      case PartyRelationshipActivated(relationshipId) => state.activateRelationship(relationshipId)
       case TokenAdded(token)                          => state.addToken(token)
       case TokenDeleted(token)                        => state.deleteToken(token)
     }
