@@ -37,6 +37,10 @@ message PartyRelationshipSuspendedV1 {
   required PartyRelationshipV1 partyRelationship = 1;
 }
 
+message PartyRelationshipActivatedV1 {
+  required PartyRelationshipV1 partyRelationship = 1;
+}
+
 message TokenAddedV1 {
   required TokenV1 token = 1;
 }

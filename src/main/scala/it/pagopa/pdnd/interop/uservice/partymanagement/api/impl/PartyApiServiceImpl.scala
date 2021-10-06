@@ -677,7 +677,27 @@ class PartyApiServiceImpl(
     */
   override def activatePartyRelationshipById(
     relationshipId: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = ???
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result = for {
+      uuid <- relationshipId.asUUID.toFuture
+      resultsCollection <- Future.traverse(commanders)(
+        _.ask(ref => ActivatePartyRelationship(uuid, ref)).transform(Success(_))
+      )
+      _ <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+    } yield ()
+
+    onComplete(result) {
+      case Success(_) =>
+        activatePartyRelationshipById204
+      case Failure(ex) =>
+        activatePartyRelationshipById404(Problem(Option(ex.getMessage), status = 404, "Relationship not found"))
+    }
+  }
 
   /** Code: 204, Message: Relationship suspended
     * Code: 400, Message: Bad Request, DataType: Problem

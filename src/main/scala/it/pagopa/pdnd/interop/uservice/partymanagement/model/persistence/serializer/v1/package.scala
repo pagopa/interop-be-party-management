@@ -111,6 +111,14 @@ package object v1 {
     : PersistEventSerializer[PartyRelationshipSuspended, PartyRelationshipSuspendedV1] =
     event => getPartyRelationshipV1(event.partyRelationship).map(PartyRelationshipSuspendedV1.of)
 
+  implicit def partyRelationshipActivatedV1PersistEventDeserializer
+  : PersistEventDeserializer[PartyRelationshipActivatedV1, PartyRelationshipActivated] = event =>
+    getPartyRelationship(event.partyRelationship).map(PartyRelationshipActivated)
+
+  implicit def partyRelationshipActivatedV1PersistEventSerializer
+  : PersistEventSerializer[PartyRelationshipActivated, PartyRelationshipActivatedV1] =
+    event => getPartyRelationshipV1(event.partyRelationship).map(PartyRelationshipActivatedV1.of)
+
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)
 

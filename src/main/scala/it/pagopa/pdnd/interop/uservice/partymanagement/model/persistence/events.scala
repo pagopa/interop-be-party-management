@@ -20,6 +20,7 @@ final case class PartyRelationshipAdded(partyRelationship: PartyRelationship)   
 final case class PartyRelationshipConfirmed(partyRelationshipId: UUID)            extends PartyRelationshipEvent
 final case class PartyRelationshipDeleted(partyRelationshipId: UUID)              extends PartyRelationshipEvent
 final case class PartyRelationshipSuspended(partyRelationship: PartyRelationship) extends PartyRelationshipEvent
+final case class PartyRelationshipActivated(partyRelationship: PartyRelationship) extends PartyRelationshipEvent
 
 /* Token Event */
 final case class TokenAdded(token: Token)   extends TokenEvent

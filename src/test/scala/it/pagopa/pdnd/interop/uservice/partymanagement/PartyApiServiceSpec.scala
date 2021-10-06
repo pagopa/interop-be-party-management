@@ -476,7 +476,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "fail if relationship does not exist" in {
-      val suspensionResponse = Await.result(
+      val response = Await.result(
         Http().singleRequest(
           HttpRequest(
             uri = s"$url/relationships/non-existing-relationship/suspend",
@@ -487,7 +487,89 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         Duration.Inf
       )
 
-      suspensionResponse.status shouldBe StatusCodes.NotFound
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+  }
+
+  "Activating relationship" must {
+    import RelationshipPartyApiServiceData._
+
+    "succeed" in {
+      val taxCode          = UUID.randomUUID().toString
+      val institutionId    = UUID.randomUUID().toString
+      val personSeed       = personSeed1.copy(taxCode = taxCode)
+      val organizationSeed = orgSeed1.copy(institutionId = institutionId)
+      val relationshipSeed = rlSeed1.copy(from = taxCode, to = institutionId)
+      val managerId        = UUID.randomUUID()
+      val relationshipId   = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(managerId).once()         // Create person
+      (() => uuidSupplier.get).expects().returning(relationshipId).once()    // Create relationship
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once() // Create organization
+
+      val _ =
+        prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
+
+      confirmRelationshipWithToken(relationshipSeed)
+
+      // First suspend the relationship
+      val suspensionResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}/suspend",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      suspensionResponse.status shouldBe StatusCodes.NoContent
+
+      // Then activate the relationship
+      val activationResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}/activate",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      activationResponse.status shouldBe StatusCodes.NoContent
+
+      val relationshipResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      relationshipResponse.status shouldBe StatusCodes.OK
+      val updatedRelationship = Await.result(Unmarshal(relationshipResponse.entity).to[Relationship], Duration.Inf)
+      updatedRelationship.status shouldBe PartyRelationshipStatus.Active.toString
+
+    }
+
+    "fail if relationship does not exist" in {
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/non-existing-relationship/activate",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NotFound
     }
 
   }
