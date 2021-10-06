@@ -336,12 +336,6 @@ paths:
       responses:
         '204':
           description: Relationship suspended
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
           content:
@@ -366,12 +360,6 @@ paths:
       responses:
         '204':
           description: Relationship activated
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
           content:
