@@ -2,15 +2,19 @@ package it.pagopa.pdnd.interop.uservice
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.scalamock.scalatest.MockFactory
 
-import scala.concurrent.Await
+import java.util.UUID
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 package object partymanagement extends MockFactory {
   val uuidSupplier: UUIDSupplier              = mock[UUIDSupplier]
@@ -28,6 +32,15 @@ package object partymanagement extends MockFactory {
 
   def createToken(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
     create(data, "tokens")
+
+  def confirmRelationshipWithToken(
+    relationshipSeed: RelationshipSeed
+  )(implicit as: ActorSystem, ec: ExecutionContext): HttpResponse = {
+    val tokenSeed =
+      TokenSeed(seed = UUID.randomUUID().toString, relationships = RelationshipsSeed(Seq(relationshipSeed)), "checksum")
+    val tokenData = Await.result(Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+    createToken(tokenData)
+  }
 
   private def create(data: Source[ByteString, Any], path: String)(implicit actorSystem: ActorSystem): HttpResponse = {
     Await.result(

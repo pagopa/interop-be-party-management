@@ -155,6 +155,19 @@ object PartyPersistentBehavior {
           .persist(PartyRelationshipDeleted(partyRelationshipId))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
+      case SuspendPartyRelationship(partyRelationshipId, replyTo) =>
+        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipSuspended(rel))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case GetPartyRelationshipById(uuid, replyTo) =>
         val relationship: Option[PartyRelationship] = state.relationships.get(uuid.toString)
         replyTo ! relationship
@@ -222,6 +235,7 @@ object PartyPersistentBehavior {
       case PartyRelationshipAdded(partyRelationship)  => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId) => state.confirmPartyRelationship(relationshipId)
       case PartyRelationshipDeleted(relationshipId)   => state.deletePartyRelationship(relationshipId)
+      case PartyRelationshipSuspended(relationship)   => state.suspendRelationship(relationship)
       case TokenAdded(token)                          => state.addToken(token)
       case TokenDeleted(token)                        => state.deleteToken(token)
     }

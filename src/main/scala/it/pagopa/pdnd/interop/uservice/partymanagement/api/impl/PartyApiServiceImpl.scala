@@ -25,7 +25,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
+@SuppressWarnings(
+  Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial", "org.wartremover.warts.TraversableOps")
+)
 class PartyApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,
@@ -667,5 +669,41 @@ class PartyApiServiceImpl(
         bulkOrganizations404(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
+  }
+
+  /** Code: 204, Message: Relationship activated
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def activatePartyRelationshipById(
+    relationshipId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = ???
+
+  /** Code: 204, Message: Relationship suspended
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def suspendPartyRelationshipById(
+    relationshipId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result = for {
+      uuid <- relationshipId.asUUID.toFuture
+      resultsCollection <- Future.traverse(commanders)(
+        _.ask(ref => SuspendPartyRelationship(uuid, ref)).transform(Success(_))
+      )
+      _ <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+    } yield ()
+
+    onComplete(result) {
+      case Success(_) =>
+        suspendPartyRelationshipById204
+      case Failure(ex) =>
+        suspendPartyRelationshipById404(Problem(Option(ex.getMessage), status = 404, "Relationship not found"))
+    }
   }
 }
