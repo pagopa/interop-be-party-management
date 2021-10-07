@@ -103,6 +103,28 @@ package object v1 {
     event =>
       Right[Throwable, PartyRelationshipDeletedV1](PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString))
 
+  implicit def partyRelationshipSuspendedV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipSuspendedV1, PartyRelationshipSuspended] = event =>
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipSuspended)
+
+  implicit def partyRelationshipSuspendedV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipSuspended, PartyRelationshipSuspendedV1] =
+    event =>
+      Right[Throwable, PartyRelationshipSuspendedV1](
+        PartyRelationshipSuspendedV1.of(event.partyRelationshipId.toString)
+      )
+
+  implicit def partyRelationshipActivatedV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipActivatedV1, PartyRelationshipActivated] = event =>
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipActivated)
+
+  implicit def partyRelationshipActivatedV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipActivated, PartyRelationshipActivatedV1] =
+    event =>
+      Right[Throwable, PartyRelationshipActivatedV1](
+        PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString)
+      )
+
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)
 

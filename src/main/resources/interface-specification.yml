@@ -320,6 +320,54 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  '/relationships/{relationshipId}/suspend':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+    post:
+      summary: Suspend Relationship by ID
+      tags:
+        - party
+      responses:
+        '204':
+          description: Relationship suspended
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: suspendPartyRelationshipById
+      description: 'Suspend relationship by ID'
+  '/relationships/{relationshipId}/activate':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+    post:
+      summary: Activate Relationship by plaftorm ID
+      tags:
+        - party
+      responses:
+        '204':
+          description: Relationship activated
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: activatePartyRelationshipById
+      description: 'Activate Relationship by ID'
   /tokens:
     post:
       #      security:
@@ -768,7 +816,7 @@ components:
           enum:
             - Pending
             - Active
-            - Inactive
+            - Suspended
       additionalProperties: false
       required:
         - id

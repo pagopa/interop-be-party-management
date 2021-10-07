@@ -15,17 +15,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationshipStatus, Token}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{
-  Organization,
-  OrganizationSeed,
-  Person,
-  PersonSeed,
-  Relationship,
-  Relationships,
-  RelationshipsSeed,
-  TokenSeed
-}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -432,6 +423,155 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       body shouldBe rlExpected4
     }
+  }
+
+  "Suspending relationship" must {
+    import RelationshipPartyApiServiceData._
+
+    "succeed" in {
+      val taxCode          = UUID.randomUUID().toString
+      val institutionId    = UUID.randomUUID().toString
+      val personSeed       = personSeed1.copy(taxCode = taxCode)
+      val organizationSeed = orgSeed1.copy(institutionId = institutionId)
+      val relationshipSeed = rlSeed1.copy(from = taxCode, to = institutionId)
+      val managerId        = UUID.randomUUID()
+      val relationshipId   = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(managerId).once()         // Create person
+      (() => uuidSupplier.get).expects().returning(relationshipId).once()    // Create relationship
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once() // Create organization
+
+      val _ =
+        prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
+
+      confirmRelationshipWithToken(relationshipSeed)
+
+      val suspensionResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}/suspend",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      suspensionResponse.status shouldBe StatusCodes.NoContent
+
+      val relationshipResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      relationshipResponse.status shouldBe StatusCodes.OK
+      val updatedRelationship = Await.result(Unmarshal(relationshipResponse.entity).to[Relationship], Duration.Inf)
+      updatedRelationship.status shouldBe PartyRelationshipStatus.Suspended.toString
+
+    }
+
+    "fail if relationship does not exist" in {
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/non-existing-relationship/suspend",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+  }
+
+  "Activating relationship" must {
+    import RelationshipPartyApiServiceData._
+
+    "succeed" in {
+      val taxCode          = UUID.randomUUID().toString
+      val institutionId    = UUID.randomUUID().toString
+      val personSeed       = personSeed1.copy(taxCode = taxCode)
+      val organizationSeed = orgSeed1.copy(institutionId = institutionId)
+      val relationshipSeed = rlSeed1.copy(from = taxCode, to = institutionId)
+      val managerId        = UUID.randomUUID()
+      val relationshipId   = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(managerId).once()         // Create person
+      (() => uuidSupplier.get).expects().returning(relationshipId).once()    // Create relationship
+      (() => uuidSupplier.get).expects().returning(UUID.randomUUID()).once() // Create organization
+
+      val _ =
+        prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
+
+      confirmRelationshipWithToken(relationshipSeed)
+
+      // First suspend the relationship
+      val suspensionResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}/suspend",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      suspensionResponse.status shouldBe StatusCodes.NoContent
+
+      // Then activate the relationship
+      val activationResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}/activate",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      activationResponse.status shouldBe StatusCodes.NoContent
+
+      val relationshipResponse = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/${relationshipId.toString}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      relationshipResponse.status shouldBe StatusCodes.OK
+      val updatedRelationship = Await.result(Unmarshal(relationshipResponse.entity).to[Relationship], Duration.Inf)
+      updatedRelationship.status shouldBe PartyRelationshipStatus.Active.toString
+
+    }
+
+    "fail if relationship does not exist" in {
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$url/relationships/non-existing-relationship/activate",
+            method = HttpMethods.POST,
+            headers = authorization
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NotFound
+    }
+
   }
 
   "Working on token" must {

@@ -19,6 +19,8 @@ final case class AttributesAdded(party: Party) extends PartyEvent
 final case class PartyRelationshipAdded(partyRelationship: PartyRelationship) extends PartyRelationshipEvent
 final case class PartyRelationshipConfirmed(partyRelationshipId: UUID)        extends PartyRelationshipEvent
 final case class PartyRelationshipDeleted(partyRelationshipId: UUID)          extends PartyRelationshipEvent
+final case class PartyRelationshipSuspended(partyRelationshipId: UUID)        extends PartyRelationshipEvent
+final case class PartyRelationshipActivated(partyRelationshipId: UUID)        extends PartyRelationshipEvent
 
 /* Token Event */
 final case class TokenAdded(token: Token)   extends TokenEvent
