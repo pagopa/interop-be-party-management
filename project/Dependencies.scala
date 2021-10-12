@@ -73,6 +73,10 @@ object Dependencies {
     lazy val core      = namespace %% "scalamock" % scalaMockVersion
   }
 
+  private[this] object mustache {
+    lazy val mustache = "com.github.spullara.mustache.java" % "compiler" % mustacheVersion
+  }
+
   object Jars {
     lazy val `server`: Seq[ModuleID] = Seq(
       // For making Java 12 happy
@@ -102,6 +106,7 @@ object Dependencies {
       cats.core                    % Compile,
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
+      mustache.mustache            % Compile,
       scalpb.core                  % "protobuf",
       akka.testkit                 % Test,
       scalatest.core               % Test,
