@@ -17,8 +17,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
 package object partymanagement extends MockFactory {
-  val uuidSupplier: UUIDSupplier              = mock[UUIDSupplier]
-  final lazy val url: String                  = "http://localhost:8088/pdnd-interop-uservice-party-management/0.0.1"
+  val uuidSupplier: UUIDSupplier = mock[UUIDSupplier]
+  final lazy val url: String =
+    s"http://localhost:8088/pdnd-interop-uservice-party-management/${buildinfo.BuildInfo.interfaceVersion}"
   final val authorization: Seq[Authorization] = Seq(headers.Authorization(OAuth2BearerToken("token")))
 
   def createOrganization(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
