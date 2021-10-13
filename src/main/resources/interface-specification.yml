@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Party Management Micro Service
   description: This service is the party manager
-  version: '{{version}}'
+  version: '0.1'
   contact:
     name: API Support
     url: 'http://www.example.com/support'
@@ -11,7 +11,7 @@ info:
   x-api-id: an x-api-id
   x-summary: an x-summary
 servers:
-  - url: 'https://gateway.interop.pdnd.dev/pdnd-interop-uservice-party-management/{{version}}'
+  - url: 'https://gateway.interop.pdnd.dev/pdnd-interop-uservice-party-management/0.1'
     description: This service is the party manager
 tags:
   - name: party
