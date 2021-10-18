@@ -54,8 +54,10 @@ pipeline {
     stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
       environment {
-        CASSANDRA = credentials('cassandra-db')
-        CASSANDRA_HOST = 'cluster1-dc1-service.cassandra-operator.svc.cluster.local:9042'
+        POSTGRES = credentials('postgres-db') // TODO Create this on Jenkins
+        POSTGRES_HOST = 'some-db-url' // TODO update this once defined
+        POSTGRES_PORT = '5432'
+        POSTGRES_DB = 'party_management_persistence'
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
         //REPLICAS_NR = 1
       }
