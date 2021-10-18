@@ -16,8 +16,7 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
 
-//using both final and protected to overcome the possible "never used" compile error for a private constructor
-final class S3ManagerImpl protected extends FileManager {
+final class S3ManagerImpl extends FileManager {
 
   lazy val s3Client: S3Client = {
     val awsCredentials =

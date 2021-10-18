@@ -12,8 +12,7 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
 
-//using both final and protected to overcome the possible "never used" compile error for a private constructor
-final class BlobStorageManagerImpl protected extends FileManager {
+final class BlobStorageManagerImpl extends FileManager {
 
   lazy val azureBlobClient = {
     val accountName: String = storageAccountInfo.applicationId

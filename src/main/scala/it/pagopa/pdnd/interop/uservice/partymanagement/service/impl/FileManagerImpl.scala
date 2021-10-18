@@ -9,9 +9,8 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
 
-//using both final and protected to overcome the possible "never used" compile error for a private constructor
 @SuppressWarnings(Array("org.wartremover.warts.ToString"))
-final class FileManagerImpl protected extends FileManager {
+final class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
