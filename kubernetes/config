@@ -10,6 +10,11 @@ popd  > /dev/null
 
 repository=$DOCKER_REPO
 
+#setting up file manager env vars
+storageType=$STORAGE_TYPE
+storageContainer=$STORAGE_CONTAINER
+storageEndpoint=$STORAGE_ENDPOINT
+
 name=$(cat $SCRIPT_PATH/../build.sbt | grep "name :=" | awk -F:= '{ print $2 }' | sed 's/\"//' | sed 's/\",//' | sed 's/ //' | tr '[:upper:]' '[:lower:]' | grep -v client)
 
 #getting version from sbt

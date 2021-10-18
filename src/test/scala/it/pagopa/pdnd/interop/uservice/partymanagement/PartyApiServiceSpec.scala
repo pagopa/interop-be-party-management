@@ -8,7 +8,7 @@ import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, MessageEntity, StatusCodes}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
@@ -19,6 +19,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{PartyRelationshipStatus, Token}
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.FileManager
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.util.UUID
@@ -26,6 +27,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object PartyApiServiceSpec {
+  //setting up file manager properties
 
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
@@ -45,9 +47,10 @@ object PartyApiServiceSpec {
     """)
 
   val config: Config = ConfigFactory
-    .parseResourcesAnySyntax("test")
+    .parseResourcesAnySyntax("application-test")
     .withFallback(testData)
 
+  def fileManagerType = config.getString("uservice-party-management.storage.type")
 }
 
 @SuppressWarnings(
@@ -66,6 +69,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     ActorSystem(Behaviors.ignore[Any], name = system.name, config = system.settings.config)
   implicit val executionContext: ExecutionContextExecutor = httpSystem.executionContext
   implicit val classicSystem: actor.ActorSystem           = httpSystem.classicSystem
+  val fileManager                                         = FileManager.getConcreteImplementation(PartyApiServiceSpec.fileManagerType).get
 
   override def beforeAll(): Unit = {
 
@@ -79,7 +83,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
 
     val partyApiService: PartyApiService =
-      new PartyApiServiceImpl(system, sharding, persistentEntity, uuidSupplier)
+      new PartyApiServiceImpl(system, sharding, persistentEntity, uuidSupplier, fileManager)
 
     val partyApi: PartyApi =
       new PartyApi(partyApiService, partyApiMarshaller, wrappingDirective)
@@ -611,15 +615,22 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val tokenText = Token.encode(token1)
 
+      val formData = Multipart.FormData
+        .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
+        .toEntity
+
       val consumedResponse = Await.result(
         Http().singleRequest(
-          HttpRequest(uri = s"$url/tokens/$tokenText", method = HttpMethods.POST, headers = authorization)
+          HttpRequest(
+            uri = s"$url/tokens/$tokenText",
+            method = HttpMethods.POST,
+            headers = multipart,
+            entity = formData
+          )
         ),
         Duration.Inf
       )
-
       consumedResponse.status shouldBe StatusCodes.Created
-
     }
 
     "invalidate a token" in {
@@ -864,7 +875,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           to = orgSeed5.institutionId,
           role = rlSeed6.role,
           platformRole = rlSeed6.platformRole,
-          status = PartyRelationshipStatus.Pending.toString
+          status = PartyRelationshipStatus.Pending.toString,
+          filePath = None
         )
     }
   }

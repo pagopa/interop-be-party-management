@@ -14,7 +14,8 @@ final case class PartyRelationship(
   to: UUID,
   role: PartyRole,
   platformRole: String,
-  status: PartyRelationshipStatus
+  status: PartyRelationshipStatus,
+  filePath: Option[String]
 ) {
 
   /** Returns a syntetic identifier useful to bind the party relationship with a generated token, if any.
@@ -39,6 +40,7 @@ object PartyRelationship {
       status = role match {
         case Operator => Active
         case _        => Pending
-      }
+      },
+      filePath = None
     )
 }

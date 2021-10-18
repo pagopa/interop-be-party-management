@@ -27,6 +27,7 @@ message PartyRelationshipAddedV1 {
 
 message PartyRelationshipConfirmedV1 {
   required string partyRelationshipId = 1;
+  required string filePath = 2;
 }
 
 message PartyRelationshipDeletedV1 {

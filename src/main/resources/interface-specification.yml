@@ -444,6 +444,19 @@ paths:
           schema:
             description: to be defined
             type: string
+      requestBody:
+        description: onboarding signed document
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - doc
+              properties:
+                doc:
+                  type: string
+                  format: binary
+        required: true
       responses:
         '201':
           description: successful operation
@@ -798,6 +811,9 @@ components:
         from:
           type: string
           description: tax code
+        filePath:
+          type: string
+          description: path of the file containing the signed onboarding document
         to:
           type: string
           description: institution id

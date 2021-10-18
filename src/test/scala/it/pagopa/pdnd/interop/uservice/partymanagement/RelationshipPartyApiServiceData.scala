@@ -59,7 +59,6 @@ object RelationshipPartyApiServiceData {
   lazy final val orgSeed6 =
     OrganizationSeed(institutionId6, "Institutions Ten", "...", "...", "mail10@mail.org", Seq.empty)
 
-
   lazy final val rlSeed1 = RelationshipSeed(from = taxCode1, to = institutionId1, role = "Manager", "admin")
   lazy final val rlSeed2 = RelationshipSeed(from = taxCode2, to = institutionId2, role = "Manager", "admin")
   lazy final val rlSeed3 = RelationshipSeed(from = taxCode3, to = institutionId3, role = "Manager", "admin")
@@ -77,8 +76,9 @@ object RelationshipPartyApiServiceData {
         from = taxCode2,
         to = institutionId2,
         role = "Manager",
-        "admin",
-        status = "Pending"
+        platformRole = "admin",
+        status = "Pending",
+        filePath = None
       )
     )
   )
@@ -89,16 +89,18 @@ object RelationshipPartyApiServiceData {
         from = taxCode4,
         to = institutionId4,
         role = "Manager",
-        "admin",
-        status = "Pending"
+        platformRole = "admin",
+        status = "Pending",
+        filePath = None
       ),
       Relationship(
         id = UUID.randomUUID(),
         from = taxCode5,
         to = institutionId4,
         role = "Delegate",
-        "admin",
-        status = "Pending"
+        platformRole = "admin",
+        status = "Pending",
+        filePath = None
       )
     )
   )
@@ -110,8 +112,9 @@ object RelationshipPartyApiServiceData {
         from = taxCode8,
         to = institutionId6,
         role = "Delegate",
-        "security",
-        status = "Pending"
+        platformRole = "security",
+        status = "Pending",
+        filePath = None
       )
     )
   )

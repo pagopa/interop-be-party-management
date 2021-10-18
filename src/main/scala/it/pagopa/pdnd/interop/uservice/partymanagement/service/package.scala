@@ -5,6 +5,8 @@ import scala.util.Try
 
 package object service {
 
+  type OnboardingFilePath = String
+
   /** Pimps string type to support safe UUID parsing.
     * <br>
     * @param string to be extended
