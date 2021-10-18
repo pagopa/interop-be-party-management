@@ -14,6 +14,8 @@ object Dependencies {
     lazy val projection       = "com.lightbend.akka" %% "akka-projection-eventsourced" % projectionVersion
     lazy val clusterTools     = namespace            %% "akka-cluster-tools"           % akkaVersion
     lazy val persistenceJdbc  = "com.lightbend.akka" %% "akka-persistence-jdbc"        % jdbcPersistenceVersion
+    // Warning: this is community driven
+    lazy val projectionSlick  = "com.lightbend.akka" %% "akka-projection-slick"        % slickProjectionVersion
     lazy val s3Journal        = "com.github.j5ik2o"  %% "akka-persistence-s3-journal"  % akkaPersistenceS3Version
     lazy val s3Snapshot       = "com.github.j5ik2o"  %% "akka-persistence-s3-snapshot" % akkaPersistenceS3Version
     lazy val stream           = namespace            %% "akka-stream-typed"            % akkaVersion
@@ -103,6 +105,7 @@ object Dependencies {
       akka.persistenceQuery        % Compile,
       akka.projection              % Compile,
       akka.persistenceJdbc         % Compile,
+      akka.projectionSlick         % Compile,
       akka.s3Journal               % Compile,
       akka.s3Snapshot              % Compile,
       akka.stream                  % Compile,

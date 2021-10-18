@@ -32,6 +32,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.{FileManager, UUIDSupplier}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.UUIDSupplierImpl
 import kamon.Kamon
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
@@ -88,10 +90,12 @@ object Main extends App {
         }
 
         val persistence =
-          classicSystem.classicSystem.settings.config.getString("uservice-party-management.persistence")
+          classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
 
-        if (persistence == "cassandra") {
-          val partyPersistentProjection = new PartyPersistentProjection(context.system, partyPersistentEntity)
+        if (persistence == "jdbc-journal") {
+          val dbConfig: DatabaseConfig[JdbcProfile] =
+            DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
+          val partyPersistentProjection = PartyPersistentProjection(context.system, partyPersistentEntity, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
             name = "party-projections",

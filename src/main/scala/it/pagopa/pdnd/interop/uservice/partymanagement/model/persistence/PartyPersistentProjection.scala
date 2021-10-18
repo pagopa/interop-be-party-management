@@ -1,21 +1,27 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
-import akka.{Done, NotUsed}
 import akka.actor.typed.ActorSystem
-import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.cluster.sharding.typed.scaladsl.Entity
-import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
+import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.query.Offset
-import akka.projection.{ProjectionContext, ProjectionId}
-import akka.projection.cassandra.scaladsl.CassandraProjection
 import akka.projection.eventsourced.EventEnvelope
 import akka.projection.eventsourced.scaladsl.EventSourcedProvider
 import akka.projection.scaladsl.{AtLeastOnceFlowProjection, SourceProvider}
+import akka.projection.slick.SlickProjection
+import akka.projection.{ProjectionContext, ProjectionId}
 import akka.stream.scaladsl.FlowWithContext
+import akka.{Done, NotUsed}
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.duration.DurationInt
 
-class PartyPersistentProjection(system: ActorSystem[_], entity: Entity[Command, ShardingEnvelope[Command]]) {
+final case class PartyPersistentProjection(
+  system: ActorSystem[_],
+  entity: Entity[Command, ShardingEnvelope[Command]],
+  dbConfig: DatabaseConfig[JdbcProfile]
+) {
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
@@ -24,7 +30,7 @@ class PartyPersistentProjection(system: ActorSystem[_], entity: Entity[Command, 
 
   def sourceProvider(tag: String): SourceProvider[Offset, EventEnvelope[Event]] =
     EventSourcedProvider
-      .eventsByTag[Event](system, readJournalPluginId = CassandraReadJournal.Identifier, tag = tag)
+      .eventsByTag[Event](system, readJournalPluginId = JdbcReadJournal.Identifier, tag = tag)
 
   val flow
     : FlowWithContext[EventEnvelope[Event], ProjectionContext, EventEnvelope[Event], ProjectionContext, NotUsed]#Repr[
@@ -38,8 +44,14 @@ class PartyPersistentProjection(system: ActorSystem[_], entity: Entity[Command, 
     })
 
   def projection(tag: String): AtLeastOnceFlowProjection[Offset, EventEnvelope[Event]] = {
-    CassandraProjection
-      .atLeastOnceFlow(projectionId = ProjectionId("party-projections", tag), sourceProvider(tag), handler = flow)
+    implicit val as: ActorSystem[_] = system
+    SlickProjection
+      .atLeastOnceFlow(
+        projectionId = ProjectionId("party-projections", tag),
+        sourceProvider = sourceProvider(tag),
+        handler = flow,
+        databaseConfig = dbConfig
+      )
       .withRestartBackoff(minBackoff = 10.seconds, maxBackoff = 60.seconds, randomFactor = 0.5)
   }
 
