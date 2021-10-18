@@ -814,6 +814,12 @@ components:
         filePath:
           type: string
           description: path of the file containing the signed onboarding document
+        fileName:
+          type: string
+          description: name of the file containing the signed onboarding document
+        contentType:
+          type: string
+          description: content type of the file containing the signed onboarding document
         to:
           type: string
           description: institution id

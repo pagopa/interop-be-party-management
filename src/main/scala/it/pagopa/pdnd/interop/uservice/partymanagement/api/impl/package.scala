@@ -34,7 +34,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val personFormat: RootJsonFormat[Person]                       = jsonFormat4(Person)
   implicit val organizationSeedFormat: RootJsonFormat[OrganizationSeed]   = jsonFormat6(OrganizationSeed)
   implicit val organizationFormat: RootJsonFormat[Organization]           = jsonFormat7(Organization)
-  implicit val relationshipFormat: RootJsonFormat[Relationship]           = jsonFormat7(Relationship)
+  implicit val relationshipFormat: RootJsonFormat[Relationship]           = jsonFormat9(Relationship)
   implicit val relationshipSeedFormat: RootJsonFormat[RelationshipSeed]   = jsonFormat4(RelationshipSeed)
   implicit val relationshipsFormat: RootJsonFormat[Relationships]         = jsonFormat1(Relationships)
   implicit val relationshipsSeedFormat: RootJsonFormat[RelationshipsSeed] = jsonFormat1(RelationshipsSeed)
@@ -73,7 +73,9 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
           role = partyRelationship.role.stringify,
           platformRole = partyRelationship.platformRole,
           status = partyRelationship.status.stringify,
-          filePath = partyRelationship.filePath
+          filePath = partyRelationship.filePath,
+          fileName = partyRelationship.fileName,
+          contentType = partyRelationship.contentType
         )
       }
     }

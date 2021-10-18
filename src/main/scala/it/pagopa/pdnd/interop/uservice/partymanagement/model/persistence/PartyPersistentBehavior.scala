@@ -138,7 +138,7 @@ object PartyPersistentBehavior {
 
           }
 
-      case ConfirmPartyRelationship(partyRelationshipId, filePath, replyTo) =>
+      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, replyTo) =>
         state.relationships
           .get(partyRelationshipId.toString)
           .fold {
@@ -146,7 +146,9 @@ object PartyPersistentBehavior {
             Effect.none[PartyRelationshipConfirmed, State]
           } { t =>
             Effect
-              .persist(PartyRelationshipConfirmed(t.id, filePath))
+              .persist(
+                PartyRelationshipConfirmed(t.id, filePath, fileInfo.getFileName, fileInfo.getContentType.toString())
+              )
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           }
 
@@ -245,8 +247,8 @@ object PartyPersistentBehavior {
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
-      case PartyRelationshipConfirmed(relationshipId, filePath) =>
-        state.confirmPartyRelationship(relationshipId, filePath)
+      case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
+        state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)
       case PartyRelationshipDeleted(relationshipId)   => state.deletePartyRelationship(relationshipId)
       case PartyRelationshipSuspended(relationshipId) => state.suspendRelationship(relationshipId)
       case PartyRelationshipActivated(relationshipId) => state.activateRelationship(relationshipId)

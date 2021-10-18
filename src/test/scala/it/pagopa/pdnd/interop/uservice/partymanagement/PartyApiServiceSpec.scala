@@ -876,7 +876,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           role = rlSeed6.role,
           platformRole = rlSeed6.platformRole,
           status = PartyRelationshipStatus.Pending.toString,
-          filePath = None
+          filePath = None,
+          fileName = None,
+          contentType = None
         )
     }
   }

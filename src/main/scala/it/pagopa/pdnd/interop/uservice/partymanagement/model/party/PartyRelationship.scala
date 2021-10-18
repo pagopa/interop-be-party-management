@@ -15,7 +15,9 @@ final case class PartyRelationship(
   role: PartyRole,
   platformRole: String,
   status: PartyRelationshipStatus,
-  filePath: Option[String]
+  filePath: Option[String],
+  fileName: Option[String],
+  contentType: Option[String]
 ) {
 
   /** Returns a syntetic identifier useful to bind the party relationship with a generated token, if any.
@@ -41,6 +43,8 @@ object PartyRelationship {
         case Operator => Active
         case _        => Pending
       },
-      filePath = None
+      filePath = None,
+      fileName = None,
+      contentType = None
     )
 }

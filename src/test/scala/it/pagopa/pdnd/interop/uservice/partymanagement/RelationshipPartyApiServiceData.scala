@@ -78,7 +78,9 @@ object RelationshipPartyApiServiceData {
         role = "Manager",
         platformRole = "admin",
         status = "Pending",
-        filePath = None
+        filePath = None,
+        fileName = None,
+        contentType = None
       )
     )
   )
@@ -91,7 +93,9 @@ object RelationshipPartyApiServiceData {
         role = "Manager",
         platformRole = "admin",
         status = "Pending",
-        filePath = None
+        filePath = None,
+        fileName = None,
+        contentType = None
       ),
       Relationship(
         id = UUID.randomUUID(),
@@ -100,7 +104,9 @@ object RelationshipPartyApiServiceData {
         role = "Delegate",
         platformRole = "admin",
         status = "Pending",
-        filePath = None
+        filePath = None,
+        fileName = None,
+        contentType = None
       )
     )
   )
@@ -114,7 +120,9 @@ object RelationshipPartyApiServiceData {
         role = "Delegate",
         platformRole = "security",
         status = "Pending",
-        filePath = None
+        filePath = None,
+        fileName = None,
+        contentType = None
       )
     )
   )

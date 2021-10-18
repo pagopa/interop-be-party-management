@@ -101,7 +101,9 @@ object utils {
       start = toOffsetDateTime(partyRelationshipV1.start),
       end = partyRelationshipV1.end.map(toOffsetDateTime),
       status = status,
-      filePath = partyRelationshipV1.filePath
+      filePath = partyRelationshipV1.filePath,
+      fileName = partyRelationshipV1.fileName,
+      contentType = partyRelationshipV1.contentType
     )
   }
 

@@ -245,7 +245,9 @@ class PartyApiServiceImpl(
         role = verified.role.toString,
         platformRole = verified.platformRole,
         status = verified.status.toString,
-        filePath = None
+        filePath = None,
+        fileName = None,
+        contentType = None
       )
     } yield relationship
 
@@ -449,7 +451,7 @@ class PartyApiServiceImpl(
       filePath <- fileManager.store(token.seed, fileParts)
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, ref)
+          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, ref)
         )
       } //TODO atomic?
     } yield results
