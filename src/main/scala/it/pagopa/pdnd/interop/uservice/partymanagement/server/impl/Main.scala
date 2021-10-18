@@ -48,7 +48,7 @@ object Main extends App {
 
   val fileManager = FileManager
     .getConcreteImplementation(ApplicationConfiguration.runtimeFileManager)
-    .get
+    .get //end of the world here: if no valid file manager is configured, the application must break.
 
   Kamon.init()
 
