@@ -53,38 +53,18 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation
     * Code: 404, Message: Organization not found
     */
-  override def existsOrganization(organizationId: String): Route = {
-    logger.info(s"Verify organization $organizationId")
+  override def existsOrganizationById(id: String): Route = {
+    logger.info(s"Verify organization $id")
 
-    val result: Future[Option[Party]] =
-      getCommander(organizationId).ask(ref => GetPartyByExternalId(organizationId, getShard(organizationId), ref))
-
-    onSuccess(result) {
-      case Some(party) => Party.convertToApi(party).swap.fold(_ => existsOrganization404, _ => existsOrganization200)
-      case None        => existsOrganization404
-    }
-
-  }
-
-  /** Code: 200, Message: successful operation, DataType: Organization
-    * Code: 404, Message: Organization not found, DataType: ErrorResponse
-    */
-  override def getOrganization(organizationId: String)(implicit
-    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
-    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)]
-  ): Route = {
-    logger.info(s"Retrieve organization $organizationId")
-
-    val result: Future[Option[Party]] =
-      getCommander(organizationId).ask(ref => GetPartyByExternalId(organizationId, getShard(organizationId), ref))
-
-    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
+    val result: Future[Option[Party]] = for {
+      uuid <- id.asUUID.toFuture
+      r    <- getCommander(id).ask(ref => GetParty(uuid, ref))
+    } yield r
 
     onSuccess(result) {
       case Some(party) =>
-        Party.convertToApi(party).swap.fold(_ => getOrganization404(errorResponse), o => getOrganization200(o))
-      case None => getOrganization404(errorResponse)
+        Party.convertToApi(party).swap.fold(_ => existsOrganizationById404, _ => existsOrganizationById200)
+      case None => existsOrganizationById404
     }
 
   }
@@ -101,7 +81,7 @@ class PartyApiServiceImpl(
     val party: Party = InstitutionParty.fromApi(organizationSeed, uuidSupplier)
 
     val result: Future[StatusReply[Party]] =
-      getCommander(party.externalId).ask(ref => AddParty(party, getShard(party.externalId), ref))
+      getCommander(party.id.toString).ask(ref => AddParty(party, ref))
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
@@ -129,8 +109,10 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    val result: Future[StatusReply[Party]] =
-      getCommander(organizationId).ask(ref => AddAttributes(organizationId, requestBody, ref))
+    val result: Future[StatusReply[Party]] = for {
+      uuid <- organizationId.asUUID.toFuture
+      r    <- getCommander(organizationId).ask(ref => AddAttributes(uuid, requestBody, ref))
+    } yield r
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
@@ -157,12 +139,12 @@ class PartyApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info(s"Creating person ${personSeed.name}/${personSeed.surname}")
+    logger.info(s"Creating person ${personSeed.id.toString}")
 
-    val party: Party = PersonParty.fromApi(personSeed, uuidSupplier)
+    val party: Party = PersonParty.fromApi(personSeed)
 
     val result: Future[StatusReply[Party]] =
-      getCommander(party.externalId).ask(ref => AddParty(party, getShard(party.externalId), ref))
+      getCommander(party.id.toString).ask(ref => AddParty(party, ref))
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
@@ -181,37 +163,17 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: Person exists
     * Code: 404, Message: Person not found
     */
-  override def existsPerson(taxCode: String): Route = {
-    logger.info(s"Verify person $taxCode")
+  override def existsPersonById(id: String): Route = {
+    logger.info(s"Verify person $id")
 
-    val result: Future[Option[Party]] =
-      getCommander(taxCode).ask(ref => GetPartyByExternalId(taxCode, getShard(taxCode), ref))
-
-    onSuccess(result) {
-      case Some(party) => Party.convertToApi(party).fold(_ => existsPerson404, _ => existsPerson200)
-      case None        => existsPerson404
-    }
-
-  }
-
-  /** Code: 200, Message: Person exists, DataType: Person
-    * Code: 404, Message: Person not found, DataType: ErrorResponse
-    */
-  override def getPerson(taxCode: String)(implicit
-    toEntityMarshallerPerson: ToEntityMarshaller[Person],
-    toEntityMarshallerErrorResponse: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)]
-  ): Route = {
-    logger.info(s"Retrieving person $taxCode")
-
-    val result: Future[Option[Party]] =
-      getCommander(taxCode).ask(ref => GetPartyByExternalId(taxCode, getShard(taxCode), ref))
-
-    val errorResponse: Problem = Problem(detail = None, status = 404, title = "some error")
+    val result: Future[Option[Party]] = for {
+      uuid <- id.asUUID.toFuture
+      r    <- getCommander(id).ask(ref => GetParty(uuid, ref))
+    } yield r
 
     onSuccess(result) {
-      case Some(party) => Party.convertToApi(party).fold(_ => getPerson404(errorResponse), p => getPerson200(p))
-      case None        => getPerson404(errorResponse)
+      case Some(party) => Party.convertToApi(party).fold(_ => existsPersonById404, _ => existsPersonById200)
+      case None        => existsPersonById404
     }
 
   }
@@ -240,8 +202,8 @@ class PartyApiServiceImpl(
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
       relationship = Relationship(
         id = verified.id,
-        from = from.externalId,
-        to = to.externalId,
+        from = from.id,
+        to = to.id,
         role = verified.role.toString,
         platformRole = verified.platformRole,
         status = verified.status.toString,
@@ -277,19 +239,25 @@ class PartyApiServiceImpl(
       .toList
 
     def retrieveRelationships(
-      externalId: String,
+      id: UUID,
       commandFunc: (UUID, ActorRef[List[PartyRelationship]]) => PartyRelationshipCommand
     ): Future[List[Relationship]] = for {
-      party <- getParty(externalId)
+      party <- getParty(id)
       re    <- commanders.getRelationships(party, commandFunc)
     } yield re
 
-    val result: Future[List[Relationship]] = (from, to) match {
+    def relationshipsFromParams(from: Option[UUID], to: Option[UUID]): Future[List[Relationship]] = (from, to) match {
       case (Some(f), Some(t)) => retrieveRelationships(f, GetPartyRelationshipsByFrom).map(_.filter(_.to == t))
       case (Some(f), None)    => retrieveRelationships(f, GetPartyRelationshipsByFrom)
       case (None, Some(t))    => retrieveRelationships(t, GetPartyRelationshipsByTo)
       case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
+
+    val result: Future[List[Relationship]] = for {
+      fromUuid <- from.traverse(_.asUUID.toFuture)
+      toUuid   <- to.traverse(_.asUUID.toFuture)
+      r        <- relationshipsFromParams(fromUuid, toUuid)
+    } yield r
 
     val filteredResult = platformRole match {
       case Some(pr) => result.map(_.filter(_.platformRole == pr))
@@ -396,20 +364,16 @@ class PartyApiServiceImpl(
 
   }
 
-  private def getParty(externalId: String)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
-    found <- getCommander(externalId).ask(ref => GetPartyByExternalId(externalId, getShard(externalId), ref))
-    party <- found.fold(Future.failed[Party](new RuntimeException(s"Party $externalId not found")))(p =>
+  private def getParty(id: UUID)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
+    found <- getCommander(id.toString).ask(ref => GetParty(id, ref))
+    party <- found.fold(Future.failed[Party](new RuntimeException(s"Party ${id.toString} not found")))(p =>
       Future.successful(p)
     )
   } yield party
 
   private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] = for {
-    from <- getCommander(relationshipSeed.from).ask(ref =>
-      GetPartyByExternalId(relationshipSeed.from, getShard(relationshipSeed.from), ref)
-    )
-    to <- getCommander(relationshipSeed.to).ask(ref =>
-      GetPartyByExternalId(relationshipSeed.to, getShard(relationshipSeed.to), ref)
-    )
+    from <- getCommander(relationshipSeed.from.toString).ask(ref => GetParty(relationshipSeed.from, ref))
+    to   <- getCommander(relationshipSeed.to.toString).ask(ref => GetParty(relationshipSeed.to, ref))
     role = PartyRole.fromText(relationshipSeed.role).toOption
     relationship <- relationshipByInvolvedParties(
       from = from.get.id,
@@ -559,13 +523,13 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Organization not found, DataType: Problem
     */
-  override def getPartyOrganizationByUUID(id: String)(implicit
+  override def getOrganizationById(id: String)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
-    def notFound = getPartyOrganizationByUUID404(
+    def notFound = getOrganizationById404(
       Problem(Option(s"Organization $id Not Found"), status = 404, "organization not found")
     )
 
@@ -583,10 +547,10 @@ class PartyApiServiceImpl(
         result.flatten
           .find(_.id.toString == id)
           .fold(notFound) { reply =>
-            Party.convertToApi(reply).swap.fold(_ => notFound, p => getPartyOrganizationByUUID200(p))
+            Party.convertToApi(reply).swap.fold(_ => notFound, p => getOrganizationById200(p))
           }
       case Failure(ex) =>
-        getPartyOrganizationByUUID404(Problem(Option(ex.getMessage), status = 404, "organization not found"))
+        getOrganizationById404(Problem(Option(ex.getMessage), status = 404, "organization not found"))
     }
   }
 
@@ -594,13 +558,13 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Person not found, DataType: Problem
     */
-  override def getPartyPersonByUUID(id: String)(implicit
+  override def getPersonById(id: String)(implicit
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
-    def notFound = getPartyPersonByUUID404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
+    def notFound = getPersonById404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
 
     val commanders = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -616,10 +580,10 @@ class PartyApiServiceImpl(
         result.flatten
           .find(_.id.toString == id)
           .fold(notFound) { reply =>
-            Party.convertToApi(reply).fold(_ => notFound, p => getPartyPersonByUUID200(p))
+            Party.convertToApi(reply).fold(_ => notFound, p => getPersonById200(p))
           }
       case Failure(ex) =>
-        getPartyPersonByUUID404(Problem(Option(ex.getMessage), status = 404, "person not found"))
+        getPersonById404(Problem(Option(ex.getMessage), status = 404, "person not found"))
     }
   }
 
@@ -680,7 +644,7 @@ class PartyApiServiceImpl(
 
         val response = BulkOrganizations(
           found = organizations,
-          notFound = bulkPartiesSeed.partyIdentifiers.map(_.toString).diff(organizations.map(_.partyId))
+          notFound = bulkPartiesSeed.partyIdentifiers.diff(organizations.map(_.id)).map(_.toString)
         )
         bulkOrganizations200(response)
       case Failure(ex) =>

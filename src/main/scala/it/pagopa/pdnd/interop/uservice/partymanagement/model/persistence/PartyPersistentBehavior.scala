@@ -33,14 +33,14 @@ object PartyPersistentBehavior {
       context.system.settings.config.getDuration("uservice-party-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
-      case AddParty(party, shardId, replyTo) =>
-        logger.error(s"Adding party ${party.externalId} to shard $shardId")
+      case AddParty(party, replyTo) =>
+        logger.error(s"Adding party ${party.id}")
         logger.error(state.toString)
-        state.indexes
-          .get(party.externalId)
+        state.parties
+          .get(party.id)
           .map { _ =>
-            logger.error(s"AddParty found party ${party.externalId} at shard $shardId")
-            replyTo ! StatusReply.Error(s"Party ${party.externalId} already exists")
+            logger.error(s"AddParty found party ${party.id}")
+            replyTo ! StatusReply.Error(s"Party ${party.id} already exists")
             Effect.none[PartyAdded, State]
           }
           .getOrElse {
@@ -56,7 +56,7 @@ object PartyPersistentBehavior {
 
       case GetParty(uuid, replyTo) =>
         val party: Option[Party] = state.parties.get(uuid)
-        party.foreach(p => logger.info(s"Found party ${p.externalId}/${p.id.toString}"))
+        party.foreach(p => logger.info(s"Found party ${p.id.toString}"))
         replyTo ! party
 
         Effect.none
@@ -65,7 +65,7 @@ object PartyPersistentBehavior {
         val foundParties: Seq[Party] = {
           uuids.flatMap(uuid => state.parties.get(uuid))
         }
-        foundParties.foreach(p => logger.info(s"Found party ${p.externalId}/${p.id.toString}"))
+        foundParties.foreach(p => logger.info(s"Found party ${p.id.toString}"))
         replyTo ! foundParties
         Effect.none
 
@@ -83,25 +83,9 @@ object PartyPersistentBehavior {
         replyTo ! statusReply
         Effect.none
 
-      case GetPartyByExternalId(externalId, shardId, replyTo) =>
-        val party: Option[Party] = for {
-          uuid <- state.indexes.get(externalId)
-          _ = logger.info(s"GetPartyByExternalId found $externalId/${uuid.toString} at shard $shardId")
-          party <- state.parties.get(uuid)
-        } yield party
-
-        replyTo ! party
-
-        Effect.none
-
       case AddAttributes(organizationId, attributes, replyTo) =>
-        val party: Option[Party] = for {
-          uuid <- state.indexes.get(organizationId)
-          _ = logger.info(s"Found $organizationId/${uuid.toString}")
-          party <- state.parties.get(uuid)
-        } yield party
-
-        party
+        state.parties
+          .get(organizationId)
           .map { p =>
             val updated: Either[Throwable, Party] = p.addAttributes(attributes.toSet)
             updated.fold[Effect[AttributesAdded, State]](
