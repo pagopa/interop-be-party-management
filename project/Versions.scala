@@ -16,5 +16,7 @@ object Versions {
   lazy val scalaMockVersion         = "5.1.0"
   lazy val stateMonitoringVersion   = "0.0.3-SNAPSHOT"
   lazy val mustacheVersion          = "0.9.0"
+  lazy val jdbcPersistenceVersion   = "5.0.1"
   lazy val azureStorageBlobVersion  = "12.14.1"
+  lazy val slickProjectionVersion   = "1.2.2"
 }
