@@ -15,6 +15,9 @@ message PartyRelationshipV1 {
   required string start = 6;
   optional string end = 7;
   required PartyRelationshipStatusV1 status = 8;
+  optional string filePath = 9;
+  optional string fileName = 10;
+  optional string contentType = 11;
 
   enum PartyRelationshipStatusV1 {
     Pending = 0;

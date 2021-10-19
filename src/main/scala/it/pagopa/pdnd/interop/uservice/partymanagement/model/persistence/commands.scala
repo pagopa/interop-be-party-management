@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
 import akka.actor.typed.ActorRef
+import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{TokenSeed, TokenText}
@@ -30,8 +31,12 @@ final case class AddAttributes(organizationId: String, attributes: Seq[String], 
 final case class AddPartyRelationship(partyRelationship: PartyRelationship, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class ConfirmPartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationshipCommand
+final case class ConfirmPartyRelationship(
+  relationshipId: UUID,
+  filePath: String,
+  fileInfo: FileInfo,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
 
 final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand

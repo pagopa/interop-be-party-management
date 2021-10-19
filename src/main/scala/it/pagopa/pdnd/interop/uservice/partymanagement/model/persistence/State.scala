@@ -30,10 +30,18 @@ final case class State(
   def addPartyRelationship(relationship: PartyRelationship): State =
     copy(relationships = relationships + (relationship.id.toString -> relationship))
 
-  def confirmPartyRelationship(id: UUID): State = {
+  def confirmPartyRelationship(id: UUID, filePath: String, fileName: String, contentType: String): State = {
     val relationshipId = id.toString
     val updated: Map[String, PartyRelationship] =
-      relationships.updated(relationshipId, relationships(relationshipId).copy(status = PartyRelationshipStatus.Active))
+      relationships.updated(
+        relationshipId,
+        relationships(relationshipId).copy(
+          status = PartyRelationshipStatus.Active,
+          filePath = Some(filePath),
+          fileName = Some(fileName),
+          contentType = Some(contentType)
+        )
+      )
     copy(relationships = updated)
   }
 

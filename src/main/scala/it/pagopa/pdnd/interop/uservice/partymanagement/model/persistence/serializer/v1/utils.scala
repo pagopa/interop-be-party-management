@@ -100,7 +100,10 @@ object utils {
       platformRole = partyRelationshipV1.platformRole,
       start = toOffsetDateTime(partyRelationshipV1.start),
       end = partyRelationshipV1.end.map(toOffsetDateTime),
-      status = status
+      status = status,
+      filePath = partyRelationshipV1.filePath,
+      fileName = partyRelationshipV1.fileName,
+      contentType = partyRelationshipV1.contentType
     )
   }
 
@@ -120,7 +123,8 @@ object utils {
       platformRole = partyRelationship.platformRole,
       start = partyRelationship.start.format(formatter),
       end = partyRelationship.end.map(_.format(formatter)),
-      status = status
+      status = status,
+      filePath = partyRelationship.filePath
     )
 
   }

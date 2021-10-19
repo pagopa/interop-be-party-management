@@ -6,6 +6,7 @@ import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import cats.implicits.toTraverseOps
@@ -19,6 +20,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.service._
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io.File
 import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -32,7 +34,8 @@ class PartyApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
-  uuidSupplier: UUIDSupplier
+  uuidSupplier: UUIDSupplier,
+  fileManager: FileManager
 )(implicit ec: ExecutionContext)
     extends PartyApiService {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -241,7 +244,10 @@ class PartyApiServiceImpl(
         to = to.externalId,
         role = verified.role.toString,
         platformRole = verified.platformRole,
-        status = verified.status.toString
+        status = verified.status.toString,
+        filePath = None,
+        fileName = None,
+        contentType = None
       )
     } yield relationship
 
@@ -343,14 +349,15 @@ class PartyApiServiceImpl(
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def consumeToken(
-    token: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def consumeToken(token: String, doc: (FileInfo, File))(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
 
     val results: Future[Seq[StatusReply[Unit]]] = for {
       token <- Future.fromTry(Token.decode(token))
       results <-
-        if (token.isValid) processRelationships(token, ConfirmPartyRelationship)
+        if (token.isValid) confirmRelationships(token, doc)
         else processRelationships(token, DeletePartyRelationship)
     } yield results
 
@@ -434,6 +441,17 @@ class PartyApiServiceImpl(
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           commandFunc(partyRelationshipBinding.relationshipId, ref)
+        )
+      } //TODO atomic?
+    } yield results
+  }
+
+  private def confirmRelationships(token: Token, fileParts: (FileInfo, File)): Future[Seq[StatusReply[Unit]]] = {
+    for {
+      filePath <- fileManager.store(token.seed, fileParts)
+      results <- Future.traverse(token.legals) { partyRelationshipBinding =>
+        getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
+          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, ref)
         )
       } //TODO atomic?
     } yield results

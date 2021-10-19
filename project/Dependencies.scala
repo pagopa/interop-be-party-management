@@ -77,6 +77,11 @@ object Dependencies {
     lazy val mustache = "com.github.spullara.mustache.java" % "compiler" % mustacheVersion
   }
 
+  private[this] object azure {
+    lazy val namespace   = "com.azure"
+    lazy val storageBlob = namespace % "azure-storage-blob" % azureStorageBlobVersion
+  }
+
   object Jars {
     lazy val `server`: Seq[ModuleID] = Seq(
       // For making Java 12 happy
@@ -107,6 +112,7 @@ object Dependencies {
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
       mustache.mustache            % Compile,
+      azure.storageBlob            % Compile,
       scalpb.core                  % "protobuf",
       akka.testkit                 % Test,
       scalatest.core               % Test,

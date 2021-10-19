@@ -83,12 +83,25 @@ package object v1 {
     : PersistEventSerializer[PartyRelationshipConfirmed, PartyRelationshipConfirmedV1] =
     event =>
       Right[Throwable, PartyRelationshipConfirmedV1](
-        PartyRelationshipConfirmedV1.of(event.partyRelationshipId.toString)
+        PartyRelationshipConfirmedV1
+          .of(
+            partyRelationshipId = event.partyRelationshipId.toString,
+            filePath = event.filePath,
+            fileName = event.fileName,
+            contentType = event.contentType
+          )
       )
 
   implicit def partyRelationshipConfirmedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
-    stringToUUID(event.partyRelationshipId).map(PartyRelationshipConfirmed)
+    stringToUUID(event.partyRelationshipId).map(id =>
+      PartyRelationshipConfirmed(
+        partyRelationshipId = id,
+        filePath = event.filePath,
+        fileName = event.fileName,
+        contentType = event.contentType
+      )
+    )
 
   implicit def partyRelationshipAddedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipAdded, PartyRelationshipAddedV1] =

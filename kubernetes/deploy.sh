@@ -16,6 +16,8 @@ kubectl get secret regcred -n default -o yaml | sed s/"namespace: default"/"name
 
 kubectl create secret generic cassandra --from-literal=CASSANDRA_HOST=$CASSANDRA_HOST --from-literal=CASSANDRA_USR=$CASSANDRA_USR --from-literal=CASSANDRA_PSW=$CASSANDRA_PSW -n $NAMESPACE
 
+kubectl create secret generic storage --from-literal=STORAGE_USR=$STORAGE_USR --from-literal=STORAGE_PSW=$STORAGE_PSW -n $NAMESPACE
+
 kubectl create secret generic application.conf --from-file=application.conf=$SCRIPT_PATH/../src/main/resources/application.conf -n $NAMESPACE
 
 $SCRIPT_PATH/templater.sh $SCRIPT_PATH/deployment.yaml.template -s -f $SCRIPT_PATH/config > $SCRIPT_PATH/deployment.yaml
