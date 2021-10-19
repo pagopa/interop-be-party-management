@@ -29,10 +29,10 @@ final case class PartyRelationship(
 object PartyRelationship {
   //TODO add role check
   def create(
-    UUIDSupplier: UUIDSupplier
+    uuidSupplier: UUIDSupplier
   )(from: UUID, to: UUID, role: PartyRole, platformRole: String): PartyRelationship =
     PartyRelationship(
-      id = UUIDSupplier.get,
+      id = uuidSupplier.get,
       from = from,
       to = to,
       role = role,
