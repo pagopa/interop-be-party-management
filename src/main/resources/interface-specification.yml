@@ -194,6 +194,40 @@ paths:
         '404':
           description: Organization not found
   /organizations/{id}/attributes:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+          example: e72dd279-5f52-4039-afbe-2b7e432c490e
+        name: id
+        in: path
+        required: true
+        description: Organization ID
+    get:
+      summary: Retrieves attributes
+      tags:
+        - party
+      responses:
+        '200':
+          description: Party Attributes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attributes'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Party not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getPartyAttributes
+      description: 'returns the attributes of the identified party, if any.'
     patch:
       #      security:
       #        - bearerAuth: [ ]
@@ -202,16 +236,6 @@ paths:
       summary: Retrieve the organization attributes for the given organizationId
       description: Return ok
       operationId: addOrganizationAttributes
-      parameters:
-        - name: id
-          in: path
-          description: The ID of the Organization to retrieve
-          required: true
-          schema:
-            description: to be defined
-            type: string
-            format: uuid
-            example: e72dd279-5f52-4039-afbe-2b7e432c490e
       requestBody:
         required: true
         content:
@@ -513,40 +537,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  '/party/{id}/attributes':
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: id
-        in: path
-        required: true
-        description: UUID of the party
-    get:
-      summary: Retrieves attributes
-      tags:
-        - party
-      responses:
-        '200':
-          description: Party Attributes
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Attributes'
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: Party not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-      operationId: getPartyAttributes
-      description: 'returns the attributes of the identified party, if any.'
   '/bulk/organizations':
     post:
       summary: Retrieves a collection of organizations

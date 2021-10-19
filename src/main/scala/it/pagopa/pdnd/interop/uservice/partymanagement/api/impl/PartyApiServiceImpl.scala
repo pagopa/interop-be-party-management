@@ -4,7 +4,7 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
+import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
@@ -447,22 +447,16 @@ class PartyApiServiceImpl(
     id: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
-    val commanders = (0 to settings.numberOfShards)
-      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-      .toList
-
-    val attributes: Future[List[StatusReply[Seq[String]]]] = Future.traverse(commanders) { commander =>
-      commander.ask(ref => GetPartyAttributes(UUID.fromString(id), ref)) //TODO make this UUID better
-    }
+    val attributes: Future[StatusReply[Seq[String]]] = for {
+      uuid <- id.asUUID.toFuture
+      r    <- getCommander(id).ask(ref => GetPartyAttributes(uuid, ref))
+    } yield r
 
     onComplete(attributes) {
-      case Success(result) =>
-        result
-          .find(_.isSuccess)
-          .fold(getPartyAttributes404(Problem(Option(s"Party $id Not Found"), status = 404, "party not found"))) {
-            reply =>
-              getPartyAttributes200(reply.getValue)
-          }
+      case Success(result) if result.isSuccess =>
+        getPartyAttributes200(result.getValue)
+      case Success(_) =>
+        complete((500, Problem(None, status = 500, "Unexpected error")))
       case Failure(ex) => getPartyAttributes404(Problem(Option(ex.getMessage), status = 404, "party not found"))
     }
   }
