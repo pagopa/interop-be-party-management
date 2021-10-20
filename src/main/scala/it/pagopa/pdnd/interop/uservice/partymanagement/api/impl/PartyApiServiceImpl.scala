@@ -17,15 +17,12 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.error.OrganizationAlready
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
-import it.pagopa.pdnd.interop.uservice.partymanagement.service._
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.{UUIDSupplier, _}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.File
 import java.util.UUID
-import scala.annotation.tailrec
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 @SuppressWarnings(
@@ -387,13 +384,11 @@ class PartyApiServiceImpl(
   } yield party
 
   private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] = for {
-    from <- getCommander(relationshipSeed.from.toString).ask(ref => GetParty(relationshipSeed.from, ref))
-    to   <- getCommander(relationshipSeed.to.toString).ask(ref => GetParty(relationshipSeed.to, ref))
-    role = PartyRole.fromText(relationshipSeed.role).toOption
+    role <- PartyRole.fromText(relationshipSeed.role).toFuture
     relationship <- relationshipByInvolvedParties(
-      from = from.get.id,
-      to = to.get.id,
-      role = role.get,
+      from = relationshipSeed.from,
+      to = relationshipSeed.to,
+      role = role,
       platformRole = relationshipSeed.platformRole
     )
   } yield relationship
@@ -483,38 +478,14 @@ class PartyApiServiceImpl(
     role: PartyRole,
     platformRole: String
   ): Future[PartyRelationship] = {
-    val commanders: List[EntityRef[Command]] =
-      (0 until settings.numberOfShards)
-        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-        .toList
 
-    recursiveLookup(commanders, from, to, role, platformRole) match {
-      case Some(relationship) => Future.successful(relationship)
-      case None               => Future.failed(new RuntimeException("Relationship not found"))
-    }
-  }
+    for {
+      maybeRelationship <- getCommander(from.toString).ask(ref =>
+        GetPartyRelationshipByAttributes(from = from, to = to, role = role, platformRole = platformRole, ref)
+      )
+      result <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
+    } yield result
 
-  @tailrec
-  private def recursiveLookup(
-    commanders: List[EntityRef[Command]],
-    from: UUID,
-    to: UUID,
-    role: PartyRole,
-    platformRole: String
-  ): Option[PartyRelationship] = {
-    commanders match {
-      case Nil => None
-      case elem :: tail =>
-        Await.result(
-          elem.ask(ref =>
-            GetPartyRelationshipByAttributes(from = from, to = to, role = role, platformRole = platformRole, ref)
-          ),
-          Duration.Inf
-        ) match {
-          case Some(relationship) => Some(relationship)
-          case None               => recursiveLookup(tail, from, to, role, platformRole)
-        }
-    }
   }
 
   /** flips result of relationship retrieval from the cluster.
