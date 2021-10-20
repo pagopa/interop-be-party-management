@@ -575,7 +575,7 @@ class PartyApiServiceImpl(
         uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
         results <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
         maybePartyRelationship = results.find(_.isDefined).flatten
-        partyRelationship <- maybePartyRelationship.flatTraverse(commanders.convertToRelationship)
+        partyRelationship      = maybePartyRelationship.map(_.toRelationship)
       } yield partyRelationship
 
     onComplete(result) {
