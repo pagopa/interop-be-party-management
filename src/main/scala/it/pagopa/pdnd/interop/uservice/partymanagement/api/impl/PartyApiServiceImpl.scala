@@ -539,24 +539,18 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    def notFound = getPersonById404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
-
-    val commanders = (0 to settings.numberOfShards)
-      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-      .toList
+    def notFound: Route = getPersonById404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
 
     val persons = for {
       personUUID <- id.asUUID.toFuture
-      results    <- Future.traverse(commanders) { commander => commander.ask(ref => GetParty(personUUID, ref)) }
+      results    <- getCommander(id).ask(ref => GetParty(personUUID, ref))
     } yield results
 
     onComplete(persons) {
       case Success(result) =>
-        result.flatten
-          .find(_.id.toString == id)
-          .fold(notFound) { reply =>
-            Party.convertToApi(reply).fold(_ => notFound, p => getPersonById200(p))
-          }
+        result.fold(notFound) { reply =>
+          Party.convertToApi(reply).fold(_ => notFound, p => getPersonById200(p))
+        }
       case Failure(ex) =>
         getPersonById404(Problem(Option(ex.getMessage), status = 404, "person not found"))
     }
