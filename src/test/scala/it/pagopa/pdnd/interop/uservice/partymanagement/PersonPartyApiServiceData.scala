@@ -15,12 +15,10 @@ object PersonPartyApiServiceData {
   final lazy val personUuid2 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9216")
   final lazy val personUuid3 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9217")
   final lazy val personUuid4 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9218")
-  final lazy val personUuid5 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9281")
 
   final lazy val personSeed1 = PersonSeed(id = personUuid1)
   final lazy val personSeed2 = PersonSeed(id = personUuid2)
   final lazy val personSeed3 = PersonSeed(id = personUuid3)
-  final lazy val personSeed4 = PersonSeed(id = personUuid4)
 
   final lazy val personExpected1 = Person(id = personUuid1)
   final lazy val personExpected2 = Person(id = personUuid3)

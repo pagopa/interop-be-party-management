@@ -15,7 +15,6 @@ object OrganizationsPartyApiServiceData {
   lazy final val orgUuid2 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9211")
   lazy final val orgUuid3 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9212")
   lazy final val orgUuid4 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9213")
-  lazy final val orgUuid5 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9231")
 
   lazy final val institutionId1 = "id1"
   lazy final val institutionId2 = "id2"

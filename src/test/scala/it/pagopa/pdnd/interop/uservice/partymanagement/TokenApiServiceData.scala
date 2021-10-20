@@ -19,11 +19,7 @@ object TokenApiServiceData {
 
   lazy final val createTokenUuid0 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9210")
   lazy final val createTokenUuid1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9211")
-  lazy final val createTokenUuid2 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9212")
-  lazy final val createTokenUuid3 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9213")
-  lazy final val createTokenUuid4 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9214")
-  lazy final val createTokenUuid5 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9215")
-  
+
   lazy final val tokenSeedId1 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9210"
   lazy final val tokenSeedId2 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9211"
   lazy final val tokenSeedId3 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9212"
