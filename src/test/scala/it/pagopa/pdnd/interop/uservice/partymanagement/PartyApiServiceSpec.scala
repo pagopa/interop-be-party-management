@@ -288,24 +288,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
   "Working on relationships" must {
     import RelationshipPartyApiServiceData._
 
-    "return 400 if the party does not exist" in {
-
-      val nonExistingId = UUID.randomUUID()
-
-      val response = Await.result(
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships?from=${nonExistingId.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
-          )
-        ),
-        Duration.Inf
-      )
-
-      response.status shouldBe StatusCodes.BadRequest
-    }
-
     "return 200 if the relationships do not exist" in {
 
       val uuid = UUID.randomUUID()
@@ -472,7 +454,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()
       (() => uuidSupplier.get).expects().returning(relUuid1).once()
-
       (() => uuidSupplier.get).expects().returning(relUuid2).once()
 
       val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)

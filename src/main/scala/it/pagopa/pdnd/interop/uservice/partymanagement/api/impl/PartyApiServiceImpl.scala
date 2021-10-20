@@ -246,22 +246,25 @@ class PartyApiServiceImpl(
       s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}/${platformRole.getOrElse("Empty")}"
     )
 
-    val commanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
-      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-      .toList
+    def retrieveRelationshipsByTo(id: UUID): Future[List[Relationship]] = {
+      val commanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
+        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+        .toList
 
-    def retrieveRelationships(
-      id: UUID,
-      commandFunc: (UUID, ActorRef[List[PartyRelationship]]) => PartyRelationshipCommand
-    ): Future[List[Relationship]] = for {
-      party <- getParty(id)
-      re    <- commanders.getRelationships(party, commandFunc)
-    } yield re
+      for {
+        re <- commanders.traverse(_.ask[List[PartyRelationship]](ref => GetPartyRelationshipsByTo(id, ref)))
+      } yield re.flatten.map(_.toRelationship)
+    }
+
+    def retrieveRelationshipsByFrom(id: UUID): Future[List[Relationship]] =
+      for {
+        re <- getCommander(id.toString).ask(ref => GetPartyRelationshipsByFrom(id, ref))
+      } yield re.map(_.toRelationship)
 
     def relationshipsFromParams(from: Option[UUID], to: Option[UUID]): Future[List[Relationship]] = (from, to) match {
-      case (Some(f), Some(t)) => retrieveRelationships(f, GetPartyRelationshipsByFrom).map(_.filter(_.to == t))
-      case (Some(f), None)    => retrieveRelationships(f, GetPartyRelationshipsByFrom)
-      case (None, Some(t))    => retrieveRelationships(t, GetPartyRelationshipsByTo)
+      case (Some(f), Some(t)) => retrieveRelationshipsByFrom(f).map(_.filter(_.to == t))
+      case (Some(f), None)    => retrieveRelationshipsByFrom(f)
+      case (None, Some(t))    => retrieveRelationshipsByTo(t)
       case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 

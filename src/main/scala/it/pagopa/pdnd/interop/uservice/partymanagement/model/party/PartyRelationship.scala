@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.Relationship
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationshipStatus.{Active, Pending}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 
@@ -24,6 +25,19 @@ final case class PartyRelationship(
     * @return
     */
   def applicationId: String = s"${from.toString}-${to.toString}-${role.stringify}-${platformRole}"
+
+  def toRelationship: Relationship = Relationship(
+    id = id,
+    from = from,
+    to = to,
+    role = role.stringify,
+    platformRole = platformRole,
+    status = status.stringify,
+    filePath = filePath,
+    fileName = fileName,
+    contentType = contentType
+  )
+
 }
 
 object PartyRelationship {

@@ -46,11 +46,6 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit class CommandersOps(val commanders: List[EntityRef[Command]]) extends AnyVal {
 
-    def convertToRelationships(
-      partyRelationships: List[PartyRelationship]
-    )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[Relationship]] =
-      Future.traverse(partyRelationships)(commanders.convertToRelationship).map(_.flatten)
-
     def convertToRelationship(
       partyRelationship: PartyRelationship
     )(implicit ec: ExecutionContext, timeout: Timeout): Future[Option[Relationship]] = {
@@ -89,15 +84,6 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
         .map(_.flatten)
     }
 
-    def getRelationships(
-      party: Party,
-      commandFunc: (UUID, ActorRef[List[PartyRelationship]]) => PartyRelationshipCommand
-    )(implicit ec: ExecutionContext, timeout: Timeout): Future[List[Relationship]] = {
-      for {
-        partyRelationships <- commanders.getPartyRelationships(party.id, commandFunc)
-        relationships      <- commanders.convertToRelationships(partyRelationships)
-      } yield relationships
-    }
   }
 
 }
