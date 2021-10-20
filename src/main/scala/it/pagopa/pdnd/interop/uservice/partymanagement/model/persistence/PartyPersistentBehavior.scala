@@ -83,6 +83,15 @@ object PartyPersistentBehavior {
         replyTo ! statusReply
         Effect.none
 
+      case GetOrganizationByExternalId(externalId, replyTo) =>
+        val party: Option[InstitutionParty] = state.parties.collectFirst {
+          case (_, o: InstitutionParty) if o.externalId == externalId => o
+        }
+        party.foreach(p => logger.info(s"Found organization ${p.id.toString}"))
+        replyTo ! party
+
+        Effect.none
+
       case AddAttributes(organizationId, attributes, replyTo) =>
         state.parties
           .get(organizationId)

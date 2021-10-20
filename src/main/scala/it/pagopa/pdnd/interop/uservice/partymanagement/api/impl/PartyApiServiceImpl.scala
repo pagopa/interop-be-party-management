@@ -13,6 +13,7 @@ import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
+import it.pagopa.pdnd.interop.uservice.partymanagement.error.OrganizationAlreadyExists
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
@@ -78,13 +79,24 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Creating organization ${organizationSeed.description}")
-    val party: Party = InstitutionParty.fromApi(organizationSeed, uuidSupplier)
 
-    val result: Future[StatusReply[Party]] =
-      getCommander(party.id.toString).ask(ref => AddParty(party, ref))
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
 
-    onSuccess(result) {
-      case statusReply if statusReply.isSuccess =>
+    val organization: Future[StatusReply[Party]] = for {
+      shardOrgs <- commanders.traverse(_.ask(ref => GetOrganizationByExternalId(organizationSeed.institutionId, ref)))
+      maybeExistingOrg = shardOrgs.flatten.headOption
+      newOrg <- maybeExistingOrg
+        .toLeft(InstitutionParty.fromApi(organizationSeed, uuidSupplier))
+        .left
+        .map(_ => OrganizationAlreadyExists(organizationSeed.institutionId))
+        .toFuture
+      result <- getCommander(newOrg.id.toString).ask(ref => AddParty(newOrg, ref))
+    } yield result
+
+    onComplete(organization) {
+      case Success(statusReply) if statusReply.isSuccess =>
         Party
           .convertToApi(statusReply.getValue)
           .swap
@@ -92,10 +104,10 @@ class PartyApiServiceImpl(
             _ => createOrganization400(Problem(detail = None, status = 400, title = "some error")),
             organization => createOrganization201(organization)
           )
-      case statusReply =>
-        createOrganization400(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error")
-        )
+      case Success(_) =>
+        createOrganization400(Problem(detail = None, status = 400, title = "some error"))
+      case Failure(ex) =>
+        createOrganization400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
   }

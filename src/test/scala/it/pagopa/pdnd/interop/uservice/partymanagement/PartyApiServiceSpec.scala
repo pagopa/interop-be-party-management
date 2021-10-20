@@ -273,7 +273,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     "return 400 if organization already exists" in {
 
       (() => uuidSupplier.get).expects().returning(orgUuid4).once()
-      (() => uuidSupplier.get).expects().returning(orgUuid5).once()
 
       val _ = prepareTest(orgSeed4)
 
@@ -474,7 +473,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()
       (() => uuidSupplier.get).expects().returning(relUuid1).once()
 
-      (() => uuidSupplier.get).expects().returning(orgUuid).once()
       (() => uuidSupplier.get).expects().returning(relUuid2).once()
 
       val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
@@ -532,7 +530,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()
       (() => uuidSupplier.get).expects().returning(relUuid1).once()
 
-      (() => uuidSupplier.get).expects().returning(orgUuid).once()
       (() => uuidSupplier.get).expects().returning(relUuid2).once()
 
       val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
