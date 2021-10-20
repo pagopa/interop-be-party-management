@@ -17,14 +17,13 @@ sealed trait TokenCommand             extends Command
 case object Idle extends Command
 
 /* Party Command */
-final case class AddParty(entity: Party, shardId: String, replyTo: ActorRef[StatusReply[Party]]) extends PartyCommand
-final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[Unit]])                extends PartyCommand
-final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])                       extends PartyCommand
-final case class GetParties(partiesToFind: Seq[UUID], replyTo: ActorRef[Seq[Party]])             extends PartyCommand
-final case class GetPartyAttributes(partyId: UUID, replyTo: ActorRef[StatusReply[Seq[String]]])  extends PartyCommand
-final case class GetPartyByExternalId(externalId: String, shardId: String, replyTo: ActorRef[Option[Party]])
+final case class AddParty(entity: Party, replyTo: ActorRef[StatusReply[Party]])                 extends PartyCommand
+final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[Unit]])               extends PartyCommand
+final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])                      extends PartyCommand
+final case class GetPartyAttributes(partyId: UUID, replyTo: ActorRef[StatusReply[Seq[String]]]) extends PartyCommand
+final case class AddAttributes(organizationId: UUID, attributes: Seq[String], replyTo: ActorRef[StatusReply[Party]])
     extends PartyCommand
-final case class AddAttributes(organizationId: String, attributes: Seq[String], replyTo: ActorRef[StatusReply[Party]])
+final case class GetOrganizationByExternalId(externalId: String, replyTo: ActorRef[Option[InstitutionParty]])
     extends PartyCommand
 
 /* PartyRelationship Command */
@@ -64,7 +63,7 @@ final case class GetPartyRelationshipByAttributes(
   replyTo: ActorRef[Option[PartyRelationship]]
 ) extends PartyRelationshipCommand
 
-/* Party Command */
+/* Token Command */
 final case class AddToken(
   token: TokenSeed,
   partyRelationships: Seq[PartyRelationship],

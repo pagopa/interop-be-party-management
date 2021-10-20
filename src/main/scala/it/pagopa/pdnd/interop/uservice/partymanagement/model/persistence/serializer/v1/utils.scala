@@ -30,9 +30,6 @@ object utils {
       Right(
         PersonParty(
           id = UUID.fromString(p.id),
-          externalId = p.externalId,
-          name = p.name,
-          surname = p.surname,
           start = toOffsetDateTime(p.start),
           end = p.end.map(toOffsetDateTime)
         )
@@ -44,8 +41,6 @@ object utils {
           externalId = i.externalId,
           description = i.description,
           digitalAddress = i.digitalAddress,
-          managerName = i.managerName,
-          managerSurname = i.managerSurname,
           attributes = i.attributes.toSet,
           start = toOffsetDateTime(i.start),
           end = i.end.map(toOffsetDateTime)
@@ -59,9 +54,6 @@ object utils {
       Right(
         PersonPartyV1(
           id = p.id.toString,
-          externalId = p.externalId,
-          name = p.name,
-          surname = p.surname,
           start = p.start.format(formatter),
           end = p.end.map(_.format(formatter))
         )
@@ -73,8 +65,6 @@ object utils {
           externalId = i.externalId,
           description = i.description,
           digitalAddress = i.digitalAddress,
-          managerName = i.managerName,
-          managerSurname = i.managerSurname,
           attributes = i.attributes.toSeq,
           start = i.start.format(formatter),
           end = i.end.map(_.format(formatter))

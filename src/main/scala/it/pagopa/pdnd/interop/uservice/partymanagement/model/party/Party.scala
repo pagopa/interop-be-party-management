@@ -17,7 +17,6 @@ import java.util.UUID
 )
 sealed trait Party {
   def id: UUID
-  def externalId: String //TODO describe also the type CF|askjasjdas
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 
@@ -41,31 +40,17 @@ sealed trait Party {
 )
 object Party {
 
-//  def addAttributes(party: Party, attributes: Set[String]): Either[Throwable, Party] = {
-//    val zero: Either[Throwable, Party] = Right(party)
-//    attributes.foldLeft(zero)((current, attrs) => current.flatMap(p => p.addAttributes(attrs)))
-//  }
-
   def convertToApi(party: Party): ApiParty =
     party match {
       case personParty: PersonParty =>
-        Right(
-          Person(
-            name = personParty.name,
-            taxCode = personParty.externalId,
-            surname = personParty.surname,
-            partyId = personParty.id.toString
-          )
-        )
+        Right(Person(id = personParty.id))
       case institutionParty: InstitutionParty =>
         Left(
           Organization(
             description = institutionParty.description,
             institutionId = institutionParty.externalId,
-            managerName = institutionParty.managerName,
-            managerSurname = institutionParty.managerSurname,
             digitalAddress = institutionParty.digitalAddress,
-            partyId = institutionParty.id.toString,
+            id = institutionParty.id,
             attributes = institutionParty.attributes.toSeq
           )
         )
@@ -73,24 +58,10 @@ object Party {
 
 }
 
-final case class PersonParty(
-  id: UUID,
-  externalId: String,
-  name: String,
-  surname: String,
-  start: OffsetDateTime,
-  end: Option[OffsetDateTime]
-) extends Party
+final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]) extends Party
 
 object PersonParty {
-  def fromApi(person: PersonSeed, uuidSupplier: UUIDSupplier): PersonParty = PersonParty(
-    id = uuidSupplier.get,
-    externalId = person.taxCode,
-    name = person.name,
-    surname = person.surname,
-    start = OffsetDateTime.now(),
-    end = None
-  )
+  def fromApi(person: PersonSeed): PersonParty = PersonParty(id = person.id, start = OffsetDateTime.now(), end = None)
 }
 
 final case class InstitutionParty(
@@ -98,8 +69,6 @@ final case class InstitutionParty(
   externalId: String,
   description: String,
   digitalAddress: String,
-  managerName: String,
-  managerSurname: String,
   attributes: Set[String],
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
@@ -112,8 +81,6 @@ object InstitutionParty {
       externalId = organization.institutionId,
       description = organization.description,
       digitalAddress = organization.digitalAddress,
-      managerName = organization.managerName,
-      managerSurname = organization.managerSurname,
       attributes = organization.attributes.toSet,
       start = OffsetDateTime.now(),
       end = None

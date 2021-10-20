@@ -12,15 +12,8 @@ import "v1/token.proto";
 
 message StateV1 {
   repeated PartiesV1 parties = 1;
-  repeated IndexesV1 indexes = 2;
   repeated TokensV1 tokens = 3;
   repeated RelationshipEntryV1 relationships = 4;
-}
-
-
-message IndexesV1 {
-  required string key = 1;
-  required string value = 2;
 }
 
 message PartiesV1 {

@@ -7,8 +7,7 @@ import java.util.UUID
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
 final case class State(
-  parties: Map[UUID, Party],  //TODO use String instead of UUID
-  indexes: Map[String, UUID], //TODO use String instead of UUID
+  parties: Map[UUID, Party],
   tokens: Map[String, Token],
   relationships: Map[String, PartyRelationship]
 ) extends Persistable {
@@ -16,13 +15,13 @@ final case class State(
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def addParty(party: Party): State = {
-    logger.error(s"Writing party ${party.externalId} to state")
-    val newState = copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
+    logger.error(s"Writing party ${party.id.toString} to state")
+    val newState = copy(parties = parties + (party.id -> party))
     logger.info(newState.toString)
     newState
   }
 
-  def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
+  def deleteParty(party: Party): State = copy(parties = parties - party.id)
 
   def updateParty(party: Party): State =
     copy(parties = parties + (party.id -> party))
@@ -86,7 +85,6 @@ object State {
   val empty: State =
     State(
       parties = Map.empty[UUID, Party],
-      indexes = Map.empty[String, UUID],
       relationships = Map.empty[String, PartyRelationship],
       tokens = Map.empty[String, Token]
     )

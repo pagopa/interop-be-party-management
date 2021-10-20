@@ -16,6 +16,7 @@ import java.io.{File, PrintWriter}
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
+import scala.util.Random
 
 package object partymanagement extends MockFactory {
   val uuidSupplier: UUIDSupplier = mock[UUIDSupplier]
@@ -75,4 +76,5 @@ package object partymanagement extends MockFactory {
     temporaryFile
   }
 
+  def randomString(): String = Random.alphanumeric.take(40).mkString
 }
