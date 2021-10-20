@@ -206,7 +206,7 @@ class PartyApiServiceImpl(
       role <- PartyRole.fromText(seed.role).toFuture
       _    <- isMissingRelationship(from.id, to.id, role, seed.platformRole)
       partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
-      currentPartyRelationships <- commanders.getPartyRelationships(to.id, GetPartyRelationshipsByTo)
+      currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
       relationship = Relationship(
@@ -596,7 +596,7 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    def getParty(id: UUID) : Future[Option[Party]] =
+    def getParty(id: UUID): Future[Option[Party]] =
       getCommander(id.toString).ask(ref => GetParty(id, ref))
 
     val result = bulkPartiesSeed.partyIdentifiers.traverse(getParty)

@@ -61,14 +61,6 @@ object PartyPersistentBehavior {
 
         Effect.none
 
-      case GetParties(uuids, replyTo) =>
-        val foundParties: Seq[Party] = {
-          uuids.flatMap(uuid => state.parties.get(uuid))
-        }
-        foundParties.foreach(p => logger.info(s"Found party ${p.id.toString}"))
-        replyTo ! foundParties
-        Effect.none
-
       case GetPartyAttributes(uuid, replyTo) =>
         val statusReply: StatusReply[Seq[String]] = state.parties
           .get(uuid)
