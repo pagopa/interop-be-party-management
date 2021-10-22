@@ -193,6 +193,39 @@ paths:
           description: successful operation
         '404':
           description: Organization not found
+  /organizations/external/{id}:
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: External Organization ID
+    get:
+      summary: Retrieves Organization by ID
+      tags:
+        - party
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getOrganizationByExternalId
+      description: 'returns the identified organization, if any.'
   /organizations/{id}/attributes:
     parameters:
       - schema:
