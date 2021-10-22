@@ -296,10 +296,12 @@ paths:
           name: from
           schema:
             type: string
+            format: uuid
         - in: query
           name: to
           schema:
             type: string
+            format: uuid
         - in: query
           name: platformRole
           schema:
