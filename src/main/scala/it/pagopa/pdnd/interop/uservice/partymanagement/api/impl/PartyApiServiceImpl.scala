@@ -13,7 +13,7 @@ import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
-import it.pagopa.pdnd.interop.uservice.partymanagement.error.OrganizationAlreadyExists
+import it.pagopa.pdnd.interop.uservice.partymanagement.error.{OrganizationAlreadyExists, OrganizationNotFound}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
@@ -671,5 +671,36 @@ class PartyApiServiceImpl(
       case Failure(ex) =>
         suspendPartyRelationshipById404(Problem(Option(ex.getMessage), status = 404, "Relationship not found"))
     }
+  }
+
+  override def getOrganizationByExternalId(externalId: String)(implicit
+                                                                      toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+                                                                      toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+                                                                      contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Getting organization ${externalId}")
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val organization: Future[InstitutionParty] = for {
+      shardOrgs <- commanders.traverse(_.ask(ref => GetOrganizationByExternalId(externalId, ref)))
+      result <- shardOrgs.flatten.headOption.toFuture(OrganizationNotFound(externalId))
+    } yield result
+
+    onComplete(organization) {
+      case Success(statusReply) =>
+        Party
+          .convertToApi(statusReply)
+          .swap
+          .fold(
+            _ => getOrganizationByExternalId400(Problem(detail = None, status = 400, title = "some error")),
+            organization => getOrganizationByExternalId200(organization)
+          )
+      case Failure(ex) =>
+        getOrganizationByExternalId400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+    }
+
   }
 }
