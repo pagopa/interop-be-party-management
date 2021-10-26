@@ -105,12 +105,21 @@ package object v1 {
     : PersistEventSerializer[PartyRelationshipAdded, PartyRelationshipAddedV1] =
     event => getPartyRelationshipV1(event.partyRelationship).map(PartyRelationshipAddedV1.of)
 
+  implicit def partyRelationshipRejectedV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
+
+  implicit def partyRelationshipRejectedV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
+    event =>
+      Right[Throwable, PartyRelationshipRejectedV1](PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString))
+
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
-    : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
+  : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
     stringToUUID(event.partyRelationshipId).map(PartyRelationshipDeleted)
 
   implicit def partyRelationshipDeletedV1PersistEventSerializer
-    : PersistEventSerializer[PartyRelationshipDeleted, PartyRelationshipDeletedV1] =
+  : PersistEventSerializer[PartyRelationshipDeleted, PartyRelationshipDeletedV1] =
     event =>
       Right[Throwable, PartyRelationshipDeletedV1](PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString))
 

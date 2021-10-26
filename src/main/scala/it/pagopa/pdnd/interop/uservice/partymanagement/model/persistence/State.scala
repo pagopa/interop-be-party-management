@@ -44,14 +44,17 @@ final case class State(
     copy(relationships = updated)
   }
 
-  def deletePartyRelationship(relationshipId: UUID): State =
-    copy(relationships = relationships - relationshipId.toString)
+  def rejectRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Rejected)
 
   def suspendRelationship(relationshipId: UUID): State =
     updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Suspended)
 
   def activateRelationship(relationshipId: UUID): State =
     updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Active)
+
+  def deleteRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Deleted)
 
   private def updateRelationshipStatus(relationshipId: UUID, newStatus: PartyRelationshipStatus): State =
     relationships.get(relationshipId.toString) match {

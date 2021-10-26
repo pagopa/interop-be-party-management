@@ -137,10 +137,31 @@ object PartyPersistentBehavior {
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           }
 
+      case RejectPartyRelationship(partyRelationshipId, replyTo) =>
+        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipRejected(rel.id))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case DeletePartyRelationship(partyRelationshipId, replyTo) =>
-        Effect
-          .persist(PartyRelationshipDeleted(partyRelationshipId))
-          .thenRun(_ => replyTo ! StatusReply.Success(()))
+        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipDeleted(rel.id))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
 
       case SuspendPartyRelationship(partyRelationshipId, replyTo) =>
         val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
@@ -234,7 +255,8 @@ object PartyPersistentBehavior {
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)
-      case PartyRelationshipDeleted(relationshipId)   => state.deletePartyRelationship(relationshipId)
+      case PartyRelationshipRejected(relationshipId)  => state.rejectRelationship(relationshipId)
+      case PartyRelationshipDeleted(relationshipId)   => state.deleteRelationship(relationshipId)
       case PartyRelationshipSuspended(relationshipId) => state.suspendRelationship(relationshipId)
       case PartyRelationshipActivated(relationshipId) => state.activateRelationship(relationshipId)
       case TokenAdded(token)                          => state.addToken(token)

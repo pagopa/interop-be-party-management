@@ -338,7 +338,7 @@ class PartyApiServiceImpl(
       token <- Future.fromTry(Token.decode(token))
       results <-
         if (token.isValid) confirmRelationships(token, doc)
-        else processRelationships(token, DeletePartyRelationship)
+        else processRelationships(token, RejectPartyRelationship)
     } yield results
 
     onComplete(results) {
@@ -361,7 +361,7 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     val results: Future[Seq[StatusReply[Unit]]] = for {
       token   <- Future.fromTry(Token.decode(token))
-      results <- processRelationships(token, DeletePartyRelationship)
+      results <- processRelationships(token, RejectPartyRelationship)
     } yield results
 
     onComplete(results) {
@@ -702,5 +702,35 @@ class PartyApiServiceImpl(
         getOrganizationByExternalId400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
+  }
+
+  /** Code: 204, Message: relationship deleted
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def deleteRelationshipById(relationshipId: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    logger.info(s"Delete relationship by id: $relationshipId")
+
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[Option[StatusReply[Unit]]] =
+      for {
+        uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, ref)))
+        maybeDeletion = results.filter(_.isSuccess).headOption
+      } yield maybeDeletion
+
+    onComplete(result) {
+      case Success(Some(reply)) => if (reply.isSuccess) {
+        deleteRelationshipById204
+      } else {
+        deleteRelationshipById404(Problem(detail = Some(s"Error while deleting relationship $relationshipId"), status = 400, title = "some error"))
+      }
+      case Success(None) => deleteRelationshipById404(Problem(detail = None, status = 404, title = "some error"))
+      case Failure(ex) =>
+        deleteRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+    }
   }
 }
