@@ -54,8 +54,8 @@ pipeline {
     stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
       environment {
-        POSTGRES = credentials('postgres-db') // TODO Create this on Jenkins
-        POSTGRES_HOST = 'some-db-url' // TODO update this once defined
+        POSTGRES = credentials('postgres-db')
+        POSTGRES_HOST = 'pdnd-interop-dev-rds.c9zr6t2swdpb.eu-central-1.rds.amazonaws.com'
         POSTGRES_PORT = '5432'
         POSTGRES_DB = 'party_management_persistence'
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
