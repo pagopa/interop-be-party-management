@@ -569,7 +569,7 @@ class PartyApiServiceImpl(
 
     val result: Future[Option[Relationship]] =
       for {
-        uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        uuid    <- relationshipId.toFutureUUID
         results <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
         maybePartyRelationship = results.find(_.isDefined).flatten
         partyRelationship      = maybePartyRelationship.map(_.toRelationship)
