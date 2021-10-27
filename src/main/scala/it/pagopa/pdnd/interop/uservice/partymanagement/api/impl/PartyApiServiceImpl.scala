@@ -729,7 +729,7 @@ class PartyApiServiceImpl(
           deleteRelationshipById404(
             Problem(
               detail = Some(s"Error while deleting relationship $relationshipId"),
-              status = 400,
+              status = 404,
               title = "some error"
             )
           )
