@@ -22,7 +22,6 @@ class StateSerializer extends SerializerWithStringManifest {
     case s: State => serialize(s, StateManifest, currentVersion)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef =
     manifest.split('|').toList match {
       case StateManifest :: `version1` :: Nil =>

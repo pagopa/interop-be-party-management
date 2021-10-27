@@ -25,9 +25,6 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-@SuppressWarnings(
-  Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial", "org.wartremover.warts.TraversableOps")
-)
 class PartyApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,
@@ -674,9 +671,9 @@ class PartyApiServiceImpl(
   }
 
   override def getOrganizationByExternalId(externalId: String)(implicit
-                                                                      toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
-                                                                      toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-                                                                      contexts: Seq[(String, String)]
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Getting organization ${externalId}")
 
@@ -686,7 +683,7 @@ class PartyApiServiceImpl(
 
     val organization: Future[InstitutionParty] = for {
       shardOrgs <- commanders.traverse(_.ask(ref => GetOrganizationByExternalId(externalId, ref)))
-      result <- shardOrgs.flatten.headOption.toFuture(OrganizationNotFound(externalId))
+      result    <- shardOrgs.flatten.headOption.toFuture(OrganizationNotFound(externalId))
     } yield result
 
     onComplete(organization) {
@@ -708,7 +705,9 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Relationship not found, DataType: Problem
     */
-  override def deleteRelationshipById(relationshipId: String)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def deleteRelationshipById(
+    relationshipId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     logger.info(s"Delete relationship by id: $relationshipId")
 
     val commanders = (0 to settings.numberOfShards)
@@ -723,11 +722,18 @@ class PartyApiServiceImpl(
       } yield maybeDeletion
 
     onComplete(result) {
-      case Success(Some(reply)) => if (reply.isSuccess) {
-        deleteRelationshipById204
-      } else {
-        deleteRelationshipById404(Problem(detail = Some(s"Error while deleting relationship $relationshipId"), status = 400, title = "some error"))
-      }
+      case Success(Some(reply)) =>
+        if (reply.isSuccess) {
+          deleteRelationshipById204
+        } else {
+          deleteRelationshipById404(
+            Problem(
+              detail = Some(s"Error while deleting relationship $relationshipId"),
+              status = 400,
+              title = "some error"
+            )
+          )
+        }
       case Success(None) => deleteRelationshipById404(Problem(detail = None, status = 404, title = "some error"))
       case Failure(ex) =>
         deleteRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))

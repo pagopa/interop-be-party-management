@@ -53,9 +53,6 @@ object PartyApiServiceSpec {
   def fileManagerType: String = config.getString("uservice-party-management.storage.type")
 }
 
-@SuppressWarnings(
-  Array("org.wartremover.warts.Var", "org.wartremover.warts.Null", "org.wartremover.warts.OptionPartial")
-)
 class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.config) with AnyWordSpecLike {
 
   val partyApiMarshaller: PartyApiMarshaller = new PartyApiMarshallerImpl
@@ -120,14 +117,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val nonExistingId = UUID.randomUUID()
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/persons/${nonExistingId.toString}",
-            method = HttpMethods.HEAD,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/persons/${nonExistingId.toString}",
+              method = HttpMethods.HEAD,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       response.status shouldBe StatusCodes.NotFound
     }
@@ -148,10 +147,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val _ = prepareTest(personSeed2)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(uri = s"$url/persons/${personUuid2.toString}", method = HttpMethods.HEAD, headers = authorization)
-        ).futureValue
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/persons/${personUuid2.toString}",
+              method = HttpMethods.HEAD,
+              headers = authorization
+            )
+          )
+          .futureValue
 
       response.status shouldBe StatusCodes.OK
     }
@@ -160,14 +165,19 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val _ = prepareTest(personSeed3)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(uri = s"$url/persons/${personUuid3.toString}", method = HttpMethods.GET, headers = authorization)
-        ).futureValue
-      
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/persons/${personUuid3.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
 
       val body = Unmarshal(response.entity).to[Person].futureValue
-      
+
       response.status shouldBe StatusCodes.OK
 
       body shouldBe personExpected2
@@ -193,14 +203,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val nonExistingUuid = UUID.randomUUID()
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/organizations/${nonExistingUuid.toString}",
-            method = HttpMethods.HEAD,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/organizations/${nonExistingUuid.toString}",
+              method = HttpMethods.HEAD,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       response.status shouldBe StatusCodes.NotFound
     }
@@ -225,14 +237,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val _ = prepareTest(orgSeed2)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/organizations/${orgUuid2.toString}",
-            method = HttpMethods.HEAD,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/organizations/${orgUuid2.toString}",
+              method = HttpMethods.HEAD,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       response.status shouldBe StatusCodes.OK
     }
@@ -243,14 +257,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val _ = prepareTest(orgSeed3)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/organizations/${orgUuid3.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/organizations/${orgUuid3.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       val body = Unmarshal(response.entity).to[Organization].futureValue
 
@@ -286,14 +302,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val _ = createPerson(personData)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships?from=${uuid.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?from=${uuid.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       response.status shouldBe StatusCodes.OK
 
@@ -355,14 +373,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val _ = prepareTest(personSeed = personSeed, organizationSeed = orgSeed, relationshipSeed = rlSeed)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships?from=${personUuid.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?from=${personUuid.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       val body = Unmarshal(response.entity).to[Relationships].futureValue
 
@@ -444,14 +464,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedDelegate)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships?to=${orgUuid.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?to=${orgUuid.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       val body = Unmarshal(response.entity).to[Relationships].futureValue
 
@@ -499,14 +521,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
 
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships?to=${orgUuid.toString}&platformRole=security",
-            method = HttpMethods.GET,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?to=${orgUuid.toString}&platformRole=security",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       val body = Unmarshal(response.entity).to[Relationships].futureValue
 
@@ -536,25 +560,29 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       confirmRelationshipWithToken(relationshipSeed)
 
-      val suspensionResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}/suspend",
-            method = HttpMethods.POST,
-            headers = authorization
+      val suspensionResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}/suspend",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       suspensionResponse.status shouldBe StatusCodes.NoContent
 
-      val relationshipResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val relationshipResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       relationshipResponse.status shouldBe StatusCodes.OK
       val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
@@ -563,14 +591,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "fail if relationship does not exist" in {
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/non-existing-relationship/suspend",
-            method = HttpMethods.POST,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/non-existing-relationship/suspend",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       response.status shouldBe StatusCodes.NotFound
     }
@@ -598,37 +628,43 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       confirmRelationshipWithToken(relationshipSeed)
 
       // First suspend the relationship
-      val suspensionResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}/suspend",
-            method = HttpMethods.POST,
-            headers = authorization
+      val suspensionResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}/suspend",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       suspensionResponse.status shouldBe StatusCodes.NoContent
 
       // Then activate the relationship
-      val activationResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}/activate",
-            method = HttpMethods.POST,
-            headers = authorization
+      val activationResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}/activate",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       activationResponse.status shouldBe StatusCodes.NoContent
 
-      val relationshipResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val relationshipResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       relationshipResponse.status shouldBe StatusCodes.OK
       val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
@@ -637,15 +673,17 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "fail if relationship does not exist" in {
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/non-existing-relationship/activate",
-            method = HttpMethods.POST,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/non-existing-relationship/activate",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
           )
-        ).futureValue
-      
+          .futureValue
+
       response.status shouldBe StatusCodes.NotFound
     }
 
@@ -672,24 +710,28 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       confirmRelationshipWithToken(relationshipSeed)
 
       val deleteResponse =
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}",
-            method = HttpMethods.DELETE,
-            headers = authorization
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}",
+              method = HttpMethods.DELETE,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       deleteResponse.status shouldBe StatusCodes.NoContent
 
-      val relationshipResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val relationshipResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       relationshipResponse.status shouldBe StatusCodes.OK
       val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
@@ -699,13 +741,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "fail if relationship does not exist" in {
       val response =
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${UUID.randomUUID()}",
-            method = HttpMethods.DELETE,
-            headers = authorization
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${UUID.randomUUID()}",
+              method = HttpMethods.DELETE,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       response.status shouldBe StatusCodes.NotFound
     }
@@ -753,15 +797,17 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
         .toEntity
 
-      val consumedResponse = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/tokens/$tokenText",
-            method = HttpMethods.POST,
-            headers = multipart,
-            entity = formData
+      val consumedResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/$tokenText",
+              method = HttpMethods.POST,
+              headers = multipart,
+              entity = formData
+            )
           )
-        ).futureValue
+          .futureValue
       consumedResponse.status shouldBe StatusCodes.Created
     }
 
@@ -781,21 +827,25 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val tokenText = Token.encode(token2)
 
-      val consumedResponse = 
-        Http().singleRequest(
-          HttpRequest(uri = s"$url/tokens/$tokenText", method = HttpMethods.DELETE, headers = authorization)
-        ).futureValue
+      val consumedResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/tokens/$tokenText", method = HttpMethods.DELETE, headers = authorization)
+          )
+          .futureValue
 
       consumedResponse.status shouldBe StatusCodes.OK
 
       val response =
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships?from=${personId3.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?from=${personId3.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       val body = Unmarshal(response.entity).to[Relationships].futureValue
 
@@ -810,10 +860,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val uuid = "YADA-YADA"
 
       //when looking up for the corresponding organization
-      val response = 
-        Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/$uuid", method = HttpMethods.GET, headers = authorization)
-        ).futureValue
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/relationships/$uuid", method = HttpMethods.GET, headers = authorization)
+          )
+          .futureValue
 
       //then
       response.status shouldBe StatusCodes.BadRequest
@@ -821,14 +873,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 404 when the relationship does not exist" in {
       //given a random UUID
-      
+
       val uuid = UUID.randomUUID().toString
 
       //when looking up for the corresponding organization
-      val response = 
-        Http().singleRequest(
-          HttpRequest(uri = s"$url/relationships/$uuid", method = HttpMethods.GET, headers = authorization)
-        ).futureValue
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/relationships/$uuid", method = HttpMethods.GET, headers = authorization)
+          )
+          .futureValue
 
       //then
       response.status shouldBe StatusCodes.NotFound
@@ -854,14 +908,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val _ = prepareTest(personSeed = personSeed, organizationSeed = orgSeed, relationshipSeed = rlSeed)
 
       //when
-      val response = 
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$url/relationships/${relationshipId.toString}",
-            method = HttpMethods.GET,
-            headers = authorization
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
           )
-        ).futureValue
+          .futureValue
 
       //then
       response.status shouldBe StatusCodes.OK

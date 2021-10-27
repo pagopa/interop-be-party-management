@@ -13,14 +13,7 @@ import org.slf4j.LoggerFactory
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.StringPlusAny",
-    "org.wartremover.warts.Equals",
-    "org.wartremover.warts.ToString"
-  )
-)
+
 object PartyPersistentBehavior {
 
   private val logger = LoggerFactory.getLogger(this.getClass)

@@ -22,7 +22,6 @@ class TokenDeletedSerializer extends SerializerWithStringManifest {
     case event: TokenDeleted => serialize(event, TokenDeletedManifest, currentVersion)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case TokenDeletedManifest :: `version1` :: Nil =>
       deserialize(v1.events.TokenDeletedV1, bytes, manifest, currentVersion)

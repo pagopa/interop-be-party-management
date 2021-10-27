@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 
 import java.util.UUID
 
-@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
 final case class State(
   parties: Map[UUID, Party],
   tokens: Map[String, Token],
