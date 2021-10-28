@@ -19,3 +19,4 @@ case class BulkPartiesSeed (
   partyIdentifiers: Seq[UUID]
 ) extends ApiModel
 
+

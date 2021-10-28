@@ -35,7 +35,7 @@ object PartyApi {
 }
 
 class PartyApi(baseUrl: String) {
-
+  
   /**
    * Activate Relationship by ID
    * 

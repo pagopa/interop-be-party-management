@@ -21,24 +21,28 @@ object OrganizationsPartyApiServiceData {
   lazy final val institutionId3 = "id3"
   lazy final val institutionId4 = "id4"
 
-  lazy final val orgSeed1 = OrganizationSeed(institutionId1, "Institutions One", "mail1@mail.org", Seq.empty)
-  lazy final val orgSeed2 = OrganizationSeed(institutionId2, "Institutions Two", "mail2@mail.org", Seq.empty)
-  lazy final val orgSeed3 = OrganizationSeed(institutionId3, "Institutions Three", "mail3@mail.org", Seq.empty)
-  lazy final val orgSeed4 = OrganizationSeed(institutionId4, "Institutions Four", "mail4@mail.org", Seq.empty)
+  lazy final val orgSeed1 = OrganizationSeed(institutionId1, None,"Institutions One", "mail1@mail.org","fiscalCode", Seq.empty)
+  lazy final val orgSeed2 = OrganizationSeed(institutionId2, None, "Institutions Two", "mail2@mail.org", "fiscalCode", Seq.empty)
+  lazy final val orgSeed3 = OrganizationSeed(institutionId3, None,"Institutions Three", "mail3@mail.org", "fiscalCode", Seq.empty)
+  lazy final val orgSeed4 = OrganizationSeed(institutionId4, None, "Institutions Four", "mail4@mail.org", "fiscalCode", Seq.empty)
 
   // format: on
   lazy final val expected1 = Organization(
     institutionId = institutionId1,
+    code = None,
     description = "Institutions One",
     digitalAddress = "mail1@mail.org",
+    fiscalCode = "fiscalCode",
     id = orgUuid1,
     attributes = Seq.empty
   )
 
   lazy final val expected3 = Organization(
     institutionId = institutionId3,
+    code = None,
     description = "Institutions Three",
     digitalAddress = "mail3@mail.org",
+    fiscalCode = "fiscalCode",
     id = orgUuid3,
     attributes = Seq.empty
   )

@@ -16,8 +16,12 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.client.invoker.ApiModel
 case class OrganizationSeed (
   /* DN */
   institutionId: String,
+  /* an accessory code (e.g. codice ipa) */
+  code: Option[String] = None,
   description: String,
   digitalAddress: String,
+  fiscalCode: String,
   attributes: Seq[String]
 ) extends ApiModel
+
 

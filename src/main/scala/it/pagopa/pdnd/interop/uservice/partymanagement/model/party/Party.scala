@@ -31,10 +31,12 @@ object Party {
       case institutionParty: InstitutionParty =>
         Left(
           Organization(
-            description = institutionParty.description,
-            institutionId = institutionParty.externalId,
-            digitalAddress = institutionParty.digitalAddress,
             id = institutionParty.id,
+            institutionId = institutionParty.externalId,
+            code = institutionParty.code,
+            description = institutionParty.description,
+            digitalAddress = institutionParty.digitalAddress,
+            fiscalCode = institutionParty.fiscalCode,
             attributes = institutionParty.attributes.toSeq
           )
         )
@@ -51,8 +53,10 @@ object PersonParty {
 final case class InstitutionParty(
   id: UUID,
   externalId: String,
+  code: Option[String],
   description: String,
   digitalAddress: String,
+  fiscalCode: String,
   attributes: Set[String],
   start: OffsetDateTime,
   end: Option[OffsetDateTime]
@@ -63,8 +67,10 @@ object InstitutionParty {
     InstitutionParty(
       id = uuidSupplier.get,
       externalId = organization.institutionId,
+      code = organization.code,
       description = organization.description,
       digitalAddress = organization.digitalAddress,
+      fiscalCode = organization.fiscalCode,
       attributes = organization.attributes.toSet,
       start = OffsetDateTime.now(),
       end = None
