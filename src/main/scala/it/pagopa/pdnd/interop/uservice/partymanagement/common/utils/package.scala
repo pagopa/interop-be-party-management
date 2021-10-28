@@ -36,6 +36,11 @@ package object utils {
     def toFuture: Future[A] = t.fold(e => Future.failed(e), a => Future.successful(a))
   }
 
+  implicit class StringOps[A](val str: String) extends AnyVal {
+    def toUUID: Try[UUID]          = Try { UUID.fromString(str) }
+    def toFutureUUID: Future[UUID] = toUUID.toFuture
+  }
+
   implicit class StatusReplyOps[A](val statusReply: StatusReply[A]) extends AnyVal {
     def toEither: Either[Throwable, A] =
       if (statusReply.isSuccess) Right(statusReply.getValue) else Left(statusReply.getError)

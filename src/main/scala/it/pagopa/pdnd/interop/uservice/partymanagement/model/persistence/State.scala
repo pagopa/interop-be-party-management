@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 
 import java.util.UUID
 
-@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
 final case class State(
   parties: Map[UUID, Party],
   tokens: Map[String, Token],
@@ -44,14 +43,17 @@ final case class State(
     copy(relationships = updated)
   }
 
-  def deletePartyRelationship(relationshipId: UUID): State =
-    copy(relationships = relationships - relationshipId.toString)
+  def rejectRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Rejected)
 
   def suspendRelationship(relationshipId: UUID): State =
     updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Suspended)
 
   def activateRelationship(relationshipId: UUID): State =
     updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Active)
+
+  def deleteRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Deleted)
 
   private def updateRelationshipStatus(relationshipId: UUID, newStatus: PartyRelationshipStatus): State =
     relationships.get(relationshipId.toString) match {

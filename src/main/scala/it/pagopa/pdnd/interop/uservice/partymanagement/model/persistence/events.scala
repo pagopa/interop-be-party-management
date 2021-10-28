@@ -22,10 +22,11 @@ final case class PartyRelationshipConfirmed(
   filePath: String,
   fileName: String,
   contentType: String
-)                                                                      extends PartyRelationshipEvent
-final case class PartyRelationshipDeleted(partyRelationshipId: UUID)   extends PartyRelationshipEvent
-final case class PartyRelationshipSuspended(partyRelationshipId: UUID) extends PartyRelationshipEvent
-final case class PartyRelationshipActivated(partyRelationshipId: UUID) extends PartyRelationshipEvent
+)                                                                       extends PartyRelationshipEvent
+final case class PartyRelationshipRejected(partyRelationshipId: UUID)   extends PartyRelationshipEvent
+final case class PartyRelationshipDeleted(partyRelationshipId: UUID)    extends PartyRelationshipEvent
+final case class PartyRelationshipSuspended(partyRelationshipId: UUID)  extends PartyRelationshipEvent
+final case class PartyRelationshipActivated(partyRelationshipId: UUID)  extends PartyRelationshipEvent
 
 /* Token Event */
 final case class TokenAdded(token: Token)   extends TokenEvent

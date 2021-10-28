@@ -38,14 +38,6 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.StringPlusAny",
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.TryPartial",
-    "org.wartremover.warts.NonUnitStatements"
-  )
-)
 object Main extends App {
 
   val fileManager = FileManager

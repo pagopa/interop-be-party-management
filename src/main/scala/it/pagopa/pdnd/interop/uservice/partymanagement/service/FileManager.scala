@@ -22,14 +22,6 @@ trait FileManager {
 
 }
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.Any",
-    "org.wartremover.warts.Throw",
-    "org.wartremover.warts.StringPlusAny",
-    "org.wartremover.warts.AsInstanceOf"
-  )
-)
 object FileManager {
   def getConcreteImplementation(fileManager: String): Try[FileManager] = {
     fileManager match {

@@ -22,17 +22,12 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import java.util.UUID
 import scala.util.Try
 
-@SuppressWarnings(Array("org.wartremover.warts.Nothing"))
 object utils {
 
   def getParty(partyV1: PartyV1): ErrorOr[Party] = partyV1 match {
     case p: PersonPartyV1 =>
       Right(
-        PersonParty(
-          id = UUID.fromString(p.id),
-          start = toOffsetDateTime(p.start),
-          end = p.end.map(toOffsetDateTime)
-        )
+        PersonParty(id = UUID.fromString(p.id), start = toOffsetDateTime(p.start), end = p.end.map(toOffsetDateTime))
       )
     case i: InstitutionPartyV1 =>
       Right(
@@ -51,13 +46,7 @@ object utils {
 
   def getPartyV1(party: Party): ErrorOr[PartyV1] = party match {
     case p: PersonParty =>
-      Right(
-        PersonPartyV1(
-          id = p.id.toString,
-          start = p.start.format(formatter),
-          end = p.end.map(_.format(formatter))
-        )
-      )
+      Right(PersonPartyV1(id = p.id.toString, start = p.start.format(formatter), end = p.end.map(_.format(formatter))))
     case i: InstitutionParty =>
       Right(
         InstitutionPartyV1(

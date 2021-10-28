@@ -18,7 +18,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import java.util.UUID
 
 package object v1 {
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
+
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state =>
       for {
@@ -37,7 +37,6 @@ package object v1 {
           .map(_.toMap)
       } yield State(parties, tokens, relationships)
 
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state =>
       for {
@@ -104,6 +103,15 @@ package object v1 {
   implicit def partyRelationshipAddedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipAdded, PartyRelationshipAddedV1] =
     event => getPartyRelationshipV1(event.partyRelationship).map(PartyRelationshipAddedV1.of)
+
+  implicit def partyRelationshipRejectedV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
+
+  implicit def partyRelationshipRejectedV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
+    event =>
+      Right[Throwable, PartyRelationshipRejectedV1](PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString))
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
