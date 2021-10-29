@@ -2,6 +2,13 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 
 import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{ErrorOr, formatter, toOffsetDateTime}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationshipStatus.{
+  Active,
+  Deleted,
+  Pending,
+  Rejected,
+  Suspended
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
@@ -13,6 +20,15 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
   PartyRelationshipStatusV1,
   PartyRoleV1
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1.{
+  Unrecognized => UnrecognizedStatus
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRoleV1._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRoleV1.{
+  Unrecognized => UnrecognizedRole
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
@@ -74,8 +90,8 @@ object utils {
       id        <- stringToUUID(partyRelationshipV1.id)
       from      <- stringToUUID(partyRelationshipV1.from)
       to        <- stringToUUID(partyRelationshipV1.to)
-      partyRole <- PartyRole.fromText(partyRelationshipV1.role.name)
-      status    <- PartyRelationshipStatus.fromText(partyRelationshipV1.status.name)
+      partyRole <- partyRoleFromProtobuf(partyRelationshipV1.role)
+      status    <- relationshipStatusFromProtobuf(partyRelationshipV1.status)
     } yield PartyRelationship(
       id = id,
       from = from,
@@ -93,25 +109,19 @@ object utils {
   }
 
   def getPartyRelationshipV1(partyRelationship: PartyRelationship): ErrorOr[PartyRelationshipV1] = {
-    for {
-      status <- PartyRelationshipStatusV1
-        .fromName(partyRelationship.status.stringify)
-        .toRight(new RuntimeException("Deserialization from protobuf failed"))
-      partyRole <- PartyRoleV1
-        .fromName(partyRelationship.role.stringify)
-        .toRight(new RuntimeException("Deserialization from protobuf failed"))
-    } yield PartyRelationshipV1(
-      id = partyRelationship.id.toString,
-      from = partyRelationship.from.toString,
-      to = partyRelationship.to.toString,
-      role = partyRole,
-      productRole = partyRelationship.productRole,
-      start = partyRelationship.start.format(formatter),
-      end = partyRelationship.end.map(_.format(formatter)),
-      status = status,
-      filePath = partyRelationship.filePath
+    Right(
+      PartyRelationshipV1(
+        id = partyRelationship.id.toString,
+        from = partyRelationship.from.toString,
+        to = partyRelationship.to.toString,
+        role = partyRoleToProtobuf(partyRelationship.role),
+        productRole = partyRelationship.productRole,
+        start = partyRelationship.start.format(formatter),
+        end = partyRelationship.end.map(_.format(formatter)),
+        status = relationshipStatusToProtobuf(partyRelationship.status),
+        filePath = partyRelationship.filePath
+      )
     )
-
   }
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
@@ -147,4 +157,40 @@ object utils {
       )
     )
   }
+
+  def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PartyRole] =
+    role match {
+      case PARTY_ROLE_DELEGATE     => Right(Manager)
+      case PARTY_ROLE_MANAGER      => Right(Delegate)
+      case PARTY_ROLE_OPERATOR     => Right(Operator)
+      case UnrecognizedRole(value) => Left(new RuntimeException(s"Unable to deserialize party role value $value"))
+    }
+
+  def relationshipStatusFromProtobuf(status: PartyRelationshipStatusV1): ErrorOr[PartyRelationshipStatus] =
+    status match {
+      case RELATIONSHIP_STATUS_PENDING   => Right(Pending)
+      case RELATIONSHIP_STATUS_ACTIVE    => Right(Active)
+      case RELATIONSHIP_STATUS_SUSPENDED => Right(Suspended)
+      case RELATIONSHIP_STATUS_DELETED   => Right(Deleted)
+      case RELATIONSHIP_STATUS_REJECTED  => Right(Rejected)
+      case UnrecognizedStatus(value) =>
+        Left(new RuntimeException(s"Unable to deserialize party relationship status value $value"))
+    }
+
+  def partyRoleToProtobuf(role: PartyRole): PartyRoleV1 =
+    role match {
+      case Manager  => PARTY_ROLE_DELEGATE
+      case Delegate => PARTY_ROLE_MANAGER
+      case Operator => PARTY_ROLE_OPERATOR
+    }
+
+  def relationshipStatusToProtobuf(status: PartyRelationshipStatus): PartyRelationshipStatusV1 =
+    status match {
+      case Pending   => RELATIONSHIP_STATUS_PENDING
+      case Active    => RELATIONSHIP_STATUS_ACTIVE
+      case Suspended => RELATIONSHIP_STATUS_SUSPENDED
+      case Deleted   => RELATIONSHIP_STATUS_DELETED
+      case Rejected  => RELATIONSHIP_STATUS_REJECTED
+    }
+
 }

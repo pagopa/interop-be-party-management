@@ -44,12 +44,12 @@ object TokenApiServiceData {
   lazy final val organizationSeed2 = OrganizationSeed(institutionId2, None, "Institutions Ten", "mail10@mail.org", "fiscalCode",    attributes = Seq.empty, products = Set.empty)
   lazy final val organizationSeed3 = OrganizationSeed(institutionId3, None, "Institutions Eleven", "mail11@mail.org", "fiscalCode", attributes = Seq.empty, products = Set.empty)
 
-  lazy final val relationshipSeed1 = RelationshipSeed(from = personId1, to = orgId1, role = "Manager",  productRole = "admin", products = Set.empty)
-  lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = "Delegate", productRole = "admin", products = Set.empty)
-  lazy final val relationshipSeed3 = RelationshipSeed(from = personId2, to = orgId2, role = "Manager",  productRole = "admin", products = Set.empty)
-  lazy final val relationshipSeed4 = RelationshipSeed(from = personId2, to = orgId2, role = "Delegate", productRole = "admin", products = Set.empty)
-  lazy final val relationshipSeed5 = RelationshipSeed(from = personId3, to = orgId3, role = "Manager",  productRole = "admin", products = Set.empty)
-  lazy final val relationshipSeed6 = RelationshipSeed(from = personId3, to = orgId3, role = "Delegate", productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed1 = RelationshipSeed(from = personId1, to = orgId1, role = MANAGER,  productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = DELEGATE, productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed3 = RelationshipSeed(from = personId2, to = orgId2, role = MANAGER,  productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed4 = RelationshipSeed(from = personId2, to = orgId2, role = DELEGATE, productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed5 = RelationshipSeed(from = personId3, to = orgId3, role = MANAGER,  productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed6 = RelationshipSeed(from = personId3, to = orgId3, role = DELEGATE, productRole = "admin", products = Set.empty)
   
   lazy final val relationshipId1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9299")
   lazy final val relationshipId2 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9298")

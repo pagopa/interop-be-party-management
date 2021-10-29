@@ -745,7 +745,7 @@ components:
           format: email
           type: string
         fiscalCode:
-          description: organization fiscal code 
+          description: organization fiscal code
           type: string
         products:
           type: array
@@ -831,6 +831,22 @@ components:
             type: string
             format: uuid
           description: the identifiers of party
+    PartyRoleEnum:
+      type: string
+      description: Represents the generic available role types for the relationship
+      enum:
+        - MANAGER
+        - DELEGATE
+        - OPERATOR
+    RelationshipStatusEnum:
+      type: string
+      description: Represents the party relationship status
+      enum:
+        - PENDING
+        - ACTIVE
+        - SUSPENDED
+        - DELETED
+        - REJECTED
     Attributes:
       type: array
       items:
@@ -858,12 +874,7 @@ components:
           format: uuid
           description: organization ID
         role:
-          type: string
-          description: represents the generic available role types for the relationship
-          enum:
-            - Manager
-            - Delegate
-            - Operator
+          $ref: '#/components/schemas/PartyRoleEnum'
         products:
           type: array
           items:
@@ -904,27 +915,12 @@ components:
           type: string
           description: content type of the file containing the signed onboarding document
         role:
-          type: string
-          description: represents the generic available role types for the relationship
-          enum:
-            - Manager
-            - Delegate
-            - Operator
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: 'if present, it represents the current PagoPA product this relationship belongs to'
+          $ref: '#/components/schemas/PartyRoleEnum'
         productRole:
           type: string
           description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
         status:
-          type: string
-          enum:
-            - Pending
-            - Active
-            - Suspended
+          $ref: '#/components/schemas/RelationshipStatusEnum'
       additionalProperties: false
       required:
         - id

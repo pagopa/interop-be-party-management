@@ -25,16 +25,15 @@ final case class PartyRelationship(
   /** Returns a syntetic identifier useful to bind the party relationship with a generated token, if any.
     * @return
     */
-  def applicationId: String = s"${from.toString}-${to.toString}-${role.stringify}-${productRole}"
+  def applicationId: String = s"${from.toString}-${to.toString}-${role.toString}-$productRole"
 
   def toRelationship: Relationship = Relationship(
     id = id,
     from = from,
     to = to,
-    role = role.stringify,
+    role = role.toApi,
     productRole = productRole,
-    products = products,
-    status = status.stringify,
+    status = status.toApi,
     filePath = filePath,
     fileName = fileName,
     contentType = contentType

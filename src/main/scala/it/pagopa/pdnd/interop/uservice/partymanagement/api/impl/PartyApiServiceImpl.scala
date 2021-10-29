@@ -228,9 +228,9 @@ class PartyApiServiceImpl(
     val result: Future[Relationship] = for {
       from <- getParty(seed.from)
       to   <- getParty(seed.to)
-      role <- PartyRole.fromText(seed.role).toFuture
-      _    <- isMissingRelationship(from.id, to.id, role, seed.productRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.products, seed.productRole)
+      role = PartyRole.fromApi(seed.role)
+      _ <- isMissingRelationship(from.id, to.id, role, seed.productRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -238,10 +238,10 @@ class PartyApiServiceImpl(
         id = verified.id,
         from = from.id,
         to = to.id,
-        role = verified.role.toString,
+        role = seed.role,
         products = verified.products,
         productRole = verified.productRole,
-        status = verified.status.toString,
+        status = verified.status.toApi,
         filePath = None,
         fileName = None,
         contentType = None
@@ -439,15 +439,13 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] = for {
-    role <- PartyRole.fromText(relationshipSeed.role).toFuture
-    relationship <- relationshipByInvolvedParties(
+  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] =
+    relationshipByInvolvedParties(
       from = relationshipSeed.from,
       to = relationshipSeed.to,
-      role = role,
+      role = PartyRole.fromApi(relationshipSeed.role),
       productRole = relationshipSeed.productRole
     )
-  } yield relationship
 
   private def isRelationshipAllowed(
     currentPartyRelationships: List[PartyRelationship],
@@ -734,7 +732,7 @@ class PartyApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info(s"Getting organization ${externalId}")
+    logger.info(s"Getting organization $externalId")
 
     val commanders = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -777,7 +775,7 @@ class PartyApiServiceImpl(
       for {
         uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
         results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, ref)))
-        maybeDeletion = results.filter(_.isSuccess).headOption
+        maybeDeletion = results.find(_.isSuccess)
       } yield maybeDeletion
 
     onComplete(result) {

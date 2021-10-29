@@ -21,16 +21,17 @@ message PartyRelationshipV1 {
   optional string contentType = 12;
 
   enum PartyRelationshipStatusV1 {
-    Pending = 0;
-    Active = 1;
-    Suspended = 2;
-    Deleted = 3;
+    RELATIONSHIP_STATUS_PENDING = 0;
+    RELATIONSHIP_STATUS_ACTIVE = 1;
+    RELATIONSHIP_STATUS_SUSPENDED = 2;
+    RELATIONSHIP_STATUS_DELETED = 3;
+    RELATIONSHIP_STATUS_REJECTED = 4;
   }
 
   enum PartyRoleV1 {
-    Delegate = 0;
-    Manager = 1;
-    Operator = 2;
+    PARTY_ROLE_DELEGATE = 0;
+    PARTY_ROLE_MANAGER = 1;
+    PARTY_ROLE_OPERATOR = 2;
   }
 }
 
