@@ -673,6 +673,7 @@ components:
           format: email
           type: string
         fiscalCode:
+          description: organization fiscal code 
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
@@ -705,6 +706,7 @@ components:
           format: email
           type: string
         fiscalCode:
+          description: organization fiscal code
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
