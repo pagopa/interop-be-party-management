@@ -6,12 +6,6 @@ import spray.json.{DefaultJsonProtocol, JsString, JsValue, JsonFormat, deseriali
 import scala.util.{Failure, Success, Try}
 
 sealed trait PartyRole {
-//  def stringify: String = this match {
-//    case Manager  => "Manager"
-//    case Delegate => "Delegate"
-//    case Operator => "Operator"
-//  }
-
   def toApi: PartyRoleEnum = this match {
     case Manager  => MANAGER
     case Delegate => DELEGATE
@@ -48,13 +42,6 @@ object PartyRole extends DefaultJsonProtocol {
     }
 
   }
-
-//  def fromText(str: String): Either[Throwable, PartyRole] = str match {
-//    case "Manager"  => Right(Manager)
-//    case "Delegate" => Right(Delegate)
-//    case "Operator" => Right(Operator)
-//    case _          => Left(new RuntimeException("Invalid PartyRole")) //TODO meaningful error
-//  }
 
   def fromApi(role: PartyRoleEnum): PartyRole = role match {
     case MANAGER  => Manager
