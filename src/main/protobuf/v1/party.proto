@@ -27,5 +27,7 @@ message InstitutionPartyV1 {
   required string start = 7;
   optional string end = 8;
   repeated string attributes = 9;
+  optional string code = 10;
+  required string fiscalCode = 11;
 }
 

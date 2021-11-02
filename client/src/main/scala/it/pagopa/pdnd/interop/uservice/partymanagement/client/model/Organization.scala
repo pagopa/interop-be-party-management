@@ -18,8 +18,12 @@ case class Organization (
   id: UUID,
   /* DN */
   institutionId: String,
+  /* an accessory code (e.g. codice ipa) */
+  code: Option[String] = None,
   description: String,
   digitalAddress: String,
+  fiscalCode: String,
   attributes: Seq[String]
 ) extends ApiModel
+
 

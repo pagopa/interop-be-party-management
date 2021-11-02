@@ -34,8 +34,10 @@ object utils {
         InstitutionParty(
           id = UUID.fromString(i.id),
           externalId = i.externalId,
+          code = i.code,
           description = i.description,
           digitalAddress = i.digitalAddress,
+          fiscalCode = i.fiscalCode,
           attributes = i.attributes.toSet,
           start = toOffsetDateTime(i.start),
           end = i.end.map(toOffsetDateTime)
@@ -52,8 +54,10 @@ object utils {
         InstitutionPartyV1(
           id = i.id.toString,
           externalId = i.externalId,
+          code = i.code,
           description = i.description,
           digitalAddress = i.digitalAddress,
+          fiscalCode = i.fiscalCode,
           attributes = i.attributes.toSeq,
           start = i.start.format(formatter),
           end = i.end.map(_.format(formatter))

@@ -662,6 +662,9 @@ components:
           description: DN
           example: 'aoo=c_f205,o=c_f205,c=it'
           type: string
+        code:
+          description: an accessory code (e.g. codice ipa)
+          type: string
         description:
           type: string
           example: AGENCY X
@@ -669,12 +672,16 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
+        fiscalCode:
+          description: organization fiscal code 
+          type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
         - institutionId
         - description
         - digitalAddress
+        - fiscalCode
         - attributes
       additionalProperties: false
     Organization:
@@ -688,12 +695,18 @@ components:
           description: DN
           example: 'aoo=c_f205,o=c_f205,c=it'
           type: string
+        code:
+          description: an accessory code (e.g. codice ipa)
+          type: string
         description:
           type: string
           example: AGENCY X
         digitalAddress:
           example: email@pec.mail.org
           format: email
+          type: string
+        fiscalCode:
+          description: organization fiscal code
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
@@ -702,6 +715,7 @@ components:
         - institutionId
         - description
         - digitalAddress
+        - fiscalCode
         - attributes
       additionalProperties: false
     BulkOrganizations:
