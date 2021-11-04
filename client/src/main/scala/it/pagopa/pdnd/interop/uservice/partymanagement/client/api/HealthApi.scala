@@ -22,7 +22,7 @@ object HealthApi {
 }
 
 class HealthApi(baseUrl: String) {
-  
+
   /**
    * Return ok
    * 

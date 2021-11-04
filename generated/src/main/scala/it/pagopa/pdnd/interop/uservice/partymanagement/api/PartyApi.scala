@@ -19,6 +19,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.OrganizationSeed
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Person
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.PersonSeed
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.Products
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Relationship
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.RelationshipSeed
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Relationships
@@ -51,6 +52,15 @@ class PartyApi(
           wrappingDirective { implicit contexts =>
             entity(as[Seq[String]]) { requestBody =>
               partyService.addOrganizationAttributes(id = id, requestBody = requestBody)
+            }
+          }
+        }
+      } ~
+      path("organizations" / Segment / "products") { (id) =>
+        post {
+          wrappingDirective { implicit contexts =>
+            entity(as[Products]) { products =>
+              partyService.addOrganizationProducts(id = id, products = products)
             }
           }
         }
@@ -174,9 +184,8 @@ class PartyApi(
       path("relationships") {
         get {
           wrappingDirective { implicit contexts =>
-            parameters("from".as[String].?, "to".as[String].?, "platformRole".as[String].?) {
-              (from, to, platformRole) =>
-                partyService.getRelationships(from = from, to = to, platformRole = platformRole)
+            parameters("from".as[String].?, "to".as[String].?, "productRole".as[String].?) { (from, to, productRole) =>
+              partyService.getRelationships(from = from, to = to, productRole = productRole)
             }
           }
         }
@@ -232,6 +241,24 @@ trait PartyApiService {
     * Code: 404, Message: Organization not found, DataType: Problem
     */
   def addOrganizationAttributes(id: String, requestBody: Seq[String])(implicit
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route
+
+  def addOrganizationProducts200(responseOrganization: Organization)(implicit
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization]
+  ): Route =
+    complete((200, responseOrganization))
+  def addOrganizationProducts404(responseProblem: Problem)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+  ): Route =
+    complete((404, responseProblem))
+
+  /** Code: 200, Message: successful operation, DataType: Organization
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  def addOrganizationProducts(id: String, products: Products)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -505,7 +532,7 @@ trait PartyApiService {
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  def getRelationships(from: Option[String], to: Option[String], platformRole: Option[String])(implicit
+  def getRelationships(from: Option[String], to: Option[String], productRole: Option[String])(implicit
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -564,6 +591,8 @@ trait PartyApiMarshaller {
   implicit def fromEntityUnmarshallerOrganizationSeed: FromEntityUnmarshaller[OrganizationSeed]
 
   implicit def fromEntityUnmarshallerRelationshipSeed: FromEntityUnmarshaller[RelationshipSeed]
+
+  implicit def fromEntityUnmarshallerProducts: FromEntityUnmarshaller[Products]
 
   implicit def fromEntityUnmarshallerBulkPartiesSeed: FromEntityUnmarshaller[BulkPartiesSeed]
 

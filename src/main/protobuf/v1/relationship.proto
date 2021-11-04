@@ -11,13 +11,14 @@ message PartyRelationshipV1 {
   required string from = 2;
   required string to = 3;
   required PartyRoleV1 role = 4;
-  required string platformRole = 5;
-  required string start = 6;
-  optional string end = 7;
-  required PartyRelationshipStatusV1 status = 8;
-  optional string filePath = 9;
-  optional string fileName = 10;
-  optional string contentType = 11;
+  optional string product = 5;
+  required string productRole = 6;
+  required string start = 7;
+  optional string end = 8;
+  required PartyRelationshipStatusV1 status = 9;
+  optional string filePath = 10;
+  optional string fileName = 11;
+  optional string contentType = 12;
 
   enum PartyRelationshipStatusV1 {
     Pending = 0;

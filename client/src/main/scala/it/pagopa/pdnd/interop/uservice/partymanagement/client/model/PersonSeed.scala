@@ -19,4 +19,3 @@ case class PersonSeed (
   id: UUID
 ) extends ApiModel
 
-

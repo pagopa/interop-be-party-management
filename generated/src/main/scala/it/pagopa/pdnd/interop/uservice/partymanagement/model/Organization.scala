@@ -7,8 +7,9 @@ import java.util.UUID
   * @param code an accessory code (e.g. codice ipa) for example: ''null''
   * @param description  for example: ''AGENCY X''
   * @param digitalAddress  for example: ''email@pec.mail.org''
-  * @param fiscalCode  for example: ''null''
+  * @param fiscalCode organization fiscal code for example: ''null''
   * @param attributes  for example: ''null''
+  * @param products  for example: ''null''
   */
 final case class Organization(
   id: UUID,
@@ -17,5 +18,6 @@ final case class Organization(
   description: String,
   digitalAddress: String,
   fiscalCode: String,
-  attributes: Seq[String]
+  attributes: Seq[String],
+  products: Seq[String]
 )

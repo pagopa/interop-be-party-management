@@ -14,7 +14,8 @@ final case class PartyRelationship(
   from: UUID,
   to: UUID,
   role: PartyRole,
-  platformRole: String,
+  product: Option[String],
+  productRole: String,
   status: PartyRelationshipStatus,
   filePath: Option[String],
   fileName: Option[String],
@@ -24,14 +25,15 @@ final case class PartyRelationship(
   /** Returns a syntetic identifier useful to bind the party relationship with a generated token, if any.
     * @return
     */
-  def applicationId: String = s"${from.toString}-${to.toString}-${role.stringify}-${platformRole}"
+  def applicationId: String = s"${from.toString}-${to.toString}-${role.stringify}-${productRole}"
 
   def toRelationship: Relationship = Relationship(
     id = id,
     from = from,
     to = to,
     role = role.stringify,
-    platformRole = platformRole,
+    productRole = productRole,
+    product = product,
     status = status.stringify,
     filePath = filePath,
     fileName = fileName,
@@ -44,13 +46,14 @@ object PartyRelationship {
   //TODO add role check
   def create(
     uuidSupplier: UUIDSupplier
-  )(from: UUID, to: UUID, role: PartyRole, platformRole: String): PartyRelationship =
+  )(from: UUID, to: UUID, role: PartyRole, product: Option[String], productRole: String): PartyRelationship =
     PartyRelationship(
       id = uuidSupplier.get,
       from = from,
       to = to,
       role = role,
-      platformRole = platformRole,
+      product = product,
+      productRole = productRole,
       start = OffsetDateTime.now(),
       end = None,
       status = role match {

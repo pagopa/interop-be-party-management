@@ -101,6 +101,30 @@ object PartyPersistentBehavior {
             Effect.none[AttributesAdded, State]
           }
 
+      case AddOrganizationProducts(organizationId, products, replyTo) =>
+        state.parties
+          .get(organizationId)
+          .map { p =>
+            val updated: Either[Throwable, Party] = p.replaceProducts(products.toSet)
+            updated.fold[Effect[OrganizationProductsAdded, State]](
+              ex => {
+                replyTo ! StatusReply.Error(
+                  s"Something goes wrong trying to organization products for party $organizationId: ${ex.getMessage}"
+                )
+                Effect.none[OrganizationProductsAdded, State]
+              },
+              p => {
+                Effect
+                  .persist(OrganizationProductsAdded(p))
+                  .thenRun(_ => replyTo ! StatusReply.Success(p))
+              }
+            )
+          }
+          .getOrElse {
+            replyTo ! StatusReply.Error(s"Party $organizationId not found")
+            Effect.none[AttributesAdded, State]
+          }
+
       case AddPartyRelationship(partyRelationship, replyTo) =>
         state.relationships
           .get(partyRelationship.id.toString)
@@ -228,8 +252,8 @@ object PartyPersistentBehavior {
           .persist(TokenDeleted(token))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-      case GetPartyRelationshipByAttributes(from, to, role, platformRole, replyTo) =>
-        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, platformRole)
+      case GetPartyRelationshipByAttributes(from, to, role, productRole, replyTo) =>
+        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, productRole)
         Effect.none[Event, State]
 
       case Idle =>
@@ -245,6 +269,7 @@ object PartyPersistentBehavior {
       case PartyAdded(party)                         => state.addParty(party)
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
+      case OrganizationProductsAdded(party)          => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)

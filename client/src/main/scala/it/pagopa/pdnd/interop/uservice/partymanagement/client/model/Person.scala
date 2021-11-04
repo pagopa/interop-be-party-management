@@ -18,4 +18,3 @@ case class Person (
   id: UUID
 ) extends ApiModel
 
-

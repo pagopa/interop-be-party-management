@@ -68,13 +68,13 @@ final case class State(
     from: UUID,
     to: UUID,
     role: PartyRole,
-    platformRole: String
+    productRole: String
   ): Option[PartyRelationship] = {
     relationships.values.find(relationship =>
       from.toString == relationship.from.toString
         && to.toString == relationship.to.toString
         && role == relationship.role
-        && platformRole == relationship.platformRole
+        && productRole == relationship.productRole
     )
   }
 

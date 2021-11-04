@@ -20,8 +20,9 @@ case class OrganizationSeed (
   code: Option[String] = None,
   description: String,
   digitalAddress: String,
+  /* organization fiscal code */
   fiscalCode: String,
+  products: Seq[String],
   attributes: Seq[String]
 ) extends ApiModel
-
 

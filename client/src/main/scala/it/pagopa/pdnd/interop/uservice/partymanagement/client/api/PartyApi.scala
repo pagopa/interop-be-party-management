@@ -19,6 +19,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.Organization
 import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.Person
 import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.PersonSeed
 import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.Problem
+import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.Products
 import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.Relationship
 import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.RelationshipSeed
 import it.pagopa.pdnd.interop.uservice.partymanagement.client.model.Relationships
@@ -35,7 +36,7 @@ object PartyApi {
 }
 
 class PartyApi(baseUrl: String) {
-  
+
   /**
    * Activate Relationship by ID
    * 
@@ -65,6 +66,24 @@ class PartyApi(baseUrl: String) {
   def addOrganizationAttributes(id: UUID, requestBody: Seq[String]): ApiRequest[Organization] =
     ApiRequest[Organization](ApiMethods.PATCH, baseUrl, "/organizations/{id}/attributes", "application/json")
       .withBody(requestBody)
+      .withPathParam("id", id)
+      .withSuccessResponse[Organization](200)
+      .withErrorResponse[Problem](404)
+      
+
+  /**
+   * Replaces the organization products with the set provided with this action
+   * 
+   * Expected answers:
+   *   code 200 : Organization (successful operation)
+   *   code 404 : Problem (Organization not found)
+   * 
+   * @param id Organization identifier
+   * @param products 
+   */
+  def addOrganizationProducts(id: UUID, products: Products): ApiRequest[Organization] =
+    ApiRequest[Organization](ApiMethods.POST, baseUrl, "/organizations/{id}/products", "application/json")
+      .withBody(products)
       .withPathParam("id", id)
       .withSuccessResponse[Organization](200)
       .withErrorResponse[Problem](404)
@@ -319,13 +338,13 @@ class PartyApi(baseUrl: String) {
    * 
    * @param from 
    * @param to 
-   * @param platformRole 
+   * @param productRole 
    */
-  def getRelationships(from: Option[UUID] = None, to: Option[UUID] = None, platformRole: Option[String] = None): ApiRequest[Relationships] =
+  def getRelationships(from: Option[UUID] = None, to: Option[UUID] = None, productRole: Option[String] = None): ApiRequest[Relationships] =
     ApiRequest[Relationships](ApiMethods.GET, baseUrl, "/relationships", "application/json")
       .withQueryParam("from", from)
       .withQueryParam("to", to)
-      .withQueryParam("platformRole", platformRole)
+      .withQueryParam("productRole", productRole)
       .withSuccessResponse[Relationships](200)
       .withErrorResponse[Problem](400)
       

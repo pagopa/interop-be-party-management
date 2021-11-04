@@ -28,8 +28,10 @@ case class Relationship (
   contentType: Option[String] = None,
   /* represents the generic available role types for the relationship */
   role: RelationshipEnums.Role,
-  /* user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles */
-  platformRole: String,
+  /* if present, it represents the current PagoPA product this relationship belongs to */
+  product: Option[String] = None,
+  /* user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles */
+  productRole: String,
   status: RelationshipEnums.Status
 ) extends ApiModel
 
@@ -50,4 +52,3 @@ object RelationshipEnums {
   }
 
 }
-

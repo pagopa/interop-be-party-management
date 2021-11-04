@@ -39,6 +39,7 @@ object utils {
           digitalAddress = i.digitalAddress,
           fiscalCode = i.fiscalCode,
           attributes = i.attributes.toSet,
+          products = i.products.toSet,
           start = toOffsetDateTime(i.start),
           end = i.end.map(toOffsetDateTime)
         )
@@ -80,7 +81,8 @@ object utils {
       from = from,
       to = to,
       role = partyRole,
-      platformRole = partyRelationshipV1.platformRole,
+      product = partyRelationshipV1.product,
+      productRole = partyRelationshipV1.productRole,
       start = toOffsetDateTime(partyRelationshipV1.start),
       end = partyRelationshipV1.end.map(toOffsetDateTime),
       status = status,
@@ -103,7 +105,7 @@ object utils {
       from = partyRelationship.from.toString,
       to = partyRelationship.to.toString,
       role = partyRole,
-      platformRole = partyRelationship.platformRole,
+      productRole = partyRelationship.productRole,
       start = partyRelationship.start.format(formatter),
       end = partyRelationship.end.map(_.format(formatter)),
       status = status,

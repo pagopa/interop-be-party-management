@@ -22,8 +22,9 @@ case class Organization (
   code: Option[String] = None,
   description: String,
   digitalAddress: String,
+  /* organization fiscal code */
   fiscalCode: String,
-  attributes: Seq[String]
+  attributes: Seq[String],
+  products: Seq[String]
 ) extends ApiModel
-
 

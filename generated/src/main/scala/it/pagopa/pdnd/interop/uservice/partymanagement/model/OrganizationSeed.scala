@@ -4,7 +4,8 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model
   * @param code an accessory code (e.g. codice ipa) for example: ''null''
   * @param description  for example: ''AGENCY X''
   * @param digitalAddress  for example: ''email@pec.mail.org''
-  * @param fiscalCode  for example: ''null''
+  * @param fiscalCode organization fiscal code for example: ''null''
+  * @param products  for example: ''null''
   * @param attributes  for example: ''null''
   */
 final case class OrganizationSeed(
@@ -13,5 +14,6 @@ final case class OrganizationSeed(
   description: String,
   digitalAddress: String,
   fiscalCode: String,
+  products: Seq[String],
   attributes: Seq[String]
 )
