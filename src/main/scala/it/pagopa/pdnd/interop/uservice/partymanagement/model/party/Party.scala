@@ -42,7 +42,7 @@ object Party {
             digitalAddress = institutionParty.digitalAddress,
             fiscalCode = institutionParty.fiscalCode,
             attributes = institutionParty.attributes.toSeq,
-            products = institutionParty.products.toSeq
+            products = institutionParty.products
           )
         )
     }
@@ -78,7 +78,7 @@ object InstitutionParty {
       digitalAddress = organization.digitalAddress,
       fiscalCode = organization.fiscalCode,
       attributes = organization.attributes.toSet,
-      products = organization.products.toSet,
+      products = organization.products,
       start = OffsetDateTime.now(),
       end = None
     )

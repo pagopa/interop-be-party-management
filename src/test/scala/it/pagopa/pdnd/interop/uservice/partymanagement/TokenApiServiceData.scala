@@ -40,9 +40,9 @@ object TokenApiServiceData {
   lazy final val institutionId2 = "id10"
   lazy final val institutionId3 = "id13"
 
-  lazy final val organizationSeed1 = OrganizationSeed(institutionId1, None, "Institutions Nine", "mail9@mail.org", "fiscalCode",    attributes = Seq.empty, products = Seq.empty)
-  lazy final val organizationSeed2 = OrganizationSeed(institutionId2, None, "Institutions Ten", "mail10@mail.org", "fiscalCode",    attributes = Seq.empty, products = Seq.empty)
-  lazy final val organizationSeed3 = OrganizationSeed(institutionId3, None, "Institutions Eleven", "mail11@mail.org", "fiscalCode", attributes = Seq.empty, products = Seq.empty)
+  lazy final val organizationSeed1 = OrganizationSeed(institutionId1, None, "Institutions Nine", "mail9@mail.org", "fiscalCode",    attributes = Seq.empty, products = Set.empty)
+  lazy final val organizationSeed2 = OrganizationSeed(institutionId2, None, "Institutions Ten", "mail10@mail.org", "fiscalCode",    attributes = Seq.empty, products = Set.empty)
+  lazy final val organizationSeed3 = OrganizationSeed(institutionId3, None, "Institutions Eleven", "mail11@mail.org", "fiscalCode", attributes = Seq.empty, products = Set.empty)
 
   lazy final val relationshipSeed1 = RelationshipSeed(from = personId1, to = orgId1, role = "Manager",  productRole = "admin", products = Set.empty)
   lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = "Delegate", productRole = "admin", products = Set.empty)

@@ -752,6 +752,7 @@ components:
           items:
             type: string
             description: product names associated to this organization
+          uniqueItems: true
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
@@ -793,6 +794,7 @@ components:
           items:
             type: string
             description: product names associated to this organization
+          uniqueItems: true
       required:
         - id
         - institutionId

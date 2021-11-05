@@ -21,10 +21,10 @@ object OrganizationsPartyApiServiceData {
   lazy final val institutionId3 = "id3"
   lazy final val institutionId4 = "id4"
 
-  lazy final val orgSeed1 = OrganizationSeed(institutionId1, None,"Institutions One", "mail1@mail.org","fiscalCode",    Seq.empty, Seq.empty)
-  lazy final val orgSeed2 = OrganizationSeed(institutionId2, None, "Institutions Two", "mail2@mail.org", "fiscalCode",  Seq.empty, Seq.empty)
-  lazy final val orgSeed3 = OrganizationSeed(institutionId3, None,"Institutions Three", "mail3@mail.org", "fiscalCode", Seq.empty, Seq.empty)
-  lazy final val orgSeed4 = OrganizationSeed(institutionId4, None, "Institutions Four", "mail4@mail.org", "fiscalCode", Seq.empty, Seq.empty)
+  lazy final val orgSeed1 = OrganizationSeed(institutionId1, None,"Institutions One", "mail1@mail.org","fiscalCode",    Set.empty, Seq.empty)
+  lazy final val orgSeed2 = OrganizationSeed(institutionId2, None, "Institutions Two", "mail2@mail.org", "fiscalCode",  Set.empty, Seq.empty)
+  lazy final val orgSeed3 = OrganizationSeed(institutionId3, None,"Institutions Three", "mail3@mail.org", "fiscalCode", Set.empty, Seq.empty)
+  lazy final val orgSeed4 = OrganizationSeed(institutionId4, None, "Institutions Four", "mail4@mail.org", "fiscalCode", Set.empty, Seq.empty)
 
   // format: on
   lazy final val expected1 = Organization(
@@ -35,7 +35,7 @@ object OrganizationsPartyApiServiceData {
     fiscalCode = "fiscalCode",
     id = orgUuid1,
     attributes = Seq.empty,
-    products = Seq.empty
+    products = Set.empty
   )
 
   lazy final val expected3 = Organization(
@@ -46,7 +46,7 @@ object OrganizationsPartyApiServiceData {
     fiscalCode = "fiscalCode",
     id = orgUuid3,
     attributes = Seq.empty,
-    products = Seq.empty
+    products = Set.empty
   )
 
   def prepareTest(
