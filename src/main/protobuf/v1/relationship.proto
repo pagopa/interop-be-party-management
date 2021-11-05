@@ -11,7 +11,7 @@ message PartyRelationshipV1 {
   required string from = 2;
   required string to = 3;
   required PartyRoleV1 role = 4;
-  optional string product = 5;
+  repeated string products = 5;
   required string productRole = 6;
   required string start = 7;
   optional string end = 8;

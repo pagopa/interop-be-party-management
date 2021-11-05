@@ -17,3 +17,4 @@ case class RelationshipsSeed (
   items: Seq[RelationshipSeed]
 ) extends ApiModel
 
+

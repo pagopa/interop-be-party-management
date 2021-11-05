@@ -36,7 +36,7 @@ object PartyApi {
 }
 
 class PartyApi(baseUrl: String) {
-
+  
   /**
    * Activate Relationship by ID
    * 
@@ -64,7 +64,7 @@ class PartyApi(baseUrl: String) {
    * @param requestBody 
    */
   def addOrganizationAttributes(id: UUID, requestBody: Seq[String]): ApiRequest[Organization] =
-    ApiRequest[Organization](ApiMethods.PATCH, baseUrl, "/organizations/{id}/attributes", "application/json")
+    ApiRequest[Organization](ApiMethods.POST, baseUrl, "/organizations/{id}/attributes", "application/json")
       .withBody(requestBody)
       .withPathParam("id", id)
       .withSuccessResponse[Organization](200)
@@ -86,6 +86,24 @@ class PartyApi(baseUrl: String) {
       .withBody(products)
       .withPathParam("id", id)
       .withSuccessResponse[Organization](200)
+      .withErrorResponse[Problem](404)
+      
+
+  /**
+   * Replaces the relationship products with the set provided with this action
+   * 
+   * Expected answers:
+   *   code 200 : Relationship (successful operation)
+   *   code 404 : Problem (Organization not found)
+   * 
+   * @param relationshipId Relationship identifier
+   * @param products 
+   */
+  def addRelationshipProducts(relationshipId: UUID, products: Products): ApiRequest[Relationship] =
+    ApiRequest[Relationship](ApiMethods.POST, baseUrl, "/relationships/{relationshipId}/products", "application/json")
+      .withBody(products)
+      .withPathParam("relationshipId", relationshipId)
+      .withSuccessResponse[Relationship](200)
       .withErrorResponse[Problem](404)
       
 

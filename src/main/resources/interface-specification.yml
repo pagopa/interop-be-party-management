@@ -261,7 +261,7 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: getPartyAttributes
       description: 'returns the attributes of the identified party, if any.'
-    patch:
+    post:
       #      security:
       #        - bearerAuth: [ ]
       tags:
@@ -447,6 +447,42 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  '/relationships/{relationshipId}/products':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship identifier
+    post:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Relationship products replacement
+      description: Replaces the relationship products with the set provided with this action
+      operationId: addRelationshipProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Products'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        '404':
+          description: Organization not found
           content:
             application/problem+json:
               schema:
@@ -806,6 +842,7 @@ components:
           type: array
           items:
             type: string
+          uniqueItems: true
           description: set of products to define for this organization
     RelationshipSeed:
       type: object
@@ -825,8 +862,11 @@ components:
             - Manager
             - Delegate
             - Operator
-        product:
-          type: string
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
           description: 'if present, it represents the current PagoPA product this relationship belongs to'
         productRole:
           type: string
@@ -837,6 +877,7 @@ components:
         - to
         - role
         - productRole
+        - products
     Relationship:
       type: object
       properties:
@@ -867,8 +908,11 @@ components:
             - Manager
             - Delegate
             - Operator
-        product:
-          type: string
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
           description: 'if present, it represents the current PagoPA product this relationship belongs to'
         productRole:
           type: string
@@ -886,6 +930,7 @@ components:
         - to
         - role
         - productRole
+        - products
         - status
     Relationships:
       type: object

@@ -145,7 +145,7 @@ class PartyApiServiceImpl(
 
     val result: Future[StatusReply[Party]] = for {
       uuid <- organizationId.asUUID.toFuture
-      r    <- getCommander(organizationId).ask(ref => AddAttributes(uuid, products.products, ref))
+      r    <- getCommander(organizationId).ask(ref => AddOrganizationProducts(uuid, products.products, ref))
     } yield r
 
     onSuccess(result) {
@@ -230,7 +230,7 @@ class PartyApiServiceImpl(
       to   <- getParty(seed.to)
       role <- PartyRole.fromText(seed.role).toFuture
       _    <- isMissingRelationship(from.id, to.id, role, seed.productRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.product, seed.productRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.products, seed.productRole)
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -239,7 +239,7 @@ class PartyApiServiceImpl(
         from = from.id,
         to = to.id,
         role = verified.role.toString,
-        product = verified.product,
+        products = verified.products,
         productRole = verified.productRole,
         status = verified.status.toString,
         filePath = None,
@@ -254,6 +254,36 @@ class PartyApiServiceImpl(
         createRelationship400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
 
+  }
+
+  /** Code: 200, Message: successful operation, DataType: Relationship
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  override def addRelationshipProducts(relationshipId: String, products: Products)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[StatusReply[PartyRelationship]] = for {
+      uuid <- relationshipId.toFutureUUID
+      resultsCollection <- Future.traverse(commanders)(
+        _.ask(ref => AddPartyRelationshipProducts(uuid, products.products, ref)).transform(Success(_))
+      )
+      relationship <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+    } yield relationship
+
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        addRelationshipProducts200(statusReply.getValue.toRelationship)
+      case statusReply =>
+        addRelationshipProducts404(
+          Problem(Option(statusReply.getError.getMessage), status = 404, "Relationship not found")
+        )
+    }
   }
 
   /** Code: 200, Message: successful operation, DataType: Relationships

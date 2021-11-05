@@ -18,6 +18,8 @@ final case class OrganizationProductsAdded(party: Party) extends PartyEvent
 
 /* PartyRelationship Event */
 final case class PartyRelationshipAdded(partyRelationship: PartyRelationship) extends PartyRelationshipEvent
+final case class PartyRelationshipProductsAdded(partyRelationshipId: UUID, products: Set[String])
+    extends PartyRelationshipEvent
 final case class PartyRelationshipConfirmed(
   partyRelationshipId: UUID,
   filePath: String,

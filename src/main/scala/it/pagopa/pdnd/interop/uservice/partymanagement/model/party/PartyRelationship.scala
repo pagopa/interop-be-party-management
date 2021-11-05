@@ -14,7 +14,7 @@ final case class PartyRelationship(
   from: UUID,
   to: UUID,
   role: PartyRole,
-  product: Option[String],
+  products: Set[String],
   productRole: String,
   status: PartyRelationshipStatus,
   filePath: Option[String],
@@ -33,7 +33,7 @@ final case class PartyRelationship(
     to = to,
     role = role.stringify,
     productRole = productRole,
-    product = product,
+    products = products,
     status = status.stringify,
     filePath = filePath,
     fileName = fileName,
@@ -46,13 +46,13 @@ object PartyRelationship {
   //TODO add role check
   def create(
     uuidSupplier: UUIDSupplier
-  )(from: UUID, to: UUID, role: PartyRole, product: Option[String], productRole: String): PartyRelationship =
+  )(from: UUID, to: UUID, role: PartyRole, products: Set[String], productRole: String): PartyRelationship =
     PartyRelationship(
       id = uuidSupplier.get,
       from = from,
       to = to,
       role = role,
-      product = product,
+      products = products,
       productRole = productRole,
       start = OffsetDateTime.now(),
       end = None,

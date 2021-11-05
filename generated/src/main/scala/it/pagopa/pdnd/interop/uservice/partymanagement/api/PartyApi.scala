@@ -48,7 +48,7 @@ class PartyApi(
       }
     } ~
       path("organizations" / Segment / "attributes") { (id) =>
-        patch {
+        post {
           wrappingDirective { implicit contexts =>
             entity(as[Seq[String]]) { requestBody =>
               partyService.addOrganizationAttributes(id = id, requestBody = requestBody)
@@ -61,6 +61,15 @@ class PartyApi(
           wrappingDirective { implicit contexts =>
             entity(as[Products]) { products =>
               partyService.addOrganizationProducts(id = id, products = products)
+            }
+          }
+        }
+      } ~
+      path("relationships" / Segment / "products") { (relationshipId) =>
+        post {
+          wrappingDirective { implicit contexts =>
+            entity(as[Products]) { products =>
+              partyService.addRelationshipProducts(relationshipId = relationshipId, products = products)
             }
           }
         }
@@ -260,6 +269,24 @@ trait PartyApiService {
     */
   def addOrganizationProducts(id: String, products: Products)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route
+
+  def addRelationshipProducts200(responseRelationship: Relationship)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship]
+  ): Route =
+    complete((200, responseRelationship))
+  def addRelationshipProducts404(responseProblem: Problem)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem]
+  ): Route =
+    complete((404, responseProblem))
+
+  /** Code: 200, Message: successful operation, DataType: Relationship
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  def addRelationshipProducts(relationshipId: String, products: Products)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route

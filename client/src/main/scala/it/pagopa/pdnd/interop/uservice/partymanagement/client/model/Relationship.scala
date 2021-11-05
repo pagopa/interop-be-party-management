@@ -29,7 +29,7 @@ case class Relationship (
   /* represents the generic available role types for the relationship */
   role: RelationshipEnums.Role,
   /* if present, it represents the current PagoPA product this relationship belongs to */
-  product: Option[String] = None,
+  products: Set[String],
   /* user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles */
   productRole: String,
   status: RelationshipEnums.Status
@@ -52,3 +52,4 @@ object RelationshipEnums {
   }
 
 }
+

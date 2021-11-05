@@ -26,3 +26,4 @@ case class OrganizationSeed (
   attributes: Seq[String]
 ) extends ApiModel
 
+

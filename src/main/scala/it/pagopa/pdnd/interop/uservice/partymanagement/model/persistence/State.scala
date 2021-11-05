@@ -43,6 +43,11 @@ final case class State(
     copy(relationships = updated)
   }
 
+  def updateRelationshipProducts(relationshipId: UUID, products: Set[String]): State = {
+    val updated: PartyRelationship = relationships(relationshipId.toString).copy(products = products)
+    copy(relationships = relationships + (relationshipId.toString -> updated))
+  }
+
   def rejectRelationship(relationshipId: UUID): State =
     updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Rejected)
 

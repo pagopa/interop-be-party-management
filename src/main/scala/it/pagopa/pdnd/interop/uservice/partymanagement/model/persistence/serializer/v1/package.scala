@@ -6,14 +6,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, Party
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils.{
-  getParty,
-  getPartyRelationship,
-  stringToUUID,
-  getPartyRelationshipV1,
-  getToken,
-  _
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
 
 import java.util.UUID
 

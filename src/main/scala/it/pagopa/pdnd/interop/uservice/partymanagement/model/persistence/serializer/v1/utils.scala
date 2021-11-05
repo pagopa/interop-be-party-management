@@ -9,11 +9,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
   PartyRelationshipStatusV1,
   PartyRoleV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
   TokenV1
@@ -81,7 +81,7 @@ object utils {
       from = from,
       to = to,
       role = partyRole,
-      product = partyRelationshipV1.product,
+      products = partyRelationshipV1.products.toSet,
       productRole = partyRelationshipV1.productRole,
       start = toOffsetDateTime(partyRelationshipV1.start),
       end = partyRelationshipV1.end.map(toOffsetDateTime),
