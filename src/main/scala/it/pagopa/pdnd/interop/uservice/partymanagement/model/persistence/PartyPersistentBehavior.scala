@@ -109,7 +109,7 @@ object PartyPersistentBehavior {
             updated.fold[Effect[OrganizationProductsAdded, State]](
               ex => {
                 replyTo ! StatusReply.Error(
-                  s"Something goes wrong trying to organization products for party $organizationId: ${ex.getMessage}"
+                  s"Something went wrong trying to organization products for party $organizationId: ${ex.getMessage}"
                 )
                 Effect.none[OrganizationProductsAdded, State]
               },
