@@ -137,7 +137,7 @@ class PartyApiServiceImpl(
 
   }
 
-  override def addOrganizationProducts(organizationId: String, products: Products)(implicit
+  override def replaceOrganizationProducts(organizationId: String, products: Products)(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -154,11 +154,11 @@ class PartyApiServiceImpl(
           .convertToApi(statusReply.getValue)
           .swap
           .fold(
-            _ => addOrganizationProducts404(Problem(detail = None, status = 400, title = "some error")),
-            organization => addOrganizationProducts200(organization)
+            _ => replaceOrganizationProducts404(Problem(detail = None, status = 400, title = "some error")),
+            organization => replaceOrganizationProducts200(organization)
           )
       case statusReply =>
-        addOrganizationProducts404(
+        replaceOrganizationProducts404(
           Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
         )
     }
@@ -259,7 +259,7 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: Relationship
     * Code: 404, Message: Organization not found, DataType: Problem
     */
-  override def addRelationshipProducts(relationshipId: String, products: Products)(implicit
+  override def replaceRelationshipProducts(relationshipId: String, products: Products)(implicit
     toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -278,9 +278,9 @@ class PartyApiServiceImpl(
 
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
-        addRelationshipProducts200(statusReply.getValue.toRelationship)
+        replaceRelationshipProducts200(statusReply.getValue.toRelationship)
       case statusReply =>
-        addRelationshipProducts404(
+        replaceRelationshipProducts404(
           Problem(Option(statusReply.getError.getMessage), status = 404, "Relationship not found")
         )
     }
