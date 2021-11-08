@@ -304,7 +304,7 @@ paths:
         - party
       summary: Organization products replacement
       description: Replaces the organization products with the set provided with this action
-      operationId: addOrganizationProducts
+      operationId: replaceOrganizationProducts
       requestBody:
         required: true
         content:
@@ -467,7 +467,7 @@ paths:
         - party
       summary: Relationship products replacement
       description: Replaces the relationship products with the set provided with this action
-      operationId: addRelationshipProducts
+      operationId: replaceRelationshipProducts
       requestBody:
         required: true
         content:
