@@ -137,6 +137,34 @@ class PartyApiServiceImpl(
 
   }
 
+  override def addOrganizationProducts(organizationId: String, products: Products)(implicit
+    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+
+    val result: Future[StatusReply[Party]] = for {
+      uuid <- organizationId.asUUID.toFuture
+      r    <- getCommander(organizationId).ask(ref => AddOrganizationProducts(uuid, products.products, ref))
+    } yield r
+
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        Party
+          .convertToApi(statusReply.getValue)
+          .swap
+          .fold(
+            _ => addOrganizationProducts404(Problem(detail = None, status = 400, title = "some error")),
+            organization => addOrganizationProducts200(organization)
+          )
+      case statusReply =>
+        addOrganizationProducts404(
+          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
+        )
+    }
+
+  }
+
   /** Code: 201, Message: successful operation, DataType: Person
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
@@ -201,8 +229,8 @@ class PartyApiServiceImpl(
       from <- getParty(seed.from)
       to   <- getParty(seed.to)
       role <- PartyRole.fromText(seed.role).toFuture
-      _    <- isMissingRelationship(from.id, to.id, role, seed.platformRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
+      _    <- isMissingRelationship(from.id, to.id, role, seed.productRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.products, seed.productRole)
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -211,7 +239,8 @@ class PartyApiServiceImpl(
         from = from.id,
         to = to.id,
         role = verified.role.toString,
-        platformRole = verified.platformRole,
+        products = verified.products,
+        productRole = verified.productRole,
         status = verified.status.toString,
         filePath = None,
         fileName = None,
@@ -227,17 +256,47 @@ class PartyApiServiceImpl(
 
   }
 
+  /** Code: 200, Message: successful operation, DataType: Relationship
+    * Code: 404, Message: Organization not found, DataType: Problem
+    */
+  override def addRelationshipProducts(relationshipId: String, products: Products)(implicit
+    toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val commanders = (0 to settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[StatusReply[PartyRelationship]] = for {
+      uuid <- relationshipId.toFutureUUID
+      resultsCollection <- Future.traverse(commanders)(
+        _.ask(ref => AddPartyRelationshipProducts(uuid, products.products, ref)).transform(Success(_))
+      )
+      relationship <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+    } yield relationship
+
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        addRelationshipProducts200(statusReply.getValue.toRelationship)
+      case statusReply =>
+        addRelationshipProducts404(
+          Problem(Option(statusReply.getError.getMessage), status = 404, "Relationship not found")
+        )
+    }
+  }
+
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def getRelationships(from: Option[String], to: Option[String], platformRole: Option[String])(implicit
+  override def getRelationships(from: Option[String], to: Option[String], productRole: Option[String])(implicit
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
     logger.error(
-      s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}/${platformRole.getOrElse("Empty")}"
+      s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}/${productRole.getOrElse("Empty")}"
     )
 
     def retrieveRelationshipsByTo(id: UUID): Future[List[Relationship]] = {
@@ -268,8 +327,8 @@ class PartyApiServiceImpl(
       r        <- relationshipsFromParams(fromUuid, toUuid)
     } yield r
 
-    val filteredResult = platformRole match {
-      case Some(pr) => result.map(_.filter(_.platformRole == pr))
+    val filteredResult = productRole match {
+      case Some(pr) => result.map(_.filter(_.productRole == pr))
       case None     => result
     }
 
@@ -386,7 +445,7 @@ class PartyApiServiceImpl(
       from = relationshipSeed.from,
       to = relationshipSeed.to,
       role = role,
-      platformRole = relationshipSeed.platformRole
+      productRole = relationshipSeed.productRole
     )
   } yield relationship
 
@@ -473,12 +532,12 @@ class PartyApiServiceImpl(
     from: UUID,
     to: UUID,
     role: PartyRole,
-    platformRole: String
+    productRole: String
   ): Future[PartyRelationship] = {
 
     for {
       maybeRelationship <- getCommander(from.toString).ask(ref =>
-        GetPartyRelationshipByAttributes(from = from, to = to, role = role, platformRole = platformRole, ref)
+        GetPartyRelationshipByAttributes(from = from, to = to, role = role, productRole = productRole, ref)
       )
       result <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
     } yield result
@@ -489,8 +548,8 @@ class PartyApiServiceImpl(
     *
     * @return successful future if no relationship has been found in the cluster.
     */
-  private def isMissingRelationship(from: UUID, to: UUID, role: PartyRole, platformRole: String): Future[Boolean] = {
-    relationshipByInvolvedParties(from, to, role, platformRole).transformWith {
+  private def isMissingRelationship(from: UUID, to: UUID, role: PartyRole, productRole: String): Future[Boolean] = {
+    relationshipByInvolvedParties(from, to, role, productRole).transformWith {
       case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
       case Failure(_) => Future.successful(true)
     }

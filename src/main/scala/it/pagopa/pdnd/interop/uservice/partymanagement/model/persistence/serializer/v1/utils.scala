@@ -9,11 +9,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
   PartyRelationshipStatusV1,
   PartyRoleV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
   TokenV1
@@ -39,6 +39,7 @@ object utils {
           digitalAddress = i.digitalAddress,
           fiscalCode = i.fiscalCode,
           attributes = i.attributes.toSet,
+          products = i.products.toSet,
           start = toOffsetDateTime(i.start),
           end = i.end.map(toOffsetDateTime)
         )
@@ -80,7 +81,8 @@ object utils {
       from = from,
       to = to,
       role = partyRole,
-      platformRole = partyRelationshipV1.platformRole,
+      products = partyRelationshipV1.products.toSet,
+      productRole = partyRelationshipV1.productRole,
       start = toOffsetDateTime(partyRelationshipV1.start),
       end = partyRelationshipV1.end.map(toOffsetDateTime),
       status = status,
@@ -103,7 +105,7 @@ object utils {
       from = partyRelationship.from.toString,
       to = partyRelationship.to.toString,
       role = partyRole,
-      platformRole = partyRelationship.platformRole,
+      productRole = partyRelationship.productRole,
       start = partyRelationship.start.format(formatter),
       end = partyRelationship.end.map(_.format(formatter)),
       status = status,

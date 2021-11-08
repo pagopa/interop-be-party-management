@@ -6,14 +6,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, Party
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils.{
-  getParty,
-  getPartyRelationship,
-  stringToUUID,
-  getPartyRelationshipV1,
-  getToken,
-  _
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
 
 import java.util.UUID
 
@@ -155,5 +148,13 @@ package object v1 {
 
   implicit def tokenDeletedV1PersistEventSerializer: PersistEventSerializer[TokenDeleted, TokenDeletedV1] =
     event => getTokenV1(event.token).map(TokenDeletedV1.of)
+
+  implicit def organizationProductsAddedV1PersistEventDeserializer
+    : PersistEventDeserializer[OrganizationProductsAddedV1, OrganizationProductsAdded] =
+    event => getParty(event.party).map(OrganizationProductsAdded)
+
+  implicit def organizationProductsAddedV1PersistEventSerializer
+    : PersistEventSerializer[OrganizationProductsAdded, OrganizationProductsAddedV1] =
+    event => getPartyV1(event.party).map(OrganizationProductsAddedV1.of)
 
 }

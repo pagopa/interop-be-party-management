@@ -261,7 +261,7 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: getPartyAttributes
       description: 'returns the attributes of the identified party, if any.'
-    patch:
+    post:
       #      security:
       #        - bearerAuth: [ ]
       tags:
@@ -275,6 +275,42 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Attributes'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /organizations/{id}/products:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: Organization identifier
+    post:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Organization products replacement
+      description: Replaces the organization products with the set provided with this action
+      operationId: addOrganizationProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Products'
       responses:
         '200':
           description: successful operation
@@ -336,7 +372,7 @@ paths:
             type: string
             format: uuid
         - in: query
-          name: platformRole
+          name: productRole
           schema:
             type: string
       responses:
@@ -411,6 +447,42 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  '/relationships/{relationshipId}/products':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship identifier
+    post:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Relationship products replacement
+      description: Replaces the relationship products with the set provided with this action
+      operationId: addRelationshipProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Products'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        '404':
+          description: Organization not found
           content:
             application/problem+json:
               schema:
@@ -675,6 +747,12 @@ components:
         fiscalCode:
           description: organization fiscal code 
           type: string
+        products:
+          type: array
+          items:
+            type: string
+            description: product names associated to this organization
+          uniqueItems: true
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
@@ -683,6 +761,7 @@ components:
         - digitalAddress
         - fiscalCode
         - attributes
+        - products
       additionalProperties: false
     Organization:
       type: object
@@ -710,6 +789,12 @@ components:
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
+        products:
+          type: array
+          items:
+            type: string
+            description: product names associated to this organization
+          uniqueItems: true
       required:
         - id
         - institutionId
@@ -717,6 +802,7 @@ components:
         - digitalAddress
         - fiscalCode
         - attributes
+        - products
       additionalProperties: false
     BulkOrganizations:
       type: object
@@ -749,6 +835,17 @@ components:
       type: array
       items:
         type: string
+    Products:
+      type: object
+      required:
+        - products
+      properties:
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+          description: set of products to define for this organization
     RelationshipSeed:
       type: object
       properties:
@@ -767,15 +864,22 @@ components:
             - Manager
             - Delegate
             - Operator
-        platformRole:
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+          description: 'if present, it represents the current PagoPA product this relationship belongs to'
+        productRole:
           type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles'
+          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
       additionalProperties: false
       required:
         - from
         - to
         - role
-        - platformRole
+        - productRole
+        - products
     Relationship:
       type: object
       properties:
@@ -806,9 +910,15 @@ components:
             - Manager
             - Delegate
             - Operator
-        platformRole:
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+          description: 'if present, it represents the current PagoPA product this relationship belongs to'
+        productRole:
           type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles'
+          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
         status:
           type: string
           enum:
@@ -821,7 +931,8 @@ components:
         - from
         - to
         - role
-        - platformRole
+        - productRole
+        - products
         - status
     Relationships:
       type: object
