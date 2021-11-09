@@ -22,3 +22,15 @@ case object SUSPENDED extends RelationshipStatusEnum
 case object DELETED extends RelationshipStatusEnum
 case object REJECTED extends RelationshipStatusEnum
 
+
+object RelationshipStatusEnum {
+    def fromValue(value: String): Either[Throwable, RelationshipStatusEnum] =
+      value match {
+         case "PENDING" => Right(PENDING)
+         case "ACTIVE" => Right(ACTIVE)
+         case "SUSPENDED" => Right(SUSPENDED)
+         case "DELETED" => Right(DELETED)
+         case "REJECTED" => Right(REJECTED)
+         case other => Left(new RuntimeException(s"Unable to decode value $other"))
+      }
+}

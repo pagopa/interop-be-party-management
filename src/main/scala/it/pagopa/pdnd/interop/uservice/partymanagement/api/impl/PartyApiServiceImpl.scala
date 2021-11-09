@@ -230,7 +230,7 @@ class PartyApiServiceImpl(
       to   <- getParty(seed.to)
       role = PartyRole.fromApi(seed.role)
       _ <- isMissingRelationship(from.id, to.id, role, seed.productRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.platformRole)
+      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.products, seed.productRole)
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))

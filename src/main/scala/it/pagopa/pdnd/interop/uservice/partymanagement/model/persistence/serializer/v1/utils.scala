@@ -21,7 +21,6 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyRelationshipStatusV1,
   PartyRoleV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1.{
   Unrecognized => UnrecognizedStatus

@@ -33,6 +33,7 @@ final case class PartyRelationship(
     to = to,
     role = role.toApi,
     productRole = productRole,
+    products = products,
     status = status.toApi,
     filePath = filePath,
     fileName = fileName,

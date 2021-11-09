@@ -20,3 +20,13 @@ case object MANAGER extends PartyRoleEnum
 case object DELEGATE extends PartyRoleEnum
 case object OPERATOR extends PartyRoleEnum
 
+
+object PartyRoleEnum {
+    def fromValue(value: String): Either[Throwable, PartyRoleEnum] =
+      value match {
+         case "MANAGER" => Right(MANAGER)
+         case "DELEGATE" => Right(DELEGATE)
+         case "OPERATOR" => Right(OPERATOR)
+         case other => Left(new RuntimeException(s"Unable to decode value $other"))
+      }
+}
