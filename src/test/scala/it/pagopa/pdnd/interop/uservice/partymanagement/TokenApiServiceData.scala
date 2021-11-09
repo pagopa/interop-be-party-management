@@ -5,8 +5,13 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.{Marshal, Marshaller}
 import akka.http.scaladsl.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipStatus.Pending
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Delegate, Manager, PartyRelationship, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState.Pending
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
+  Delegate,
+  Manager,
+  PersistedPartyRelationship,
+  Token
+}
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -55,10 +60,10 @@ object TokenApiServiceData {
   lazy final val relationshipId2 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9298")
   lazy final val relationshipId3 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9297")
   lazy final val relationshipId4 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9296")
-  lazy final val partyRelationship1 = PartyRelationship(id = relationshipId1, start = OffsetDateTime.now(), end = None, status = Pending, from = personId2, to = orgId2, role = Manager,  productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
-  lazy final val partyRelationship2 = PartyRelationship(id = relationshipId2, start = OffsetDateTime.now(), end = None, status = Pending, from = personId2, to = orgId2, role = Delegate, productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
-  lazy final val partyRelationship3 = PartyRelationship(id = relationshipId3, start = OffsetDateTime.now(), end = None, status = Pending, from = personId3, to = orgId3, role = Manager,  productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
-  lazy final val partyRelationship4 = PartyRelationship(id = relationshipId4, start = OffsetDateTime.now(), end = None, status = Pending, from = personId3, to = orgId3, role = Delegate, productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship1 = PersistedPartyRelationship(id = relationshipId1, start = OffsetDateTime.now(), end = None, state = Pending, from = personId2, to = orgId2, role = Manager,  productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship2 = PersistedPartyRelationship(id = relationshipId2, start = OffsetDateTime.now(), end = None, state = Pending, from = personId2, to = orgId2, role = Delegate, productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship3 = PersistedPartyRelationship(id = relationshipId3, start = OffsetDateTime.now(), end = None, state = Pending, from = personId3, to = orgId3, role = Manager,  productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship4 = PersistedPartyRelationship(id = relationshipId4, start = OffsetDateTime.now(), end = None, state = Pending, from = personId3, to = orgId3, role = Delegate, productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
 
   lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum")
   lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum")

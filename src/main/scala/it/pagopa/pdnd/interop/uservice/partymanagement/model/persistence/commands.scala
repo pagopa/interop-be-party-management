@@ -32,8 +32,10 @@ final case class AddOrganizationProducts(
 ) extends PartyCommand
 
 /* PartyRelationship Command */
-final case class AddPartyRelationship(partyRelationship: PartyRelationship, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationshipCommand
+final case class AddPartyRelationship(
+  partyRelationship: PersistedPartyRelationship,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
 
 final case class ConfirmPartyRelationship(
   relationshipId: UUID,
@@ -51,7 +53,7 @@ final case class SuspendPartyRelationship(relationshipId: UUID, replyTo: ActorRe
 final case class AddPartyRelationshipProducts(
   relationshipId: UUID,
   products: Set[String],
-  replyTo: ActorRef[StatusReply[PartyRelationship]]
+  replyTo: ActorRef[StatusReply[PersistedPartyRelationship]]
 ) extends PartyRelationshipCommand
 
 final case class ActivatePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
@@ -60,27 +62,27 @@ final case class ActivatePartyRelationship(relationshipId: UUID, replyTo: ActorR
 final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PartyRelationship]])
+final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PersistedPartyRelationship]])
     extends PartyRelationshipCommand
 
-final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PartyRelationship]])
+final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PersistedPartyRelationship]])
     extends PartyRelationshipCommand
 
-final case class GetPartyRelationshipsByTo(to: UUID, replyTo: ActorRef[List[PartyRelationship]])
+final case class GetPartyRelationshipsByTo(to: UUID, replyTo: ActorRef[List[PersistedPartyRelationship]])
     extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipByAttributes(
-                                                   from: UUID,
-                                                   to: UUID,
-                                                   role: PersistedPartyRole,
-                                                   productRole: String,
-                                                   replyTo: ActorRef[Option[PartyRelationship]]
+  from: UUID,
+  to: UUID,
+  role: PersistedPartyRole,
+  productRole: String,
+  replyTo: ActorRef[Option[PersistedPartyRelationship]]
 ) extends PartyRelationshipCommand
 
 /* Token Command */
 final case class AddToken(
   token: TokenSeed,
-  partyRelationships: Seq[PartyRelationship],
+  partyRelationships: Seq[PersistedPartyRelationship],
   replyTo: ActorRef[StatusReply[TokenText]]
 )                                                                                         extends TokenCommand
 final case class DeleteToken(token: Token, replyTo: ActorRef[StatusReply[Unit]])          extends TokenCommand

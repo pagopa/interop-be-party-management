@@ -15,12 +15,12 @@ message PartyRelationshipV1 {
   required string productRole = 6;
   required string start = 7;
   optional string end = 8;
-  required PartyRelationshipStatusV1 status = 9;
+  required PartyRelationshipStateV1 state = 9;
   optional string filePath = 10;
   optional string fileName = 11;
   optional string contentType = 12;
 
-  enum PartyRelationshipStatusV1 {
+  enum PartyRelationshipStateV1 {
     PENDING = 1;
     ACTIVE = 2;
     SUSPENDED = 3;

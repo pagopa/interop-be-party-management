@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationship, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 
 import java.util.UUID
 
@@ -17,7 +17,7 @@ final case class AttributesAdded(party: Party)           extends PartyEvent
 final case class OrganizationProductsAdded(party: Party) extends PartyEvent
 
 /* PartyRelationship Event */
-final case class PartyRelationshipAdded(partyRelationship: PartyRelationship) extends PartyRelationshipEvent
+final case class PartyRelationshipAdded(partyRelationship: PersistedPartyRelationship) extends PartyRelationshipEvent
 final case class PartyRelationshipProductsAdded(partyRelationshipId: UUID, products: Set[String])
     extends PartyRelationshipEvent
 final case class PartyRelationshipConfirmed(

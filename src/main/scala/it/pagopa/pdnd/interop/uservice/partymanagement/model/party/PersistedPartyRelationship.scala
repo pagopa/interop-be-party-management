@@ -1,13 +1,13 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Relationship
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipStatus.{Active, Pending}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState.{Active, Pending}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
 
-final case class PartyRelationship(
+final case class PersistedPartyRelationship(
   id: UUID,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
@@ -16,7 +16,7 @@ final case class PartyRelationship(
   role: PersistedPartyRole,
   products: Set[String],
   productRole: String,
-  status: PersistedPartyRelationshipStatus,
+  state: PersistedPartyRelationshipState,
   filePath: Option[String],
   fileName: Option[String],
   contentType: Option[String]
@@ -34,7 +34,7 @@ final case class PartyRelationship(
     role = role.toApi,
     productRole = productRole,
     products = products,
-    status = status.toApi,
+    state = state.toApi,
     filePath = filePath,
     fileName = fileName,
     contentType = contentType
@@ -42,12 +42,16 @@ final case class PartyRelationship(
 
 }
 
-object PartyRelationship {
+object PersistedPartyRelationship {
   //TODO add role check
-  def create(
-    uuidSupplier: UUIDSupplier
-  )(from: UUID, to: UUID, role: PersistedPartyRole, products: Set[String], productRole: String): PartyRelationship =
-    PartyRelationship(
+  def create(uuidSupplier: UUIDSupplier)(
+    from: UUID,
+    to: UUID,
+    role: PersistedPartyRole,
+    products: Set[String],
+    productRole: String
+  ): PersistedPartyRelationship =
+    PersistedPartyRelationship(
       id = uuidSupplier.get,
       from = from,
       to = to,
@@ -56,7 +60,7 @@ object PartyRelationship {
       productRole = productRole,
       start = OffsetDateTime.now(),
       end = None,
-      status = role match {
+      state = role match {
         case Operator => Active
         case _        => Pending
       },

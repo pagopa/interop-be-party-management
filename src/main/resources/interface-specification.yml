@@ -838,9 +838,9 @@ components:
         - MANAGER
         - DELEGATE
         - OPERATOR
-    RelationshipStatus:
+    RelationshipState:
       type: string
-      description: Represents the party relationship status
+      description: Represents the party relationship state
       enum:
         - PENDING
         - ACTIVE
@@ -925,8 +925,8 @@ components:
         productRole:
           type: string
           description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
-        status:
-          $ref: '#/components/schemas/RelationshipStatus'
+        state:
+          $ref: '#/components/schemas/RelationshipState'
       additionalProperties: false
       required:
         - id
@@ -935,7 +935,7 @@ components:
         - role
         - productRole
         - products
-        - status
+        - state
     Relationships:
       type: object
       properties:

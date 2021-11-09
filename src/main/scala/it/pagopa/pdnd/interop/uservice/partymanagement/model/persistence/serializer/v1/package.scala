@@ -2,7 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 
 import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationship, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
@@ -22,7 +22,7 @@ package object v1 {
           .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
           .map(_.toMap)
         relationships <- state.relationships
-          .traverse[ErrorOr, (String, PartyRelationship)](rl =>
+          .traverse[ErrorOr, (String, PersistedPartyRelationship)](rl =>
             for {
               v <- getPartyRelationship(rl.value)
             } yield rl.key -> v
