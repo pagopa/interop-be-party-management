@@ -336,7 +336,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -363,7 +363,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -374,10 +374,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             id = relUuid,
             from = personUuid,
             to = orgUuid,
-            role = MANAGER,
+            role = PartyRole.MANAGER,
             products = Set.empty,
             productRole = "admin",
-            status = PENDING,
+            status = RelationshipStatus.PENDING,
             filePath = None,
             fileName = None,
             contentType = None
@@ -422,7 +422,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -457,7 +457,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid1,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -465,7 +465,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid2,
           to = orgUuid,
-          role = DELEGATE,
+          role = PartyRole.DELEGATE,
           productRole = "admin",
           products = Set.empty
         )
@@ -476,10 +476,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             id = relUuid1,
             from = personUuid1,
             to = orgUuid,
-            role = MANAGER,
+            role = PartyRole.MANAGER,
             productRole = "admin",
             products = Set.empty,
-            status = PENDING,
+            status = RelationshipStatus.PENDING,
             filePath = None,
             fileName = None,
             contentType = None
@@ -488,10 +488,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             id = relUuid2,
             from = personUuid2,
             to = orgUuid,
-            role = DELEGATE,
+            role = PartyRole.DELEGATE,
             productRole = "admin",
             products = Set.empty,
-            status = PENDING,
+            status = RelationshipStatus.PENDING,
             filePath = None,
             fileName = None,
             contentType = None
@@ -541,14 +541,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid1,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
       val rlSeedSecurity = RelationshipSeed(
         from = personUuid2,
         to = orgUuid,
-        role = DELEGATE,
+        role = PartyRole.DELEGATE,
         productRole = "security",
         products = Set("PDND")
       )
@@ -559,10 +559,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             id = relUuid2,
             from = personUuid2,
             to = orgUuid,
-            role = DELEGATE,
+            role = PartyRole.DELEGATE,
             productRole = "security",
             products = Set("PDND"),
-            status = PENDING,
+            status = RelationshipStatus.PENDING,
             filePath = None,
             fileName = None,
             contentType = None
@@ -611,7 +611,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -651,7 +651,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       relationshipResponse.status shouldBe StatusCodes.OK
       val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
-      updatedRelationship.status shouldBe SUSPENDED
+      updatedRelationship.status shouldBe RelationshipStatus.SUSPENDED
 
     }
 
@@ -686,7 +686,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -741,7 +741,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       relationshipResponse.status shouldBe StatusCodes.OK
       val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
-      updatedRelationship.status shouldBe ACTIVE
+      updatedRelationship.status shouldBe RelationshipStatus.ACTIVE
 
     }
 
@@ -776,7 +776,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -816,7 +816,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       relationshipResponse.status shouldBe StatusCodes.OK
       val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
-      updatedRelationship.status shouldBe DELETED
+      updatedRelationship.status shouldBe RelationshipStatus.DELETED
 
     }
 
@@ -930,7 +930,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val body = Unmarshal(response.entity).to[Relationships].futureValue
 
-      body.items.map(_.status) should contain only REJECTED
+      body.items.map(_.status) should contain only RelationshipStatus.REJECTED
 
     }
   }
@@ -986,7 +986,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         RelationshipSeed(
           from = personUuid,
           to = orgUuid,
-          role = MANAGER,
+          role = PartyRole.MANAGER,
           productRole = "admin",
           products = Set.empty
         )
@@ -1019,7 +1019,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           role = rlSeed.role,
           products = rlSeed.products,
           productRole = rlSeed.productRole,
-          status = PENDING,
+          status = RelationshipStatus.PENDING,
           filePath = None,
           fileName = None,
           contentType = None

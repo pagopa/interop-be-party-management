@@ -831,14 +831,14 @@ components:
             type: string
             format: uuid
           description: the identifiers of party
-    PartyRoleEnum:
+    PartyRole:
       type: string
       description: Represents the generic available role types for the relationship
       enum:
         - MANAGER
         - DELEGATE
         - OPERATOR
-    RelationshipStatusEnum:
+    RelationshipStatus:
       type: string
       description: Represents the party relationship status
       enum:
@@ -874,7 +874,7 @@ components:
           format: uuid
           description: organization ID
         role:
-          $ref: '#/components/schemas/PartyRoleEnum'
+          $ref: '#/components/schemas/PartyRole'
         products:
           type: array
           items:
@@ -915,7 +915,7 @@ components:
           type: string
           description: content type of the file containing the signed onboarding document
         role:
-          $ref: '#/components/schemas/PartyRoleEnum'
+          $ref: '#/components/schemas/PartyRole'
         products:
           type: array
           items:
@@ -926,7 +926,7 @@ components:
           type: string
           description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
         status:
-          $ref: '#/components/schemas/RelationshipStatusEnum'
+          $ref: '#/components/schemas/RelationshipStatus'
       additionalProperties: false
       required:
         - id

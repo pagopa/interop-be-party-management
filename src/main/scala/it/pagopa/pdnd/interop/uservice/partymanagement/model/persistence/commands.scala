@@ -70,11 +70,11 @@ final case class GetPartyRelationshipsByTo(to: UUID, replyTo: ActorRef[List[Part
     extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipByAttributes(
-  from: UUID,
-  to: UUID,
-  role: PartyRole,
-  productRole: String,
-  replyTo: ActorRef[Option[PartyRelationship]]
+                                                   from: UUID,
+                                                   to: UUID,
+                                                   role: PersistedPartyRole,
+                                                   productRole: String,
+                                                   replyTo: ActorRef[Option[PartyRelationship]]
 ) extends PartyRelationshipCommand
 
 /* Token Command */

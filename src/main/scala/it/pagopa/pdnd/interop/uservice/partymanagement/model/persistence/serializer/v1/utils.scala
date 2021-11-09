@@ -2,13 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 
 import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{ErrorOr, formatter, toOffsetDateTime}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationshipStatus.{
-  Active,
-  Deleted,
-  Pending,
-  Rejected,
-  Suspended
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipStatus._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
@@ -17,17 +11,17 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PersonPartyV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1.{
+  Unrecognized => UnrecognizedStatus,
+  _
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRoleV1.{
+  Unrecognized => UnrecognizedRole,
+  _
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
   PartyRelationshipStatusV1,
   PartyRoleV1
-}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRelationshipStatusV1.{
-  Unrecognized => UnrecognizedStatus
-}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRoleV1._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.PartyRoleV1.{
-  Unrecognized => UnrecognizedRole
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
@@ -157,39 +151,39 @@ object utils {
     )
   }
 
-  def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PartyRole] =
+  def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PersistedPartyRole] =
     role match {
-      case PARTY_ROLE_DELEGATE     => Right(Manager)
-      case PARTY_ROLE_MANAGER      => Right(Delegate)
-      case PARTY_ROLE_OPERATOR     => Right(Operator)
+      case DELEGATE                => Right(Manager)
+      case MANAGER                 => Right(Delegate)
+      case OPERATOR                => Right(Operator)
       case UnrecognizedRole(value) => Left(new RuntimeException(s"Unable to deserialize party role value $value"))
     }
 
-  def relationshipStatusFromProtobuf(status: PartyRelationshipStatusV1): ErrorOr[PartyRelationshipStatus] =
+  def relationshipStatusFromProtobuf(status: PartyRelationshipStatusV1): ErrorOr[PersistedPartyRelationshipStatus] =
     status match {
-      case RELATIONSHIP_STATUS_PENDING   => Right(Pending)
-      case RELATIONSHIP_STATUS_ACTIVE    => Right(Active)
-      case RELATIONSHIP_STATUS_SUSPENDED => Right(Suspended)
-      case RELATIONSHIP_STATUS_DELETED   => Right(Deleted)
-      case RELATIONSHIP_STATUS_REJECTED  => Right(Rejected)
+      case PENDING   => Right(Pending)
+      case ACTIVE    => Right(Active)
+      case SUSPENDED => Right(Suspended)
+      case DELETED   => Right(Deleted)
+      case REJECTED  => Right(Rejected)
       case UnrecognizedStatus(value) =>
         Left(new RuntimeException(s"Unable to deserialize party relationship status value $value"))
     }
 
-  def partyRoleToProtobuf(role: PartyRole): PartyRoleV1 =
+  def partyRoleToProtobuf(role: PersistedPartyRole): PartyRoleV1 =
     role match {
-      case Manager  => PARTY_ROLE_DELEGATE
-      case Delegate => PARTY_ROLE_MANAGER
-      case Operator => PARTY_ROLE_OPERATOR
+      case Manager  => DELEGATE
+      case Delegate => MANAGER
+      case Operator => OPERATOR
     }
 
-  def relationshipStatusToProtobuf(status: PartyRelationshipStatus): PartyRelationshipStatusV1 =
+  def relationshipStatusToProtobuf(status: PersistedPartyRelationshipStatus): PartyRelationshipStatusV1 =
     status match {
-      case Pending   => RELATIONSHIP_STATUS_PENDING
-      case Active    => RELATIONSHIP_STATUS_ACTIVE
-      case Suspended => RELATIONSHIP_STATUS_SUSPENDED
-      case Deleted   => RELATIONSHIP_STATUS_DELETED
-      case Rejected  => RELATIONSHIP_STATUS_REJECTED
+      case Pending   => PENDING
+      case Active    => ACTIVE
+      case Suspended => SUSPENDED
+      case Deleted   => DELETED
+      case Rejected  => REJECTED
     }
 
 }

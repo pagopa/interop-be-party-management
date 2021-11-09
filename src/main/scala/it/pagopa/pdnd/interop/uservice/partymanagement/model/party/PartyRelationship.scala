@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Relationship
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationshipStatus.{Active, Pending}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipStatus.{Active, Pending}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 
 import java.time.OffsetDateTime
@@ -13,10 +13,10 @@ final case class PartyRelationship(
   end: Option[OffsetDateTime],
   from: UUID,
   to: UUID,
-  role: PartyRole,
+  role: PersistedPartyRole,
   products: Set[String],
   productRole: String,
-  status: PartyRelationshipStatus,
+  status: PersistedPartyRelationshipStatus,
   filePath: Option[String],
   fileName: Option[String],
   contentType: Option[String]
@@ -46,7 +46,7 @@ object PartyRelationship {
   //TODO add role check
   def create(
     uuidSupplier: UUIDSupplier
-  )(from: UUID, to: UUID, role: PartyRole, products: Set[String], productRole: String): PartyRelationship =
+  )(from: UUID, to: UUID, role: PersistedPartyRole, products: Set[String], productRole: String): PartyRelationship =
     PartyRelationship(
       id = uuidSupplier.get,
       from = from,

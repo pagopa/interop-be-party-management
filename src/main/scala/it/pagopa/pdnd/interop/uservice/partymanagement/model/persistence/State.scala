@@ -34,7 +34,7 @@ final case class State(
       relationships.updated(
         relationshipId,
         relationships(relationshipId).copy(
-          status = PartyRelationshipStatus.Active,
+          status = PersistedPartyRelationshipStatus.Active,
           filePath = Some(filePath),
           fileName = Some(fileName),
           contentType = Some(contentType)
@@ -49,18 +49,18 @@ final case class State(
   }
 
   def rejectRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Rejected)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipStatus.Rejected)
 
   def suspendRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Suspended)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipStatus.Suspended)
 
   def activateRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Active)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipStatus.Active)
 
   def deleteRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Deleted)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipStatus.Deleted)
 
-  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PartyRelationshipStatus): State =
+  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PersistedPartyRelationshipStatus): State =
     relationships.get(relationshipId.toString) match {
       case Some(relationship) =>
         val updatedRelationship = relationship.copy(status = newStatus)
@@ -70,10 +70,10 @@ final case class State(
     }
 
   def getPartyRelationshipByAttributes(
-    from: UUID,
-    to: UUID,
-    role: PartyRole,
-    productRole: String
+                                        from: UUID,
+                                        to: UUID,
+                                        role: PersistedPartyRole,
+                                        productRole: String
   ): Option[PartyRelationship] = {
     relationships.values.find(relationship =>
       from.toString == relationship.from.toString
