@@ -49,7 +49,7 @@ object Dependencies {
 
   private[this] object enumeratum {
     lazy val namespace = "com.beachape"
-    lazy val core      = namespace %% "enumeratum" % "1.7.0"
+    lazy val core      = namespace %% "enumeratum" % enumeratumVersion
   }
 
   private[this] object json4s {
