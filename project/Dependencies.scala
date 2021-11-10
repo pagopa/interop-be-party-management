@@ -47,11 +47,6 @@ object Dependencies {
     lazy val core      = namespace %% "cats-core" % catsVersion
   }
 
-  private[this] object enumeratum {
-    lazy val namespace = "com.beachape"
-    lazy val core      = namespace %% "enumeratum" % enumeratumVersion
-  }
-
   private[this] object json4s {
     lazy val namespace = "org.json4s"
     lazy val jackson   = namespace %% "json4s-jackson" % json4sVersion
@@ -119,7 +114,6 @@ object Dependencies {
       akka.stream                  % Compile,
       azure.storageBlob            % Compile,
       cats.core                    % Compile,
-      enumeratum.core              % Compile,
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
       logback.classic              % Compile,
@@ -136,7 +130,6 @@ object Dependencies {
         akka.stream     % Compile,
         akka.http       % Compile,
         akka.httpJson4s % Compile,
-        enumeratum.core % Compile,
         json4s.jackson  % Compile,
         json4s.ext      % Compile
       )

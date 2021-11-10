@@ -6,7 +6,6 @@ object Versions {
   lazy val akkaVersion              = "2.6.16"
   lazy val azureStorageBlobVersion  = "12.14.1"
   lazy val catsVersion              = "2.6.1"
-  lazy val enumeratumVersion           = "1.7.0"
   lazy val httpJson4sVersion        = "1.38.2"
   lazy val jdbcPersistenceVersion   = "5.0.1"
   lazy val json4sVersion            = "4.0.1"

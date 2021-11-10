@@ -45,13 +45,9 @@ object {{classname}}Enums {
 
 {{#isEnum}}
 
-import enumeratum._
+sealed trait {{classname}}
 
-sealed trait {{classname}} extends EnumEntry
-
-object {{classname}} extends Enum[{{classname}}] {
-
-  val values: IndexedSeq[{{classname}}] = findValues
+object {{classname}} {
 
   {{#allowableValues}}
   {{#values}}
