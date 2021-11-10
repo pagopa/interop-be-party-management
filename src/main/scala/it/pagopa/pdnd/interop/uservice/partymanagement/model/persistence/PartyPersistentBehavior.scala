@@ -13,14 +13,7 @@ import org.slf4j.LoggerFactory
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.StringPlusAny",
-    "org.wartremover.warts.Equals",
-    "org.wartremover.warts.ToString"
-  )
-)
+
 object PartyPersistentBehavior {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -33,14 +26,14 @@ object PartyPersistentBehavior {
       context.system.settings.config.getDuration("uservice-party-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
-      case AddParty(party, shardId, replyTo) =>
-        logger.error(s"Adding party ${party.externalId} to shard $shardId")
+      case AddParty(party, replyTo) =>
+        logger.error(s"Adding party ${party.id}")
         logger.error(state.toString)
-        state.indexes
-          .get(party.externalId)
+        state.parties
+          .get(party.id)
           .map { _ =>
-            logger.error(s"AddParty found party ${party.externalId} at shard $shardId")
-            replyTo ! StatusReply.Error(s"Party ${party.externalId} already exists")
+            logger.error(s"AddParty found party ${party.id}")
+            replyTo ! StatusReply.Error(s"Party ${party.id} already exists")
             Effect.none[PartyAdded, State]
           }
           .getOrElse {
@@ -56,17 +49,9 @@ object PartyPersistentBehavior {
 
       case GetParty(uuid, replyTo) =>
         val party: Option[Party] = state.parties.get(uuid)
-        party.foreach(p => logger.info(s"Found party ${p.externalId}/${p.id.toString}"))
+        party.foreach(p => logger.info(s"Found party ${p.id.toString}"))
         replyTo ! party
 
-        Effect.none
-
-      case GetParties(uuids, replyTo) =>
-        val foundParties: Seq[Party] = {
-          uuids.flatMap(uuid => state.parties.get(uuid))
-        }
-        foundParties.foreach(p => logger.info(s"Found party ${p.externalId}/${p.id.toString}"))
-        replyTo ! foundParties
         Effect.none
 
       case GetPartyAttributes(uuid, replyTo) =>
@@ -83,25 +68,18 @@ object PartyPersistentBehavior {
         replyTo ! statusReply
         Effect.none
 
-      case GetPartyByExternalId(externalId, shardId, replyTo) =>
-        val party: Option[Party] = for {
-          uuid <- state.indexes.get(externalId)
-          _ = logger.info(s"GetPartyByExternalId found $externalId/${uuid.toString} at shard $shardId")
-          party <- state.parties.get(uuid)
-        } yield party
-
+      case GetOrganizationByExternalId(externalId, replyTo) =>
+        val party: Option[InstitutionParty] = state.parties.collectFirst {
+          case (_, o: InstitutionParty) if o.externalId == externalId => o
+        }
+        party.foreach(p => logger.info(s"Found organization ${p.id.toString}"))
         replyTo ! party
 
         Effect.none
 
       case AddAttributes(organizationId, attributes, replyTo) =>
-        val party: Option[Party] = for {
-          uuid <- state.indexes.get(organizationId)
-          _ = logger.info(s"Found $organizationId/${uuid.toString}")
-          party <- state.parties.get(uuid)
-        } yield party
-
-        party
+        state.parties
+          .get(organizationId)
           .map { p =>
             val updated: Either[Throwable, Party] = p.addAttributes(attributes.toSet)
             updated.fold[Effect[AttributesAdded, State]](
@@ -114,6 +92,30 @@ object PartyPersistentBehavior {
               p => {
                 Effect
                   .persist(AttributesAdded(p))
+                  .thenRun(_ => replyTo ! StatusReply.Success(p))
+              }
+            )
+          }
+          .getOrElse {
+            replyTo ! StatusReply.Error(s"Party $organizationId not found")
+            Effect.none[AttributesAdded, State]
+          }
+
+      case AddOrganizationProducts(organizationId, products, replyTo) =>
+        state.parties
+          .get(organizationId)
+          .map { p =>
+            val updated: Either[Throwable, Party] = p.replaceProducts(products)
+            updated.fold[Effect[OrganizationProductsAdded, State]](
+              ex => {
+                replyTo ! StatusReply.Error(
+                  s"Something went wrong trying to organization products for party $organizationId: ${ex.getMessage}"
+                )
+                Effect.none[OrganizationProductsAdded, State]
+              },
+              p => {
+                Effect
+                  .persist(OrganizationProductsAdded(p))
                   .thenRun(_ => replyTo ! StatusReply.Success(p))
               }
             )
@@ -138,7 +140,19 @@ object PartyPersistentBehavior {
 
           }
 
-      case ConfirmPartyRelationship(partyRelationshipId, replyTo) =>
+      case AddPartyRelationshipProducts(relationshipId, products, replyTo) =>
+        state.relationships
+          .get(relationshipId.toString)
+          .fold {
+            replyTo ! StatusReply.Error(s"Relationship $relationshipId not found")
+            Effect.none[PartyRelationshipProductsAdded, State]
+          } { _ =>
+            Effect
+              .persist(PartyRelationshipProductsAdded(relationshipId, products))
+              .thenRun(state => replyTo ! StatusReply.Success(state.relationships(relationshipId.toString)))
+          }
+
+      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, replyTo) =>
         state.relationships
           .get(partyRelationshipId.toString)
           .fold {
@@ -146,17 +160,40 @@ object PartyPersistentBehavior {
             Effect.none[PartyRelationshipConfirmed, State]
           } { t =>
             Effect
-              .persist(PartyRelationshipConfirmed(t.id))
+              .persist(
+                PartyRelationshipConfirmed(t.id, filePath, fileInfo.getFileName, fileInfo.getContentType.toString())
+              )
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           }
 
+      case RejectPartyRelationship(partyRelationshipId, replyTo) =>
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipRejected(rel.id))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case DeletePartyRelationship(partyRelationshipId, replyTo) =>
-        Effect
-          .persist(PartyRelationshipDeleted(partyRelationshipId))
-          .thenRun(_ => replyTo ! StatusReply.Success(()))
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipDeleted(rel.id))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
 
       case SuspendPartyRelationship(partyRelationshipId, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
@@ -169,7 +206,7 @@ object PartyPersistentBehavior {
         }
 
       case ActivatePartyRelationship(partyRelationshipId, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
@@ -182,17 +219,17 @@ object PartyPersistentBehavior {
         }
 
       case GetPartyRelationshipById(uuid, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(uuid.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(uuid.toString)
         replyTo ! relationship
         Effect.none
 
       case GetPartyRelationshipsByFrom(from, replyTo) =>
-        val relationships: List[PartyRelationship] = state.relationships.values.filter(_.from == from).toList
+        val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.from == from).toList
         replyTo ! relationships
         Effect.none
 
       case GetPartyRelationshipsByTo(to, replyTo) =>
-        val relationships: List[PartyRelationship] = state.relationships.values.filter(_.to == to).toList
+        val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.to == to).toList
         replyTo ! relationships
         Effect.none
 
@@ -227,8 +264,8 @@ object PartyPersistentBehavior {
           .persist(TokenDeleted(token))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-      case GetPartyRelationshipByAttributes(from, to, role, platformRole, replyTo) =>
-        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, platformRole)
+      case GetPartyRelationshipByAttributes(from, to, role, productRole, replyTo) =>
+        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, productRole)
         Effect.none[Event, State]
 
       case Idle =>
@@ -241,12 +278,17 @@ object PartyPersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case PartyAdded(party)                          => state.addParty(party)
-      case PartyDeleted(party)                        => state.deleteParty(party)
-      case AttributesAdded(party)                     => state.updateParty(party)
-      case PartyRelationshipAdded(partyRelationship)  => state.addPartyRelationship(partyRelationship)
-      case PartyRelationshipConfirmed(relationshipId) => state.confirmPartyRelationship(relationshipId)
-      case PartyRelationshipDeleted(relationshipId)   => state.deletePartyRelationship(relationshipId)
+      case PartyAdded(party)                         => state.addParty(party)
+      case PartyDeleted(party)                       => state.deleteParty(party)
+      case AttributesAdded(party)                    => state.updateParty(party)
+      case OrganizationProductsAdded(party)          => state.updateParty(party)
+      case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
+      case PartyRelationshipProductsAdded(relationshipId, products) =>
+        state.updateRelationshipProducts(relationshipId, products)
+      case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
+        state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)
+      case PartyRelationshipRejected(relationshipId)  => state.rejectRelationship(relationshipId)
+      case PartyRelationshipDeleted(relationshipId)   => state.deleteRelationship(relationshipId)
       case PartyRelationshipSuspended(relationshipId) => state.suspendRelationship(relationshipId)
       case PartyRelationshipActivated(relationshipId) => state.activateRelationship(relationshipId)
       case TokenAdded(token)                          => state.addToken(token)

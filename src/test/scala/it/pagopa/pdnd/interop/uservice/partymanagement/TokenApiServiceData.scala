@@ -5,8 +5,13 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.{Marshal, Marshaller}
 import akka.http.scaladsl.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PartyRelationshipStatus.Pending
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Delegate, Manager, PartyRelationship, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState.Pending
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{
+  Delegate,
+  Manager,
+  PersistedPartyRelationship,
+  Token
+}
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -17,48 +22,48 @@ object TokenApiServiceData {
 
   // format: off
 
-  lazy final val createTokenUuid0 = "37f8dce0-0a5b-476b-9fdd-a7a658eb9210"
-  lazy final val createTokenUuid1 = "37f8dce0-0a5b-476b-9fdd-a7a658eb9211"
-  lazy final val createTokenUuid2 = "37f8dce0-0a5b-476b-9fdd-a7a658eb9212"
-  lazy final val createTokenUuid3 = "37f8dce0-0a5b-476b-9fdd-a7a658eb9213"
-  lazy final val createTokenUuid4 = "37f8dce0-0a5b-476b-9fdd-a7a658eb9214"
-  lazy final val createTokenUuid5 = "37f8dce0-0a5b-476b-9fdd-a7a658eb9215"
-  
+  lazy final val createTokenUuid0 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9210")
+  lazy final val createTokenUuid1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9211")
+
   lazy final val tokenSeedId1 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9210"
   lazy final val tokenSeedId2 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9211"
   lazy final val tokenSeedId3 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9212"
 
-  lazy final val taxCode1 = "RSSMRA75L01H501H"
-  lazy final val taxCode2 = "RSSMRA75L01H501I"
-  lazy final val taxCode3 = "RSSMRA75L01H501J"
+  lazy final val personId1 = UUID.randomUUID()
+  lazy final val personId2 = UUID.randomUUID()
+  lazy final val personId3 = UUID.randomUUID()
 
-  lazy final val personSeed1 = PersonSeed(taxCode = taxCode1, surname = "Mascetti", name = "Raffaello")
-  lazy final val personSeed2 = PersonSeed(taxCode = taxCode2, surname = "Melandri", name = "Ranbaudo")
-  lazy final val personSeed3 = PersonSeed(taxCode = taxCode3, surname = "Perozzi", name = "Giorgio")
+  lazy final val orgId1 = UUID.randomUUID()
+  lazy final val orgId2 = UUID.randomUUID()
+  lazy final val orgId3 = UUID.randomUUID()
+
+  lazy final val personSeed1 = PersonSeed(id = personId1)
+  lazy final val personSeed2 = PersonSeed(id = personId2)
+  lazy final val personSeed3 = PersonSeed(id = personId3)
 
   lazy final val institutionId1 = "id9"
   lazy final val institutionId2 = "id10"
   lazy final val institutionId3 = "id13"
 
-  lazy final val organizationSeed1 = OrganizationSeed(institutionId1, "Institutions Nine", "Raffaello","Mascetti", "mail9@mail.org", Seq.empty)
-  lazy final val organizationSeed2 = OrganizationSeed(institutionId2, "Institutions Ten", "Melandri","Ranbaudo", "mail10@mail.org", Seq.empty)
-  lazy final val organizationSeed3 = OrganizationSeed(institutionId3, "Institutions Eleven", "Perozzi","Giorgio", "mail11@mail.org", Seq.empty)
+  lazy final val organizationSeed1 = OrganizationSeed(institutionId1, None, "Institutions Nine", "mail9@mail.org", "fiscalCode",    attributes = Seq.empty, products = Set.empty)
+  lazy final val organizationSeed2 = OrganizationSeed(institutionId2, None, "Institutions Ten", "mail10@mail.org", "fiscalCode",    attributes = Seq.empty, products = Set.empty)
+  lazy final val organizationSeed3 = OrganizationSeed(institutionId3, None, "Institutions Eleven", "mail11@mail.org", "fiscalCode", attributes = Seq.empty, products = Set.empty)
 
-  lazy final val relationshipSeed1 = RelationshipSeed(from = taxCode1, to = institutionId1, role = "Manager",  "admin")
-  lazy final val relationshipSeed2 = RelationshipSeed(from = taxCode1, to = institutionId1, role = "Delegate", "admin")
-  lazy final val relationshipSeed3 = RelationshipSeed(from = taxCode2, to = institutionId2, role = "Manager",  "admin")
-  lazy final val relationshipSeed4 = RelationshipSeed(from = taxCode2, to = institutionId2, role = "Delegate", "admin")
-  lazy final val relationshipSeed5 = RelationshipSeed(from = taxCode3, to = institutionId3, role = "Manager",  "admin")
-  lazy final val relationshipSeed6 = RelationshipSeed(from = taxCode3, to = institutionId3, role = "Delegate", "admin")
+  lazy final val relationshipSeed1 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.MANAGER,  productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.DELEGATE, productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed3 = RelationshipSeed(from = personId2, to = orgId2, role = PartyRole.MANAGER,  productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed4 = RelationshipSeed(from = personId2, to = orgId2, role = PartyRole.DELEGATE, productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed5 = RelationshipSeed(from = personId3, to = orgId3, role = PartyRole.MANAGER,  productRole = "admin", products = Set.empty)
+  lazy final val relationshipSeed6 = RelationshipSeed(from = personId3, to = orgId3, role = PartyRole.DELEGATE, productRole = "admin", products = Set.empty)
   
   lazy final val relationshipId1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9299")
   lazy final val relationshipId2 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9298")
   lazy final val relationshipId3 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9297")
   lazy final val relationshipId4 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9296")
-  lazy final val partyRelationship1 = PartyRelationship(id = relationshipId1, start = OffsetDateTime.now(), end = None, status = Pending, from = UUID.fromString(createTokenUuid2), to = UUID.fromString(createTokenUuid3), role = Manager,  platformRole = "admin")
-  lazy final val partyRelationship2 = PartyRelationship(id = relationshipId2, start = OffsetDateTime.now(), end = None, status = Pending, from = UUID.fromString(createTokenUuid2), to = UUID.fromString(createTokenUuid3), role = Delegate, platformRole = "admin")
-  lazy final val partyRelationship3 = PartyRelationship(id = relationshipId3, start = OffsetDateTime.now(), end = None, status = Pending, from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Manager,  platformRole = "admin")
-  lazy final val partyRelationship4 = PartyRelationship(id = relationshipId4, start = OffsetDateTime.now(), end = None, status = Pending, from = UUID.fromString(createTokenUuid4), to = UUID.fromString(createTokenUuid5), role = Delegate, platformRole = "admin")
+  lazy final val partyRelationship1 = PersistedPartyRelationship(id = relationshipId1, start = OffsetDateTime.now(), end = None, state = Pending, from = personId2, to = orgId2, role = Manager,  productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship2 = PersistedPartyRelationship(id = relationshipId2, start = OffsetDateTime.now(), end = None, state = Pending, from = personId2, to = orgId2, role = Delegate, productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship3 = PersistedPartyRelationship(id = relationshipId3, start = OffsetDateTime.now(), end = None, state = Pending, from = personId3, to = orgId3, role = Manager,  productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
+  lazy final val partyRelationship4 = PersistedPartyRelationship(id = relationshipId4, start = OffsetDateTime.now(), end = None, state = Pending, from = personId3, to = orgId3, role = Delegate, productRole = "admin", products = Set.empty, filePath = None, fileName = None, contentType = None)
 
   lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum")
   lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum")

@@ -2,50 +2,40 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serial
 
 import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PartyRelationship, Token}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils.{
-  getParty,
-  getPartyRelationship,
-  stringToUUID,
-  getPartyRelationshipV1,
-  getToken,
-  _
-}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
 
 import java.util.UUID
 
 package object v1 {
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
+
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state =>
       for {
         parties <- state.parties
           .traverse[ErrorOr, (UUID, Party)](ps => getParty(ps.value).map(p => UUID.fromString(ps.key) -> p))
           .map(_.toMap)
-        indexes <- Right(state.indexes.map(p => p.key -> UUID.fromString(p.value)).toMap)
         tokens <- state.tokens
           .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
           .map(_.toMap)
         relationships <- state.relationships
-          .traverse[ErrorOr, (String, PartyRelationship)](rl =>
+          .traverse[ErrorOr, (String, PersistedPartyRelationship)](rl =>
             for {
               v <- getPartyRelationship(rl.value)
             } yield rl.key -> v
           )
           .map(_.toMap)
-      } yield State(parties, indexes, tokens, relationships)
+      } yield State(parties, tokens, relationships)
 
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state =>
       for {
         parties <- state.parties.toSeq.traverse[ErrorOr, PartiesV1] { case (k, v) =>
           getPartyV1(v).map(party => PartiesV1(k.toString, party))
         }
-        indexes <- Right(state.indexes.map { case (k, v) => IndexesV1(k, v.toString) }.toSeq)
         tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
           getTokenV1(v).map(token => TokensV1(k, token))
         }
@@ -55,7 +45,7 @@ package object v1 {
               v <- getPartyRelationshipV1(value)
             } yield RelationshipEntryV1(key, v)
           }
-      } yield StateV1(parties, indexes, tokens, relationships)
+      } yield StateV1(parties, tokens, relationships)
 
   implicit def partyAddedV1PersistEventDeserializer: PersistEventDeserializer[PartyAddedV1, PartyAdded] = event =>
     getParty(event.party).map(PartyAdded)
@@ -83,16 +73,38 @@ package object v1 {
     : PersistEventSerializer[PartyRelationshipConfirmed, PartyRelationshipConfirmedV1] =
     event =>
       Right[Throwable, PartyRelationshipConfirmedV1](
-        PartyRelationshipConfirmedV1.of(event.partyRelationshipId.toString)
+        PartyRelationshipConfirmedV1
+          .of(
+            partyRelationshipId = event.partyRelationshipId.toString,
+            filePath = event.filePath,
+            fileName = event.fileName,
+            contentType = event.contentType
+          )
       )
 
   implicit def partyRelationshipConfirmedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
-    stringToUUID(event.partyRelationshipId).map(PartyRelationshipConfirmed)
+    stringToUUID(event.partyRelationshipId).map(id =>
+      PartyRelationshipConfirmed(
+        partyRelationshipId = id,
+        filePath = event.filePath,
+        fileName = event.fileName,
+        contentType = event.contentType
+      )
+    )
 
   implicit def partyRelationshipAddedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipAdded, PartyRelationshipAddedV1] =
     event => getPartyRelationshipV1(event.partyRelationship).map(PartyRelationshipAddedV1.of)
+
+  implicit def partyRelationshipRejectedV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
+
+  implicit def partyRelationshipRejectedV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
+    event =>
+      Right[Throwable, PartyRelationshipRejectedV1](PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString))
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
@@ -136,5 +148,13 @@ package object v1 {
 
   implicit def tokenDeletedV1PersistEventSerializer: PersistEventSerializer[TokenDeleted, TokenDeletedV1] =
     event => getTokenV1(event.token).map(TokenDeletedV1.of)
+
+  implicit def organizationProductsAddedV1PersistEventDeserializer
+    : PersistEventDeserializer[OrganizationProductsAddedV1, OrganizationProductsAdded] =
+    event => getParty(event.party).map(OrganizationProductsAdded)
+
+  implicit def organizationProductsAddedV1PersistEventSerializer
+    : PersistEventSerializer[OrganizationProductsAdded, OrganizationProductsAddedV1] =
+    event => getPartyV1(event.party).map(OrganizationProductsAddedV1.of)
 
 }

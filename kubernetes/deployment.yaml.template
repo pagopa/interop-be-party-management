@@ -57,21 +57,37 @@ spec:
             runAsUser: 1001
             allowPrivilegeEscalation: false
           env:
-            - name: CASSANDRA_HOST
+            - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_HOST
-            - name: CASSANDRA_USR
+                  name: postgres
+                  key: POSTGRES_HOST
+            - name: POSTGRES_USR
               valueFrom:
                 secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_USR
-            - name: CASSANDRA_PSW
+                  name: postgres
+                  key: POSTGRES_USR
+            - name: POSTGRES_PSW
               valueFrom:
                 secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_PSW
+                  name: postgres
+                  key: POSTGRES_PSW
+            - name: STORAGE_TYPE
+              value: {{storageType}}
+            - name: STORAGE_CONTAINER
+              value: {{storageContainer}}
+            - name: STORAGE_ENDPOINT
+              value: {{storageEndpoint}}
+            - name: STORAGE_APPLICATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: storage
+                  key: STORAGE_USR
+            - name: STORAGE_APPLICATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: storage
+                  key: STORAGE_PSW
             - name: NAMESPACE
               valueFrom:
                 fieldRef:

@@ -5,51 +5,65 @@ import org.slf4j.LoggerFactory
 
 import java.util.UUID
 
-@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals"))
 final case class State(
-  parties: Map[UUID, Party],  //TODO use String instead of UUID
-  indexes: Map[String, UUID], //TODO use String instead of UUID
+  parties: Map[UUID, Party],
   tokens: Map[String, Token],
-  relationships: Map[String, PartyRelationship]
+  relationships: Map[String, PersistedPartyRelationship]
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def addParty(party: Party): State = {
-    logger.error(s"Writing party ${party.externalId} to state")
-    val newState = copy(parties = parties + (party.id -> party), indexes = indexes + (party.externalId -> party.id))
+    logger.error(s"Writing party ${party.id.toString} to state")
+    val newState = copy(parties = parties + (party.id -> party))
     logger.info(newState.toString)
     newState
   }
 
-  def deleteParty(party: Party): State = copy(parties = parties - party.id, indexes = indexes - party.externalId)
+  def deleteParty(party: Party): State = copy(parties = parties - party.id)
 
   def updateParty(party: Party): State =
     copy(parties = parties + (party.id -> party))
 
-  def addPartyRelationship(relationship: PartyRelationship): State =
+  def addPartyRelationship(relationship: PersistedPartyRelationship): State =
     copy(relationships = relationships + (relationship.id.toString -> relationship))
 
-  def confirmPartyRelationship(id: UUID): State = {
+  def confirmPartyRelationship(id: UUID, filePath: String, fileName: String, contentType: String): State = {
     val relationshipId = id.toString
-    val updated: Map[String, PartyRelationship] =
-      relationships.updated(relationshipId, relationships(relationshipId).copy(status = PartyRelationshipStatus.Active))
+    val updated: Map[String, PersistedPartyRelationship] =
+      relationships.updated(
+        relationshipId,
+        relationships(relationshipId).copy(
+          state = PersistedPartyRelationshipState.Active,
+          filePath = Some(filePath),
+          fileName = Some(fileName),
+          contentType = Some(contentType)
+        )
+      )
     copy(relationships = updated)
   }
 
-  def deletePartyRelationship(relationshipId: UUID): State =
-    copy(relationships = relationships - relationshipId.toString)
+  def updateRelationshipProducts(relationshipId: UUID, products: Set[String]): State = {
+    val updated: PersistedPartyRelationship = relationships(relationshipId.toString).copy(products = products)
+    copy(relationships = relationships + (relationshipId.toString -> updated))
+  }
+
+  def rejectRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Rejected)
 
   def suspendRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Suspended)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Suspended)
 
   def activateRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Active)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Active)
 
-  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PartyRelationshipStatus): State =
+  def deleteRelationship(relationshipId: UUID): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Deleted)
+
+  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PersistedPartyRelationshipState): State =
     relationships.get(relationshipId.toString) match {
       case Some(relationship) =>
-        val updatedRelationship = relationship.copy(status = newStatus)
+        val updatedRelationship = relationship.copy(state = newStatus)
         copy(relationships = relationships + (relationship.id.toString -> updatedRelationship))
       case None =>
         this
@@ -58,14 +72,14 @@ final case class State(
   def getPartyRelationshipByAttributes(
     from: UUID,
     to: UUID,
-    role: PartyRole,
-    platformRole: String
-  ): Option[PartyRelationship] = {
+    role: PersistedPartyRole,
+    productRole: String
+  ): Option[PersistedPartyRelationship] = {
     relationships.values.find(relationship =>
       from.toString == relationship.from.toString
         && to.toString == relationship.to.toString
         && role == relationship.role
-        && platformRole == relationship.platformRole
+        && productRole == relationship.productRole
     )
   }
 
@@ -78,8 +92,7 @@ object State {
   val empty: State =
     State(
       parties = Map.empty[UUID, Party],
-      indexes = Map.empty[String, UUID],
-      relationships = Map.empty[String, PartyRelationship],
+      relationships = Map.empty[String, PersistedPartyRelationship],
       tokens = Map.empty[String, Token]
     )
 }

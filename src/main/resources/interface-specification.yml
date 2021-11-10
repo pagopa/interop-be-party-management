@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Party Management Micro Service
   description: This service is the party manager
-  version: '0.1'
+  version: '{{version}}'
   contact:
     name: API Support
     url: 'http://www.example.com/support'
@@ -11,7 +11,7 @@ info:
   x-api-id: an x-api-id
   x-summary: an x-summary
 servers:
-  - url: 'https://gateway.interop.pdnd.dev/pdnd-interop-uservice-party-management/0.1'
+  - url: '/pdnd-interop-uservice-party-management/{{version}}'
     description: This service is the party manager
 tags:
   - name: party
@@ -25,59 +25,61 @@ tags:
       description: Find out more
       url: 'http://swagger.io'
 paths:
-  '/persons/{taxCode}':
-    head:
-      tags:
-        - party
-      summary: Verify if a person exists for a given taxCode
-      description: Return ok
-      operationId: existsPerson
-      parameters:
-        - name: taxCode
-          in: path
-          description: The fiscal code of the Person to check
-          required: true
-          schema:
-            description: Il codice fiscale.
-            example: RSSMRA75L01H501A
-            #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
-            type: string
-      responses:
-        '200':
-          description: Person exists
-        '404':
-          description: Person not found
+  '/persons/{id}':
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+          format: uuid
+        required: true
+        description: Person ID
     get:
-      #      security:
-      #        - bearerAuth: [ ]
+      summary: Retrieves Person by ID
       tags:
         - party
-      summary: Retrieve the person for the given taxCode
-      description: Return ok
-      operationId: getPerson
-      parameters:
-        - name: taxCode
-          in: path
-          description: The fiscal code of the Person to retrieve
-          required: true
-          schema:
-            description: Il codice fiscale.
-            example: RSSMRA75L01H501A
-            #pattern: ^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$
-            type: string
       responses:
         '200':
-          description: Person exists
+          description: Person
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Person'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '404':
           description: Person not found
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      operationId: getPersonById
+      description: 'returns the identified person, if any.'
+    head:
+      tags:
+        - party
+      summary: Verify if a Person exists for a given ID
+      description: Return ok
+      operationId: existsPersonById
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the Person to check
+          required: true
+          schema:
+            description: The Person ID.
+            type: string
+            format: uuid
+            example: e72dd279-5f52-4039-afbe-2b7e432c490e
+      responses:
+        '200':
+          description: Person exists
+        '404':
+          description: Person not found
   /persons:
     post:
       #      security:
@@ -134,7 +136,40 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /organizations/{organizationId}:
+  /organizations/{id}:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: Organization ID
+    get:
+      summary: Retrieves Organization by ID
+      tags:
+        - party
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getOrganizationById
+      description: 'returns the identified organization, if any.'
     head:
       #      security:
       #        - bearerAuth: [ ]
@@ -142,38 +177,104 @@ paths:
         - party
       summary: Verify if an organization exists for a given organizationId
       description: Return ok
-      operationId: existsOrganization
+      operationId: existsOrganizationById
       parameters:
-        - name: organizationId
+        - name: id
           in: path
           description: The ID of the Organization to check
           required: true
           schema:
             description: to be defined
-            example: age
             type: string
+            format: uuid
+            example: e72dd279-5f52-4039-afbe-2b7e432c490e
       responses:
         '200':
           description: successful operation
         '404':
           description: Organization not found
+  /organizations/external/{id}:
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: External Organization ID
     get:
+      summary: Retrieves Organization by ID
+      tags:
+        - party
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Organization not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getOrganizationByExternalId
+      description: 'returns the identified organization, if any.'
+  /organizations/{id}/attributes:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+          example: e72dd279-5f52-4039-afbe-2b7e432c490e
+        name: id
+        in: path
+        required: true
+        description: Organization ID
+    get:
+      summary: Retrieves attributes
+      tags:
+        - party
+      responses:
+        '200':
+          description: Party Attributes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attributes'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Party not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getPartyAttributes
+      description: 'returns the attributes of the identified party, if any.'
+    post:
       #      security:
       #        - bearerAuth: [ ]
       tags:
         - party
-      summary: Retrieve the organization for the given organizationId
+      summary: Retrieve the organization attributes for the given organizationId
       description: Return ok
-      operationId: getOrganization
-      parameters:
-        - name: organizationId
-          in: path
-          description: The ID of the Organization to retrieve
-          required: true
-          schema:
-            description: to be defined
-            example: age
-            type: string
+      operationId: addOrganizationAttributes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attributes'
       responses:
         '200':
           description: successful operation
@@ -187,30 +288,29 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /organizations/{organizationId}/attributes:
-    patch:
+  /organizations/{id}/products:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: Organization identifier
+    post:
       #      security:
       #        - bearerAuth: [ ]
       tags:
         - party
-      summary: Retrieve the organization attributes for the given organizationId
-      description: Return ok
-      operationId: addOrganizationAttributes
-      parameters:
-        - name: organizationId
-          in: path
-          description: The ID of the Organization to retrieve
-          required: true
-          schema:
-            description: to be defined
-            example: age
-            type: string
+      summary: Organization products replacement
+      description: Replaces the organization products with the set provided with this action
+      operationId: replaceOrganizationProducts
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Attributes'
+              $ref: '#/components/schemas/Products'
       responses:
         '200':
           description: successful operation
@@ -265,12 +365,14 @@ paths:
           name: from
           schema:
             type: string
+            format: uuid
         - in: query
           name: to
           schema:
             type: string
+            format: uuid
         - in: query
-          name: platformRole
+          name: productRole
           schema:
             type: string
       responses:
@@ -287,6 +389,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
   /relationships/{relationshipId}:
+    delete:
+      tags:
+        - party
+      summary: Deletes relationship
+      description: Deletes the relationship identified by relationshipId
+      operationId: deleteRelationshipById
+      parameters:
+        - name: relationshipId
+          in: path
+          description: The ID of the Relationship to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: relationship deleted
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
     get:
       tags:
         - party
@@ -316,6 +447,42 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  '/relationships/{relationshipId}/products':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship identifier
+    post:
+      #      security:
+      #        - bearerAuth: [ ]
+      tags:
+        - party
+      summary: Relationship products replacement
+      description: Replaces the relationship products with the set provided with this action
+      operationId: replaceRelationshipProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Products'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        '404':
+          description: Organization not found
           content:
             application/problem+json:
               schema:
@@ -444,6 +611,19 @@ paths:
           schema:
             description: to be defined
             type: string
+      requestBody:
+        description: onboarding signed document
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - doc
+              properties:
+                doc:
+                  type: string
+                  format: binary
+        required: true
       responses:
         '201':
           description: successful operation
@@ -493,74 +673,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  '/party/{id}/attributes':
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: id
-        in: path
-        required: true
-        description: UUID of the party
-    get:
-      summary: Retrieves attributes
-      tags:
-        - party
-      responses:
-        '200':
-          description: Party Attributes
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Attributes'
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: Party not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-      operationId: getPartyAttributes
-      description: 'returns the attributes of the identified party, if any.'
-  '/party/organization/{id}':
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: id
-        in: path
-        required: true
-        description: internal platform UUID of the organization
-    get:
-      summary: Retrieves organization by plaftorm UUID
-      tags:
-        - party
-      responses:
-        '200':
-          description: Organization
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: Organization not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-      operationId: getPartyOrganizationByUUID
-      description: 'returns the identified organization, if any.'
   '/bulk/organizations':
     post:
       summary: Retrieves a collection of organizations
@@ -593,81 +705,27 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: bulkOrganizations
       description: 'returns a collection of all the parties for the corresponding identifiers.'
-  '/party/person/{id}':
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: id
-        in: path
-        required: true
-        description: internal platform UUID of the person
-    get:
-      summary: Retrieves person by plaftorm UUID
-      tags:
-        - party
-      responses:
-        '200':
-          description: Person
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Person'
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: Person not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-      operationId: getPartyPersonByUUID
-      description: 'returns the identified person, if any.'
 components:
   schemas:
     PersonSeed:
       type: object
       properties:
-        taxCode:
-          description: Il codice fiscale.
-          example: RSSMRA75L01H501A
+        id:
+          description: Internal id.
           type: string
-        surname:
-          type: string
-          example: Doe
-        name:
-          type: string
-          example: John
+          format: uuid
       required:
-        - taxCode
-        - name
-        - surname
+        - id
       additionalProperties: false
     Person:
       type: object
       properties:
-        taxCode:
-          description: Il codice fiscale.
-          example: RSSMRA75L01H501A
+        id:
           type: string
-        surname:
-          type: string
-          example: Doe
-        name:
-          type: string
-          example: John
-        partyId:
-          type: string
+          format: uuid
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
       required:
-        - taxCode
-        - name
-        - surname
-        - partyId
+        - id
       additionalProperties: false
     OrganizationSeed:
       type: object
@@ -676,62 +734,75 @@ components:
           description: DN
           example: 'aoo=c_f205,o=c_f205,c=it'
           type: string
+        code:
+          description: an accessory code (e.g. codice ipa)
+          type: string
         description:
           type: string
           example: AGENCY X
-        managerName:
-          example: Mario
-          type: string
-        managerSurname:
-          example: Mario
-          type: string
         digitalAddress:
           example: email@pec.mail.org
           format: email
           type: string
+        fiscalCode:
+          description: organization fiscal code
+          type: string
+        products:
+          type: array
+          items:
+            type: string
+            description: product names associated to this organization
+          uniqueItems: true
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
         - institutionId
         - description
-        - managerName
-        - managerSurname
         - digitalAddress
+        - fiscalCode
         - attributes
+        - products
       additionalProperties: false
     Organization:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         institutionId:
           description: DN
           example: 'aoo=c_f205,o=c_f205,c=it'
           type: string
+        code:
+          description: an accessory code (e.g. codice ipa)
+          type: string
         description:
           type: string
           example: AGENCY X
-        managerName:
-          example: Mario Rossi
-          type: string
-        managerSurname:
-          example: Rossi
-          type: string
         digitalAddress:
           example: email@pec.mail.org
           format: email
           type: string
-        partyId:
+        fiscalCode:
+          description: organization fiscal code
           type: string
-          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         attributes:
           $ref: '#/components/schemas/Attributes'
+        products:
+          type: array
+          items:
+            type: string
+            description: product names associated to this organization
+          uniqueItems: true
       required:
+        - id
         - institutionId
         - description
-        - managerName
-        - managerSurname
         - digitalAddress
-        - partyId
+        - fiscalCode
         - attributes
+        - products
       additionalProperties: false
     BulkOrganizations:
       type: object
@@ -760,35 +831,66 @@ components:
             type: string
             format: uuid
           description: the identifiers of party
+    PartyRole:
+      type: string
+      description: Represents the generic available role types for the relationship
+      enum:
+        - MANAGER
+        - DELEGATE
+        - OPERATOR
+    RelationshipState:
+      type: string
+      description: Represents the party relationship state
+      enum:
+        - PENDING
+        - ACTIVE
+        - SUSPENDED
+        - DELETED
+        - REJECTED
     Attributes:
       type: array
       items:
         type: string
+    Products:
+      type: object
+      required:
+        - products
+      properties:
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+          description: set of products to define for this organization
     RelationshipSeed:
       type: object
       properties:
         from:
           type: string
-          description: tax code
+          format: uuid
+          description: person ID
         to:
           type: string
-          description: institution id
+          format: uuid
+          description: organization ID
         role:
+          $ref: '#/components/schemas/PartyRole'
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+          description: 'if present, it represents the current PagoPA product this relationship belongs to'
+        productRole:
           type: string
-          description: represents the generic available role types for the relationship
-          enum:
-            - Manager
-            - Delegate
-            - Operator
-        platformRole:
-          type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles'
+          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
       additionalProperties: false
       required:
         - from
         - to
         - role
-        - platformRole
+        - productRole
+        - products
     Relationship:
       type: object
       properties:
@@ -797,34 +899,43 @@ components:
           format: uuid
         from:
           type: string
-          description: tax code
+          format: uuid
+          description: person ID
         to:
           type: string
-          description: institution id
+          format: uuid
+          description: organization ID
+        filePath:
+          type: string
+          description: path of the file containing the signed onboarding document
+        fileName:
+          type: string
+          description: name of the file containing the signed onboarding document
+        contentType:
+          type: string
+          description: content type of the file containing the signed onboarding document
         role:
+          $ref: '#/components/schemas/PartyRole'
+        products:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+          description: 'if present, it represents the current PagoPA product this relationship belongs to'
+        productRole:
           type: string
-          description: represents the generic available role types for the relationship
-          enum:
-            - Manager
-            - Delegate
-            - Operator
-        platformRole:
-          type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific platform roles'
-        status:
-          type: string
-          enum:
-            - Pending
-            - Active
-            - Suspended
+          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
+        state:
+          $ref: '#/components/schemas/RelationshipState'
       additionalProperties: false
       required:
         - id
         - from
         - to
         - role
-        - platformRole
-        - status
+        - productRole
+        - products
+        - state
     Relationships:
       type: object
       properties:

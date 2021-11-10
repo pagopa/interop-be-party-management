@@ -7,17 +7,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.Any",
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.Equals",
-    "org.wartremover.warts.ToString"
-  )
-)
 sealed trait Party {
   def id: UUID
-  def externalId: String //TODO describe also the type CF|askjasjdas
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 
@@ -26,83 +17,55 @@ sealed trait Party {
     case institutionParty: InstitutionParty =>
       val updated: Set[String] = institutionParty.attributes ++ attributes
       Right(institutionParty.copy(attributes = updated))
+  }
 
+  def replaceProducts(products: Set[String]): Either[Throwable, Party] = this match {
+    case _: PersonParty                     => Left(new RuntimeException("Products do not exist for person party"))
+    case institutionParty: InstitutionParty => Right(institutionParty.copy(products = products))
   }
 
 }
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.Any",
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.Equals",
-    "org.wartremover.warts.ToString"
-  )
-)
 object Party {
-
-//  def addAttributes(party: Party, attributes: Set[String]): Either[Throwable, Party] = {
-//    val zero: Either[Throwable, Party] = Right(party)
-//    attributes.foldLeft(zero)((current, attrs) => current.flatMap(p => p.addAttributes(attrs)))
-//  }
 
   def convertToApi(party: Party): ApiParty =
     party match {
       case personParty: PersonParty =>
-        Right(
-          Person(
-            name = personParty.name,
-            taxCode = personParty.externalId,
-            surname = personParty.surname,
-            partyId = personParty.id.toString
-          )
-        )
+        Right(Person(id = personParty.id))
       case institutionParty: InstitutionParty =>
         Left(
           Organization(
-            description = institutionParty.description,
+            id = institutionParty.id,
             institutionId = institutionParty.externalId,
-            managerName = institutionParty.managerName,
-            managerSurname = institutionParty.managerSurname,
+            code = institutionParty.code,
+            description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
-            partyId = institutionParty.id.toString,
-            attributes = institutionParty.attributes.toSeq
+            fiscalCode = institutionParty.fiscalCode,
+            attributes = institutionParty.attributes.toSeq,
+            products = institutionParty.products
           )
         )
     }
 
 }
 
-final case class PersonParty(
-  id: UUID,
-  externalId: String,
-  name: String,
-  surname: String,
-  start: OffsetDateTime,
-  end: Option[OffsetDateTime]
-) extends Party
+final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]) extends Party
 
 object PersonParty {
-  def fromApi(person: PersonSeed, uuidSupplier: UUIDSupplier): PersonParty = PersonParty(
-    id = uuidSupplier.get,
-    externalId = person.taxCode,
-    name = person.name,
-    surname = person.surname,
-    start = OffsetDateTime.now(),
-    end = None
-  )
+  def fromApi(person: PersonSeed): PersonParty = PersonParty(id = person.id, start = OffsetDateTime.now(), end = None)
 }
 
 final case class InstitutionParty(
   id: UUID,
   externalId: String,
+  code: Option[String],
   description: String,
   digitalAddress: String,
-  managerName: String,
-  managerSurname: String,
-  attributes: Set[String],
+  fiscalCode: String,
   start: OffsetDateTime,
-  end: Option[OffsetDateTime]
+  end: Option[OffsetDateTime],
+  attributes: Set[String],
+  products: Set[String]
 ) extends Party
 
 object InstitutionParty {
@@ -110,11 +73,12 @@ object InstitutionParty {
     InstitutionParty(
       id = uuidSupplier.get,
       externalId = organization.institutionId,
+      code = organization.code,
       description = organization.description,
       digitalAddress = organization.digitalAddress,
-      managerName = organization.managerName,
-      managerSurname = organization.managerSurname,
+      fiscalCode = organization.fiscalCode,
       attributes = organization.attributes.toSet,
+      products = organization.products,
       start = OffsetDateTime.now(),
       end = None
     )

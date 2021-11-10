@@ -20,9 +20,6 @@ import scala.util.Try
 //TODO evaluate an Akka persistence alternative to preserve the same behavior without this case class.
 final case class PartyRelationshipBinding(partyId: UUID, relationshipId: UUID)
 
-@SuppressWarnings(
-  Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Equals", "org.wartremover.warts.ToString")
-)
 final case class Token(
   id: String,
   legals: Seq[PartyRelationshipBinding],
@@ -34,14 +31,6 @@ final case class Token(
 
 }
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.Any",
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.Equals",
-    "org.wartremover.warts.ToString"
-  )
-)
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val partyRelationshipFormat: RootJsonFormat[PartyRelationshipBinding] = jsonFormat2(
@@ -51,7 +40,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
   final val validityHours: Long = 24L
 
-  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationship]): Either[Throwable, Token] =
+  def generate(tokenSeed: TokenSeed, parties: Seq[PersistedPartyRelationship]): Either[Throwable, Token] =
     parties
       .find(_.role == Manager)
       .map(managerRelationship =>

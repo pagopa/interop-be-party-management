@@ -54,8 +54,10 @@ pipeline {
     stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
       environment {
-        CASSANDRA = credentials('cassandra-db')
-        CASSANDRA_HOST = 'cluster1-dc1-service.cassandra-operator.svc.cluster.local:9042'
+        POSTGRES = credentials('postgres-db')
+        POSTGRES_HOST = 'pdnd-interop-dev-rds.c9zr6t2swdpb.eu-central-1.rds.amazonaws.com'
+        POSTGRES_PORT = '5432'
+        POSTGRES_DB = 'party_management_persistence'
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
         //REPLICAS_NR = 1
       }

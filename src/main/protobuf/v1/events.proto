@@ -17,6 +17,10 @@ message AttributesAddedV1 {
   required PartyV1 party = 1;
 }
 
+message OrganizationProductsAddedV1 {
+  required PartyV1 party = 1;
+}
+
 message PartyDeletedV1 {
   required PartyV1 party = 1;
 }
@@ -27,9 +31,16 @@ message PartyRelationshipAddedV1 {
 
 message PartyRelationshipConfirmedV1 {
   required string partyRelationshipId = 1;
+  required string filePath = 2;
+  required string fileName = 3;
+  required string contentType = 4;
 }
 
 message PartyRelationshipDeletedV1 {
+  required string partyRelationshipId = 1;
+}
+
+message PartyRelationshipRejectedV1 {
   required string partyRelationshipId = 1;
 }
 

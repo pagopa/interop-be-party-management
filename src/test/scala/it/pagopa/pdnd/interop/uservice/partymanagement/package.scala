@@ -12,15 +12,21 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.scalamock.scalatest.MockFactory
 
+import java.io.{File, PrintWriter}
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
+import scala.util.Random
 
 package object partymanagement extends MockFactory {
   val uuidSupplier: UUIDSupplier = mock[UUIDSupplier]
   final lazy val url: String =
     s"http://localhost:8088/pdnd-interop-uservice-party-management/${buildinfo.BuildInfo.interfaceVersion}"
   final val authorization: Seq[Authorization] = Seq(headers.Authorization(OAuth2BearerToken("token")))
+  final val multipart: Seq[HttpHeader] = Seq(
+    headers.Authorization(OAuth2BearerToken("token")),
+    headers.`Content-Type`(ContentType(MediaTypes.`multipart/form-data`))
+  )
 
   def createOrganization(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
     create(data, "organizations")
@@ -57,4 +63,18 @@ package object partymanagement extends MockFactory {
     )
   }
 
+  def writeToTempFile(contents: String): File = {
+    val temporaryFile = File.createTempFile("temp", System.currentTimeMillis().toString)
+    temporaryFile.deleteOnExit()
+    new PrintWriter(temporaryFile) {
+      try {
+        write(contents)
+      } finally {
+        close()
+      }
+    }
+    temporaryFile
+  }
+
+  def randomString(): String = Random.alphanumeric.take(40).mkString
 }

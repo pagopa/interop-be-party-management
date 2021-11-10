@@ -28,8 +28,17 @@ package object utils {
     def toFuture: Future[A] = either.fold(e => Future.failed(e), a => Future.successful(a))
   }
 
+  implicit class OptionOps[A](val option: Option[A]) extends AnyVal {
+    def toFuture(e: Throwable): Future[A] = option.fold[Future[A]](Future.failed(e))(Future.successful)
+  }
+
   implicit class TryOps[A](val t: Try[A]) extends AnyVal {
     def toFuture: Future[A] = t.fold(e => Future.failed(e), a => Future.successful(a))
+  }
+
+  implicit class StringOps[A](val str: String) extends AnyVal {
+    def toUUID: Try[UUID]          = Try { UUID.fromString(str) }
+    def toFutureUUID: Future[UUID] = toUUID.toFuture
   }
 
   implicit class StatusReplyOps[A](val statusReply: StatusReply[A]) extends AnyVal {

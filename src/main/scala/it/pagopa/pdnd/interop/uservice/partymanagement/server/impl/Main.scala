@@ -29,21 +29,20 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   PartyPersistentProjection
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.{FileManager, UUIDSupplier}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.UUIDSupplierImpl
 import kamon.Kamon
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.StringPlusAny",
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.NonUnitStatements"
-  )
-)
 object Main extends App {
+
+  val fileManager = FileManager
+    .getConcreteImplementation(ApplicationConfiguration.runtimeFileManager)
+    .get //end of the world here: if no valid file manager is configured, the application must break.
 
   Kamon.init()
 
@@ -56,6 +55,7 @@ object Main extends App {
     }
 
   locally {
+
     val _ = ActorSystem[Nothing](
       Behaviors.setup[Nothing] { context =>
         import akka.actor.typed.scaladsl.adapter._
@@ -65,9 +65,10 @@ object Main extends App {
 
         val cluster = Cluster(context.system)
 
-        context.log.error(
-          "Started [" + context.system + "], cluster.selfAddress = " + cluster.selfMember.address + ", build info = " + buildinfo.BuildInfo.toString + ")"
-        )
+        context.log.error(s"""Started [ ${context.system} ]
+                             |   cluster.selfAddress   = ${cluster.selfMember.address}
+                             |   file manager type     = ${fileManager.getClass.getName}
+                             |   build info            = ${buildinfo.BuildInfo.toString}""".stripMargin)
 
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
@@ -81,10 +82,12 @@ object Main extends App {
         }
 
         val persistence =
-          classicSystem.classicSystem.settings.config.getString("uservice-party-management.persistence")
+          classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
 
-        if (persistence == "cassandra") {
-          val partyPersistentProjection = new PartyPersistentProjection(context.system, partyPersistentEntity)
+        if (persistence == "jdbc-journal") {
+          val dbConfig: DatabaseConfig[JdbcProfile] =
+            DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
+          val partyPersistentProjection = PartyPersistentProjection(context.system, partyPersistentEntity, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
             name = "party-projections",
@@ -97,7 +100,7 @@ object Main extends App {
         val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
 
         val partyApi: PartyApi = new PartyApi(
-          new PartyApiServiceImpl(context.system, sharding, partyPersistentEntity, uuidSupplier),
+          new PartyApiServiceImpl(context.system, sharding, partyPersistentEntity, uuidSupplier, fileManager),
           marshallerImpl,
           SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
         )

@@ -15,11 +15,8 @@ message PartyV1 {
 
 message PersonPartyV1 {
   required string id = 1;
-  required string externalId = 2;
-  required string name = 3;
-  required string surname = 4;
-  required string start = 5;
-  optional string end = 6;
+  required string start = 2;
+  optional string end = 3;
 }
 
 message InstitutionPartyV1 {
@@ -27,10 +24,11 @@ message InstitutionPartyV1 {
   required string externalId = 2;
   required string description = 3;
   required string digitalAddress = 4;
-  required string managerName = 5;
-  required string managerSurname = 6;
+  optional string code = 5;
+  required string fiscalCode = 6;
   required string start = 7;
   optional string end = 8;
   repeated string attributes = 9;
+  repeated string products = 10;
 }
 

@@ -11,22 +11,27 @@ message PartyRelationshipV1 {
   required string from = 2;
   required string to = 3;
   required PartyRoleV1 role = 4;
-  required string platformRole = 5;
-  required string start = 6;
-  optional string end = 7;
-  required PartyRelationshipStatusV1 status = 8;
+  repeated string products = 5;
+  required string productRole = 6;
+  required string start = 7;
+  optional string end = 8;
+  required PartyRelationshipStateV1 state = 9;
+  optional string filePath = 10;
+  optional string fileName = 11;
+  optional string contentType = 12;
 
-  enum PartyRelationshipStatusV1 {
-    Pending = 0;
-    Active = 1;
-    Suspended = 2;
-    Deleted = 3;
+  enum PartyRelationshipStateV1 {
+    PENDING = 1;
+    ACTIVE = 2;
+    SUSPENDED = 3;
+    DELETED = 4;
+    REJECTED = 5;
   }
 
   enum PartyRoleV1 {
-    Delegate = 0;
-    Manager = 1;
-    Operator = 2;
+    DELEGATE = 1;
+    MANAGER = 2;
+    OPERATOR = 3;
   }
 }
 
