@@ -40,7 +40,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
   final val validityHours: Long = 24L
 
-  def generate(tokenSeed: TokenSeed, parties: Seq[PartyRelationship]): Either[Throwable, Token] =
+  def generate(tokenSeed: TokenSeed, parties: Seq[PersistedPartyRelationship]): Either[Throwable, Token] =
     parties
       .find(_.role == Manager)
       .map(managerRelationship =>

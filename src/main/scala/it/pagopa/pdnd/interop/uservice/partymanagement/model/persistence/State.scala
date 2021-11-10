@@ -8,7 +8,7 @@ import java.util.UUID
 final case class State(
   parties: Map[UUID, Party],
   tokens: Map[String, Token],
-  relationships: Map[String, PartyRelationship]
+  relationships: Map[String, PersistedPartyRelationship]
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -25,16 +25,16 @@ final case class State(
   def updateParty(party: Party): State =
     copy(parties = parties + (party.id -> party))
 
-  def addPartyRelationship(relationship: PartyRelationship): State =
+  def addPartyRelationship(relationship: PersistedPartyRelationship): State =
     copy(relationships = relationships + (relationship.id.toString -> relationship))
 
   def confirmPartyRelationship(id: UUID, filePath: String, fileName: String, contentType: String): State = {
     val relationshipId = id.toString
-    val updated: Map[String, PartyRelationship] =
+    val updated: Map[String, PersistedPartyRelationship] =
       relationships.updated(
         relationshipId,
         relationships(relationshipId).copy(
-          status = PartyRelationshipStatus.Active,
+          state = PersistedPartyRelationshipState.Active,
           filePath = Some(filePath),
           fileName = Some(fileName),
           contentType = Some(contentType)
@@ -44,26 +44,26 @@ final case class State(
   }
 
   def updateRelationshipProducts(relationshipId: UUID, products: Set[String]): State = {
-    val updated: PartyRelationship = relationships(relationshipId.toString).copy(products = products)
+    val updated: PersistedPartyRelationship = relationships(relationshipId.toString).copy(products = products)
     copy(relationships = relationships + (relationshipId.toString -> updated))
   }
 
   def rejectRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Rejected)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Rejected)
 
   def suspendRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Suspended)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Suspended)
 
   def activateRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Active)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Active)
 
   def deleteRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PartyRelationshipStatus.Deleted)
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Deleted)
 
-  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PartyRelationshipStatus): State =
+  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PersistedPartyRelationshipState): State =
     relationships.get(relationshipId.toString) match {
       case Some(relationship) =>
-        val updatedRelationship = relationship.copy(status = newStatus)
+        val updatedRelationship = relationship.copy(state = newStatus)
         copy(relationships = relationships + (relationship.id.toString -> updatedRelationship))
       case None =>
         this
@@ -72,9 +72,9 @@ final case class State(
   def getPartyRelationshipByAttributes(
     from: UUID,
     to: UUID,
-    role: PartyRole,
+    role: PersistedPartyRole,
     productRole: String
-  ): Option[PartyRelationship] = {
+  ): Option[PersistedPartyRelationship] = {
     relationships.values.find(relationship =>
       from.toString == relationship.from.toString
         && to.toString == relationship.to.toString
@@ -92,7 +92,7 @@ object State {
   val empty: State =
     State(
       parties = Map.empty[UUID, Party],
-      relationships = Map.empty[String, PartyRelationship],
+      relationships = Map.empty[String, PersistedPartyRelationship],
       tokens = Map.empty[String, Token]
     )
 }

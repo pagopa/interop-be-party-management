@@ -228,9 +228,15 @@ class PartyApiServiceImpl(
     val result: Future[Relationship] = for {
       from <- getParty(seed.from)
       to   <- getParty(seed.to)
-      role <- PartyRole.fromText(seed.role).toFuture
-      _    <- isMissingRelationship(from.id, to.id, role, seed.productRole)
-      partyRelationship = PartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.products, seed.productRole)
+      role = PersistedPartyRole.fromApi(seed.role)
+      _ <- isMissingRelationship(from.id, to.id, role, seed.productRole)
+      partyRelationship = PersistedPartyRelationship.create(uuidSupplier)(
+        from.id,
+        to.id,
+        role,
+        seed.products,
+        seed.productRole
+      )
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -238,10 +244,10 @@ class PartyApiServiceImpl(
         id = verified.id,
         from = from.id,
         to = to.id,
-        role = verified.role.toString,
+        role = seed.role,
         products = verified.products,
         productRole = verified.productRole,
-        status = verified.status.toString,
+        state = verified.state.toApi,
         filePath = None,
         fileName = None,
         contentType = None
@@ -268,7 +274,7 @@ class PartyApiServiceImpl(
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val result: Future[StatusReply[PartyRelationship]] = for {
+    val result: Future[StatusReply[PersistedPartyRelationship]] = for {
       uuid <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => AddPartyRelationshipProducts(uuid, products.products, ref)).transform(Success(_))
@@ -305,7 +311,7 @@ class PartyApiServiceImpl(
         .toList
 
       for {
-        re <- commanders.traverse(_.ask[List[PartyRelationship]](ref => GetPartyRelationshipsByTo(id, ref)))
+        re <- commanders.traverse(_.ask[List[PersistedPartyRelationship]](ref => GetPartyRelationshipsByTo(id, ref)))
       } yield re.flatten.map(_.toRelationship)
     }
 
@@ -439,24 +445,22 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PartyRelationship] = for {
-    role <- PartyRole.fromText(relationshipSeed.role).toFuture
-    relationship <- relationshipByInvolvedParties(
+  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PersistedPartyRelationship] =
+    relationshipByInvolvedParties(
       from = relationshipSeed.from,
       to = relationshipSeed.to,
-      role = role,
+      role = PersistedPartyRole.fromApi(relationshipSeed.role),
       productRole = relationshipSeed.productRole
     )
-  } yield relationship
 
   private def isRelationshipAllowed(
-    currentPartyRelationships: List[PartyRelationship],
-    partyRelationships: PartyRelationship
-  ): Future[PartyRelationship] = Future.fromTry {
+    currentPartyRelationships: List[PersistedPartyRelationship],
+    partyRelationships: PersistedPartyRelationship
+  ): Future[PersistedPartyRelationship] = Future.fromTry {
     Either
       .cond(
-        currentPartyRelationships.exists(_.status == PartyRelationshipStatus.Active) ||
-          Set[PartyRole](Manager, Delegate).contains(partyRelationships.role),
+        currentPartyRelationships.exists(_.state == PersistedPartyRelationshipState.Active) ||
+          Set[PersistedPartyRole](Manager, Delegate).contains(partyRelationships.role),
         partyRelationships,
         new RuntimeException("Operator without active manager")
       )
@@ -531,9 +535,9 @@ class PartyApiServiceImpl(
   private def relationshipByInvolvedParties(
     from: UUID,
     to: UUID,
-    role: PartyRole,
+    role: PersistedPartyRole,
     productRole: String
-  ): Future[PartyRelationship] = {
+  ): Future[PersistedPartyRelationship] = {
 
     for {
       maybeRelationship <- getCommander(from.toString).ask(ref =>
@@ -548,7 +552,12 @@ class PartyApiServiceImpl(
     *
     * @return successful future if no relationship has been found in the cluster.
     */
-  private def isMissingRelationship(from: UUID, to: UUID, role: PartyRole, productRole: String): Future[Boolean] = {
+  private def isMissingRelationship(
+    from: UUID,
+    to: UUID,
+    role: PersistedPartyRole,
+    productRole: String
+  ): Future[Boolean] = {
     relationshipByInvolvedParties(from, to, role, productRole).transformWith {
       case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
       case Failure(_) => Future.successful(true)
@@ -734,7 +743,7 @@ class PartyApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info(s"Getting organization ${externalId}")
+    logger.info(s"Getting organization $externalId")
 
     val commanders = (0 to settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -777,7 +786,7 @@ class PartyApiServiceImpl(
       for {
         uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
         results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, ref)))
-        maybeDeletion = results.filter(_.isSuccess).headOption
+        maybeDeletion = results.find(_.isSuccess)
       } yield maybeDeletion
 
     onComplete(result) {

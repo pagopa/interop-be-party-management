@@ -15,13 +15,13 @@ object Dependencies {
     lazy val clusterTools     = namespace            %% "akka-cluster-tools"           % akkaVersion
     lazy val persistenceJdbc  = "com.lightbend.akka" %% "akka-persistence-jdbc"        % jdbcPersistenceVersion
     // Warning: this is community driven
-    lazy val projectionSlick  = "com.lightbend.akka" %% "akka-projection-slick"        % slickProjectionVersion
-    lazy val s3Journal        = "com.github.j5ik2o"  %% "akka-persistence-s3-journal"  % akkaPersistenceS3Version
-    lazy val s3Snapshot       = "com.github.j5ik2o"  %% "akka-persistence-s3-snapshot" % akkaPersistenceS3Version
-    lazy val stream           = namespace            %% "akka-stream-typed"            % akkaVersion
-    lazy val http             = namespace            %% "akka-http"                    % akkaHttpVersion
-    lazy val httpJson         = namespace            %% "akka-http-spray-json"         % akkaHttpVersion
-    lazy val httpJson4s       = "de.heikoseeberger"  %% "akka-http-json4s"             % httpJson4sVersion
+    lazy val projectionSlick = "com.lightbend.akka" %% "akka-projection-slick"        % slickProjectionVersion
+    lazy val s3Journal       = "com.github.j5ik2o"  %% "akka-persistence-s3-journal"  % akkaPersistenceS3Version
+    lazy val s3Snapshot      = "com.github.j5ik2o"  %% "akka-persistence-s3-snapshot" % akkaPersistenceS3Version
+    lazy val stream          = namespace            %% "akka-stream-typed"            % akkaVersion
+    lazy val http            = namespace            %% "akka-http"                    % akkaHttpVersion
+    lazy val httpJson        = namespace            %% "akka-http-spray-json"         % akkaHttpVersion
+    lazy val httpJson4s      = "de.heikoseeberger"  %% "akka-http-json4s"             % httpJson4sVersion
     lazy val discoveryKubernetesApi =
       "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % akkaManagementVersion
     lazy val clusterBootstrap =
@@ -94,32 +94,32 @@ object Dependencies {
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       //
       akka.actorTyped              % Compile,
-      akka.clusterTyped            % Compile,
-      akka.clusterSharding         % Compile,
+      akka.clusterBootstrap        % Compile,
       akka.clusterHttp             % Compile,
+      akka.clusterSharding         % Compile,
+      akka.clusterTools            % Compile,
+      akka.clusterTyped            % Compile,
       akka.discovery               % Compile,
       akka.discoveryKubernetesApi  % Compile,
-      akka.clusterBootstrap        % Compile,
-      akka.clusterTools            % Compile,
+      akka.http                    % Compile,
+      akka.httpJson                % Compile,
       akka.persistence             % Compile,
+      akka.persistenceJdbc         % Compile,
       akka.persistenceQuery        % Compile,
       akka.projection              % Compile,
-      akka.persistenceJdbc         % Compile,
       akka.projectionSlick         % Compile,
       akka.s3Journal               % Compile,
       akka.s3Snapshot              % Compile,
-      akka.stream                  % Compile,
-      akka.http                    % Compile,
-      akka.httpJson                % Compile,
       akka.slf4j                   % Compile,
-      openapi4j.operationValidator % Compile,
-      postgres.jdbc                % Compile,
-      logback.classic              % Compile,
+      akka.stream                  % Compile,
+      azure.storageBlob            % Compile,
       cats.core                    % Compile,
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
+      logback.classic              % Compile,
       mustache.mustache            % Compile,
-      azure.storageBlob            % Compile,
+      openapi4j.operationValidator % Compile,
+      postgres.jdbc                % Compile,
       scalpb.core                  % "protobuf",
       akka.testkit                 % Test,
       scalatest.core               % Test,

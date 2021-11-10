@@ -167,7 +167,7 @@ object PartyPersistentBehavior {
           }
 
       case RejectPartyRelationship(partyRelationshipId, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
@@ -180,7 +180,7 @@ object PartyPersistentBehavior {
         }
 
       case DeletePartyRelationship(partyRelationshipId, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
@@ -193,7 +193,7 @@ object PartyPersistentBehavior {
         }
 
       case SuspendPartyRelationship(partyRelationshipId, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
@@ -206,7 +206,7 @@ object PartyPersistentBehavior {
         }
 
       case ActivatePartyRelationship(partyRelationshipId, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(partyRelationshipId.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
@@ -219,17 +219,17 @@ object PartyPersistentBehavior {
         }
 
       case GetPartyRelationshipById(uuid, replyTo) =>
-        val relationship: Option[PartyRelationship] = state.relationships.get(uuid.toString)
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(uuid.toString)
         replyTo ! relationship
         Effect.none
 
       case GetPartyRelationshipsByFrom(from, replyTo) =>
-        val relationships: List[PartyRelationship] = state.relationships.values.filter(_.from == from).toList
+        val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.from == from).toList
         replyTo ! relationships
         Effect.none
 
       case GetPartyRelationshipsByTo(to, replyTo) =>
-        val relationships: List[PartyRelationship] = state.relationships.values.filter(_.to == to).toList
+        val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.to == to).toList
         replyTo ! relationships
         Effect.none
 
@@ -278,12 +278,13 @@ object PartyPersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case PartyAdded(party)                                        => state.addParty(party)
-      case PartyDeleted(party)                                      => state.deleteParty(party)
-      case AttributesAdded(party)                                   => state.updateParty(party)
-      case OrganizationProductsAdded(party)                         => state.updateParty(party)
-      case PartyRelationshipAdded(partyRelationship)                => state.addPartyRelationship(partyRelationship)
-      case PartyRelationshipProductsAdded(relationshipId, products) => state.updateRelationshipProducts(relationshipId, products)
+      case PartyAdded(party)                         => state.addParty(party)
+      case PartyDeleted(party)                       => state.deleteParty(party)
+      case AttributesAdded(party)                    => state.updateParty(party)
+      case OrganizationProductsAdded(party)          => state.updateParty(party)
+      case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
+      case PartyRelationshipProductsAdded(relationshipId, products) =>
+        state.updateRelationshipProducts(relationshipId, products)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)
       case PartyRelationshipRejected(relationshipId)  => state.rejectRelationship(relationshipId)
