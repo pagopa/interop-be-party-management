@@ -37,8 +37,6 @@ object Party {
           Organization(
             id = institutionParty.id,
             institutionId = institutionParty.externalId,
-            code = institutionParty.code,
-            label = institutionParty.label,
             description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
             taxCode = institutionParty.taxCode,
@@ -59,8 +57,6 @@ object PersonParty {
 final case class InstitutionParty(
   id: UUID,
   externalId: String,
-  code: Option[String],
-  label: Option[String],
   description: String,
   digitalAddress: String,
   taxCode: String,
@@ -75,8 +71,6 @@ object InstitutionParty {
     InstitutionParty(
       id = uuidSupplier.get,
       externalId = organization.institutionId,
-      code = organization.code,
-      label = organization.label,
       description = organization.description,
       digitalAddress = organization.digitalAddress,
       taxCode = organization.taxCode,

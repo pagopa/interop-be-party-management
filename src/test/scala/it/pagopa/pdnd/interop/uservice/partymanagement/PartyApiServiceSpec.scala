@@ -333,8 +333,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val orgSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -369,8 +367,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val orgSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -437,8 +433,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val orgSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -481,8 +475,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val orgSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -574,8 +566,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val orgSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -653,8 +643,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val organizationSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -737,8 +725,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val organizationSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -836,8 +822,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val organizationSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
@@ -1055,8 +1039,6 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val orgSeed =
         OrganizationSeed(
           institutionId,
-          None,
-          None,
           "Institutions One",
           "mail1@mail.org",
           "taxCode",
