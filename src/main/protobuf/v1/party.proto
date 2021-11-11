@@ -25,10 +25,11 @@ message InstitutionPartyV1 {
   required string description = 3;
   required string digitalAddress = 4;
   optional string code = 5;
-  required string fiscalCode = 6;
-  required string start = 7;
-  optional string end = 8;
-  repeated string attributes = 9;
-  repeated string products = 10;
+  optional string label = 6;
+  required string taxCode = 7;
+  required string start = 8;
+  optional string end = 9;
+  repeated string attributes = 10;
+  repeated string products = 11;
 }
 
