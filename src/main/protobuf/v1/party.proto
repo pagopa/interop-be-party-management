@@ -24,12 +24,10 @@ message InstitutionPartyV1 {
   required string externalId = 2;
   required string description = 3;
   required string digitalAddress = 4;
-  optional string code = 5;
-  optional string label = 6;
-  required string taxCode = 7;
-  required string start = 8;
-  optional string end = 9;
-  repeated string attributes = 10;
-  repeated string products = 11;
+  required string taxCode = 5;
+  required string start = 6;
+  optional string end = 7;
+  repeated string attributes = 8;
+  repeated string products = 9;
 }
 
