@@ -731,11 +731,8 @@ components:
       type: object
       properties:
         institutionId:
-          description: DN
-          example: 'aoo=c_f205,o=c_f205,c=it'
-          type: string
-        code:
-          description: an accessory code (e.g. codice ipa)
+          description: organization id (e.g iPA code)
+          example: 'c_f205'
           type: string
         description:
           type: string
@@ -744,8 +741,8 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
-        fiscalCode:
-          description: organization fiscal code
+        taxCode:
+          description: organization tax code
           type: string
         products:
           type: array
@@ -759,7 +756,7 @@ components:
         - institutionId
         - description
         - digitalAddress
-        - fiscalCode
+        - taxCode
         - attributes
         - products
       additionalProperties: false
@@ -771,11 +768,8 @@ components:
           format: uuid
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         institutionId:
-          description: DN
-          example: 'aoo=c_f205,o=c_f205,c=it'
-          type: string
-        code:
-          description: an accessory code (e.g. codice ipa)
+          description: organization id (e.g iPA code)
+          example: 'c_f205'
           type: string
         description:
           type: string
@@ -784,8 +778,8 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
-        fiscalCode:
-          description: organization fiscal code
+        taxCode:
+          description: organization tax code
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
@@ -800,7 +794,7 @@ components:
         - institutionId
         - description
         - digitalAddress
-        - fiscalCode
+        - taxCode
         - attributes
         - products
       additionalProperties: false

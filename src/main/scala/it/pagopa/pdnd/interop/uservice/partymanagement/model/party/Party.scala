@@ -37,10 +37,9 @@ object Party {
           Organization(
             id = institutionParty.id,
             institutionId = institutionParty.externalId,
-            code = institutionParty.code,
             description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
-            fiscalCode = institutionParty.fiscalCode,
+            taxCode = institutionParty.taxCode,
             attributes = institutionParty.attributes.toSeq,
             products = institutionParty.products
           )
@@ -58,10 +57,9 @@ object PersonParty {
 final case class InstitutionParty(
   id: UUID,
   externalId: String,
-  code: Option[String],
   description: String,
   digitalAddress: String,
-  fiscalCode: String,
+  taxCode: String,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   attributes: Set[String],
@@ -73,10 +71,9 @@ object InstitutionParty {
     InstitutionParty(
       id = uuidSupplier.get,
       externalId = organization.institutionId,
-      code = organization.code,
       description = organization.description,
       digitalAddress = organization.digitalAddress,
-      fiscalCode = organization.fiscalCode,
+      taxCode = organization.taxCode,
       attributes = organization.attributes.toSet,
       products = organization.products,
       start = OffsetDateTime.now(),

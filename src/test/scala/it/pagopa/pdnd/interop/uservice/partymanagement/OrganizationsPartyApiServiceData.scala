@@ -6,8 +6,8 @@ import akka.http.scaladsl.model.{HttpResponse, MessageEntity}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 
 import java.util.UUID
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 object OrganizationsPartyApiServiceData {
   // format: off
@@ -21,18 +21,17 @@ object OrganizationsPartyApiServiceData {
   lazy final val institutionId3 = "id3"
   lazy final val institutionId4 = "id4"
 
-  lazy final val orgSeed1 = OrganizationSeed(institutionId1, None,"Institutions One", "mail1@mail.org","fiscalCode",    Set.empty, Seq.empty)
-  lazy final val orgSeed2 = OrganizationSeed(institutionId2, None, "Institutions Two", "mail2@mail.org", "fiscalCode",  Set.empty, Seq.empty)
-  lazy final val orgSeed3 = OrganizationSeed(institutionId3, None,"Institutions Three", "mail3@mail.org", "fiscalCode", Set.empty, Seq.empty)
-  lazy final val orgSeed4 = OrganizationSeed(institutionId4, None, "Institutions Four", "mail4@mail.org", "fiscalCode", Set.empty, Seq.empty)
+  lazy final val orgSeed1 = OrganizationSeed(institutionId1, "Institutions One", "mail1@mail.org","taxCode",    Set.empty, Seq.empty)
+  lazy final val orgSeed2 = OrganizationSeed(institutionId2, "Institutions Two", "mail2@mail.org", "taxCode",  Set.empty, Seq.empty)
+  lazy final val orgSeed3 = OrganizationSeed(institutionId3, "Institutions Three", "mail3@mail.org", "taxCode", Set.empty, Seq.empty)
+  lazy final val orgSeed4 = OrganizationSeed(institutionId4, "Institutions Four", "mail4@mail.org", "taxCode", Set.empty, Seq.empty)
 
   // format: on
   lazy final val expected1 = Organization(
     institutionId = institutionId1,
-    code = None,
     description = "Institutions One",
     digitalAddress = "mail1@mail.org",
-    fiscalCode = "fiscalCode",
+    taxCode = "taxCode",
     id = orgUuid1,
     attributes = Seq.empty,
     products = Set.empty
@@ -40,10 +39,9 @@ object OrganizationsPartyApiServiceData {
 
   lazy final val expected3 = Organization(
     institutionId = institutionId3,
-    code = None,
     description = "Institutions Three",
     digitalAddress = "mail3@mail.org",
-    fiscalCode = "fiscalCode",
+    taxCode = "taxCode",
     id = orgUuid3,
     attributes = Seq.empty,
     products = Set.empty
