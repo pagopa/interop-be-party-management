@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS party.event_tag(
     PRIMARY KEY(event_id, tag),
     CONSTRAINT fk_event_journal
       FOREIGN KEY(event_id)
-      REFERENCES event_journal(ordering)
+      REFERENCES party.event_journal(ordering)
       ON DELETE CASCADE
 );
 
