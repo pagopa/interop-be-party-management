@@ -57,6 +57,9 @@ pipeline {
       agent { label 'sbt-template' }
       environment {
         POSTGRES = credentials('postgres-db')
+        AWS = credentials('jenkins-aws')
+        STORAGE_USR=$AWS_USR
+        STORAGE_PSW=$AWS_PSW
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
         REPLICAS_NR = 1
       }
