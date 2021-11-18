@@ -1,9 +1,8 @@
 object Versions {
-  lazy val akkaCassandraVersion     = "1.0.5"
   lazy val akkaHttpVersion          = "10.2.6"
   lazy val akkaManagementVersion    = "1.1.1"
-  lazy val akkaPersistenceS3Version = "1.1.41"
   lazy val akkaVersion              = "2.6.16"
+  lazy val awsSdkVersion            = "2.17.72"
   lazy val azureStorageBlobVersion  = "12.14.1"
   lazy val catsVersion              = "2.6.1"
   lazy val httpJson4sVersion        = "1.38.2"
@@ -14,9 +13,11 @@ object Versions {
   lazy val mockitoVersion           = "3.7.7"
   lazy val mustacheVersion          = "0.9.0"
   lazy val openapi4jVersion         = "1.0.7"
+  lazy val postgresVersion          = "42.2.21"
   lazy val projectionVersion        = "1.2.1"
   lazy val scalaMockVersion         = "5.1.0"
   lazy val scalatestVersion         = "3.2.9"
   lazy val slickProjectionVersion   = "1.2.2"
   lazy val stateMonitoringVersion   = "0.0.3-SNAPSHOT"
+  lazy val akkaPersistenceS3Version = "1.1.41"
 }

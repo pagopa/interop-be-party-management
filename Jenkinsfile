@@ -45,7 +45,9 @@ pipeline {
           unstash "pdnd_trust_store"
           script {
             sh '''docker login $NEXUS -u $NEXUS_CREDENTIALS_USR -p $NEXUS_CREDENTIALS_PSW'''
-            sbtAction 'test docker:publish'
+            sbtAction 'test'
+            sbtAction 'project client publish'
+            sbtAction 'docker:publish'
           }
         }
       }
@@ -55,11 +57,8 @@ pipeline {
       agent { label 'sbt-template' }
       environment {
         POSTGRES = credentials('postgres-db')
-        POSTGRES_HOST = 'pdnd-interop-dev-rds.c9zr6t2swdpb.eu-central-1.rds.amazonaws.com'
-        POSTGRES_PORT = '5432'
-        POSTGRES_DB = 'party_management_persistence'
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
-        //REPLICAS_NR = 1
+        REPLICAS_NR = 1
       }
       steps {
         container('sbt-container') {

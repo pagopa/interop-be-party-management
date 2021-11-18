@@ -6,7 +6,7 @@ metadata:
   name: {{name}}
   namespace: {{name}}
 spec:
-  replicas: 1
+  replicas: {{replicas}}
   selector:
     matchLabels:
       app: {{name}}
@@ -18,16 +18,11 @@ spec:
     spec:
       imagePullSecrets:
         - name: regcred
-      volumes:
-        - name: application-conf
-          secret:
-            secretName: application.conf
-            defaultMode: 420
       containers:
         - name: {{name}}
           image: {{repository}}/services/{{name}}:{{version}}
           command: ["bin/{{name}}"]
-          args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
+          args: ["-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
@@ -58,20 +53,23 @@ spec:
             allowPrivilegeEscalation: false
           env:
             - name: POSTGRES_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: postgres
-                  key: POSTGRES_HOST
+              value : "{{postgresHost}}"
+            - name: POSTGRES_PORT
+              value : "{{postgresPort}}"
+            - name: POSTGRES_DB
+              value : "{{postgresDb}}"
+            - name: POSTGRES_SCHEMA
+              value : "{{postgresSchema}}"
             - name: POSTGRES_USR
               valueFrom:
                 secretKeyRef:
                   name: postgres
-                  key: POSTGRES_USR
+                  key: 'POSTGRES_USR'
             - name: POSTGRES_PSW
               valueFrom:
                 secretKeyRef:
                   name: postgres
-                  key: POSTGRES_PSW
+                  key: 'POSTGRES_PSW'
             - name: STORAGE_TYPE
               value: {{storageType}}
             - name: STORAGE_CONTAINER
@@ -93,10 +91,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: REQUIRED_CONTACT_POINT_NR
-              value: "1"
-          volumeMounts:
-            - name: application-conf
-              mountPath: /opt/docker/etc
+              value: {{replicas}}
 ---
 apiVersion: v1
 kind: Service
