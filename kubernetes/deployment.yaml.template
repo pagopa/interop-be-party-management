@@ -91,7 +91,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: REQUIRED_CONTACT_POINT_NR
-              value: "{{replicas}"
+              value: "{{replicas}}"
 ---
 apiVersion: v1
 kind: Service
