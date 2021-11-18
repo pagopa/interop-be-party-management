@@ -45,9 +45,7 @@ pipeline {
           unstash "pdnd_trust_store"
           script {
             sh '''docker login $NEXUS -u $NEXUS_CREDENTIALS_USR -p $NEXUS_CREDENTIALS_PSW'''
-            sbtAction 'test'
-            sbtAction 'project client publish'
-            sbtAction 'docker:publish'
+            sbtAction 'test docker:publish "project client" publish'
           }
         }
       }
