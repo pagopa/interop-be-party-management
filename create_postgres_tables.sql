@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS public.event_journal(
+CREATE SCHEMA IF NOT EXISTS party AUTHORIZATION <<POSTGRES_USER>>;
+
+CREATE TABLE IF NOT EXISTS party.event_journal(
   ordering BIGSERIAL,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
@@ -19,19 +21,19 @@ CREATE TABLE IF NOT EXISTS public.event_journal(
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
-CREATE UNIQUE INDEX event_journal_ordering_idx ON public.event_journal(ordering);
+CREATE UNIQUE INDEX event_journal_ordering_idx ON party.event_journal(ordering);
 
-CREATE TABLE IF NOT EXISTS public.event_tag(
+CREATE TABLE IF NOT EXISTS party.event_tag(
     event_id BIGINT,
     tag VARCHAR(256),
     PRIMARY KEY(event_id, tag),
     CONSTRAINT fk_event_journal
       FOREIGN KEY(event_id)
-      REFERENCES event_journal(ordering)
+      REFERENCES party.event_journal(ordering)
       ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS public.snapshot (
+CREATE TABLE IF NOT EXISTS party.snapshot (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,

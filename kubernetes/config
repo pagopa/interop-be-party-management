@@ -10,6 +10,14 @@ popd  > /dev/null
 
 repository=$DOCKER_REPO
 
+replicas=$REPLICAS_NR
+
+# setting up postgres env vars
+postgresHost=$POSTGRES_HOST
+postgresPort=$POSTGRES_PORT
+postgresDb=$POSTGRES_DB
+postgresSchema=$POSTGRES_SCHEMA
+
 #setting up file manager env vars
 storageType=$STORAGE_TYPE
 storageContainer=$STORAGE_CONTAINER

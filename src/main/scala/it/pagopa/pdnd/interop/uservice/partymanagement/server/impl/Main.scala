@@ -81,7 +81,7 @@ object Main extends App {
           case Some(s) => s
         }
 
-        val persistence =
+        val persistence: String =
           classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
 
         if (persistence == "jdbc-journal") {

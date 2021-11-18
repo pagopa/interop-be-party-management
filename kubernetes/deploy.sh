@@ -14,11 +14,9 @@ kubectl create namespace $NAMESPACE
 
 kubectl get secret regcred -n default -o yaml | sed s/"namespace: default"/"namespace: $NAMESPACE"/ | kubectl apply -n $NAMESPACE -f -
 
-kubectl create secret generic postgres --from-literal=POSTGRES_HOST=$POSTGRES_HOST --from-literal=POSTGRES_USR=$POSTGRES_USR --from-literal=POSTGRES_PSW=$POSTGRES_PSW -n $NAMESPACE
+kubectl create secret generic postgres --from-literal=POSTGRES_USR=$POSTGRES_USR --from-literal=POSTGRES_PSW="$POSTGRES_PSW" -n $NAMESPACE
 
 kubectl create secret generic storage --from-literal=STORAGE_USR=$STORAGE_USR --from-literal=STORAGE_PSW=$STORAGE_PSW -n $NAMESPACE
-
-kubectl create secret generic application.conf --from-file=application.conf=$SCRIPT_PATH/../src/main/resources/application.conf -n $NAMESPACE
 
 $SCRIPT_PATH/templater.sh $SCRIPT_PATH/deployment.yaml.template -s -f $SCRIPT_PATH/config > $SCRIPT_PATH/deployment.yaml
 
