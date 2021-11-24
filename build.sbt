@@ -72,6 +72,7 @@ lazy val client = project
   .settings(
     name := "pdnd-interop-uservice-party-management-client",
     scalacOptions := Seq(),
+    scalafmtOnCompile:= true,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
@@ -94,6 +95,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "pdnd-interop-uservice-party-management",
     Test / parallelExecution := false,
+    scalafmtOnCompile:= true,
     dockerBuildOptions ++= Seq("--network=host"),
     dockerRepository := Some(System.getenv("DOCKER_REPO")),
     dockerBaseImage := "adoptopenjdk:11-jdk-hotspot",
