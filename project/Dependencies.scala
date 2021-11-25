@@ -1,4 +1,5 @@
 import Versions._
+import PDNDVersions._
 import sbt._
 
 object Dependencies {
@@ -71,6 +72,14 @@ object Dependencies {
     lazy val operationValidator = namespace % "openapi-operation-validator" % openapi4jVersion
   }
 
+  private[this] object pagopa {
+    lazy val namespace = "it.pagopa"
+
+    lazy val commons     = namespace %% "pdnd-interop-commons-utils"        % commonsVersion
+    lazy val commonsFile = namespace %% "pdnd-interop-commons-file-manager" % commonsVersion
+
+  }
+
   private[this] object postgres {
     lazy val namespace = "org.postgresql"
     lazy val jdbc      = namespace % "postgresql" % postgresVersion
@@ -121,6 +130,8 @@ object Dependencies {
       logback.classic              % Compile,
       mustache.mustache            % Compile,
       openapi4j.operationValidator % Compile,
+      pagopa.commons               % Compile,
+      pagopa.commonsFile           % Compile,
       postgres.jdbc                % Compile,
       scalpb.core                  % "protobuf",
       akka.testkit                 % Test,

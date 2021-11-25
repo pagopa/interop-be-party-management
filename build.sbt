@@ -16,6 +16,9 @@ val generateCode = taskKey[Unit]("A task for generating the code starting from t
 
 val packagePrefix = settingKey[String]("The package prefix derived from the uservice name")
 
+ThisBuild / resolvers += "Pagopa Nexus Snapshots" at s"https://gateway.interop.pdnd.dev/nexus/repository/maven-snapshots/"
+ThisBuild / resolvers += "Pagopa Nexus Releases" at s"https://gateway.interop.pdnd.dev/nexus/repository/maven-releases/"
+
 packagePrefix := {
   name.value
     .replaceFirst("pdnd-", "pdnd.")

@@ -10,14 +10,15 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import cats.implicits.toTraverseOps
+import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.error.{OrganizationAlreadyExists, OrganizationNotFound}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.{UUIDSupplier, _}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.File
@@ -52,7 +53,7 @@ class PartyApiServiceImpl(
     logger.info(s"Verify organization $id")
 
     val result: Future[Option[Party]] = for {
-      uuid <- id.asUUID.toFuture
+      uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetParty(uuid, ref))
     } yield r
 
@@ -116,7 +117,7 @@ class PartyApiServiceImpl(
   ): Route = {
 
     val result: Future[StatusReply[Party]] = for {
-      uuid <- organizationId.asUUID.toFuture
+      uuid <- organizationId.toFutureUUID
       r    <- getCommander(organizationId).ask(ref => AddAttributes(uuid, requestBody, ref))
     } yield r
 
@@ -144,7 +145,7 @@ class PartyApiServiceImpl(
   ): Route = {
 
     val result: Future[StatusReply[Party]] = for {
-      uuid <- organizationId.asUUID.toFuture
+      uuid <- organizationId.toFutureUUID
       r    <- getCommander(organizationId).ask(ref => AddOrganizationProducts(uuid, products.products, ref))
     } yield r
 
@@ -201,7 +202,7 @@ class PartyApiServiceImpl(
     logger.info(s"Verify person $id")
 
     val result: Future[Option[Party]] = for {
-      uuid <- id.asUUID.toFuture
+      uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetParty(uuid, ref))
     } yield r
 
@@ -328,8 +329,8 @@ class PartyApiServiceImpl(
     }
 
     val result: Future[List[Relationship]] = for {
-      fromUuid <- from.traverse(_.asUUID.toFuture)
-      toUuid   <- to.traverse(_.asUUID.toFuture)
+      fromUuid <- from.traverse(_.toFutureUUID)
+      toUuid   <- to.traverse(_.toFutureUUID)
       r        <- relationshipsFromParams(fromUuid, toUuid)
     } yield r
 
@@ -518,7 +519,7 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
     val attributes: Future[StatusReply[Seq[String]]] = for {
-      uuid <- id.asUUID.toFuture
+      uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetPartyAttributes(uuid, ref))
     } yield r
 
@@ -579,7 +580,7 @@ class PartyApiServiceImpl(
     )
 
     val organizations = for {
-      organizationUUID <- id.asUUID.toFuture
+      organizationUUID <- id.toFutureUUID
       results          <- getCommander(id).ask(ref => GetParty(organizationUUID, ref))
     } yield results
 
@@ -607,7 +608,7 @@ class PartyApiServiceImpl(
     def notFound: Route = getPersonById404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
 
     val persons = for {
-      personUUID <- id.asUUID.toFuture
+      personUUID <- id.toFutureUUID
       results    <- getCommander(id).ask(ref => GetParty(personUUID, ref))
     } yield results
 
@@ -695,7 +696,7 @@ class PartyApiServiceImpl(
       .toList
 
     val result = for {
-      uuid <- relationshipId.asUUID.toFuture
+      uuid <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => ActivatePartyRelationship(uuid, ref)).transform(Success(_))
       )
@@ -723,7 +724,7 @@ class PartyApiServiceImpl(
       .toList
 
     val result = for {
-      uuid <- relationshipId.asUUID.toFuture
+      uuid <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => SuspendPartyRelationship(uuid, ref)).transform(Success(_))
       )

@@ -1,7 +1,7 @@
 object Versions {
   lazy val akkaHttpVersion          = "10.2.6"
   lazy val akkaManagementVersion    = "1.1.1"
-  lazy val akkaVersion              = "2.6.16"
+  lazy val akkaVersion              = "2.6.17"
   lazy val awsSdkVersion            = "2.17.72"
   lazy val azureStorageBlobVersion  = "12.14.1"
   lazy val catsVersion              = "2.6.1"
@@ -20,4 +20,8 @@ object Versions {
   lazy val slickProjectionVersion   = "1.2.2"
   lazy val stateMonitoringVersion   = "0.0.3-SNAPSHOT"
   lazy val akkaPersistenceS3Version = "1.1.41"
+}
+
+object PDNDVersions {
+  lazy val commonsVersion = "0.1.1-SNAPSHOT"
 }

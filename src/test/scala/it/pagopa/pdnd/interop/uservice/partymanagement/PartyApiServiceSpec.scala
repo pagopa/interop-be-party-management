@@ -12,14 +12,14 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
+import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Token
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.FileManager
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.util.UUID
@@ -64,9 +64,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   val httpSystem: ActorSystem[Any] =
     ActorSystem(Behaviors.ignore[Any], name = system.name, config = system.settings.config)
+
   implicit val executionContext: ExecutionContextExecutor = httpSystem.executionContext
   implicit val classicSystem: actor.ActorSystem           = httpSystem.classicSystem
-  val fileManager: FileManager                            = FileManager.getConcreteImplementation(PartyApiServiceSpec.fileManagerType).get
+
+  val fileManager: FileManager = FileManager.getConcreteImplementation(PartyApiServiceSpec.fileManagerType).get
 
   override def beforeAll(): Unit = {
 

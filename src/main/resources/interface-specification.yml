@@ -24,6 +24,8 @@ tags:
     externalDocs:
       description: Find out more
       url: 'http://swagger.io'
+security:
+  - bearerAuth: [ ]
 paths:
   '/persons/{id}':
     parameters:
@@ -82,8 +84,6 @@ paths:
           description: Person not found
   /persons:
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create a new person
@@ -110,8 +110,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /organizations:
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create an organization
@@ -171,8 +169,6 @@ paths:
       operationId: getOrganizationById
       description: 'returns the identified organization, if any.'
     head:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Verify if an organization exists for a given organizationId
@@ -262,8 +258,6 @@ paths:
       operationId: getPartyAttributes
       description: 'returns the attributes of the identified party, if any.'
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Retrieve the organization attributes for the given organizationId
@@ -298,8 +292,6 @@ paths:
         required: true
         description: Organization identifier
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Organization products replacement
@@ -326,8 +318,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /relationships:
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create a new relationship between a Person and an Organization
@@ -353,8 +343,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
     get:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Return a list of relationships
@@ -461,8 +449,6 @@ paths:
         required: true
         description: Relationship identifier
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Relationship products replacement
@@ -537,8 +523,6 @@ paths:
       description: 'Activate Relationship by ID'
   /tokens:
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Create a new token
@@ -565,8 +549,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /tokens/{token}:
     head:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Retrieve token info
@@ -596,8 +578,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
     post:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Consume a token
@@ -634,8 +614,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
     delete:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - party
       summary: Invalidate a token
@@ -659,8 +637,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /status:
     get:
-      #      security:
-      #        - bearerAuth: [ ]
       tags:
         - health
       summary: Health status endpoint
@@ -995,9 +971,9 @@ components:
       required:
         - status
         - title
-#  securitySchemes:
-#    bearerAuth:
-#      type: http
-#      description: A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
-#      scheme: bearer
-#      bearerFormat: JWTly in the editor.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: 'A bearer token in the format of a JWS and comformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).'
+      scheme: bearer
+      bearerFormat: JWT

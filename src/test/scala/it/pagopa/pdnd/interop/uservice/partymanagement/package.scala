@@ -7,9 +7,9 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 import org.scalamock.scalatest.MockFactory
 
 import java.io.{File, PrintWriter}
