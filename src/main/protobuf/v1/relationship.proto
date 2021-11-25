@@ -32,6 +32,7 @@ message PartyRelationshipV1 {
     DELEGATE = 1;
     MANAGER = 2;
     OPERATOR = 3;
+    SUB_DELEGATE = 4;
   }
 }
 

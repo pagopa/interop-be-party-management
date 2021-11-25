@@ -156,9 +156,10 @@ object utils {
 
   def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PersistedPartyRole] =
     role match {
-      case PartyRoleV1.DELEGATE => Right(Manager)
-      case PartyRoleV1.MANAGER  => Right(Delegate)
-      case PartyRoleV1.OPERATOR => Right(Operator)
+      case PartyRoleV1.DELEGATE     => Right(Manager)
+      case PartyRoleV1.MANAGER      => Right(Delegate)
+      case PartyRoleV1.OPERATOR     => Right(Operator)
+      case PartyRoleV1.SUB_DELEGATE => Right(SubDelegate)
       case PartyRoleV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party role value $value"))
     }
@@ -176,9 +177,10 @@ object utils {
 
   def partyRoleToProtobuf(role: PersistedPartyRole): PartyRoleV1 =
     role match {
-      case Manager  => PartyRoleV1.DELEGATE
-      case Delegate => PartyRoleV1.MANAGER
-      case Operator => PartyRoleV1.OPERATOR
+      case Manager     => PartyRoleV1.DELEGATE
+      case Delegate    => PartyRoleV1.MANAGER
+      case SubDelegate => PartyRoleV1.MANAGER
+      case Operator    => PartyRoleV1.OPERATOR
     }
 
   def relationshipStateToProtobuf(state: PersistedPartyRelationshipState): PartyRelationshipStateV1 =

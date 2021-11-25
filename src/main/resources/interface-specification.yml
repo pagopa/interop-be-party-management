@@ -807,6 +807,7 @@ components:
       enum:
         - MANAGER
         - DELEGATE
+        - SUB_DELEGATE
         - OPERATOR
     RelationshipState:
       type: string
