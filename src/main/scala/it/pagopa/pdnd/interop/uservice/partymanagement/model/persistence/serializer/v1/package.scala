@@ -149,12 +149,4 @@ package object v1 {
   implicit def tokenDeletedV1PersistEventSerializer: PersistEventSerializer[TokenDeleted, TokenDeletedV1] =
     event => getTokenV1(event.token).map(TokenDeletedV1.of)
 
-  implicit def organizationProductsAddedV1PersistEventDeserializer
-    : PersistEventDeserializer[OrganizationProductsAddedV1, OrganizationProductsAdded] =
-    event => getParty(event.party).map(OrganizationProductsAdded)
-
-  implicit def organizationProductsAddedV1PersistEventSerializer
-    : PersistEventSerializer[OrganizationProductsAdded, OrganizationProductsAddedV1] =
-    event => getPartyV1(event.party).map(OrganizationProductsAddedV1.of)
-
 }

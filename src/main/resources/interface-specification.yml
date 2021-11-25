@@ -326,6 +326,10 @@ paths:
             type: string
             format: uuid
         - in: query
+          name: product
+          schema:
+            type: string
+        - in: query
           name: productRole
           schema:
             type: string
@@ -754,6 +758,16 @@ components:
       type: array
       items:
         type: string
+    RelationshipProductSeed:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+      required:
+        - id
+        - role
     RelationshipSeed:
       type: object
       properties:
@@ -767,22 +781,28 @@ components:
           description: organization ID
         role:
           $ref: '#/components/schemas/PartyRole'
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: 'if present, it represents the current PagoPA product this relationship belongs to'
-        productRole:
-          type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
+        product:
+          $ref: '#/components/schemas/RelationshipProductSeed'
       additionalProperties: false
       required:
         - from
         - to
         - role
-        - productRole
-        - products
+        - product
+    RelationshipProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - timestamp
     Relationship:
       type: object
       properties:
@@ -808,15 +828,8 @@ components:
           description: content type of the file containing the signed onboarding document
         role:
           $ref: '#/components/schemas/PartyRole'
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: 'if present, it represents the current PagoPA product this relationship belongs to'
-        productRole:
-          type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
+        product:
+          $ref: '#/components/schemas/RelationshipProduct'
         state:
           $ref: '#/components/schemas/RelationshipState'
       additionalProperties: false
@@ -825,8 +838,7 @@ components:
         - from
         - to
         - role
-        - productRole
-        - products
+        - product
         - state
     Relationships:
       type: object

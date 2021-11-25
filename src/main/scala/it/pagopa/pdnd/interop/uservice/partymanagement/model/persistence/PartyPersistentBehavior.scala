@@ -101,30 +101,6 @@ object PartyPersistentBehavior {
             Effect.none[AttributesAdded, State]
           }
 
-      case AddOrganizationProducts(organizationId, products, replyTo) =>
-        state.parties
-          .get(organizationId)
-          .map { p =>
-            val updated: Either[Throwable, Party] = p.replaceProducts(products)
-            updated.fold[Effect[OrganizationProductsAdded, State]](
-              ex => {
-                replyTo ! StatusReply.Error(
-                  s"Something went wrong trying to organization products for party $organizationId: ${ex.getMessage}"
-                )
-                Effect.none[OrganizationProductsAdded, State]
-              },
-              p => {
-                Effect
-                  .persist(OrganizationProductsAdded(p))
-                  .thenRun(_ => replyTo ! StatusReply.Success(p))
-              }
-            )
-          }
-          .getOrElse {
-            replyTo ! StatusReply.Error(s"Party $organizationId not found")
-            Effect.none[AttributesAdded, State]
-          }
-
       case AddPartyRelationship(partyRelationship, replyTo) =>
         state.relationships
           .get(partyRelationship.id.toString)
@@ -138,18 +114,6 @@ object PartyPersistentBehavior {
               .persist(PartyRelationshipAdded(partyRelationship))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-          }
-
-      case AddPartyRelationshipProducts(relationshipId, products, replyTo) =>
-        state.relationships
-          .get(relationshipId.toString)
-          .fold {
-            replyTo ! StatusReply.Error(s"Relationship $relationshipId not found")
-            Effect.none[PartyRelationshipProductsAdded, State]
-          } { _ =>
-            Effect
-              .persist(PartyRelationshipProductsAdded(relationshipId, products))
-              .thenRun(state => replyTo ! StatusReply.Success(state.relationships(relationshipId.toString)))
           }
 
       case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, replyTo) =>
@@ -264,8 +228,8 @@ object PartyPersistentBehavior {
           .persist(TokenDeleted(token))
           .thenRun(_ => replyTo ! StatusReply.Success(()))
 
-      case GetPartyRelationshipByAttributes(from, to, role, productRole, replyTo) =>
-        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, productRole)
+      case GetPartyRelationshipByAttributes(from, to, role, product, productRole, replyTo) =>
+        replyTo ! state.getPartyRelationshipByAttributes(from, to, role, product, productRole)
         Effect.none[Event, State]
 
       case Idle =>
@@ -281,10 +245,7 @@ object PartyPersistentBehavior {
       case PartyAdded(party)                         => state.addParty(party)
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
-      case OrganizationProductsAdded(party)          => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
-      case PartyRelationshipProductsAdded(relationshipId, products) =>
-        state.updateRelationshipProducts(relationshipId, products)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)
       case PartyRelationshipRejected(relationshipId)  => state.rejectRelationship(relationshipId)

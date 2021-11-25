@@ -339,8 +339,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()
@@ -366,8 +365,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
 
       val rlExpected = Relationships(
@@ -377,8 +375,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            products = Set.empty,
-            productRole = "admin",
+            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
@@ -425,8 +422,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()
@@ -460,16 +456,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid1,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
       val rlSeedDelegate =
         RelationshipSeed(
           from = personUuid2,
           to = orgUuid,
           role = PartyRole.DELEGATE,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
 
       val rlExpected = Relationships(
@@ -479,8 +473,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid1,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            productRole = "admin",
-            products = Set.empty,
+            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
@@ -491,8 +484,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            productRole = "admin",
-            products = Set.empty,
+            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
@@ -544,15 +536,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid1,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
       val rlSeedSecurity = RelationshipSeed(
         from = personUuid2,
         to = orgUuid,
         role = PartyRole.DELEGATE,
-        productRole = "security",
-        products = Set("PDND")
+        RelationshipProductSeed(id = "p1", role = "security")
       )
 
       val rlExpected = Relationships(
@@ -562,8 +552,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            productRole = "security",
-            products = Set("PDND"),
+            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
@@ -614,8 +603,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
       val relationshipId = UUID.randomUUID()
 
@@ -689,8 +677,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
       val relationshipId = UUID.randomUUID()
 
@@ -779,8 +766,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
       val relationshipId = UUID.randomUUID()
 
@@ -989,8 +975,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = PartyRole.MANAGER,
-          productRole = "admin",
-          products = Set.empty
+          RelationshipProductSeed(id = "p1", role = "admin")
         )
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()
@@ -1019,8 +1004,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = rlSeed.role,
-          products = rlSeed.products,
-          productRole = rlSeed.productRole,
+          product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
           state = RelationshipState.PENDING,
           filePath = None,
           fileName = None,

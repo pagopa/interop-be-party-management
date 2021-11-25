@@ -202,14 +202,8 @@ class PartyApiServiceImpl(
       from <- getParty(seed.from)
       to   <- getParty(seed.to)
       role = PersistedPartyRole.fromApi(seed.role)
-      _ <- isMissingRelationship(from.id, to.id, role, seed.productRole)
-      partyRelationship = PersistedPartyRelationship.create(uuidSupplier)(
-        from.id,
-        to.id,
-        role,
-        seed.products,
-        seed.productRole
-      )
+      _ <- isMissingRelationship(from.id, to.id, role, seed.product)
+      partyRelationship = PersistedPartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.product)
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -218,8 +212,7 @@ class PartyApiServiceImpl(
         from = from.id,
         to = to.id,
         role = seed.role,
-        products = verified.products,
-        productRole = verified.productRole,
+        product = verified.product.toRelationshipProduct,
         state = verified.state.toApi,
         filePath = None,
         fileName = None,
@@ -238,7 +231,12 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def getRelationships(from: Option[String], to: Option[String], productRole: Option[String])(implicit
+  override def getRelationships(
+    from: Option[String],
+    to: Option[String],
+    product: Option[String],
+    productRole: Option[String]
+  )(implicit
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -276,10 +274,12 @@ class PartyApiServiceImpl(
       r        <- relationshipsFromParams(fromUuid, toUuid)
     } yield r
 
-    val filteredResult = productRole match {
-      case Some(pr) => result.map(_.filter(_.productRole == pr))
-      case None     => result
-    }
+    val filteredResult: Future[List[Relationship]] =
+      result.map(relationships =>
+        relationships
+          .filter(relationship => product.forall(filter => filter == relationship.product.id))
+          .filter(relationship => productRole.forall(filter => filter == relationship.product.role))
+      )
 
     onComplete(filteredResult) {
       case Success(relationships) => getRelationships200(Relationships(relationships))
@@ -393,7 +393,7 @@ class PartyApiServiceImpl(
       from = relationshipSeed.from,
       to = relationshipSeed.to,
       role = PersistedPartyRole.fromApi(relationshipSeed.role),
-      productRole = relationshipSeed.productRole
+      product = relationshipSeed.product
     )
 
   private def isRelationshipAllowed(
@@ -479,12 +479,19 @@ class PartyApiServiceImpl(
     from: UUID,
     to: UUID,
     role: PersistedPartyRole,
-    productRole: String
+    product: RelationshipProductSeed
   ): Future[PersistedPartyRelationship] = {
 
     for {
       maybeRelationship <- getCommander(from.toString).ask(ref =>
-        GetPartyRelationshipByAttributes(from = from, to = to, role = role, productRole = productRole, ref)
+        GetPartyRelationshipByAttributes(
+          from = from,
+          to = to,
+          role = role,
+          product = product.id,
+          productRole = product.role,
+          ref
+        )
       )
       result <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
     } yield result
@@ -499,9 +506,9 @@ class PartyApiServiceImpl(
     from: UUID,
     to: UUID,
     role: PersistedPartyRole,
-    productRole: String
+    product: RelationshipProductSeed
   ): Future[Boolean] = {
-    relationshipByInvolvedParties(from, to, role, productRole).transformWith {
+    relationshipByInvolvedParties(from, to, role, product).transformWith {
       case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
       case Failure(_) => Future.successful(true)
     }

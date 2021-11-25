@@ -25,11 +25,6 @@ final case class AddAttributes(organizationId: UUID, attributes: Seq[String], re
     extends PartyCommand
 final case class GetOrganizationByExternalId(externalId: String, replyTo: ActorRef[Option[InstitutionParty]])
     extends PartyCommand
-final case class AddOrganizationProducts(
-  organizationId: UUID,
-  products: Set[String],
-  replyTo: ActorRef[StatusReply[Party]]
-) extends PartyCommand
 
 /* PartyRelationship Command */
 final case class AddPartyRelationship(
@@ -50,12 +45,6 @@ final case class RejectPartyRelationship(relationshipId: UUID, replyTo: ActorRef
 final case class SuspendPartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
-final case class AddPartyRelationshipProducts(
-  relationshipId: UUID,
-  products: Set[String],
-  replyTo: ActorRef[StatusReply[PersistedPartyRelationship]]
-) extends PartyRelationshipCommand
-
 final case class ActivatePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
@@ -75,6 +64,7 @@ final case class GetPartyRelationshipByAttributes(
   from: UUID,
   to: UUID,
   role: PersistedPartyRole,
+  product: String,
   productRole: String,
   replyTo: ActorRef[Option[PersistedPartyRelationship]]
 ) extends PartyRelationshipCommand
