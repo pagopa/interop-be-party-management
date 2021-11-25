@@ -282,40 +282,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /organizations/{id}/products:
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: id
-        in: path
-        required: true
-        description: Organization identifier
-    post:
-      tags:
-        - party
-      summary: Organization products replacement
-      description: Replaces the organization products with the set provided with this action
-      operationId: replaceOrganizationProducts
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Products'
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '404':
-          description: Organization not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
   /relationships:
     post:
       tags:
@@ -435,40 +401,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-  '/relationships/{relationshipId}/products':
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: relationshipId
-        in: path
-        required: true
-        description: Relationship identifier
-    post:
-      tags:
-        - party
-      summary: Relationship products replacement
-      description: Replaces the relationship products with the set provided with this action
-      operationId: replaceRelationshipProducts
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Products'
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Relationship'
-        '404':
-          description: Organization not found
           content:
             application/problem+json:
               schema:
@@ -822,17 +754,6 @@ components:
       type: array
       items:
         type: string
-    Products:
-      type: object
-      required:
-        - products
-      properties:
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: set of products to define for this organization
     RelationshipSeed:
       type: object
       properties:

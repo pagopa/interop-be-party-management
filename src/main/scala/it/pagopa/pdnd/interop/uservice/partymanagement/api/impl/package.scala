@@ -20,5 +20,4 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val tokenTextFormat: RootJsonFormat[TokenText]                 = jsonFormat1(TokenText)
   implicit val bulkPartiesSeedFormat: RootJsonFormat[BulkPartiesSeed]     = jsonFormat1(BulkPartiesSeed)
   implicit val bulkOrganizationsFormat: RootJsonFormat[BulkOrganizations] = jsonFormat2(BulkOrganizations)
-  implicit val productsFormat: RootJsonFormat[Products]                   = jsonFormat1(Products)
 }
