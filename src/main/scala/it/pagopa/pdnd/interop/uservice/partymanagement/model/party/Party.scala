@@ -1,8 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationSeed, Person, PersonSeed}
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.UUIDSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID

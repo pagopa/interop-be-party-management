@@ -14,6 +14,10 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
+import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
@@ -21,7 +25,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   PartyApiServiceImpl
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.{ApplicationConfiguration, Authenticator}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   Command,
@@ -29,8 +33,6 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   PartyPersistentProjection
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.{FileManager, UUIDSupplier}
-import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.UUIDSupplierImpl
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile

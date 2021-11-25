@@ -1,7 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1
 
 import cats.implicits._
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.{ErrorOr, formatter, toOffsetDateTime}
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
@@ -27,41 +28,48 @@ object utils {
 
   def getParty(partyV1: PartyV1): ErrorOr[Party] = partyV1 match {
     case p: PersonPartyV1 =>
-      Right(
-        PersonParty(id = UUID.fromString(p.id), start = toOffsetDateTime(p.start), end = p.end.map(toOffsetDateTime))
-      )
+      for {
+        start <- p.start.toOffsetDateTime.toEither
+        end   <- p.end.traverse(_.toOffsetDateTime).toEither
+      } yield PersonParty(id = UUID.fromString(p.id), start = start, end = end)
+
     case i: InstitutionPartyV1 =>
-      Right(
-        InstitutionParty(
-          id = UUID.fromString(i.id),
-          externalId = i.externalId,
-          description = i.description,
-          digitalAddress = i.digitalAddress,
-          taxCode = i.taxCode,
-          attributes = i.attributes.toSet,
-          products = i.products.toSet,
-          start = toOffsetDateTime(i.start),
-          end = i.end.map(toOffsetDateTime)
-        )
+      for {
+        start <- i.start.toOffsetDateTime.toEither
+        end   <- i.end.traverse(_.toOffsetDateTime).toEither
+      } yield InstitutionParty(
+        id = UUID.fromString(i.id),
+        externalId = i.externalId,
+        description = i.description,
+        digitalAddress = i.digitalAddress,
+        taxCode = i.taxCode,
+        attributes = i.attributes.toSet,
+        products = i.products.toSet,
+        start = start,
+        end = end
       )
     case Empty => Left(new RuntimeException("Deserialization from protobuf failed"))
   }
 
   def getPartyV1(party: Party): ErrorOr[PartyV1] = party match {
     case p: PersonParty =>
-      Right(PersonPartyV1(id = p.id.toString, start = p.start.format(formatter), end = p.end.map(_.format(formatter))))
+      for {
+        start <- p.start.asFormattedString.toEither
+        end   <- p.end.traverse(_.asFormattedString).toEither
+      } yield PersonPartyV1(id = p.id.toString, start = start, end = end)
     case i: InstitutionParty =>
-      Right(
-        InstitutionPartyV1(
-          id = i.id.toString,
-          externalId = i.externalId,
-          description = i.description,
-          digitalAddress = i.digitalAddress,
-          taxCode = i.taxCode,
-          attributes = i.attributes.toSeq,
-          start = i.start.format(formatter),
-          end = i.end.map(_.format(formatter))
-        )
+      for {
+        start <- i.start.asFormattedString.toEither
+        end   <- i.end.traverse(_.asFormattedString).toEither
+      } yield InstitutionPartyV1(
+        id = i.id.toString,
+        externalId = i.externalId,
+        description = i.description,
+        digitalAddress = i.digitalAddress,
+        taxCode = i.taxCode,
+        attributes = i.attributes.toSeq,
+        start = start,
+        end = end
       )
   }
 
@@ -75,6 +83,8 @@ object utils {
       to        <- stringToUUID(partyRelationshipV1.to)
       partyRole <- partyRoleFromProtobuf(partyRelationshipV1.role)
       state     <- relationshipStateFromProtobuf(partyRelationshipV1.state)
+      start     <- partyRelationshipV1.start.toOffsetDateTime.toEither
+      end       <- partyRelationshipV1.end.traverse(_.toOffsetDateTime).toEither
     } yield PersistedPartyRelationship(
       id = id,
       from = from,
@@ -82,8 +92,8 @@ object utils {
       role = partyRole,
       products = partyRelationshipV1.products.toSet,
       productRole = partyRelationshipV1.productRole,
-      start = toOffsetDateTime(partyRelationshipV1.start),
-      end = partyRelationshipV1.end.map(toOffsetDateTime),
+      start = start,
+      end = end,
       state = state,
       filePath = partyRelationshipV1.filePath,
       fileName = partyRelationshipV1.fileName,
@@ -92,28 +102,30 @@ object utils {
   }
 
   def getPartyRelationshipV1(partyRelationship: PersistedPartyRelationship): ErrorOr[PartyRelationshipV1] = {
-    Right(
-      PartyRelationshipV1(
-        id = partyRelationship.id.toString,
-        from = partyRelationship.from.toString,
-        to = partyRelationship.to.toString,
-        role = partyRoleToProtobuf(partyRelationship.role),
-        productRole = partyRelationship.productRole,
-        start = partyRelationship.start.format(formatter),
-        end = partyRelationship.end.map(_.format(formatter)),
-        state = relationshipStateToProtobuf(partyRelationship.state),
-        filePath = partyRelationship.filePath
-      )
+    for {
+      start <- partyRelationship.start.asFormattedString.toEither
+      end   <- partyRelationship.end.traverse(_.asFormattedString).toEither
+    } yield PartyRelationshipV1(
+      id = partyRelationship.id.toString,
+      from = partyRelationship.from.toString,
+      to = partyRelationship.to.toString,
+      role = partyRoleToProtobuf(partyRelationship.role),
+      productRole = partyRelationship.productRole,
+      start = start,
+      end = end,
+      state = relationshipStateToProtobuf(partyRelationship.state),
+      filePath = partyRelationship.filePath
     )
   }
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
-      legals <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
+      legals   <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
+      validity <- tokenV1.validity.toOffsetDateTime.toEither
     } yield Token(
       id = tokenV1.id,
       legals = legals,
-      validity = toOffsetDateTime(tokenV1.validity),
+      validity = validity,
       seed = UUID.fromString(tokenV1.seed),
       checksum = tokenV1.checksum
     )
@@ -129,16 +141,17 @@ object utils {
   }
 
   def getTokenV1(token: Token): ErrorOr[TokenV1] = {
-    Right[Throwable, TokenV1](
+    token.validity.asFormattedString.toEither.map(validity =>
       TokenV1(
         id = token.id,
         legals =
           token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
-        validity = token.validity.format(formatter),
+        validity = validity,
         seed = token.seed.toString,
         checksum = token.checksum
       )
     )
+
   }
 
   def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PersistedPartyRole] =

@@ -15,7 +15,7 @@ object ApplicationConfiguration {
     config.getString("uservice-party-management.storage.type")
   }
 
-  def storageAccountInfo = {
+  def storageAccountInfo: StorageAccountInfo = {
     StorageAccountInfo(
       applicationId = config.getString("uservice-party-management.storage.application.id"),
       applicationSecret = config.getString("uservice-party-management.storage.application.secret"),
