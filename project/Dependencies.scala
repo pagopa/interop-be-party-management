@@ -1,4 +1,5 @@
 import Versions._
+import PDNDVersions._
 import sbt._
 
 object Dependencies {

@@ -53,7 +53,7 @@ class PartyApiServiceImpl(
     logger.info(s"Verify organization $id")
 
     val result: Future[Option[Party]] = for {
-      uuid <- id.toUUID.toFuture
+      uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetParty(uuid, ref))
     } yield r
 
@@ -117,7 +117,7 @@ class PartyApiServiceImpl(
   ): Route = {
 
     val result: Future[StatusReply[Party]] = for {
-      uuid <- organizationId.toUUID.toFuture
+      uuid <- organizationId.toFutureUUID
       r    <- getCommander(organizationId).ask(ref => AddAttributes(uuid, requestBody, ref))
     } yield r
 
@@ -145,7 +145,7 @@ class PartyApiServiceImpl(
   ): Route = {
 
     val result: Future[StatusReply[Party]] = for {
-      uuid <- organizationId.toUUID.toFuture
+      uuid <- organizationId.toFutureUUID
       r    <- getCommander(organizationId).ask(ref => AddOrganizationProducts(uuid, products.products, ref))
     } yield r
 
@@ -202,7 +202,7 @@ class PartyApiServiceImpl(
     logger.info(s"Verify person $id")
 
     val result: Future[Option[Party]] = for {
-      uuid <- id.toUUID.toFuture
+      uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetParty(uuid, ref))
     } yield r
 
@@ -329,8 +329,8 @@ class PartyApiServiceImpl(
     }
 
     val result: Future[List[Relationship]] = for {
-      fromUuid <- from.traverse(_.toUUID.toFuture)
-      toUuid   <- to.traverse(_.toUUID.toFuture)
+      fromUuid <- from.traverse(_.toFutureUUID)
+      toUuid   <- to.traverse(_.toFutureUUID)
       r        <- relationshipsFromParams(fromUuid, toUuid)
     } yield r
 
@@ -519,7 +519,7 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
     val attributes: Future[StatusReply[Seq[String]]] = for {
-      uuid <- id.toUUID.toFuture
+      uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetPartyAttributes(uuid, ref))
     } yield r
 
@@ -580,7 +580,7 @@ class PartyApiServiceImpl(
     )
 
     val organizations = for {
-      organizationUUID <- id.toUUID.toFuture
+      organizationUUID <- id.toFutureUUID
       results          <- getCommander(id).ask(ref => GetParty(organizationUUID, ref))
     } yield results
 
@@ -608,7 +608,7 @@ class PartyApiServiceImpl(
     def notFound: Route = getPersonById404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
 
     val persons = for {
-      personUUID <- id.toUUID.toFuture
+      personUUID <- id.toFutureUUID
       results    <- getCommander(id).ask(ref => GetParty(personUUID, ref))
     } yield results
 
@@ -696,7 +696,7 @@ class PartyApiServiceImpl(
       .toList
 
     val result = for {
-      uuid <- relationshipId.toUUID.toFuture
+      uuid <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => ActivatePartyRelationship(uuid, ref)).transform(Success(_))
       )
@@ -724,7 +724,7 @@ class PartyApiServiceImpl(
       .toList
 
     val result = for {
-      uuid <- relationshipId.toUUID.toFuture
+      uuid <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => SuspendPartyRelationship(uuid, ref)).transform(Success(_))
       )
