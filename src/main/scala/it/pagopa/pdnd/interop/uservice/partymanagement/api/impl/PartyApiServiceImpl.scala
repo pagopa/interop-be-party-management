@@ -75,7 +75,7 @@ class PartyApiServiceImpl(
   ): Route = {
     logger.info(s"Creating organization ${organizationSeed.description}")
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
@@ -194,7 +194,7 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
@@ -247,7 +247,7 @@ class PartyApiServiceImpl(
     )
 
     def retrieveRelationshipsByTo(id: UUID): Future[List[Relationship]] = {
-      val commanders: List[EntityRef[Command]] = (0 to settings.numberOfShards)
+      val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
         .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
         .toList
 
@@ -581,7 +581,7 @@ class PartyApiServiceImpl(
   ): Route = {
     logger.info(s"Retrieving relationship $relationshipId")
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
@@ -640,7 +640,7 @@ class PartyApiServiceImpl(
     relationshipId: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
@@ -668,7 +668,7 @@ class PartyApiServiceImpl(
     relationshipId: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
@@ -695,7 +695,7 @@ class PartyApiServiceImpl(
   ): Route = {
     logger.info(s"Getting organization $externalId")
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
@@ -728,7 +728,7 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     logger.info(s"Delete relationship by id: $relationshipId")
 
-    val commanders = (0 to settings.numberOfShards)
+    val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
