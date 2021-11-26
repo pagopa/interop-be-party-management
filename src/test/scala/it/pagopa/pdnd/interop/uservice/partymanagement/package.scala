@@ -10,16 +10,22 @@ import akka.util.ByteString
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import org.scalamock.scalatest.MockFactory
 
 import java.io.{File, PrintWriter}
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Random
 
 package object partymanagement extends MockFactory {
-  val uuidSupplier: UUIDSupplier = mock[UUIDSupplier]
+  val uuidSupplier: UUIDSupplier                     = mock[UUIDSupplier]
+  val offsetDateTimeSupplier: OffsetDateTimeSupplier = mock[OffsetDateTimeSupplier]
+
+  final val timestamp = OffsetDateTime.parse("2021-11-26T13:57:43.314689+01:00")
+
   final lazy val url: String =
     s"http://localhost:8088/pdnd-interop-uservice-party-management/${buildinfo.BuildInfo.interfaceVersion}"
   final val authorization: Seq[Authorization] = Seq(headers.Authorization(OAuth2BearerToken("token")))

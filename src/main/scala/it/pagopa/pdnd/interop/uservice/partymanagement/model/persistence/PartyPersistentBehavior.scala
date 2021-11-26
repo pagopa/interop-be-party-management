@@ -197,25 +197,17 @@ object PartyPersistentBehavior {
         replyTo ! relationships
         Effect.none
 
-      case AddToken(tokenSeed, partyRelationshipIds, replyTo) =>
-        val token: Either[Throwable, Token] = Token.generate(tokenSeed, partyRelationshipIds)
+      case AddToken(token, replyTo) =>
+        val itCanBeInsert: Boolean =
+          state.tokens.get(token.id).exists(t => t.isValid) || !state.tokens.contains(token.id)
 
-        token match {
-          case Right(tk) =>
-            val itCanBeInsert: Boolean =
-              state.tokens.get(tk.id).exists(t => t.isValid) || !state.tokens.contains(tk.id)
-
-            if (itCanBeInsert) {
-              Effect
-                .persist(TokenAdded(tk))
-                .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(tk))))
-            } else {
-              replyTo ! StatusReply.Error(s"Token is expired: token seed ${tk.seed.toString}")
-              Effect.none[TokenAdded, State]
-            }
-          case Left(ex) =>
-            replyTo ! StatusReply.Error(s"Token creation failed due: ${ex.getMessage}")
-            Effect.none[TokenAdded, State]
+        if (itCanBeInsert) {
+          Effect
+            .persist(TokenAdded(token))
+            .thenRun(_ => replyTo ! StatusReply.Success(TokenText(Token.encode(token))))
+        } else {
+          replyTo ! StatusReply.Error(s"Token is expired: token seed ${token.seed.toString}")
+          Effect.none[TokenAdded, State]
         }
 
       case VerifyToken(token, replyTo) =>

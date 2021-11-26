@@ -9,6 +9,6 @@ final case class PersistedProduct(id: String, role: String, timestamp: OffsetDat
 }
 
 object PersistedProduct {
-  def fromRelationshipProduct(product: RelationshipProductSeed): PersistedProduct =
-    PersistedProduct(id = product.id, role = product.role, timestamp = OffsetDateTime.now())
+  def fromRelationshipProduct(product: RelationshipProductSeed, timestamp: OffsetDateTime): PersistedProduct =
+    PersistedProduct(id = product.id, role = product.role, timestamp = timestamp)
 }

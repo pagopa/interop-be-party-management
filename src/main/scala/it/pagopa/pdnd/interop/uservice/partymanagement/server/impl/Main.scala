@@ -14,8 +14,8 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
-import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
@@ -33,6 +33,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   PartyPersistentProjection
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.OffsetDateTimeSupplierImp
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -99,10 +101,18 @@ object Main extends App {
           )
         }
 
-        val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
+        val uuidSupplier: UUIDSupplier                     = new UUIDSupplierImpl
+        val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplierImp
 
         val partyApi: PartyApi = new PartyApi(
-          new PartyApiServiceImpl(context.system, sharding, partyPersistentEntity, uuidSupplier, fileManager),
+          new PartyApiServiceImpl(
+            context.system,
+            sharding,
+            partyPersistentEntity,
+            uuidSupplier,
+            offsetDateTimeSupplier,
+            fileManager
+          ),
           marshallerImpl,
           SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
         )

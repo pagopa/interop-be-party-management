@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState.{Active, Pending}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Relationship, RelationshipProductSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -43,15 +44,17 @@ final case class PersistedPartyRelationship(
 object PersistedPartyRelationship {
   //TODO add role check
   def create(
-    uuidSupplier: UUIDSupplier
-  )(from: UUID, to: UUID, role: PersistedPartyRole, product: RelationshipProductSeed): PersistedPartyRelationship =
+    uuidSupplier: UUIDSupplier,
+    offsetDateTimeSupplier: OffsetDateTimeSupplier
+  )(from: UUID, to: UUID, role: PersistedPartyRole, product: RelationshipProductSeed): PersistedPartyRelationship = {
+    val timestamp = offsetDateTimeSupplier.get
     PersistedPartyRelationship(
       id = uuidSupplier.get,
       from = from,
       to = to,
       role = role,
-      product = PersistedProduct.fromRelationshipProduct(product),
-      start = OffsetDateTime.now(),
+      product = PersistedProduct.fromRelationshipProduct(product, timestamp),
+      start = timestamp,
       end = None,
       state = role match {
         case Operator => Active
@@ -61,4 +64,5 @@ object PersistedPartyRelationship {
       fileName = None,
       contentType = None
     )
+  }
 }

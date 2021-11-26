@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationSeed, Person, PersonSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -51,7 +52,8 @@ object Party {
 final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]) extends Party
 
 object PersonParty {
-  def fromApi(person: PersonSeed): PersonParty = PersonParty(id = person.id, start = OffsetDateTime.now(), end = None)
+  def fromApi(person: PersonSeed, offsetDateTimeSupplier: OffsetDateTimeSupplier): PersonParty =
+    PersonParty(id = person.id, start = offsetDateTimeSupplier.get, end = None)
 }
 
 final case class InstitutionParty(
@@ -67,7 +69,11 @@ final case class InstitutionParty(
 ) extends Party
 
 object InstitutionParty {
-  def fromApi(organization: OrganizationSeed, uuidSupplier: UUIDSupplier): InstitutionParty = {
+  def fromApi(
+    organization: OrganizationSeed,
+    uuidSupplier: UUIDSupplier,
+    offsetDateTimeSupplier: OffsetDateTimeSupplier
+  ): InstitutionParty = {
     InstitutionParty(
       id = uuidSupplier.get,
       externalId = organization.institutionId,
@@ -76,7 +82,7 @@ object InstitutionParty {
       taxCode = organization.taxCode,
       attributes = organization.attributes.toSet,
       products = organization.products,
-      start = OffsetDateTime.now(),
+      start = offsetDateTimeSupplier.get,
       end = None
     )
   }

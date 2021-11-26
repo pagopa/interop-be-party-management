@@ -3,8 +3,8 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 import akka.actor.typed.ActorRef
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{TokenSeed, TokenText}
 
 import java.util.UUID
 
@@ -70,11 +70,7 @@ final case class GetPartyRelationshipByAttributes(
 ) extends PartyRelationshipCommand
 
 /* Token Command */
-final case class AddToken(
-  token: TokenSeed,
-  partyRelationships: Seq[PersistedPartyRelationship],
-  replyTo: ActorRef[StatusReply[TokenText]]
-)                                                                                         extends TokenCommand
+final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]])        extends TokenCommand
 final case class DeleteToken(token: Token, replyTo: ActorRef[StatusReply[Unit]])          extends TokenCommand
 final case class VerifyToken(token: Token, replyTo: ActorRef[StatusReply[Option[Token]]]) extends TokenCommand
 

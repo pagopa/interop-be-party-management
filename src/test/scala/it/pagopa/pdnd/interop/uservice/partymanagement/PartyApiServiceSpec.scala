@@ -82,7 +82,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
 
     val partyApiService: PartyApiService =
-      new PartyApiServiceImpl(system, sharding, persistentEntity, uuidSupplier, fileManager)
+      new PartyApiServiceImpl(system, sharding, persistentEntity, uuidSupplier, offsetDateTimeSupplier, fileManager)
 
     val partyApi: PartyApi =
       new PartyApi(partyApiService, partyApiMarshaller, wrappingDirective)

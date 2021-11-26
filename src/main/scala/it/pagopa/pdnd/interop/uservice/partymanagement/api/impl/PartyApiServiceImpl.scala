@@ -20,6 +20,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.error.{OrganizationAlread
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.File
@@ -32,6 +33,7 @@ class PartyApiServiceImpl(
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
   uuidSupplier: UUIDSupplier,
+  offsetDateTimeSupplier: OffsetDateTimeSupplier,
   fileManager: FileManager
 )(implicit ec: ExecutionContext)
     extends PartyApiService {
@@ -44,7 +46,6 @@ class PartyApiServiceImpl(
 
   def getCommander(entityId: String): EntityRef[Command] =
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
-
 
   /** Code: 200, Message: successful operation
     * Code: 404, Message: Organization not found
@@ -83,7 +84,7 @@ class PartyApiServiceImpl(
       shardOrgs <- commanders.traverse(_.ask(ref => GetOrganizationByExternalId(organizationSeed.institutionId, ref)))
       maybeExistingOrg = shardOrgs.flatten.headOption
       newOrg <- maybeExistingOrg
-        .toLeft(InstitutionParty.fromApi(organizationSeed, uuidSupplier))
+        .toLeft(InstitutionParty.fromApi(organizationSeed, uuidSupplier, offsetDateTimeSupplier))
         .left
         .map(_ => OrganizationAlreadyExists(organizationSeed.institutionId))
         .toFuture
@@ -148,7 +149,7 @@ class PartyApiServiceImpl(
   ): Route = {
     logger.info(s"Creating person ${personSeed.id.toString}")
 
-    val party: Party = PersonParty.fromApi(personSeed)
+    val party: Party = PersonParty.fromApi(personSeed, offsetDateTimeSupplier)
 
     val result: Future[StatusReply[Party]] =
       getCommander(party.id.toString).ask(ref => AddParty(party, ref))
@@ -203,7 +204,12 @@ class PartyApiServiceImpl(
       to   <- getParty(seed.to)
       role = PersistedPartyRole.fromApi(seed.role)
       _ <- isMissingRelationship(from.id, to.id, role, seed.product)
-      partyRelationship = PersistedPartyRelationship.create(uuidSupplier)(from.id, to.id, role, seed.product)
+      partyRelationship = PersistedPartyRelationship.create(uuidSupplier, offsetDateTimeSupplier)(
+        from.id,
+        to.id,
+        role,
+        seed.product
+      )
       currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
       verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
       _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
@@ -301,8 +307,9 @@ class PartyApiServiceImpl(
 
     val result: Future[StatusReply[TokenText]] = for {
       partyRelationships <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationship)
-      token              <- getCommander(tokenSeed.seed).ask(ref => AddToken(tokenSeed, partyRelationships, ref))
-    } yield token
+      token              <- Token.generate(tokenSeed, partyRelationships, offsetDateTimeSupplier.get).toFuture
+      tokenTxt           <- getCommander(tokenSeed.seed).ask(ref => AddToken(token, ref))
+    } yield tokenTxt
 
     manageCreationResponse(result, createToken201, createToken400)
 
