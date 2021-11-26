@@ -11,6 +11,7 @@ import akka.pattern.StatusReply
 import akka.util.Timeout
 import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
@@ -42,9 +43,8 @@ class PartyApiServiceImpl(
   }
 
   def getCommander(entityId: String): EntityRef[Command] =
-    sharding.entityRefFor(PartyPersistentBehavior.TypeKey, getShard(entityId))
+    sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
 
-  @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
 
   /** Code: 200, Message: successful operation
     * Code: 404, Message: Organization not found
