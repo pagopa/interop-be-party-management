@@ -20,11 +20,6 @@ sealed trait Party {
       Right(institutionParty.copy(attributes = updated))
   }
 
-  def replaceProducts(products: Set[String]): Either[Throwable, Party] = this match {
-    case _: PersonParty                     => Left(new RuntimeException("Products do not exist for person party"))
-    case institutionParty: InstitutionParty => Right(institutionParty.copy(products = products))
-  }
-
 }
 
 object Party {
@@ -41,8 +36,7 @@ object Party {
             description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
             taxCode = institutionParty.taxCode,
-            attributes = institutionParty.attributes.toSeq,
-            products = institutionParty.products
+            attributes = institutionParty.attributes.toSeq
           )
         )
     }
@@ -64,8 +58,7 @@ final case class InstitutionParty(
   taxCode: String,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
-  attributes: Set[String],
-  products: Set[String]
+  attributes: Set[String]
 ) extends Party
 
 object InstitutionParty {
@@ -81,7 +74,6 @@ object InstitutionParty {
       digitalAddress = organization.digitalAddress,
       taxCode = organization.taxCode,
       attributes = organization.attributes.toSet,
-      products = organization.products,
       start = offsetDateTimeSupplier.get,
       end = None
     )

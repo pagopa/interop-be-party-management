@@ -28,6 +28,5 @@ message InstitutionPartyV1 {
   required string start = 6;
   optional string end = 7;
   repeated string attributes = 8;
-  repeated string products = 9;
 }
 

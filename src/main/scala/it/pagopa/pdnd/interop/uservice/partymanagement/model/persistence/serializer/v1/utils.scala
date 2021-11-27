@@ -50,7 +50,6 @@ object utils {
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
           attributes = i.attributes.toSet,
-          products = i.products.toSet,
           start = start,
           end = end
         )

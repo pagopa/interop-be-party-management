@@ -695,12 +695,6 @@ components:
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
-        products:
-          type: array
-          items:
-            type: string
-            description: product names associated to this organization
-          uniqueItems: true
       required:
         - id
         - institutionId
@@ -708,7 +702,6 @@ components:
         - digitalAddress
         - taxCode
         - attributes
-        - products
       additionalProperties: false
     BulkOrganizations:
       type: object
