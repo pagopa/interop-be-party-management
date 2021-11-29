@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import org.slf4j.LoggerFactory
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 final case class State(
@@ -28,7 +29,13 @@ final case class State(
   def addPartyRelationship(relationship: PersistedPartyRelationship): State =
     copy(relationships = relationships + (relationship.id.toString -> relationship))
 
-  def confirmPartyRelationship(id: UUID, filePath: String, fileName: String, contentType: String): State = {
+  def confirmPartyRelationship(
+    id: UUID,
+    filePath: String,
+    fileName: String,
+    contentType: String,
+    timestamp: OffsetDateTime
+  ): State = {
     val relationshipId = id.toString
     val updated: Map[String, PersistedPartyRelationship] =
       relationships.updated(
@@ -37,28 +44,33 @@ final case class State(
           state = PersistedPartyRelationshipState.Active,
           filePath = Some(filePath),
           fileName = Some(fileName),
-          contentType = Some(contentType)
+          contentType = Some(contentType),
+          updatedAt = Some(timestamp)
         )
       )
     copy(relationships = updated)
   }
 
-  def rejectRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Rejected)
+  def rejectRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Rejected, timestamp)
 
-  def suspendRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Suspended)
+  def suspendRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Suspended, timestamp)
 
-  def activateRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Active)
+  def activateRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Active, timestamp)
 
-  def deleteRelationship(relationshipId: UUID): State =
-    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Deleted)
+  def deleteRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Deleted, timestamp)
 
-  private def updateRelationshipStatus(relationshipId: UUID, newStatus: PersistedPartyRelationshipState): State =
+  private def updateRelationshipStatus(
+    relationshipId: UUID,
+    newStatus: PersistedPartyRelationshipState,
+    timestamp: OffsetDateTime
+  ): State =
     relationships.get(relationshipId.toString) match {
       case Some(relationship) =>
-        val updatedRelationship = relationship.copy(state = newStatus)
+        val updatedRelationship = relationship.copy(state = newStatus, updatedAt = Some(timestamp))
         copy(relationships = relationships + (relationship.id.toString -> updatedRelationship))
       case None =>
         this

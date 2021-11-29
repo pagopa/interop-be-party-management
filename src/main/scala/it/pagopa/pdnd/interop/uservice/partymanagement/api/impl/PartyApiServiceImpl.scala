@@ -24,6 +24,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSup
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.File
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -222,7 +223,9 @@ class PartyApiServiceImpl(
         state = verified.state.toApi,
         filePath = None,
         fileName = None,
-        contentType = None
+        contentType = None,
+        createdAt = verified.createdAt,
+        updatedAt = verified.updatedAt
       )
     } yield relationship
 
@@ -423,12 +426,12 @@ class PartyApiServiceImpl(
 
   private def processRelationships(
     token: Token,
-    commandFunc: (UUID, ActorRef[StatusReply[Unit]]) => Command
+    commandFunc: (UUID, OffsetDateTime, ActorRef[StatusReply[Unit]]) => Command
   ): Future[Seq[StatusReply[Unit]]] = {
     for {
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          commandFunc(partyRelationshipBinding.relationshipId, ref)
+          commandFunc(partyRelationshipBinding.relationshipId, offsetDateTimeSupplier.get, ref)
         )
       } //TODO atomic?
     } yield results
@@ -439,7 +442,13 @@ class PartyApiServiceImpl(
       filePath <- fileManager.store(token.seed, fileParts)
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, ref)
+          ConfirmPartyRelationship(
+            partyRelationshipBinding.relationshipId,
+            filePath,
+            fileParts._1,
+            offsetDateTimeSupplier.get,
+            ref
+          )
         )
       } //TODO atomic?
     } yield results
@@ -657,8 +666,9 @@ class PartyApiServiceImpl(
 
     val result = for {
       uuid <- relationshipId.toFutureUUID
+      timestamp = offsetDateTimeSupplier.get
       resultsCollection <- Future.traverse(commanders)(
-        _.ask(ref => ActivatePartyRelationship(uuid, ref)).transform(Success(_))
+        _.ask(ref => ActivatePartyRelationship(uuid, timestamp, ref)).transform(Success(_))
       )
       _ <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
     } yield ()
@@ -685,8 +695,9 @@ class PartyApiServiceImpl(
 
     val result = for {
       uuid <- relationshipId.toFutureUUID
+      timestamp = offsetDateTimeSupplier.get
       resultsCollection <- Future.traverse(commanders)(
-        _.ask(ref => SuspendPartyRelationship(uuid, ref)).transform(Success(_))
+        _.ask(ref => SuspendPartyRelationship(uuid, timestamp, ref)).transform(Success(_))
       )
       _ <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
     } yield ()
@@ -745,8 +756,9 @@ class PartyApiServiceImpl(
 
     val result: Future[Option[StatusReply[Unit]]] =
       for {
-        uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
-        results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, ref)))
+        uuid <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        timestamp = offsetDateTimeSupplier.get
+        results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, timestamp, ref)))
         maybeDeletion = results.find(_.isSuccess)
       } yield maybeDeletion
 

@@ -12,8 +12,8 @@ message PartyRelationshipV1 {
   required string to = 3;
   required PartyRoleV1 role = 4;
   required PartyRelationshipProductV1 product = 5;
-  required string start = 7;
-  optional string end = 8;
+  required int64 createdAt = 7;
+  optional int64 updatedAt = 8;
   required PartyRelationshipStateV1 state = 9;
   optional string filePath = 10;
   optional string fileName = 11;
@@ -38,5 +38,5 @@ message PartyRelationshipV1 {
 message PartyRelationshipProductV1 {
   required string id = 1;
   required string role = 2;
-  required string timestamp = 3;
+  required int64 createdAt = 3;
 }

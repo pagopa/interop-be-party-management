@@ -6,6 +6,7 @@ import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 /* Command */
@@ -36,20 +37,33 @@ final case class ConfirmPartyRelationship(
   relationshipId: UUID,
   filePath: String,
   fileInfo: FileInfo,
+  timestamp: OffsetDateTime,
   replyTo: ActorRef[StatusReply[Unit]]
 ) extends PartyRelationshipCommand
 
-final case class RejectPartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationshipCommand
+final case class RejectPartyRelationship(
+  relationshipId: UUID,
+  timestamp: OffsetDateTime,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
 
-final case class SuspendPartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationshipCommand
+final case class SuspendPartyRelationship(
+  relationshipId: UUID,
+  timestamp: OffsetDateTime,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
 
-final case class ActivatePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationshipCommand
+final case class ActivatePartyRelationship(
+  relationshipId: UUID,
+  timestamp: OffsetDateTime,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
 
-final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
-    extends PartyRelationshipCommand
+final case class DeletePartyRelationship(
+  relationshipId: UUID,
+  timestamp: OffsetDateTime,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PersistedPartyRelationship]])
     extends PartyRelationshipCommand

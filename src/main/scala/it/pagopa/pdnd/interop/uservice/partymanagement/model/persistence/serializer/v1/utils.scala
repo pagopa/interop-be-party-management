@@ -24,6 +24,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   TokenV1
 }
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.util.Try
 
@@ -93,9 +94,9 @@ object utils {
       to        <- stringToUUID(partyRelationshipV1.to)
       partyRole <- partyRoleFromProtobuf(partyRelationshipV1.role)
       state     <- relationshipStateFromProtobuf(partyRelationshipV1.state)
-      start     <- partyRelationshipV1.start.toOffsetDateTime.toEither
-      end       <- partyRelationshipV1.end.traverse(_.toOffsetDateTime).toEither
-      timestamp <- partyRelationshipV1.product.timestamp.toOffsetDateTime.toEither
+      createdAt <- partyRelationshipV1.createdAt.toOffsetDateTime.toEither
+      updatedAt <- partyRelationshipV1.updatedAt.traverse(_.toOffsetDateTime).toEither
+      timestamp <- partyRelationshipV1.product.createdAt.toOffsetDateTime.toEither
     } yield PersistedPartyRelationship(
       id = id,
       from = from,
@@ -104,10 +105,10 @@ object utils {
       product = PersistedProduct(
         id = partyRelationshipV1.product.id,
         role = partyRelationshipV1.product.role,
-        timestamp = timestamp
+        createdAt = timestamp
       ),
-      start = start,
-      end = end,
+      createdAt = createdAt,
+      updatedAt = updatedAt,
       state = state,
       filePath = partyRelationshipV1.filePath,
       fileName = partyRelationshipV1.fileName,
@@ -115,29 +116,22 @@ object utils {
     )
   }
 
-  def getPartyRelationshipV1(partyRelationship: PersistedPartyRelationship): ErrorOr[PartyRelationshipV1] = {
-    {
-      for {
-        start     <- partyRelationship.start.asFormattedString
-        end       <- partyRelationship.end.traverse(_.asFormattedString)
-        timestamp <- partyRelationship.product.timestamp.asFormattedString
-      } yield PartyRelationshipV1(
-        id = partyRelationship.id.toString,
-        from = partyRelationship.from.toString,
-        to = partyRelationship.to.toString,
-        role = partyRoleToProtobuf(partyRelationship.role),
-        product = PartyRelationshipProductV1(
-          id = partyRelationship.product.id,
-          role = partyRelationship.product.role,
-          timestamp = timestamp
-        ),
-        start = start,
-        end = end,
-        state = relationshipStateToProtobuf(partyRelationship.state),
-        filePath = partyRelationship.filePath
-      )
-    }
-  }.toEither
+  def getPartyRelationshipV1(partyRelationship: PersistedPartyRelationship): PartyRelationshipV1 =
+    PartyRelationshipV1(
+      id = partyRelationship.id.toString,
+      from = partyRelationship.from.toString,
+      to = partyRelationship.to.toString,
+      role = partyRoleToProtobuf(partyRelationship.role),
+      product = PartyRelationshipProductV1(
+        id = partyRelationship.product.id,
+        role = partyRelationship.product.role,
+        createdAt = toMillis(partyRelationship.product.createdAt)
+      ),
+      createdAt = toMillis(partyRelationship.createdAt),
+      updatedAt = partyRelationship.updatedAt.map(toMillis),
+      state = relationshipStateToProtobuf(partyRelationship.state),
+      filePath = partyRelationship.filePath
+    )
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
@@ -213,4 +207,10 @@ object utils {
       case Rejected  => PartyRelationshipStateV1.REJECTED
     }
 
+  // TODO This should be in the library
+  implicit class LongOps(val l: Long) extends AnyVal {
+    def toOffsetDateTime: Try[OffsetDateTime] = Try(OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneOffset.UTC))
+  }
+
+  def toMillis(offsetDateTime: OffsetDateTime): Long = offsetDateTime.toInstant.toEpochMilli
 }

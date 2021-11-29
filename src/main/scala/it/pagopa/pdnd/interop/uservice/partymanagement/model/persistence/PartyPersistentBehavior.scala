@@ -116,7 +116,7 @@ object PartyPersistentBehavior {
 
           }
 
-      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, replyTo) =>
+      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, timestamp, replyTo) =>
         state.relationships
           .get(partyRelationshipId.toString)
           .fold {
@@ -125,57 +125,63 @@ object PartyPersistentBehavior {
           } { t =>
             Effect
               .persist(
-                PartyRelationshipConfirmed(t.id, filePath, fileInfo.getFileName, fileInfo.getContentType.toString())
+                PartyRelationshipConfirmed(
+                  t.id,
+                  filePath,
+                  fileInfo.getFileName,
+                  fileInfo.getContentType.toString(),
+                  timestamp
+                )
               )
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           }
 
-      case RejectPartyRelationship(partyRelationshipId, replyTo) =>
+      case RejectPartyRelationship(partyRelationshipId, timestamp, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipRejected(rel.id))
+              .persist(PartyRelationshipRejected(rel.id, timestamp))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
 
-      case DeletePartyRelationship(partyRelationshipId, replyTo) =>
+      case DeletePartyRelationship(partyRelationshipId, timestamp, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipDeleted(rel.id))
+              .persist(PartyRelationshipDeleted(rel.id, timestamp))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
 
-      case SuspendPartyRelationship(partyRelationshipId, replyTo) =>
+      case SuspendPartyRelationship(partyRelationshipId, timestamp, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipSuspended(rel.id))
+              .persist(PartyRelationshipSuspended(rel.id, timestamp))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
 
-      case ActivatePartyRelationship(partyRelationshipId, replyTo) =>
+      case ActivatePartyRelationship(partyRelationshipId, timestamp, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipActivated(rel.id))
+              .persist(PartyRelationshipActivated(rel.id, timestamp))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
@@ -238,14 +244,15 @@ object PartyPersistentBehavior {
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
-      case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType) =>
-        state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType)
-      case PartyRelationshipRejected(relationshipId)  => state.rejectRelationship(relationshipId)
-      case PartyRelationshipDeleted(relationshipId)   => state.deleteRelationship(relationshipId)
-      case PartyRelationshipSuspended(relationshipId) => state.suspendRelationship(relationshipId)
-      case PartyRelationshipActivated(relationshipId) => state.activateRelationship(relationshipId)
-      case TokenAdded(token)                          => state.addToken(token)
-      case TokenDeleted(token)                        => state.deleteToken(token)
+      case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType, timestamp) =>
+        state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType, timestamp)
+      case PartyRelationshipRejected(relationshipId, timestamp)  => state.rejectRelationship(relationshipId, timestamp)
+      case PartyRelationshipDeleted(relationshipId, timestamp)   => state.deleteRelationship(relationshipId, timestamp)
+      case PartyRelationshipSuspended(relationshipId, timestamp) => state.suspendRelationship(relationshipId, timestamp)
+      case PartyRelationshipActivated(relationshipId, timestamp) =>
+        state.activateRelationship(relationshipId, timestamp)
+      case TokenAdded(token)   => state.addToken(token)
+      case TokenDeleted(token) => state.deleteToken(token)
     }
 
   val TypeKey: EntityTypeKey[Command] =
