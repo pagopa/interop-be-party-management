@@ -282,40 +282,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /organizations/{id}/products:
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: id
-        in: path
-        required: true
-        description: Organization identifier
-    post:
-      tags:
-        - party
-      summary: Organization products replacement
-      description: Replaces the organization products with the set provided with this action
-      operationId: replaceOrganizationProducts
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Products'
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '404':
-          description: Organization not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
   /relationships:
     post:
       tags:
@@ -359,6 +325,10 @@ paths:
           schema:
             type: string
             format: uuid
+        - in: query
+          name: product
+          schema:
+            type: string
         - in: query
           name: productRole
           schema:
@@ -435,40 +405,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '404':
           description: Relationship not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-  '/relationships/{relationshipId}/products':
-    parameters:
-      - schema:
-          type: string
-          format: uuid
-        name: relationshipId
-        in: path
-        required: true
-        description: Relationship identifier
-    post:
-      tags:
-        - party
-      summary: Relationship products replacement
-      description: Replaces the relationship products with the set provided with this action
-      operationId: replaceRelationshipProducts
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Products'
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Relationship'
-        '404':
-          description: Organization not found
           content:
             application/problem+json:
               schema:
@@ -759,12 +695,6 @@ components:
           type: string
         attributes:
           $ref: '#/components/schemas/Attributes'
-        products:
-          type: array
-          items:
-            type: string
-            description: product names associated to this organization
-          uniqueItems: true
       required:
         - id
         - institutionId
@@ -772,7 +702,6 @@ components:
         - digitalAddress
         - taxCode
         - attributes
-        - products
       additionalProperties: false
     BulkOrganizations:
       type: object
@@ -807,6 +736,7 @@ components:
       enum:
         - MANAGER
         - DELEGATE
+        - SUB_DELEGATE
         - OPERATOR
     RelationshipState:
       type: string
@@ -821,17 +751,16 @@ components:
       type: array
       items:
         type: string
-    Products:
+    RelationshipProductSeed:
       type: object
-      required:
-        - products
       properties:
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: set of products to define for this organization
+        id:
+          type: string
+        role:
+          type: string
+      required:
+        - id
+        - role
     RelationshipSeed:
       type: object
       properties:
@@ -845,22 +774,28 @@ components:
           description: organization ID
         role:
           $ref: '#/components/schemas/PartyRole'
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: 'if present, it represents the current PagoPA product this relationship belongs to'
-        productRole:
-          type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
+        product:
+          $ref: '#/components/schemas/RelationshipProductSeed'
       additionalProperties: false
       required:
         - from
         - to
         - role
-        - productRole
-        - products
+        - product
+    RelationshipProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - timestamp
     Relationship:
       type: object
       properties:
@@ -886,15 +821,8 @@ components:
           description: content type of the file containing the signed onboarding document
         role:
           $ref: '#/components/schemas/PartyRole'
-        products:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          description: 'if present, it represents the current PagoPA product this relationship belongs to'
-        productRole:
-          type: string
-          description: 'user role in the application context (e.g.: administrator, security user). This MUST belong to the configured set of application specific product roles'
+        product:
+          $ref: '#/components/schemas/RelationshipProduct'
         state:
           $ref: '#/components/schemas/RelationshipState'
       additionalProperties: false
@@ -903,8 +831,7 @@ components:
         - from
         - to
         - role
-        - productRole
-        - products
+        - product
         - state
     Relationships:
       type: object

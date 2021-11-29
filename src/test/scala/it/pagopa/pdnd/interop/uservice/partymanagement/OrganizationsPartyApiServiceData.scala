@@ -33,8 +33,7 @@ object OrganizationsPartyApiServiceData {
     digitalAddress = "mail1@mail.org",
     taxCode = "taxCode",
     id = orgUuid1,
-    attributes = Seq.empty,
-    products = Set.empty
+    attributes = Seq.empty
   )
 
   lazy final val expected3 = Organization(
@@ -43,8 +42,7 @@ object OrganizationsPartyApiServiceData {
     digitalAddress = "mail3@mail.org",
     taxCode = "taxCode",
     id = orgUuid3,
-    attributes = Seq.empty,
-    products = Set.empty
+    attributes = Seq.empty
   )
 
   def prepareTest(

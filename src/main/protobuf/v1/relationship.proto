@@ -11,8 +11,7 @@ message PartyRelationshipV1 {
   required string from = 2;
   required string to = 3;
   required PartyRoleV1 role = 4;
-  repeated string products = 5;
-  required string productRole = 6;
+  required PartyRelationshipProductV1 product = 5;
   required string start = 7;
   optional string end = 8;
   required PartyRelationshipStateV1 state = 9;
@@ -32,6 +31,12 @@ message PartyRelationshipV1 {
     DELEGATE = 1;
     MANAGER = 2;
     OPERATOR = 3;
+    SUB_DELEGATE = 4;
   }
 }
 
+message PartyRelationshipProductV1 {
+  required string id = 1;
+  required string role = 2;
+  required string timestamp = 3;
+}

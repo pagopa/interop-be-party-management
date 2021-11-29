@@ -40,7 +40,11 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
 
   final val validityHours: Long = 24L
 
-  def generate(tokenSeed: TokenSeed, parties: Seq[PersistedPartyRelationship]): Either[Throwable, Token] =
+  def generate(
+    tokenSeed: TokenSeed,
+    parties: Seq[PersistedPartyRelationship],
+    timestamp: OffsetDateTime
+  ): Either[Throwable, Token] =
     parties
       .find(_.role == Manager)
       .map(managerRelationship =>
@@ -49,7 +53,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
           seed = UUID.fromString(tokenSeed.seed),
           legals = parties.map(r => PartyRelationshipBinding(r.from, r.id)),
           checksum = tokenSeed.checksum,
-          validity = OffsetDateTime.now().plusHours(validityHours)
+          validity = timestamp.plusHours(validityHours)
         )
       )
       .toRight(new RuntimeException("Token can't be generated because non manager party has been supplied"))

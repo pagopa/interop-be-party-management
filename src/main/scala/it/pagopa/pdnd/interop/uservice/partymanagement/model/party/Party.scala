@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationSeed, Person, PersonSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -17,11 +18,6 @@ sealed trait Party {
     case institutionParty: InstitutionParty =>
       val updated: Set[String] = institutionParty.attributes ++ attributes
       Right(institutionParty.copy(attributes = updated))
-  }
-
-  def replaceProducts(products: Set[String]): Either[Throwable, Party] = this match {
-    case _: PersonParty                     => Left(new RuntimeException("Products do not exist for person party"))
-    case institutionParty: InstitutionParty => Right(institutionParty.copy(products = products))
   }
 
 }
@@ -40,8 +36,7 @@ object Party {
             description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
             taxCode = institutionParty.taxCode,
-            attributes = institutionParty.attributes.toSeq,
-            products = institutionParty.products
+            attributes = institutionParty.attributes.toSeq
           )
         )
     }
@@ -51,7 +46,8 @@ object Party {
 final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]) extends Party
 
 object PersonParty {
-  def fromApi(person: PersonSeed): PersonParty = PersonParty(id = person.id, start = OffsetDateTime.now(), end = None)
+  def fromApi(person: PersonSeed, offsetDateTimeSupplier: OffsetDateTimeSupplier): PersonParty =
+    PersonParty(id = person.id, start = offsetDateTimeSupplier.get, end = None)
 }
 
 final case class InstitutionParty(
@@ -62,12 +58,15 @@ final case class InstitutionParty(
   taxCode: String,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
-  attributes: Set[String],
-  products: Set[String]
+  attributes: Set[String]
 ) extends Party
 
 object InstitutionParty {
-  def fromApi(organization: OrganizationSeed, uuidSupplier: UUIDSupplier): InstitutionParty = {
+  def fromApi(
+    organization: OrganizationSeed,
+    uuidSupplier: UUIDSupplier,
+    offsetDateTimeSupplier: OffsetDateTimeSupplier
+  ): InstitutionParty = {
     InstitutionParty(
       id = uuidSupplier.get,
       externalId = organization.institutionId,
@@ -75,8 +74,7 @@ object InstitutionParty {
       digitalAddress = organization.digitalAddress,
       taxCode = organization.taxCode,
       attributes = organization.attributes.toSet,
-      products = organization.products,
-      start = OffsetDateTime.now(),
+      start = offsetDateTimeSupplier.get,
       end = None
     )
   }

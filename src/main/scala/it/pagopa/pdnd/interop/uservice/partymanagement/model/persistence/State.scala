@@ -43,11 +43,6 @@ final case class State(
     copy(relationships = updated)
   }
 
-  def updateRelationshipProducts(relationshipId: UUID, products: Set[String]): State = {
-    val updated: PersistedPartyRelationship = relationships(relationshipId.toString).copy(products = products)
-    copy(relationships = relationships + (relationshipId.toString -> updated))
-  }
-
   def rejectRelationship(relationshipId: UUID): State =
     updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Rejected)
 
@@ -73,13 +68,15 @@ final case class State(
     from: UUID,
     to: UUID,
     role: PersistedPartyRole,
+    product: String,
     productRole: String
   ): Option[PersistedPartyRelationship] = {
     relationships.values.find(relationship =>
       from.toString == relationship.from.toString
         && to.toString == relationship.to.toString
         && role == relationship.role
-        && productRole == relationship.productRole
+        && product == relationship.product.id
+        && productRole == relationship.product.role
     )
   }
 
