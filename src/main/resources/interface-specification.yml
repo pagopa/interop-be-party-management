@@ -326,6 +326,14 @@ paths:
             type: string
             format: uuid
         - in: query
+          name: role
+          schema:
+            $ref: '#/components/schemas/PartyRole'
+        - in: query
+          name: state
+          schema:
+            $ref: '#/components/schemas/RelationshipState'
+        - in: query
           name: product
           schema:
             type: string
