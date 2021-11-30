@@ -27,7 +27,7 @@ import java.io.File
 import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class PartyApiServiceImpl(
   system: ActorSystem[_],
