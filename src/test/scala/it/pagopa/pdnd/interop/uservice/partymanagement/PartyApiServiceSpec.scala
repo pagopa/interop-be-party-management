@@ -674,11 +674,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "PDND", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -748,11 +750,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -822,22 +826,26 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid1,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           ),
           Relationship(
             id = relUuid2,
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -907,11 +915,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "PDND", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
