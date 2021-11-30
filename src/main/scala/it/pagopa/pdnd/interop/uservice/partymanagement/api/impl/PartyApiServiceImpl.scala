@@ -756,7 +756,7 @@ class PartyApiServiceImpl(
 
     val result: Future[Option[StatusReply[Unit]]] =
       for {
-        uuid <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        uuid <- relationshipId.toFutureUUID
         timestamp = offsetDateTimeSupplier.get
         results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, timestamp, ref)))
         maybeDeletion = results.find(_.isSuccess)
