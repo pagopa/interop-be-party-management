@@ -5,13 +5,10 @@ import akka.http.scaladsl.marshalling.{Marshal, Marshaller}
 import akka.http.scaladsl.model.{HttpResponse, MessageEntity}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 
-import java.time.OffsetDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
 object RelationshipPartyApiServiceData {
-
-  final val timestamp = OffsetDateTime.parse("2021-11-23T13:37:00.277147+01:00")
 
   def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationshipSeed: RelationshipSeed)(
     implicit

@@ -8,6 +8,7 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
+import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
 import java.time.temporal.ChronoUnit
@@ -20,7 +21,8 @@ object PartyPersistentBehavior {
 
   def commandHandler(
     shard: ActorRef[ClusterSharding.ShardCommand],
-    context: ActorContext[Command]
+    context: ActorContext[Command],
+    offsetDateTimeSupplier: OffsetDateTimeSupplier
   ): (State, Command) => Effect[Event, State] = { (state, command) =>
     val idleTimeout =
       context.system.settings.config.getDuration("uservice-party-management.idle-timeout")
@@ -116,7 +118,7 @@ object PartyPersistentBehavior {
 
           }
 
-      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, timestamp, replyTo) =>
+      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, replyTo) =>
         state.relationships
           .get(partyRelationshipId.toString)
           .fold {
@@ -130,58 +132,58 @@ object PartyPersistentBehavior {
                   filePath,
                   fileInfo.getFileName,
                   fileInfo.getContentType.toString(),
-                  timestamp
+                  offsetDateTimeSupplier.get
                 )
               )
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           }
 
-      case RejectPartyRelationship(partyRelationshipId, timestamp, replyTo) =>
+      case RejectPartyRelationship(partyRelationshipId, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipRejected(rel.id, timestamp))
+              .persist(PartyRelationshipRejected(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
 
-      case DeletePartyRelationship(partyRelationshipId, timestamp, replyTo) =>
+      case DeletePartyRelationship(partyRelationshipId, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipDeleted(rel.id, timestamp))
+              .persist(PartyRelationshipDeleted(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
 
-      case SuspendPartyRelationship(partyRelationshipId, timestamp, replyTo) =>
+      case SuspendPartyRelationship(partyRelationshipId, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipSuspended(rel.id, timestamp))
+              .persist(PartyRelationshipSuspended(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
 
-      case ActivatePartyRelationship(partyRelationshipId, timestamp, replyTo) =>
+      case ActivatePartyRelationship(partyRelationshipId, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId.toString)
 
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipActivated(rel.id, timestamp))
+              .persist(PartyRelationshipActivated(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
@@ -258,7 +260,11 @@ object PartyPersistentBehavior {
   val TypeKey: EntityTypeKey[Command] =
     EntityTypeKey[Command]("uservice-party-management-persistence-party")
 
-  def apply(shard: ActorRef[ClusterSharding.ShardCommand], persistenceId: PersistenceId): Behavior[Command] = {
+  def apply(
+    shard: ActorRef[ClusterSharding.ShardCommand],
+    persistenceId: PersistenceId,
+    offsetDateTimeSupplier: OffsetDateTimeSupplier
+  ): Behavior[Command] = {
     Behaviors.setup { context =>
 //      context.log.error(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
@@ -267,7 +273,7 @@ object PartyPersistentBehavior {
       EventSourcedBehavior[Command, Event, State](
         persistenceId = persistenceId,
         emptyState = State.empty,
-        commandHandler = commandHandler(shard, context),
+        commandHandler = commandHandler(shard, context, offsetDateTimeSupplier),
         eventHandler = eventHandler
       ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = numberOfEvents, keepNSnapshots = 1))
         .withTagger(_ => Set(persistenceId.id))

@@ -14,7 +14,6 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
-import it.pagopa.pdnd.interop.uservice.partymanagement.RelationshipPartyApiServiceData.timestamp
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
@@ -23,12 +22,15 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
 
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object PartyApiServiceSpec {
   //setting up file manager properties
+
+  final val timestamp = OffsetDateTime.parse("2021-11-23T13:37:00.277147+01:00")
 
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
@@ -73,7 +75,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   override def beforeAll(): Unit = {
 
-    val persistentEntity = Main.buildPersistentEntity()
+    val persistentEntity = Main.buildPersistentEntity(offsetDateTimeSupplier)
 
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
 
