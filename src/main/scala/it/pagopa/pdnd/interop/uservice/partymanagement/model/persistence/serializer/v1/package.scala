@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer
 
 import cats.implicits._
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
@@ -8,9 +9,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
 
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.UUID
-import scala.util.Try
 
 package object v1 {
 
@@ -79,7 +78,7 @@ package object v1 {
             filePath = event.filePath,
             fileName = event.fileName,
             contentType = event.contentType,
-            timestamp = offsetDateTimeToMillis(event.timestamp)
+            timestamp = event.timestamp.toMillis
           )
       )
 
@@ -87,7 +86,7 @@ package object v1 {
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
     for {
       uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- millisToOffsetDateTime(event.timestamp)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
     } yield PartyRelationshipConfirmed(
       partyRelationshipId = uuid,
       filePath = event.filePath,
@@ -104,56 +103,56 @@ package object v1 {
     : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
     for {
       uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- millisToOffsetDateTime(event.timestamp)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
     } yield PartyRelationshipRejected(uuid, timestamp)
 
   implicit def partyRelationshipRejectedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
     event =>
       Right[Throwable, PartyRelationshipRejectedV1](
-        PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString, offsetDateTimeToMillis(event.timestamp))
+        PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
     for {
       uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- millisToOffsetDateTime(event.timestamp)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
     } yield PartyRelationshipDeleted(uuid, timestamp)
 
   implicit def partyRelationshipDeletedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipDeleted, PartyRelationshipDeletedV1] =
     event =>
       Right[Throwable, PartyRelationshipDeletedV1](
-        PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString, offsetDateTimeToMillis(event.timestamp))
+        PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
   implicit def partyRelationshipSuspendedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipSuspendedV1, PartyRelationshipSuspended] = event =>
     for {
       uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- millisToOffsetDateTime(event.timestamp)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
     } yield PartyRelationshipSuspended(uuid, timestamp)
 
   implicit def partyRelationshipSuspendedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipSuspended, PartyRelationshipSuspendedV1] =
     event =>
       Right[Throwable, PartyRelationshipSuspendedV1](
-        PartyRelationshipSuspendedV1.of(event.partyRelationshipId.toString, offsetDateTimeToMillis(event.timestamp))
+        PartyRelationshipSuspendedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
   implicit def partyRelationshipActivatedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipActivatedV1, PartyRelationshipActivated] = event =>
     for {
       uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- millisToOffsetDateTime(event.timestamp)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
     } yield PartyRelationshipActivated(uuid, timestamp)
 
   implicit def partyRelationshipActivatedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipActivated, PartyRelationshipActivatedV1] =
     event =>
       Right[Throwable, PartyRelationshipActivatedV1](
-        PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString, offsetDateTimeToMillis(event.timestamp))
+        PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
@@ -168,10 +167,4 @@ package object v1 {
   implicit def tokenDeletedV1PersistEventSerializer: PersistEventSerializer[TokenDeleted, TokenDeletedV1] =
     event => getTokenV1(event.token).map(TokenDeletedV1.of)
 
-  // TODO To library
-  def millisToOffsetDateTime(millis: Long): ErrorOr[OffsetDateTime] = Try(
-    OffsetDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC)
-  ).toEither
-
-  def offsetDateTimeToMillis(offsetDateTime: OffsetDateTime): Long = offsetDateTime.toInstant.toEpochMilli
 }

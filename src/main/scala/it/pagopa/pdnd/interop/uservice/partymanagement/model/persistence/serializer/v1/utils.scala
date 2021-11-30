@@ -1,8 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1
 
 import cats.implicits._
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
@@ -11,20 +11,19 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
-  PartyRelationshipProductV1,
-  PartyRelationshipV1
-}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
   PartyRelationshipStateV1,
   PartyRoleV1
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
+  PartyRelationshipProductV1,
+  PartyRelationshipV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
   TokenV1
 }
 
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.util.Try
 
@@ -125,10 +124,10 @@ object utils {
       product = PartyRelationshipProductV1(
         id = partyRelationship.product.id,
         role = partyRelationship.product.role,
-        createdAt = toMillis(partyRelationship.product.createdAt)
+        createdAt = partyRelationship.product.createdAt.toMillis
       ),
-      createdAt = toMillis(partyRelationship.createdAt),
-      updatedAt = partyRelationship.updatedAt.map(toMillis),
+      createdAt = partyRelationship.createdAt.toMillis,
+      updatedAt = partyRelationship.updatedAt.map(_.toMillis),
       state = relationshipStateToProtobuf(partyRelationship.state),
       filePath = partyRelationship.filePath
     )
@@ -207,10 +206,4 @@ object utils {
       case Rejected  => PartyRelationshipStateV1.REJECTED
     }
 
-  // TODO This should be in the library
-  implicit class LongOps(val l: Long) extends AnyVal {
-    def toOffsetDateTime: Try[OffsetDateTime] = Try(OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneOffset.UTC))
-  }
-
-  def toMillis(offsetDateTime: OffsetDateTime): Long = offsetDateTime.toInstant.toEpochMilli
 }

@@ -1035,12 +1035,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship updated At
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Suspend relationship updated At
 
-      val a =
+      val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
 
-      val b = confirmRelationshipWithToken(relationshipSeed)
-
-      val (_, _) = (a, b)
+      confirmRelationshipWithToken(relationshipSeed)
 
       val suspensionResponse =
         Http()
