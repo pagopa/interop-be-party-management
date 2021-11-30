@@ -240,6 +240,8 @@ class PartyApiServiceImpl(
   override def getRelationships(
     from: Option[String],
     to: Option[String],
+    role: Option[String],
+    state: Option[String],
     product: Option[String],
     productRole: Option[String]
   )(implicit
@@ -285,6 +287,8 @@ class PartyApiServiceImpl(
         relationships
           .filter(relationship => product.forall(filter => filter == relationship.product.id))
           .filter(relationship => productRole.forall(filter => filter == relationship.product.role))
+          .filter(relationship => role.forall(filter => filter == relationship.role.toString))
+          .filter(relationship => state.forall(filter => filter == relationship.state.toString))
       )
 
     onComplete(filteredResult) {

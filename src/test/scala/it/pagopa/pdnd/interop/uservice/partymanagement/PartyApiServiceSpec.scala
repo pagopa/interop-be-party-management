@@ -556,7 +556,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body.items should contain theSameElementsAs rlExpected.items
     }
 
-    "filter relationships by platform role" in {
+    "filter relationships by product role" in {
 
       val personUuid1   = UUID.randomUUID()
       val personUuid2   = UUID.randomUUID()
@@ -629,6 +629,374 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       body.items should contain theSameElementsAs rlExpected.items
     }
+
+    "filter relationships by product" in {
+
+      val personUuid1   = UUID.randomUUID()
+      val personUuid2   = UUID.randomUUID()
+      val orgUuid       = UUID.randomUUID()
+      val relUuid1      = UUID.randomUUID()
+      val relUuid2      = UUID.randomUUID()
+      val institutionId = randomString()
+
+      val personSeed1 = PersonSeed(personUuid1)
+      val personSeed2 = PersonSeed(personUuid2)
+      val orgSeed =
+        OrganizationSeed(institutionId, "Institutions One", "mail1@mail.org", "taxCode", Set.empty, Seq.empty)
+      val rlSeedAdmin =
+        RelationshipSeed(
+          from = personUuid1,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          RelationshipProductSeed(id = "p1", role = "admin")
+        )
+      val rlSeedSecurity = RelationshipSeed(
+        from = personUuid2,
+        to = orgUuid,
+        role = PartyRole.DELEGATE,
+        RelationshipProductSeed(id = "PDND", role = "security")
+      )
+
+      val rlExpected = Relationships(
+        Seq(
+          Relationship(
+            id = relUuid2,
+            from = personUuid2,
+            to = orgUuid,
+            role = PartyRole.DELEGATE,
+            product = RelationshipProduct(id = "PDND", role = "security", timestamp = timestamp),
+            state = RelationshipState.PENDING,
+            filePath = None,
+            fileName = None,
+            contentType = None
+          )
+        )
+      )
+
+      (() => uuidSupplier.get).expects().returning(orgUuid).once()  // Create organization
+      (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+
+      val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
+
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?to=${orgUuid.toString}&product=PDND",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      val body = Unmarshal(response.entity).to[Relationships].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body.items should contain theSameElementsAs rlExpected.items
+    }
+
+    "filter relationships by role" in {
+
+      val personUuid1   = UUID.randomUUID()
+      val personUuid2   = UUID.randomUUID()
+      val orgUuid       = UUID.randomUUID()
+      val relUuid1      = UUID.randomUUID()
+      val relUuid2      = UUID.randomUUID()
+      val institutionId = randomString()
+
+      val personSeed1 = PersonSeed(personUuid1)
+      val personSeed2 = PersonSeed(personUuid2)
+      val orgSeed =
+        OrganizationSeed(institutionId, "Institutions One", "mail1@mail.org", "taxCode", Set.empty, Seq.empty)
+      val rlSeedAdmin =
+        RelationshipSeed(
+          from = personUuid1,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          RelationshipProductSeed(id = "p1", role = "admin")
+        )
+      val rlSeedSecurity = RelationshipSeed(
+        from = personUuid2,
+        to = orgUuid,
+        role = PartyRole.DELEGATE,
+        RelationshipProductSeed(id = "p1", role = "security")
+      )
+
+      val rlExpected = Relationships(
+        Seq(
+          Relationship(
+            id = relUuid2,
+            from = personUuid2,
+            to = orgUuid,
+            role = PartyRole.DELEGATE,
+            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            state = RelationshipState.PENDING,
+            filePath = None,
+            fileName = None,
+            contentType = None
+          )
+        )
+      )
+
+      (() => uuidSupplier.get).expects().returning(orgUuid).once()  // Create organization
+      (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+
+      val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
+
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?to=${orgUuid.toString}&role=DELEGATE",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      val body = Unmarshal(response.entity).to[Relationships].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body.items should contain theSameElementsAs rlExpected.items
+    }
+
+    "filter relationships by state" in {
+
+      val personUuid1   = UUID.randomUUID()
+      val personUuid2   = UUID.randomUUID()
+      val orgUuid       = UUID.randomUUID()
+      val relUuid1      = UUID.randomUUID()
+      val relUuid2      = UUID.randomUUID()
+      val institutionId = randomString()
+
+      val personSeed1 = PersonSeed(personUuid1)
+      val personSeed2 = PersonSeed(personUuid2)
+      val orgSeed =
+        OrganizationSeed(institutionId, "Institutions One", "mail1@mail.org", "taxCode", Set.empty, Seq.empty)
+      val rlSeedAdmin =
+        RelationshipSeed(
+          from = personUuid1,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          RelationshipProductSeed(id = "p1", role = "admin")
+        )
+      val rlSeedSecurity = RelationshipSeed(
+        from = personUuid2,
+        to = orgUuid,
+        role = PartyRole.DELEGATE,
+        RelationshipProductSeed(id = "p1", role = "security")
+      )
+
+      val rlExpected = Relationships(
+        Seq(
+          Relationship(
+            id = relUuid1,
+            from = personUuid1,
+            to = orgUuid,
+            role = PartyRole.MANAGER,
+            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+            state = RelationshipState.PENDING,
+            filePath = None,
+            fileName = None,
+            contentType = None
+          ),
+          Relationship(
+            id = relUuid2,
+            from = personUuid2,
+            to = orgUuid,
+            role = PartyRole.DELEGATE,
+            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            state = RelationshipState.PENDING,
+            filePath = None,
+            fileName = None,
+            contentType = None
+          )
+        )
+      )
+
+      (() => uuidSupplier.get).expects().returning(orgUuid).once()  // Create organization
+      (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+
+      val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
+
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships?to=${orgUuid.toString}&state=PENDING",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      val body = Unmarshal(response.entity).to[Relationships].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body.items should contain theSameElementsAs rlExpected.items
+    }
+
+    "filter relationships by all filters" in {
+
+      val personUuid1   = UUID.randomUUID()
+      val personUuid2   = UUID.randomUUID()
+      val orgUuid       = UUID.randomUUID()
+      val relUuid1      = UUID.randomUUID()
+      val relUuid2      = UUID.randomUUID()
+      val institutionId = randomString()
+
+      val personSeed1 = PersonSeed(personUuid1)
+      val personSeed2 = PersonSeed(personUuid2)
+      val orgSeed =
+        OrganizationSeed(institutionId, "Institutions One", "mail1@mail.org", "taxCode", Set.empty, Seq.empty)
+      val rlSeedAdmin =
+        RelationshipSeed(
+          from = personUuid1,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          RelationshipProductSeed(id = "p1", role = "admin")
+        )
+      val rlSeedSecurity = RelationshipSeed(
+        from = personUuid2,
+        to = orgUuid,
+        role = PartyRole.DELEGATE,
+        RelationshipProductSeed(id = "PDND", role = "security")
+      )
+
+      val rlExpected = Relationships(
+        Seq(
+          Relationship(
+            id = relUuid2,
+            from = personUuid2,
+            to = orgUuid,
+            role = PartyRole.DELEGATE,
+            product = RelationshipProduct(id = "PDND", role = "security", timestamp = timestamp),
+            state = RelationshipState.PENDING,
+            filePath = None,
+            fileName = None,
+            contentType = None
+          )
+        )
+      )
+
+      (() => uuidSupplier.get).expects().returning(orgUuid).once()  // Create organization
+      (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+
+      val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
+
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri =
+                s"$url/relationships?to=${orgUuid.toString}&product=PDND&productRole=security&role=DELEGATE&state=PENDING",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      val body = Unmarshal(response.entity).to[Relationships].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body.items should contain theSameElementsAs rlExpected.items
+    }
+
+    "not retrieve relationships if not match any filters." in {
+
+      val personUuid1   = UUID.randomUUID()
+      val personUuid2   = UUID.randomUUID()
+      val orgUuid       = UUID.randomUUID()
+      val relUuid1      = UUID.randomUUID()
+      val relUuid2      = UUID.randomUUID()
+      val institutionId = randomString()
+
+      val personSeed1 = PersonSeed(personUuid1)
+      val personSeed2 = PersonSeed(personUuid2)
+      val orgSeed =
+        OrganizationSeed(institutionId, "Institutions One", "mail1@mail.org", "taxCode", Set.empty, Seq.empty)
+      val rlSeedAdmin =
+        RelationshipSeed(
+          from = personUuid1,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          RelationshipProductSeed(id = "p1", role = "admin")
+        )
+      val rlSeedSecurity = RelationshipSeed(
+        from = personUuid2,
+        to = orgUuid,
+        role = PartyRole.DELEGATE,
+        RelationshipProductSeed(id = "p1", role = "security")
+      )
+
+      (() => uuidSupplier.get).expects().returning(orgUuid).once()  // Create organization
+      (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+
+      val _ = prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
+      val _ = prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
+
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri =
+                s"$url/relationships?to=${orgUuid.toString}&product=Interop&productRole=security&role=DELEGATE&state=PENDING",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      val body = Unmarshal(response.entity).to[Relationships].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body.items shouldBe empty
+    }
+
   }
 
   "Suspending relationship" must {
