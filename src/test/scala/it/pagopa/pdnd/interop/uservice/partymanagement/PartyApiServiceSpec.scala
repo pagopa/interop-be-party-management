@@ -14,7 +14,6 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
-import it.pagopa.pdnd.interop.uservice.partymanagement.RelationshipPartyApiServiceData.timestamp
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
@@ -23,12 +22,15 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
 
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object PartyApiServiceSpec {
   //setting up file manager properties
+
+  final val timestamp = OffsetDateTime.parse("2021-11-23T13:37:00.277147+01:00")
 
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
@@ -73,7 +75,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   override def beforeAll(): Unit = {
 
-    val persistentEntity = Main.buildPersistentEntity()
+    val persistentEntity = Main.buildPersistentEntity(offsetDateTimeSupplier)
 
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
 
@@ -400,11 +402,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -505,22 +509,26 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid1,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           ),
           Relationship(
             id = relUuid2,
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -590,11 +598,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -664,11 +674,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "PDND", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -738,11 +750,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -812,22 +826,26 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid1,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           ),
           Relationship(
             id = relUuid2,
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -897,11 +915,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "PDND", role = "security", timestamp = timestamp),
+            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestamp),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
-            contentType = None
+            contentType = None,
+            createdAt = timestamp,
+            updatedAt = None
           )
         )
       )
@@ -1024,6 +1044,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Suspend relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
@@ -1102,6 +1124,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Suspend relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Activate relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
@@ -1195,6 +1220,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Delete relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
@@ -1232,6 +1259,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "fail if relationship does not exist" in {
+      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Delete relationship
+
       val response =
         Http()
           .singleRequest(
@@ -1286,6 +1315,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestamp)
+        .repeated(tokenSeed1.relationships.items.size) // Consume token
 
       val relationshipResponse = prepareTest(personSeed2, organizationSeed2, relationshipSeed3, relationshipSeed4)
 
@@ -1326,6 +1359,10 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestamp)
+        .repeated(tokenSeed2.relationships.items.size) // Consume token
 
       val relationshipResponse = prepareTest(personSeed3, organizationSeed3, relationshipSeed5, relationshipSeed6)
 
@@ -1449,11 +1486,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = rlSeed.role,
-          product = RelationshipProduct(id = "p1", role = "admin", timestamp = timestamp),
+          product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
           state = RelationshipState.PENDING,
           filePath = None,
           fileName = None,
-          contentType = None
+          contentType = None,
+          createdAt = timestamp,
+          updatedAt = None
         )
     }
   }

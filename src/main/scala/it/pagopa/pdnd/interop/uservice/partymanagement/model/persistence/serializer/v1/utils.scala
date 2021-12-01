@@ -1,8 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1
 
 import cats.implicits._
-import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
+import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPartyRelationshipState._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
@@ -11,13 +11,13 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyV1,
   PersonPartyV1
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
-  PartyRelationshipProductV1,
-  PartyRelationshipV1
-}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
   PartyRelationshipStateV1,
   PartyRoleV1
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
+  PartyRelationshipProductV1,
+  PartyRelationshipV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
@@ -93,9 +93,9 @@ object utils {
       to        <- stringToUUID(partyRelationshipV1.to)
       partyRole <- partyRoleFromProtobuf(partyRelationshipV1.role)
       state     <- relationshipStateFromProtobuf(partyRelationshipV1.state)
-      start     <- partyRelationshipV1.start.toOffsetDateTime.toEither
-      end       <- partyRelationshipV1.end.traverse(_.toOffsetDateTime).toEither
-      timestamp <- partyRelationshipV1.product.timestamp.toOffsetDateTime.toEither
+      createdAt <- partyRelationshipV1.createdAt.toOffsetDateTime.toEither
+      updatedAt <- partyRelationshipV1.updatedAt.traverse(_.toOffsetDateTime).toEither
+      timestamp <- partyRelationshipV1.product.createdAt.toOffsetDateTime.toEither
     } yield PersistedPartyRelationship(
       id = id,
       from = from,
@@ -104,10 +104,10 @@ object utils {
       product = PersistedProduct(
         id = partyRelationshipV1.product.id,
         role = partyRelationshipV1.product.role,
-        timestamp = timestamp
+        createdAt = timestamp
       ),
-      start = start,
-      end = end,
+      createdAt = createdAt,
+      updatedAt = updatedAt,
       state = state,
       filePath = partyRelationshipV1.filePath,
       fileName = partyRelationshipV1.fileName,
@@ -115,29 +115,22 @@ object utils {
     )
   }
 
-  def getPartyRelationshipV1(partyRelationship: PersistedPartyRelationship): ErrorOr[PartyRelationshipV1] = {
-    {
-      for {
-        start     <- partyRelationship.start.asFormattedString
-        end       <- partyRelationship.end.traverse(_.asFormattedString)
-        timestamp <- partyRelationship.product.timestamp.asFormattedString
-      } yield PartyRelationshipV1(
-        id = partyRelationship.id.toString,
-        from = partyRelationship.from.toString,
-        to = partyRelationship.to.toString,
-        role = partyRoleToProtobuf(partyRelationship.role),
-        product = PartyRelationshipProductV1(
-          id = partyRelationship.product.id,
-          role = partyRelationship.product.role,
-          timestamp = timestamp
-        ),
-        start = start,
-        end = end,
-        state = relationshipStateToProtobuf(partyRelationship.state),
-        filePath = partyRelationship.filePath
-      )
-    }
-  }.toEither
+  def getPartyRelationshipV1(partyRelationship: PersistedPartyRelationship): PartyRelationshipV1 =
+    PartyRelationshipV1(
+      id = partyRelationship.id.toString,
+      from = partyRelationship.from.toString,
+      to = partyRelationship.to.toString,
+      role = partyRoleToProtobuf(partyRelationship.role),
+      product = PartyRelationshipProductV1(
+        id = partyRelationship.product.id,
+        role = partyRelationship.product.role,
+        createdAt = partyRelationship.product.createdAt.toMillis
+      ),
+      createdAt = partyRelationship.createdAt.toMillis,
+      updatedAt = partyRelationship.updatedAt.map(_.toMillis),
+      state = relationshipStateToProtobuf(partyRelationship.state),
+      filePath = partyRelationship.filePath
+    )
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {

@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 /* Event */
@@ -21,12 +22,17 @@ final case class PartyRelationshipConfirmed(
   partyRelationshipId: UUID,
   filePath: String,
   fileName: String,
-  contentType: String
-)                                                                      extends PartyRelationshipEvent
-final case class PartyRelationshipRejected(partyRelationshipId: UUID)  extends PartyRelationshipEvent
-final case class PartyRelationshipDeleted(partyRelationshipId: UUID)   extends PartyRelationshipEvent
-final case class PartyRelationshipSuspended(partyRelationshipId: UUID) extends PartyRelationshipEvent
-final case class PartyRelationshipActivated(partyRelationshipId: UUID) extends PartyRelationshipEvent
+  contentType: String,
+  timestamp: OffsetDateTime
+) extends PartyRelationshipEvent
+final case class PartyRelationshipRejected(partyRelationshipId: UUID, timestamp: OffsetDateTime)
+    extends PartyRelationshipEvent
+final case class PartyRelationshipDeleted(partyRelationshipId: UUID, timestamp: OffsetDateTime)
+    extends PartyRelationshipEvent
+final case class PartyRelationshipSuspended(partyRelationshipId: UUID, timestamp: OffsetDateTime)
+    extends PartyRelationshipEvent
+final case class PartyRelationshipActivated(partyRelationshipId: UUID, timestamp: OffsetDateTime)
+    extends PartyRelationshipEvent
 
 /* Token Event */
 final case class TokenAdded(token: Token)   extends TokenEvent

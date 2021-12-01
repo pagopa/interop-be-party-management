@@ -4,11 +4,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationshipProduc
 
 import java.time.OffsetDateTime
 
-final case class PersistedProduct(id: String, role: String, timestamp: OffsetDateTime) {
-  def toRelationshipProduct: RelationshipProduct = RelationshipProduct(id = id, role = role, timestamp = timestamp)
+final case class PersistedProduct(id: String, role: String, createdAt: OffsetDateTime) {
+  def toRelationshipProduct: RelationshipProduct = RelationshipProduct(id = id, role = role, createdAt = createdAt)
 }
 
 object PersistedProduct {
   def fromRelationshipProduct(product: RelationshipProductSeed, timestamp: OffsetDateTime): PersistedProduct =
-    PersistedProduct(id = product.id, role = product.role, timestamp = timestamp)
+    PersistedProduct(id = product.id, role = product.role, createdAt = timestamp)
 }

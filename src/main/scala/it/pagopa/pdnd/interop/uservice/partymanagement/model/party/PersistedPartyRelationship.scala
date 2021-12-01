@@ -10,8 +10,6 @@ import java.util.UUID
 
 final case class PersistedPartyRelationship(
   id: UUID,
-  start: OffsetDateTime,
-  end: Option[OffsetDateTime],
   from: UUID,
   to: UUID,
   role: PersistedPartyRole,
@@ -19,7 +17,9 @@ final case class PersistedPartyRelationship(
   state: PersistedPartyRelationshipState,
   filePath: Option[String],
   fileName: Option[String],
-  contentType: Option[String]
+  contentType: Option[String],
+  createdAt: OffsetDateTime,
+  updatedAt: Option[OffsetDateTime]
 ) {
 
   /** Returns a syntetic identifier useful to bind the party relationship with a generated token, if any.
@@ -36,7 +36,9 @@ final case class PersistedPartyRelationship(
     state = state.toApi,
     filePath = filePath,
     fileName = fileName,
-    contentType = contentType
+    contentType = contentType,
+    createdAt = createdAt,
+    updatedAt = updatedAt
   )
 
 }
@@ -54,8 +56,8 @@ object PersistedPartyRelationship {
       to = to,
       role = role,
       product = PersistedProduct.fromRelationshipProduct(product, timestamp),
-      start = timestamp,
-      end = None,
+      createdAt = timestamp,
+      updatedAt = None,
       state = role match {
         case Operator => Active
         case _        => Pending

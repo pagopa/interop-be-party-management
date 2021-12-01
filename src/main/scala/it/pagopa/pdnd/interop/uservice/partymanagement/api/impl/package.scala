@@ -12,7 +12,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val organizationSeedFormat: RootJsonFormat[OrganizationSeed]       = jsonFormat6(OrganizationSeed)
   implicit val organizationFormat: RootJsonFormat[Organization]               = jsonFormat6(Organization)
   implicit val relationshipProductFormat: RootJsonFormat[RelationshipProduct] = jsonFormat3(RelationshipProduct)
-  implicit val relationshipFormat: RootJsonFormat[Relationship]               = jsonFormat9(Relationship)
+  implicit val relationshipFormat: RootJsonFormat[Relationship]               = jsonFormat11(Relationship)
   implicit val relationshipProductSeedFormat: RootJsonFormat[RelationshipProductSeed] = jsonFormat2(
     RelationshipProductSeed
   )

@@ -26,7 +26,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import java.io.File
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class PartyApiServiceImpl(
   system: ActorSystem[_],
@@ -222,7 +222,9 @@ class PartyApiServiceImpl(
         state = verified.state.toApi,
         filePath = None,
         fileName = None,
-        contentType = None
+        contentType = None,
+        createdAt = verified.createdAt,
+        updatedAt = verified.updatedAt
       )
     } yield relationship
 
@@ -745,7 +747,7 @@ class PartyApiServiceImpl(
 
     val result: Future[Option[StatusReply[Unit]]] =
       for {
-        uuid    <- Try(UUID.fromString(relationshipId)).toEither.toFuture
+        uuid    <- relationshipId.toFutureUUID
         results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, ref)))
         maybeDeletion = results.find(_.isSuccess)
       } yield maybeDeletion

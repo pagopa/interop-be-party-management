@@ -797,13 +797,13 @@ components:
           type: string
         role:
           type: string
-        timestamp:
+        createdAt:
           type: string
           format: date-time
       required:
         - id
         - role
-        - timestamp
+        - createdAt
     Relationship:
       type: object
       properties:
@@ -833,6 +833,12 @@ components:
           $ref: '#/components/schemas/RelationshipProduct'
         state:
           $ref: '#/components/schemas/RelationshipState'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       additionalProperties: false
       required:
         - id
@@ -841,6 +847,7 @@ components:
         - role
         - product
         - state
+        - createdAt
     Relationships:
       type: object
       properties:

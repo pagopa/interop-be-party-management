@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer
 
 import cats.implicits._
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
@@ -39,11 +40,9 @@ package object v1 {
         tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
           getTokenV1(v).map(token => TokensV1(k, token))
         }
-        relationships <- state.relationships.toSeq
-          .traverse[ErrorOr, RelationshipEntryV1] { case (key, value) =>
-            for {
-              v <- getPartyRelationshipV1(value)
-            } yield RelationshipEntryV1(key, v)
+        relationships = state.relationships.toSeq
+          .map { case (key, value) =>
+            RelationshipEntryV1(key, getPartyRelationshipV1(value))
           }
       } yield StateV1(parties, tokens, relationships)
 
@@ -78,63 +77,82 @@ package object v1 {
             partyRelationshipId = event.partyRelationshipId.toString,
             filePath = event.filePath,
             fileName = event.fileName,
-            contentType = event.contentType
+            contentType = event.contentType,
+            timestamp = event.timestamp.toMillis
           )
       )
 
   implicit def partyRelationshipConfirmedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
-    stringToUUID(event.partyRelationshipId).map(id =>
-      PartyRelationshipConfirmed(
-        partyRelationshipId = id,
-        filePath = event.filePath,
-        fileName = event.fileName,
-        contentType = event.contentType
-      )
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipConfirmed(
+      partyRelationshipId = uuid,
+      filePath = event.filePath,
+      fileName = event.fileName,
+      contentType = event.contentType,
+      timestamp = timestamp
     )
 
   implicit def partyRelationshipAddedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipAdded, PartyRelationshipAddedV1] =
-    event => getPartyRelationshipV1(event.partyRelationship).map(PartyRelationshipAddedV1.of)
+    event => Right(PartyRelationshipAddedV1.of(getPartyRelationshipV1(event.partyRelationship)))
 
   implicit def partyRelationshipRejectedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
-    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipRejected(uuid, timestamp)
 
   implicit def partyRelationshipRejectedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
     event =>
-      Right[Throwable, PartyRelationshipRejectedV1](PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString))
+      Right[Throwable, PartyRelationshipRejectedV1](
+        PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
+      )
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
-    stringToUUID(event.partyRelationshipId).map(PartyRelationshipDeleted)
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipDeleted(uuid, timestamp)
 
   implicit def partyRelationshipDeletedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipDeleted, PartyRelationshipDeletedV1] =
     event =>
-      Right[Throwable, PartyRelationshipDeletedV1](PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString))
+      Right[Throwable, PartyRelationshipDeletedV1](
+        PartyRelationshipDeletedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
+      )
 
   implicit def partyRelationshipSuspendedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipSuspendedV1, PartyRelationshipSuspended] = event =>
-    stringToUUID(event.partyRelationshipId).map(PartyRelationshipSuspended)
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipSuspended(uuid, timestamp)
 
   implicit def partyRelationshipSuspendedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipSuspended, PartyRelationshipSuspendedV1] =
     event =>
       Right[Throwable, PartyRelationshipSuspendedV1](
-        PartyRelationshipSuspendedV1.of(event.partyRelationshipId.toString)
+        PartyRelationshipSuspendedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
   implicit def partyRelationshipActivatedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipActivatedV1, PartyRelationshipActivated] = event =>
-    stringToUUID(event.partyRelationshipId).map(PartyRelationshipActivated)
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipActivated(uuid, timestamp)
 
   implicit def partyRelationshipActivatedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipActivated, PartyRelationshipActivatedV1] =
     event =>
       Right[Throwable, PartyRelationshipActivatedV1](
-        PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString)
+        PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>

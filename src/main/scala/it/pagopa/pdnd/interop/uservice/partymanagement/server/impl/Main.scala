@@ -50,11 +50,14 @@ object Main extends App {
 
   Kamon.init()
 
-  def buildPersistentEntity(): Entity[Command, ShardingEnvelope[Command]] =
+  def buildPersistentEntity(
+    offsetDateTimeSupplier: OffsetDateTimeSupplier
+  ): Entity[Command, ShardingEnvelope[Command]] =
     Entity(typeKey = PartyPersistentBehavior.TypeKey) { entityContext =>
       PartyPersistentBehavior(
         entityContext.shard,
-        PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
+        PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId),
+        offsetDateTimeSupplier
       )
     }
 
@@ -74,9 +77,13 @@ object Main extends App {
                              |   file manager type     = ${fileManager.getClass.getName}
                              |   build info            = ${buildinfo.BuildInfo.toString}""".stripMargin)
 
+        val uuidSupplier: UUIDSupplier                     = new UUIDSupplierImpl
+        val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplierImp
+
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
-        val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] = buildPersistentEntity()
+        val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
+          buildPersistentEntity(offsetDateTimeSupplier)
 
         val _ = sharding.init(partyPersistentEntity)
 
@@ -100,9 +107,6 @@ object Main extends App {
             stopMessage = ProjectionBehavior.Stop
           )
         }
-
-        val uuidSupplier: UUIDSupplier                     = new UUIDSupplierImpl
-        val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplierImp
 
         val partyApi: PartyApi = new PartyApi(
           new PartyApiServiceImpl(

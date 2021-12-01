@@ -34,22 +34,27 @@ message PartyRelationshipConfirmedV1 {
   required string filePath = 2;
   required string fileName = 3;
   required string contentType = 4;
+  required int64 timestamp = 5;
 }
 
 message PartyRelationshipDeletedV1 {
   required string partyRelationshipId = 1;
+  required int64 timestamp = 2;
 }
 
 message PartyRelationshipRejectedV1 {
   required string partyRelationshipId = 1;
+  required int64 timestamp = 2;
 }
 
 message PartyRelationshipSuspendedV1 {
   required string partyRelationshipId = 1;
+  required int64 timestamp = 2;
 }
 
 message PartyRelationshipActivatedV1 {
   required string partyRelationshipId = 1;
+  required int64 timestamp = 2;
 }
 
 message TokenAddedV1 {
