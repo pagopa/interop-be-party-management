@@ -236,25 +236,28 @@ class PartyApiServiceImpl(
 
   }
 
+  private def parseArrayParameter(param: String): List[String] =
+    if (param == "[]") List.empty
+    else param.parseCommaSeparated
+
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
   override def getRelationships(
     from: Option[String],
     to: Option[String],
-    role: Option[String],
-    state: Option[String],
-    product: Option[String],
-    productRole: Option[String]
+    roles: String,
+    states: String,
+    products: String,
+    productRoles: String
   )(implicit
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
-    logger.error(
-      s"Getting relationships for ${from.getOrElse("Empty")}/${to.getOrElse("Empty")}/${productRole.getOrElse("Empty")}"
-    )
+    logger.error(s"Getting relationships for from: ${from.getOrElse("Empty")}/ to: ${to
+      .getOrElse("Empty")}/roles: $roles/states: $states/products: $products/productRoles: $productRoles")
 
     def retrieveRelationshipsByTo(id: UUID): Future[List[Relationship]] = {
       val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
@@ -284,13 +287,18 @@ class PartyApiServiceImpl(
       r        <- relationshipsFromParams(fromUuid, toUuid)
     } yield r
 
+    val productsArray     = parseArrayParameter(products)
+    val productRolesArray = parseArrayParameter(productRoles)
+    val rolesArray        = parseArrayParameter(roles)
+    val statesArray       = parseArrayParameter(states)
+
     val filteredResult: Future[List[Relationship]] =
       result.map(relationships =>
         relationships
-          .filter(relationship => product.forall(filter => filter == relationship.product.id))
-          .filter(relationship => productRole.forall(filter => filter == relationship.product.role))
-          .filter(relationship => role.forall(filter => filter == relationship.role.toString))
-          .filter(relationship => state.forall(filter => filter == relationship.state.toString))
+          .filter(relationship => productsArray.isEmpty || productsArray.contains(relationship.product.id))
+          .filter(relationship => productRolesArray.isEmpty || productRolesArray.contains(relationship.product.role))
+          .filter(relationship => rolesArray.isEmpty || rolesArray.contains(relationship.role.toString))
+          .filter(relationship => statesArray.isEmpty || statesArray.contains(relationship.state.toString))
       )
 
     onComplete(filteredResult) {
