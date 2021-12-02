@@ -12,6 +12,7 @@ import akka.util.Timeout
 import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
+import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
@@ -210,9 +211,22 @@ class PartyApiServiceImpl(
         role,
         seed.product
       )
-      currentPartyRelationships <- commanders.traverse(_.ask(GetPartyRelationshipsByTo(to.id, _))).map(_.flatten)
-      verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
-      _                         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
+      currentPartyRelationships <- commanders
+        .traverse(
+          _.ask(ref =>
+            GetPartyRelationshipsByTo(
+              to = to.id,
+              roles = List.empty,
+              states = List.empty,
+              products = List.empty,
+              productRoles = List.empty,
+              ref
+            )
+          )
+        )
+        .map(_.flatten)
+      verified <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
+      _        <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
       relationship = Relationship(
         id = verified.id,
         from = from.id,
@@ -236,10 +250,6 @@ class PartyApiServiceImpl(
 
   }
 
-  private def parseArrayParameter(param: String): List[String] =
-    if (param == "[]") List.empty
-    else param.parseCommaSeparated
-
   /** Code: 200, Message: successful operation, DataType: Relationships
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
@@ -259,49 +269,65 @@ class PartyApiServiceImpl(
     logger.error(s"Getting relationships for from: ${from.getOrElse("Empty")}/ to: ${to
       .getOrElse("Empty")}/roles: $roles/states: $states/products: $products/productRoles: $productRoles")
 
-    def retrieveRelationshipsByTo(id: UUID): Future[List[Relationship]] = {
+    def retrieveRelationshipsByTo(
+      id: UUID,
+      roles: List[PartyRole],
+      states: List[RelationshipState],
+      product: List[String],
+      productRoles: List[String]
+    ): Future[List[Relationship]] = {
       val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
         .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
         .toList
 
       for {
-        re <- commanders.traverse(_.ask[List[PersistedPartyRelationship]](ref => GetPartyRelationshipsByTo(id, ref)))
+        re <- commanders.traverse(
+          _.ask[List[PersistedPartyRelationship]](ref =>
+            GetPartyRelationshipsByTo(id, roles, states, product, productRoles, ref)
+          )
+        )
       } yield re.flatten.map(_.toRelationship)
     }
 
-    def retrieveRelationshipsByFrom(id: UUID): Future[List[Relationship]] =
+    def retrieveRelationshipsByFrom(
+      id: UUID,
+      roles: List[PartyRole],
+      states: List[RelationshipState],
+      product: List[String],
+      productRoles: List[String]
+    ): Future[List[Relationship]] =
       for {
-        re <- getCommander(id.toString).ask(ref => GetPartyRelationshipsByFrom(id, ref))
+        re <- getCommander(id.toString).ask(ref =>
+          GetPartyRelationshipsByFrom(id, roles, states, product, productRoles, ref)
+        )
       } yield re.map(_.toRelationship)
 
-    def relationshipsFromParams(from: Option[UUID], to: Option[UUID]): Future[List[Relationship]] = (from, to) match {
-      case (Some(f), Some(t)) => retrieveRelationshipsByFrom(f).map(_.filter(_.to == t))
-      case (Some(f), None)    => retrieveRelationshipsByFrom(f)
-      case (None, Some(t))    => retrieveRelationshipsByTo(t)
-      case _                  => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
+    def relationshipsFromParams(
+      from: Option[UUID],
+      to: Option[UUID],
+      roles: List[PartyRole],
+      states: List[RelationshipState],
+      product: List[String],
+      productRoles: List[String]
+    ): Future[List[Relationship]] = (from, to) match {
+      case (Some(f), Some(t)) =>
+        retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
+      case (Some(f), None) => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
+      case (None, Some(t)) => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
+      case _               => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 
     val result: Future[List[Relationship]] = for {
-      fromUuid <- from.traverse(_.toFutureUUID)
-      toUuid   <- to.traverse(_.toFutureUUID)
-      r        <- relationshipsFromParams(fromUuid, toUuid)
+      fromUuid    <- from.traverse(_.toFutureUUID)
+      toUuid      <- to.traverse(_.toFutureUUID)
+      rolesArray  <- OpenapiUtils.parseArrayParameters(roles).traverse(PartyRole.fromValue).toFuture
+      statesArray <- OpenapiUtils.parseArrayParameters(states).traverse(RelationshipState.fromValue).toFuture
+      productsArray     = OpenapiUtils.parseArrayParameters(products)
+      productRolesArray = OpenapiUtils.parseArrayParameters(productRoles)
+      r <- relationshipsFromParams(fromUuid, toUuid, rolesArray, statesArray, productsArray, productRolesArray)
     } yield r
 
-    val productsArray     = parseArrayParameter(products)
-    val productRolesArray = parseArrayParameter(productRoles)
-    val rolesArray        = parseArrayParameter(roles)
-    val statesArray       = parseArrayParameter(states)
-
-    val filteredResult: Future[List[Relationship]] =
-      result.map(relationships =>
-        relationships
-          .filter(relationship => productsArray.isEmpty || productsArray.contains(relationship.product.id))
-          .filter(relationship => productRolesArray.isEmpty || productRolesArray.contains(relationship.product.role))
-          .filter(relationship => rolesArray.isEmpty || rolesArray.contains(relationship.role.toString))
-          .filter(relationship => statesArray.isEmpty || statesArray.contains(relationship.state.toString))
-      )
-
-    onComplete(filteredResult) {
+    onComplete(result) {
       case Success(relationships) => getRelationships200(Relationships(relationships))
       case Failure(ex) =>
         getRelationships400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))

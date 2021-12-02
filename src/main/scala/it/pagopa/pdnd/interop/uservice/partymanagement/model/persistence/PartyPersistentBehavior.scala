@@ -6,8 +6,9 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
+import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{PartyRole, RelationshipState, TokenText}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
@@ -195,14 +196,18 @@ object PartyPersistentBehavior {
         replyTo ! relationship
         Effect.none
 
-      case GetPartyRelationshipsByFrom(from, replyTo) =>
+      case GetPartyRelationshipsByFrom(from, roles, states, products, productRoles, replyTo) =>
         val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.from == from).toList
-        replyTo ! relationships
+        val filtered: List[PersistedPartyRelationship] =
+          filterRelationships(relationships, roles, states, products, productRoles)
+        replyTo ! filtered
         Effect.none
 
-      case GetPartyRelationshipsByTo(to, replyTo) =>
+      case GetPartyRelationshipsByTo(to, roles, states, products, productRoles, replyTo) =>
         val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.to == to).toList
-        replyTo ! relationships
+        val filtered: List[PersistedPartyRelationship] =
+          filterRelationships(relationships, roles, states, products, productRoles)
+        replyTo ! filtered
         Effect.none
 
       case AddToken(token, replyTo) =>
@@ -239,6 +244,19 @@ object PartyPersistentBehavior {
     }
 
   }
+
+  private def filterRelationships(
+    relationships: List[PersistedPartyRelationship],
+    roles: List[PartyRole],
+    states: List[RelationshipState],
+    products: List[String],
+    productRoles: List[String]
+  ): List[PersistedPartyRelationship] =
+    relationships
+      .filter(r => OpenapiUtils.verifyParametersByCondition(roles)(r.role.toApi))
+      .filter(r => OpenapiUtils.verifyParametersByCondition(states)(r.state.toApi))
+      .filter(r => OpenapiUtils.verifyParametersByCondition(products)(r.product.id))
+      .filter(r => OpenapiUtils.verifyParametersByCondition(productRoles)(r.product.role))
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
