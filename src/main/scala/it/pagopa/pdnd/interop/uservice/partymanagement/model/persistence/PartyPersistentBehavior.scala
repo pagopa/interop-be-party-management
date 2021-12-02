@@ -6,7 +6,7 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
+import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{PartyRole, RelationshipState, TokenText}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
@@ -253,10 +253,10 @@ object PartyPersistentBehavior {
     productRoles: List[String]
   ): List[PersistedPartyRelationship] =
     relationships
-      .filter(r => OpenapiUtils.verifyParametersByCondition(roles)(r.role.toApi))
-      .filter(r => OpenapiUtils.verifyParametersByCondition(states)(r.state.toApi))
-      .filter(r => OpenapiUtils.verifyParametersByCondition(products)(r.product.id))
-      .filter(r => OpenapiUtils.verifyParametersByCondition(productRoles)(r.product.role))
+      .filter(r => verifyParametersByCondition(roles)(r.role.toApi))
+      .filter(r => verifyParametersByCondition(states)(r.state.toApi))
+      .filter(r => verifyParametersByCondition(products)(r.product.id))
+      .filter(r => verifyParametersByCondition(productRoles)(r.product.role))
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {

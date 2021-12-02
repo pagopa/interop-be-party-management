@@ -12,7 +12,7 @@ import akka.util.Timeout
 import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
-import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
+import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils._
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
@@ -320,10 +320,10 @@ class PartyApiServiceImpl(
     val result: Future[List[Relationship]] = for {
       fromUuid    <- from.traverse(_.toFutureUUID)
       toUuid      <- to.traverse(_.toFutureUUID)
-      rolesArray  <- OpenapiUtils.parseArrayParameters(roles).traverse(PartyRole.fromValue).toFuture
-      statesArray <- OpenapiUtils.parseArrayParameters(states).traverse(RelationshipState.fromValue).toFuture
-      productsArray     = OpenapiUtils.parseArrayParameters(products)
-      productRolesArray = OpenapiUtils.parseArrayParameters(productRoles)
+      rolesArray  <- parseArrayParameters(roles).traverse(PartyRole.fromValue).toFuture
+      statesArray <- parseArrayParameters(states).traverse(RelationshipState.fromValue).toFuture
+      productsArray     = parseArrayParameters(products)
+      productRolesArray = parseArrayParameters(productRoles)
       r <- relationshipsFromParams(fromUuid, toUuid, rolesArray, statesArray, productsArray, productRolesArray)
     } yield r
 
