@@ -359,26 +359,29 @@ class PartyApiServiceImpl(
 
   }
 
-  /** Code: 200, Message: successful operation
+  /** Code: 200, Message: successful operation, DataType: TokenInfo
     * Code: 404, Message: Token not found, DataType: Problem
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def verifyToken(
-    tokenId: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def getToken(tokenId: String)(implicit
+    toEntityMarshallerTokenInfo: ToEntityMarshaller[TokenInfo],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
 
-    val result: Future[Option[Token]] = for {
+    val result: Future[TokenInfo] = for {
       tokenIdUUID <- tokenId.toFutureUUID
-      res         <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-    } yield res
+      result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- result.toFuture(TokenNotFound(tokenId))
+    } yield TokenInfo(id = token.id, checksum = token.checksum)
 
     onComplete(result) {
-      case Success(result) if result.isEmpty =>
-        verifyToken404(Problem(detail = None, status = 404, title = "Token not found"))
-      case Success(_) =>
-        verifyToken200
+      case Success(token) =>
+        getToken200(token)
+      case Failure(ex: TokenNotFound) =>
+        getToken404(Problem(detail = Option(ex.getMessage), status = 404, title = "Token not found"))
       case Failure(ex) =>
-        verifyToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
 
