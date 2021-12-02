@@ -3,7 +3,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence
 import akka.actor.typed.ActorRef
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenText
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{PartyRole, RelationshipState, TokenText}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 
 import java.util.UUID
@@ -54,11 +54,23 @@ final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef
 final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PersistedPartyRelationship]])
     extends PartyRelationshipCommand
 
-final case class GetPartyRelationshipsByFrom(from: UUID, replyTo: ActorRef[List[PersistedPartyRelationship]])
-    extends PartyRelationshipCommand
+final case class GetPartyRelationshipsByFrom(
+  from: UUID,
+  roles: List[PartyRole],
+  states: List[RelationshipState],
+  products: List[String],
+  productRoles: List[String],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
 
-final case class GetPartyRelationshipsByTo(to: UUID, replyTo: ActorRef[List[PersistedPartyRelationship]])
-    extends PartyRelationshipCommand
+final case class GetPartyRelationshipsByTo(
+  to: UUID,
+  roles: List[PartyRole],
+  states: List[RelationshipState],
+  products: List[String],
+  productRoles: List[String],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
 
 final case class GetPartyRelationshipByAttributes(
   from: UUID,

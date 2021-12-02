@@ -118,13 +118,13 @@ object Main extends App {
             fileManager
           ),
           marshallerImpl,
-          SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
+          SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
         )
 
         val healthApi: HealthApi = new HealthApi(
           new HealthServiceApiImpl(),
           new HealthApiMarshallerImpl(),
-          SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
+          SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
         )
 
         val _ = AkkaManagement.get(classicSystem).start()
