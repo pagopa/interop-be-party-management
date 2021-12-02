@@ -22,7 +22,7 @@ object PersistedPartyRole extends DefaultJsonProtocol {
   def fromApi(role: PartyRole): PersistedPartyRole = role match {
     case PartyRole.MANAGER      => Manager
     case PartyRole.DELEGATE     => Delegate
-    case PartyRole.SUB_DELEGATE => Delegate
+    case PartyRole.SUB_DELEGATE => SubDelegate
     case PartyRole.OPERATOR     => Operator
   }
 }
