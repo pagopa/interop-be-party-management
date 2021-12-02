@@ -19,6 +19,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   PartyRelationshipProductV1,
   PartyRelationshipV1
 }
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.state.{
+  PartiesV1,
+  RelationshipEntryV1,
+  TokensV1
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
   PartyRelationshipBindingV1,
   TokenV1
@@ -137,13 +142,7 @@ object utils {
       id       <- tokenV1.id.toUUID.toEither
       legals   <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
       validity <- tokenV1.validity.toOffsetDateTime.toEither
-    } yield Token(
-      id = id,
-      legals = legals,
-      validity = validity,
-      applicationId = tokenV1.applicationId,
-      checksum = tokenV1.checksum
-    )
+    } yield Token(id = id, legals = legals, validity = validity, checksum = tokenV1.checksum)
   }
 
   def partyRelationshipBindingMapper(
@@ -162,11 +161,33 @@ object utils {
         legals =
           token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
         validity = validity,
-        applicationId = token.applicationId,
         checksum = token.checksum
       )
     )
 
+  }
+
+  def extractTupleFromPartiesV1(partiesV1: PartiesV1): Either[Throwable, (UUID, Party)] = {
+    for {
+      key   <- partiesV1.key.toUUID.toEither
+      party <- getParty(partiesV1.value)
+    } yield key -> party
+  }
+
+  def extractTupleFromTokensV1(tokensV1: TokensV1): Either[Throwable, (UUID, Token)] = {
+    for {
+      key   <- tokensV1.key.toUUID.toEither
+      token <- getToken(tokensV1.value)
+    } yield key -> token
+  }
+
+  def extractTupleFromRelationshipEntryV1(
+    relationshipEntryV1: RelationshipEntryV1
+  ): Either[Throwable, (UUID, PersistedPartyRelationship)] = {
+    for {
+      key   <- relationshipEntryV1.key.toUUID.toEither
+      value <- getPartyRelationship(relationshipEntryV1.value)
+    } yield key -> value
   }
 
   def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PersistedPartyRole] =

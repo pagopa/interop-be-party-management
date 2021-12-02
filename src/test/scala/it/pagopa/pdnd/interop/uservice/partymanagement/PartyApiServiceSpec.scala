@@ -51,6 +51,7 @@ object PartyApiServiceSpec {
   val config: Config = ConfigFactory
     .parseResourcesAnySyntax("application-test")
     .withFallback(testData)
+    .resolve()
 
   def fileManagerType: String = config.getString("uservice-party-management.storage.type")
 }

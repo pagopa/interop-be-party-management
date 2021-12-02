@@ -86,6 +86,8 @@ spec:
                 secretKeyRef:
                   name: storage
                   key: STORAGE_PSW
+            - name: TOKEN_VALIDITY
+              value: {{tokenValidity}}
             - name: NAMESPACE
               valueFrom:
                 fieldRef:

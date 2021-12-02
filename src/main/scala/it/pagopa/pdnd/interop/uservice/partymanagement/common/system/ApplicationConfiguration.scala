@@ -15,12 +15,7 @@ object ApplicationConfiguration {
     config.getString("uservice-party-management.storage.type")
   }
 
-  def storageAccountInfo: StorageAccountInfo = {
-    StorageAccountInfo(
-      applicationId = config.getString("uservice-party-management.storage.application.id"),
-      applicationSecret = config.getString("uservice-party-management.storage.application.secret"),
-      endpoint = config.getString("uservice-party-management.storage.endpoint"),
-      container = config.getString("uservice-party-management.storage.container")
-    )
+  def tokenValidity: Long = {
+    config.getLong("uservice-party-management.token-validity")
   }
 }

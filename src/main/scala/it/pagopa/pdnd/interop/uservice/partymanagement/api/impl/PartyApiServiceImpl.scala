@@ -395,11 +395,11 @@ class PartyApiServiceImpl(
 
     val results: Future[Seq[StatusReply[Unit]]] = for {
       tokenIdUUID <- tokenId.toFutureUUID
-      token       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-      founded     <- token.toFuture(TokenNotFound(tokenId))
+      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- found.toFuture(TokenNotFound(tokenId))
       results <-
-        if (founded.isValid) confirmRelationships(founded, doc)
-        else processRelationships(founded, RejectPartyRelationship)
+        if (token.isValid) confirmRelationships(token, doc)
+        else processRelationships(token, RejectPartyRelationship)
     } yield results
 
     onComplete(results) {
@@ -422,9 +422,9 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     val results: Future[Seq[StatusReply[Unit]]] = for {
       tokenIdUUID <- tokenId.toFutureUUID
-      token       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-      founded     <- token.toFuture(TokenNotFound(tokenId))
-      results     <- processRelationships(founded, RejectPartyRelationship)
+      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- found.toFuture(TokenNotFound(tokenId))
+      results     <- processRelationships(token, RejectPartyRelationship)
     } yield results
 
     onComplete(results) {

@@ -17,17 +17,13 @@ package object v1 {
     state =>
       for {
         parties <- state.parties
-          .traverse[ErrorOr, (UUID, Party)](ps => getParty(ps.value).map(p => UUID.fromString(ps.key) -> p))
+          .traverse[ErrorOr, (UUID, Party)](extractTupleFromPartiesV1)
           .map(_.toMap)
         tokens <- state.tokens
-          .traverse[ErrorOr, (UUID, Token)](ts => getToken(ts.value).map(t => UUID.fromString(ts.key) -> t))
+          .traverse[ErrorOr, (UUID, Token)](extractTupleFromTokensV1)
           .map(_.toMap)
         relationships <- state.relationships
-          .traverse[ErrorOr, (UUID, PersistedPartyRelationship)](rl =>
-            for {
-              v <- getPartyRelationship(rl.value)
-            } yield UUID.fromString(rl.key) -> v
-          )
+          .traverse[ErrorOr, (UUID, PersistedPartyRelationship)](extractTupleFromRelationshipEntryV1)
           .map(_.toMap)
       } yield State(parties, tokens, relationships)
 
