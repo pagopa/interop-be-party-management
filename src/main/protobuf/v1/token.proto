@@ -10,7 +10,7 @@ message TokenV1 {
   required string id = 1;
   repeated PartyRelationshipBindingV1 legals = 2;
   required string validity = 3;
-  required string seed = 4;
+  required string applicationId = 4;
   required string checksum = 5;
 }
 

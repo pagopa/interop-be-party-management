@@ -134,13 +134,14 @@ object utils {
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
+      id       <- tokenV1.id.toUUID.toEither
       legals   <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
       validity <- tokenV1.validity.toOffsetDateTime.toEither
     } yield Token(
-      id = tokenV1.id,
+      id = id,
       legals = legals,
       validity = validity,
-      seed = UUID.fromString(tokenV1.seed),
+      applicationId = tokenV1.applicationId,
       checksum = tokenV1.checksum
     )
   }
@@ -157,11 +158,11 @@ object utils {
   def getTokenV1(token: Token): ErrorOr[TokenV1] = {
     token.validity.asFormattedString.toEither.map(validity =>
       TokenV1(
-        id = token.id,
+        id = token.id.toString,
         legals =
           token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
         validity = validity,
-        seed = token.seed.toString,
+        applicationId = token.applicationId,
         checksum = token.checksum
       )
     )

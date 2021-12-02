@@ -8,8 +8,8 @@ import java.util.UUID
 
 final case class State(
   parties: Map[UUID, Party],
-  tokens: Map[String, Token],
-  relationships: Map[String, PersistedPartyRelationship]
+  tokens: Map[UUID, Token],
+  relationships: Map[UUID, PersistedPartyRelationship]
 ) extends Persistable {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -27,17 +27,16 @@ final case class State(
     copy(parties = parties + (party.id -> party))
 
   def addPartyRelationship(relationship: PersistedPartyRelationship): State =
-    copy(relationships = relationships + (relationship.id.toString -> relationship))
+    copy(relationships = relationships + (relationship.id -> relationship))
 
   def confirmPartyRelationship(
-    id: UUID,
+    relationshipId: UUID,
     filePath: String,
     fileName: String,
     contentType: String,
     timestamp: OffsetDateTime
   ): State = {
-    val relationshipId = id.toString
-    val updated: Map[String, PersistedPartyRelationship] =
+    val updated: Map[UUID, PersistedPartyRelationship] =
       relationships.updated(
         relationshipId,
         relationships(relationshipId).copy(
@@ -68,10 +67,10 @@ final case class State(
     newStatus: PersistedPartyRelationshipState,
     timestamp: OffsetDateTime
   ): State =
-    relationships.get(relationshipId.toString) match {
+    relationships.get(relationshipId) match {
       case Some(relationship) =>
         val updatedRelationship = relationship.copy(state = newStatus, updatedAt = Some(timestamp))
-        copy(relationships = relationships + (relationship.id.toString -> updatedRelationship))
+        copy(relationships = relationships + (relationship.id -> updatedRelationship))
       case None =>
         this
     }
@@ -94,14 +93,13 @@ final case class State(
 
   def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
 
-  def deleteToken(token: Token): State = copy(tokens = tokens - token.id)
 }
 
 object State {
   val empty: State =
     State(
       parties = Map.empty[UUID, Party],
-      relationships = Map.empty[String, PersistedPartyRelationship],
-      tokens = Map.empty[String, Token]
+      relationships = Map.empty[UUID, PersistedPartyRelationship],
+      tokens = Map.empty[UUID, Token]
     )
 }

@@ -26,9 +26,9 @@ object TokenApiServiceData {
   lazy final val createTokenUuid0 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9210")
   lazy final val createTokenUuid1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9211")
 
-  lazy final val tokenSeedId1 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9210"
-  lazy final val tokenSeedId2 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9211"
-  lazy final val tokenSeedId3 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9212"
+  lazy final val tokenId1 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9210"
+  lazy final val tokenId2 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9211"
+  lazy final val tokenId3 = "47f8dce0-0a5b-476b-9fdd-a7a658eb9212"
 
   lazy final val personId1 = UUID.randomUUID()
   lazy final val personId2 = UUID.randomUUID()
@@ -66,8 +66,8 @@ object TokenApiServiceData {
   lazy final val partyRelationship3 = PersistedPartyRelationship(id = relationshipId3, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None)
   lazy final val partyRelationship4 = PersistedPartyRelationship(id = relationshipId4, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None)
 
-  lazy val tokenSeed1: TokenSeed = TokenSeed(seed = tokenSeedId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum")
-  lazy val tokenSeed2: TokenSeed = TokenSeed(seed = tokenSeedId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum")
+  lazy val tokenSeed1: TokenSeed = TokenSeed(id = tokenId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum")
+  lazy val tokenSeed2: TokenSeed = TokenSeed(id = tokenId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum")
 
   lazy val token1: Token = Token.generate(tokenSeed1, Seq(partyRelationship1, partyRelationship2),timestamp).toOption.get
   lazy val token2: Token = Token.generate(tokenSeed2, Seq(partyRelationship3, partyRelationship4),timestamp).toOption.get

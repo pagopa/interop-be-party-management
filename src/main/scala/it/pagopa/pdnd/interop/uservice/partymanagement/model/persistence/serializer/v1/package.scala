@@ -20,13 +20,13 @@ package object v1 {
           .traverse[ErrorOr, (UUID, Party)](ps => getParty(ps.value).map(p => UUID.fromString(ps.key) -> p))
           .map(_.toMap)
         tokens <- state.tokens
-          .traverse[ErrorOr, (String, Token)](ts => getToken(ts.value).map(t => ts.key -> t))
+          .traverse[ErrorOr, (UUID, Token)](ts => getToken(ts.value).map(t => UUID.fromString(ts.key) -> t))
           .map(_.toMap)
         relationships <- state.relationships
-          .traverse[ErrorOr, (String, PersistedPartyRelationship)](rl =>
+          .traverse[ErrorOr, (UUID, PersistedPartyRelationship)](rl =>
             for {
               v <- getPartyRelationship(rl.value)
-            } yield rl.key -> v
+            } yield UUID.fromString(rl.key) -> v
           )
           .map(_.toMap)
       } yield State(parties, tokens, relationships)
@@ -38,11 +38,11 @@ package object v1 {
           getPartyV1(v).map(party => PartiesV1(k.toString, party))
         }
         tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
-          getTokenV1(v).map(token => TokensV1(k, token))
+          getTokenV1(v).map(token => TokensV1(k.toString, token))
         }
         relationships = state.relationships.toSeq
           .map { case (key, value) =>
-            RelationshipEntryV1(key, getPartyRelationshipV1(value))
+            RelationshipEntryV1(key.toString, getPartyRelationshipV1(value))
           }
       } yield StateV1(parties, tokens, relationships)
 
@@ -160,11 +160,5 @@ package object v1 {
 
   implicit def tokenAddedV1PersistEventSerializer: PersistEventSerializer[TokenAdded, TokenAddedV1] =
     event => getTokenV1(event.token).map(TokenAddedV1.of)
-
-  implicit def tokenDeletedV1PersistEventDeserializer: PersistEventDeserializer[TokenDeletedV1, TokenDeleted] = event =>
-    getToken(event.token).map(TokenDeleted)
-
-  implicit def tokenDeletedV1PersistEventSerializer: PersistEventSerializer[TokenDeleted, TokenDeletedV1] =
-    event => getTokenV1(event.token).map(TokenDeletedV1.of)
 
 }

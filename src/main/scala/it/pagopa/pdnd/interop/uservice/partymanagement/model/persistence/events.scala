@@ -35,7 +35,4 @@ final case class PartyRelationshipActivated(partyRelationshipId: UUID, timestamp
     extends PartyRelationshipEvent
 
 /* Token Event */
-final case class TokenAdded(token: Token)   extends TokenEvent
-final case class TokenDeleted(token: Token) extends TokenEvent
-//final case class TokenInvalidated(token: Token) extends TokenEvent
-//final case class TokenConsumed(token: Token)    extends TokenEvent
+final case class TokenAdded(token: Token) extends TokenEvent
