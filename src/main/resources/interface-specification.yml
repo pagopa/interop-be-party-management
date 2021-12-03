@@ -902,19 +902,27 @@ components:
           $ref: '#/components/schemas/RelationshipsSeed'
         checksum:
           type: string
-        contractVersion:
-          type: string
-          description: 'contains the version of the contract this token belongs to'
-        contractPath:
-          type: string
-          description: 'contains the path of the contract used for this token'
+        contractInfo:
+          $ref: '#/components/schemas/OnboardingContractInfo'
       additionalProperties: false
       required:
         - id
         - relationships
         - checksum
-        - contractVersion
-        - contractPath
+        - contractInfo
+    OnboardingContractInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          description: 'contains the version of the contract this onboarding belongs to'
+        path:
+          type: string
+          description: 'contains the path of the contract used for this onboarding'
+      additionalProperties: false
+      required:
+        - version
+        - path
     TokenInfo:
       type: object
       properties:

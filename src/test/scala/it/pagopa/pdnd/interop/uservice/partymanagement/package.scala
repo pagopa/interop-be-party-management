@@ -54,8 +54,7 @@ package object partymanagement extends MockFactory {
         id = UUID.randomUUID().toString,
         relationships = RelationshipsSeed(Seq(relationshipSeed)),
         "checksum",
-        "test",
-        "test"
+        OnboardingContractInfo("test", "test")
       )
     val tokenData = Await.result(Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
     createToken(tokenData)

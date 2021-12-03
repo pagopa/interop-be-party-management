@@ -25,6 +25,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   TokensV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
+  OnboardingContractInfoV1,
   PartyRelationshipBindingV1,
   TokenV1
 }
@@ -147,8 +148,7 @@ object utils {
       legals = legals,
       validity = validity,
       checksum = tokenV1.checksum,
-      contractPath = tokenV1.contractPath,
-      contractVersion = tokenV1.contractVersion
+      contractInfo = TokenOnboardingContractInfo(tokenV1.contractInfo.version, tokenV1.contractInfo.path)
     )
   }
 
@@ -169,8 +169,7 @@ object utils {
           token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
         validity = validity,
         checksum = token.checksum,
-        contractPath = token.contractPath,
-        contractVersion = token.contractVersion
+        contractInfo = OnboardingContractInfoV1(version = token.contractInfo.version, path = token.contractInfo.path)
       )
     )
 
