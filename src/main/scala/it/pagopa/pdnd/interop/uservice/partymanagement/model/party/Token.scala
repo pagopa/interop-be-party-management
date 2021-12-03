@@ -21,9 +21,16 @@ import java.util.UUID
 //TODO evaluate an Akka persistence alternative to preserve the same behavior without this case class.
 final case class PartyRelationshipBinding(partyId: UUID, relationshipId: UUID)
 
-final case class Token(id: UUID, checksum: String, legals: Seq[PartyRelationshipBinding], validity: OffsetDateTime) {
-  def isValid: Boolean = OffsetDateTime.now().isBefore(validity)
+final case class TokenOnboardingContractInfo(version: String, path: String)
 
+final case class Token(
+  id: UUID,
+  checksum: String,
+  legals: Seq[PartyRelationshipBinding],
+  validity: OffsetDateTime,
+  contractInfo: TokenOnboardingContractInfo
+) {
+  def isValid: Boolean = OffsetDateTime.now().isBefore(validity)
 }
 
 object Token extends SprayJsonSupport with DefaultJsonProtocol {
@@ -31,7 +38,11 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val partyRelationshipFormat: RootJsonFormat[PartyRelationshipBinding] = jsonFormat2(
     PartyRelationshipBinding.apply
   )
-  implicit val format: RootJsonFormat[Token] = jsonFormat4(Token.apply)
+
+  implicit val contractInfoFormat: RootJsonFormat[TokenOnboardingContractInfo] = jsonFormat2(
+    TokenOnboardingContractInfo.apply
+  )
+  implicit val format: RootJsonFormat[Token] = jsonFormat5(Token.apply)
 
   def generate(
     tokenSeed: TokenSeed,
@@ -47,7 +58,8 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
       id = id,
       legals = parties.map(r => PartyRelationshipBinding(r.from, r.id)),
       checksum = tokenSeed.checksum,
-      validity = timestamp.plusHours(ApplicationConfiguration.tokenValidityHours)
+      validity = timestamp.plusHours(ApplicationConfiguration.tokenValidityHours),
+      contractInfo = TokenOnboardingContractInfo(tokenSeed.contractInfo.version, tokenSeed.contractInfo.path)
     )
 
   }

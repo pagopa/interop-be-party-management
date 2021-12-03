@@ -66,8 +66,8 @@ object TokenApiServiceData {
   lazy final val partyRelationship3 = PersistedPartyRelationship(id = relationshipId3, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None)
   lazy final val partyRelationship4 = PersistedPartyRelationship(id = relationshipId4, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None)
 
-  lazy val tokenSeed1: TokenSeed = TokenSeed(id = tokenId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum")
-  lazy val tokenSeed2: TokenSeed = TokenSeed(id = tokenId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum")
+  lazy val tokenSeed1: TokenSeed = TokenSeed(id = tokenId2, relationships = RelationshipsSeed(Seq(relationshipSeed3, relationshipSeed4)), "checksum", OnboardingContractInfo("test", "test"))
+  lazy val tokenSeed2: TokenSeed = TokenSeed(id = tokenId3, relationships = RelationshipsSeed(Seq(relationshipSeed5, relationshipSeed6)), "checksum", OnboardingContractInfo("test", "test"))
 
   lazy val token1: Token = Token.generate(tokenSeed1, Seq(partyRelationship1, partyRelationship2),timestamp).toOption.get
   lazy val token2: Token = Token.generate(tokenSeed2, Seq(partyRelationship3, partyRelationship4),timestamp).toOption.get

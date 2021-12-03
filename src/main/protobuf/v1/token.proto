@@ -11,9 +11,15 @@ message TokenV1 {
   repeated PartyRelationshipBindingV1 legals = 2;
   required string validity = 3;
   required string checksum = 4;
+  required OnboardingContractInfoV1 contractInfo = 5;
 }
 
 message PartyRelationshipBindingV1 {
   required string partyId = 1;
   required string relationshipId = 2;
+}
+
+message OnboardingContractInfoV1 {
+  required string path = 1;
+  required string version = 2;
 }

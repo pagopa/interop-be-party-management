@@ -25,6 +25,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   TokensV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
+  OnboardingContractInfoV1,
   PartyRelationshipBindingV1,
   TokenV1
 }
@@ -142,7 +143,13 @@ object utils {
       id       <- tokenV1.id.toUUID.toEither
       legals   <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
       validity <- tokenV1.validity.toOffsetDateTime.toEither
-    } yield Token(id = id, legals = legals, validity = validity, checksum = tokenV1.checksum)
+    } yield Token(
+      id = id,
+      legals = legals,
+      validity = validity,
+      checksum = tokenV1.checksum,
+      contractInfo = TokenOnboardingContractInfo(tokenV1.contractInfo.version, tokenV1.contractInfo.path)
+    )
   }
 
   def partyRelationshipBindingMapper(
@@ -161,7 +168,8 @@ object utils {
         legals =
           token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
         validity = validity,
-        checksum = token.checksum
+        checksum = token.checksum,
+        contractInfo = OnboardingContractInfoV1(version = token.contractInfo.version, path = token.contractInfo.path)
       )
     )
 
