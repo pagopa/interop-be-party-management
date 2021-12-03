@@ -17,7 +17,6 @@ import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.Token
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -52,6 +51,7 @@ object PartyApiServiceSpec {
   val config: Config = ConfigFactory
     .parseResourcesAnySyntax("application-test")
     .withFallback(testData)
+    .resolve()
 
   def fileManagerType: String = config.getString("uservice-party-management.storage.type")
 }
@@ -1348,7 +1348,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val relationships = Unmarshal(relationshipResponse.entity).to[RelationshipsSeed].futureValue
 
-      val tokenSeed = TokenSeed(seed = tokenSeedId1, relationships = relationships, "checksum")
+      val tokenSeed = TokenSeed(id = tokenId1, relationships = relationships, "checksum")
 
       val tokenData = Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes).futureValue
 
@@ -1380,7 +1380,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       createToken(tokenData)
 
-      val tokenText = Token.encode(token1)
+      val tokenText = token1.id.toString
 
       val formData = Multipart.FormData
         .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
@@ -1424,7 +1424,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       createToken(tokenData)
 
-      val tokenText = Token.encode(token2)
+      val tokenText = token2.id.toString
 
       val consumedResponse =
         Http()

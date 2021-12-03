@@ -17,7 +17,11 @@ import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.partymanagement.error.{OrganizationAlreadyExists, OrganizationNotFound}
+import it.pagopa.pdnd.interop.uservice.partymanagement.error.{
+  OrganizationAlreadyExists,
+  OrganizationNotFound,
+  TokenNotFound
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
@@ -348,46 +352,51 @@ class PartyApiServiceImpl(
     val result: Future[StatusReply[TokenText]] = for {
       partyRelationships <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationship)
       token              <- Token.generate(tokenSeed, partyRelationships, offsetDateTimeSupplier.get).toFuture
-      tokenTxt           <- getCommander(tokenSeed.seed).ask(ref => AddToken(token, ref))
+      tokenTxt           <- getCommander(tokenSeed.id).ask(ref => AddToken(token, ref))
     } yield tokenTxt
 
     manageCreationResponse(result, createToken201, createToken400)
 
   }
 
-  /** Code: 200, Message: successful operation
+  /** Code: 200, Message: successful operation, DataType: TokenInfo
     * Code: 404, Message: Token not found, DataType: Problem
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def verifyToken(
-    token: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def getToken(tokenId: String)(implicit
+    toEntityMarshallerTokenInfo: ToEntityMarshaller[TokenInfo],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
 
-    val result: Future[StatusReply[Option[Token]]] = for {
-      token <- Future.fromTry(Token.decode(token))
-      res   <- getCommander(token.seed.toString).ask(ref => VerifyToken(token, ref))
-    } yield res
+    val result: Future[TokenInfo] = for {
+      tokenIdUUID <- tokenId.toFutureUUID
+      result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- result.toFuture(TokenNotFound(tokenId))
+    } yield TokenInfo(id = token.id, checksum = token.checksum)
 
     onComplete(result) {
-      case Success(statusReply) if statusReply.isError =>
-        verifyToken400(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
-      case Success(token) if token.getValue.nonEmpty => verifyToken200
-      case Success(_)                                => verifyToken404(Problem(detail = None, status = 404, title = "Token not found"))
+      case Success(token) =>
+        getToken200(token)
+      case Failure(ex: TokenNotFound) =>
+        getToken404(Problem(detail = Option(ex.getMessage), status = 404, title = "Token not found"))
       case Failure(ex) =>
-        verifyToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
     }
   }
 
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def consumeToken(token: String, doc: (FileInfo, File))(implicit
+  override def consumeToken(tokenId: String, doc: (FileInfo, File))(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
 
     val results: Future[Seq[StatusReply[Unit]]] = for {
-      token <- Future.fromTry(Token.decode(token))
+      tokenIdUUID <- tokenId.toFutureUUID
+      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- found.toFuture(TokenNotFound(tokenId))
       results <-
         if (token.isValid) confirmRelationships(token, doc)
         else processRelationships(token, RejectPartyRelationship)
@@ -409,11 +418,13 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
   override def invalidateToken(
-    token: String
+    tokenId: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     val results: Future[Seq[StatusReply[Unit]]] = for {
-      token   <- Future.fromTry(Token.decode(token))
-      results <- processRelationships(token, RejectPartyRelationship)
+      tokenIdUUID <- tokenId.toFutureUUID
+      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- found.toFuture(TokenNotFound(tokenId))
+      results     <- processRelationships(token, RejectPartyRelationship)
     } yield results
 
     onComplete(results) {
@@ -472,7 +483,7 @@ class PartyApiServiceImpl(
 
   private def confirmRelationships(token: Token, fileParts: (FileInfo, File)): Future[Seq[StatusReply[Unit]]] = {
     for {
-      filePath <- fileManager.store(token.seed, fileParts)
+      filePath <- fileManager.store(token.id, fileParts)
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, ref)

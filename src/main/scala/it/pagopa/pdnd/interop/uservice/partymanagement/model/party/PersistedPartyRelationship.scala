@@ -22,11 +22,6 @@ final case class PersistedPartyRelationship(
   updatedAt: Option[OffsetDateTime]
 ) {
 
-  /** Returns a syntetic identifier useful to bind the party relationship with a generated token, if any.
-    * @return
-    */
-  def applicationId: String = s"${from.toString}-${to.toString}-${role.toString}-${product.id}-${product.role}"
-
   def toRelationship: Relationship = Relationship(
     id = id,
     from = from,

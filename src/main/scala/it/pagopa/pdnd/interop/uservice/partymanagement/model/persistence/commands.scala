@@ -82,10 +82,5 @@ final case class GetPartyRelationshipByAttributes(
 ) extends PartyRelationshipCommand
 
 /* Token Command */
-final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]])        extends TokenCommand
-final case class DeleteToken(token: Token, replyTo: ActorRef[StatusReply[Unit]])          extends TokenCommand
-final case class VerifyToken(token: Token, replyTo: ActorRef[StatusReply[Option[Token]]]) extends TokenCommand
-
-//final case class InvalidateToken(token: Token, replyTo: ActorRef[StatusReply[Token]]) extends TokenCommand
-
-//final case class ConsumeToken(token: Token, replyTo: ActorRef[StatusReply[Token]]) extends TokenCommand
+final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])         extends TokenCommand
+final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
