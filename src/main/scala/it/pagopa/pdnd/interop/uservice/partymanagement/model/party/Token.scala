@@ -2,7 +2,9 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions.StringOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
+import it.pagopa.pdnd.interop.uservice.partymanagement.error.ManagerNotSupplied
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenSeed
 import spray.json._
 
@@ -35,17 +37,19 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
     tokenSeed: TokenSeed,
     parties: Seq[PersistedPartyRelationship],
     timestamp: OffsetDateTime
-  ): Either[Throwable, Token] =
-    parties
-      .find(_.role == Manager)
-      .map(_ =>
-        Token(
-          id = UUID.fromString(tokenSeed.id),
-          legals = parties.map(r => PartyRelationshipBinding(r.from, r.id)),
-          checksum = tokenSeed.checksum,
-          validity = timestamp.plusHours(ApplicationConfiguration.tokenValidityHours)
-        )
-      )
-      .toRight(new RuntimeException("Token can't be generated because non manager party has been supplied"))
+  ): Either[Throwable, Token] = {
+    for {
+      id <- tokenSeed.id.toUUID.toEither
+      _ <- parties
+        .find(_.role == Manager)
+        .toRight(ManagerNotSupplied(tokenSeed.id))
+    } yield Token(
+      id = id,
+      legals = parties.map(r => PartyRelationshipBinding(r.from, r.id)),
+      checksum = tokenSeed.checksum,
+      validity = timestamp.plusHours(ApplicationConfiguration.tokenValidityHours)
+    )
+
+  }
 
 }
