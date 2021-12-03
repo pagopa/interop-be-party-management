@@ -87,7 +87,7 @@ spec:
                   name: storage
                   key: STORAGE_PSW
             - name: TOKEN_VALIDITY_HOURS
-              value: {{tokenValidityHours}}
+              value: "{{tokenValidityHours}}"
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
