@@ -11,6 +11,8 @@ message TokenV1 {
   repeated PartyRelationshipBindingV1 legals = 2;
   required string validity = 3;
   required string checksum = 4;
+  required string contractPath = 5;
+  required string contractVersion = 6;
 }
 
 message PartyRelationshipBindingV1 {

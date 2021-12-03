@@ -142,7 +142,14 @@ object utils {
       id       <- tokenV1.id.toUUID.toEither
       legals   <- tokenV1.legals.traverse(partyRelationshipBindingMapper)
       validity <- tokenV1.validity.toOffsetDateTime.toEither
-    } yield Token(id = id, legals = legals, validity = validity, checksum = tokenV1.checksum)
+    } yield Token(
+      id = id,
+      legals = legals,
+      validity = validity,
+      checksum = tokenV1.checksum,
+      contractPath = tokenV1.contractPath,
+      contractVersion = tokenV1.contractVersion
+    )
   }
 
   def partyRelationshipBindingMapper(
@@ -161,7 +168,9 @@ object utils {
         legals =
           token.legals.map(legal => PartyRelationshipBindingV1(legal.partyId.toString, legal.relationshipId.toString)),
         validity = validity,
-        checksum = token.checksum
+        checksum = token.checksum,
+        contractPath = token.contractPath,
+        contractVersion = token.contractVersion
       )
     )
 

@@ -1348,7 +1348,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val relationships = Unmarshal(relationshipResponse.entity).to[RelationshipsSeed].futureValue
 
-      val tokenSeed = TokenSeed(id = tokenId1, relationships = relationships, "checksum")
+      val tokenSeed = TokenSeed(
+        id = tokenId1,
+        relationships = relationships,
+        "checksum",
+        contractVersion = "1",
+        contractPath = "/test.hml"
+      )
 
       val tokenData = Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes).futureValue
 
