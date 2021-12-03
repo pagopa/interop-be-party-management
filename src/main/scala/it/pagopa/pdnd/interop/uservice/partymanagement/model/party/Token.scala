@@ -43,7 +43,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
           id = UUID.fromString(tokenSeed.id),
           legals = parties.map(r => PartyRelationshipBinding(r.from, r.id)),
           checksum = tokenSeed.checksum,
-          validity = timestamp.plusHours(ApplicationConfiguration.tokenValidity)
+          validity = timestamp.plusHours(ApplicationConfiguration.tokenValidityHours)
         )
       )
       .toRight(new RuntimeException("Token can't be generated because non manager party has been supplied"))

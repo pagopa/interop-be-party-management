@@ -86,8 +86,8 @@ spec:
                 secretKeyRef:
                   name: storage
                   key: STORAGE_PSW
-            - name: TOKEN_VALIDITY
-              value: {{tokenValidity}}
+            - name: $TOKEN_VALIDITY_HOURS
+              value: {{tokenValidityHours}}
             - name: NAMESPACE
               valueFrom:
                 fieldRef:

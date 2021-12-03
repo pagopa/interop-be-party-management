@@ -15,7 +15,7 @@ object ApplicationConfiguration {
     config.getString("uservice-party-management.storage.type")
   }
 
-  def tokenValidity: Long = {
-    config.getLong("uservice-party-management.token-validity")
+  def tokenValidityHours: Long = {
+    config.getLong("uservice-party-management.token-validity-hours")
   }
 }
