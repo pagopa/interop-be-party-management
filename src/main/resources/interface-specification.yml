@@ -928,7 +928,6 @@ components:
       required:
         - partyId
         - relationshipId
-        - contractInfo
     OnboardingContractInfo:
       type: object
       properties:
