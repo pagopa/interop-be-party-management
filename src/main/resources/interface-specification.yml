@@ -913,6 +913,21 @@ components:
         - relationships
         - checksum
         - contractInfo
+    RelationshipBinding:
+      type: object
+      properties:
+        partyId:
+          type: string
+          format: uuid
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+        relationshipId:
+          type: string
+          format: uuid
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+      additionalProperties: false
+      required:
+        - partyId
+        - relationshipId
     OnboardingContractInfo:
       type: object
       properties:
@@ -935,10 +950,15 @@ components:
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         checksum:
           type: string
+        legals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationshipBinding'
       additionalProperties: false
       required:
         - id
         - checksum
+        - legals
     TokenText:
       properties:
         token:

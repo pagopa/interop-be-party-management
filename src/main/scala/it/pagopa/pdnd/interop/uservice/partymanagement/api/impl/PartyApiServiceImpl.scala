@@ -373,7 +373,7 @@ class PartyApiServiceImpl(
       tokenIdUUID <- tokenId.toFutureUUID
       result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
       token       <- result.toFuture(TokenNotFound(tokenId))
-    } yield TokenInfo(id = token.id, checksum = token.checksum)
+    } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
 
     onComplete(result) {
       case Success(token) =>

@@ -23,9 +23,10 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val onboardingContractInfoFormat: RootJsonFormat[OnboardingContractInfo] = jsonFormat2(
     OnboardingContractInfo
   )
-  implicit val tokenSeedFormat: RootJsonFormat[TokenSeed]                 = jsonFormat4(TokenSeed)
-  implicit val tokenTextFormat: RootJsonFormat[TokenText]                 = jsonFormat1(TokenText)
-  implicit val tokenInfoFormat: RootJsonFormat[TokenInfo]                 = jsonFormat2(TokenInfo)
-  implicit val bulkPartiesSeedFormat: RootJsonFormat[BulkPartiesSeed]     = jsonFormat1(BulkPartiesSeed)
-  implicit val bulkOrganizationsFormat: RootJsonFormat[BulkOrganizations] = jsonFormat2(BulkOrganizations)
+  implicit val tokenSeedFormat: RootJsonFormat[TokenSeed]                     = jsonFormat4(TokenSeed)
+  implicit val tokenTextFormat: RootJsonFormat[TokenText]                     = jsonFormat1(TokenText)
+  implicit val relationshipBindingFormat: RootJsonFormat[RelationshipBinding] = jsonFormat2(RelationshipBinding)
+  implicit val tokenInfoFormat: RootJsonFormat[TokenInfo]                     = jsonFormat3(TokenInfo)
+  implicit val bulkPartiesSeedFormat: RootJsonFormat[BulkPartiesSeed]         = jsonFormat1(BulkPartiesSeed)
+  implicit val bulkOrganizationsFormat: RootJsonFormat[BulkOrganizations]     = jsonFormat2(BulkOrganizations)
 }
