@@ -5,7 +5,7 @@ import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFo
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.StringOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.pdnd.interop.uservice.partymanagement.error.ManagerNotSupplied
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.TokenSeed
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationshipBinding, TokenSeed}
 import spray.json._
 
 import java.time.OffsetDateTime
@@ -19,7 +19,10 @@ import java.util.UUID
   * @param relationshipId
   */
 //TODO evaluate an Akka persistence alternative to preserve the same behavior without this case class.
-final case class PartyRelationshipBinding(partyId: UUID, relationshipId: UUID)
+final case class PartyRelationshipBinding(partyId: UUID, relationshipId: UUID) {
+
+  def toApi: RelationshipBinding = RelationshipBinding(partyId = partyId, relationshipId = relationshipId)
+}
 
 final case class Token(id: UUID, checksum: String, legals: Seq[PartyRelationshipBinding], validity: OffsetDateTime) {
   def isValid: Boolean = OffsetDateTime.now().isBefore(validity)
