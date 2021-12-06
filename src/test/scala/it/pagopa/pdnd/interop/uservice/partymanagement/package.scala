@@ -50,7 +50,12 @@ package object partymanagement extends MockFactory {
     relationshipSeed: RelationshipSeed
   )(implicit as: ActorSystem, ec: ExecutionContext): HttpResponse = {
     val tokenSeed =
-      TokenSeed(id = UUID.randomUUID().toString, relationships = RelationshipsSeed(Seq(relationshipSeed)), "checksum")
+      TokenSeed(
+        id = UUID.randomUUID().toString,
+        relationships = RelationshipsSeed(Seq(relationshipSeed)),
+        "checksum",
+        OnboardingContractInfo("test", "test")
+      )
     val tokenData = Await.result(Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
     createToken(tokenData)
   }

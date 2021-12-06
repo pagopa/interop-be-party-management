@@ -905,11 +905,14 @@ components:
           $ref: '#/components/schemas/RelationshipsSeed'
         checksum:
           type: string
+        contractInfo:
+          $ref: '#/components/schemas/OnboardingContractInfo'
       additionalProperties: false
       required:
         - id
         - relationships
         - checksum
+        - contractInfo
     RelationshipBinding:
       type: object
       properties:
@@ -925,6 +928,20 @@ components:
       required:
         - partyId
         - relationshipId
+        - contractInfo
+    OnboardingContractInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          description: 'contains the version of the contract this onboarding belongs to'
+        path:
+          type: string
+          description: 'contains the path of the contract used for this onboarding'
+      additionalProperties: false
+      required:
+        - version
+        - path
     TokenInfo:
       type: object
       properties:

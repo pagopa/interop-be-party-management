@@ -16,11 +16,14 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val relationshipProductSeedFormat: RootJsonFormat[RelationshipProductSeed] = jsonFormat2(
     RelationshipProductSeed
   )
-  implicit val relationshipSeedFormat: RootJsonFormat[RelationshipSeed]       = jsonFormat4(RelationshipSeed)
-  implicit val relationshipsFormat: RootJsonFormat[Relationships]             = jsonFormat1(Relationships)
-  implicit val relationshipsSeedFormat: RootJsonFormat[RelationshipsSeed]     = jsonFormat1(RelationshipsSeed)
-  implicit val problemFormat: RootJsonFormat[Problem]                         = jsonFormat3(Problem)
-  implicit val tokenFeedFormat: RootJsonFormat[TokenSeed]                     = jsonFormat3(TokenSeed)
+  implicit val relationshipSeedFormat: RootJsonFormat[RelationshipSeed]   = jsonFormat4(RelationshipSeed)
+  implicit val relationshipsFormat: RootJsonFormat[Relationships]         = jsonFormat1(Relationships)
+  implicit val relationshipsSeedFormat: RootJsonFormat[RelationshipsSeed] = jsonFormat1(RelationshipsSeed)
+  implicit val problemFormat: RootJsonFormat[Problem]                     = jsonFormat3(Problem)
+  implicit val onboardingContractInfoFormat: RootJsonFormat[OnboardingContractInfo] = jsonFormat2(
+    OnboardingContractInfo
+  )
+  implicit val tokenSeedFormat: RootJsonFormat[TokenSeed]                     = jsonFormat4(TokenSeed)
   implicit val tokenTextFormat: RootJsonFormat[TokenText]                     = jsonFormat1(TokenText)
   implicit val relationshipBindingFormat: RootJsonFormat[RelationshipBinding] = jsonFormat2(RelationshipBinding)
   implicit val tokenInfoFormat: RootJsonFormat[TokenInfo]                     = jsonFormat3(TokenInfo)
