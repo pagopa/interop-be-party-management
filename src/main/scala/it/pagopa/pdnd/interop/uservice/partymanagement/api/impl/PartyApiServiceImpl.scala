@@ -483,7 +483,7 @@ class PartyApiServiceImpl(
 
   private def confirmRelationships(token: Token, fileParts: (FileInfo, File)): Future[Seq[StatusReply[Unit]]] = {
     for {
-      filePath <- fileManager.store(token.id, fileParts)
+      filePath <- fileManager.store(ApplicationConfiguration.storageContainer)(token.id, fileParts)
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, ref)

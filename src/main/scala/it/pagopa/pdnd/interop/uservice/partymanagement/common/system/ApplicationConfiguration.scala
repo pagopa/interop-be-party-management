@@ -18,4 +18,6 @@ object ApplicationConfiguration {
   def tokenValidityHours: Long = {
     config.getLong("uservice-party-management.token-validity-hours")
   }
+
+  def storageContainer: String = config.getString("uservice-party-management.storage.container")
 }
