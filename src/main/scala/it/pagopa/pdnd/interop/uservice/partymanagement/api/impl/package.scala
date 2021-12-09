@@ -1,8 +1,9 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model.StatusCode
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
-import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.{uuidFormat, offsetDateTimeFormat}
+import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
@@ -19,7 +20,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val relationshipSeedFormat: RootJsonFormat[RelationshipSeed]   = jsonFormat4(RelationshipSeed)
   implicit val relationshipsFormat: RootJsonFormat[Relationships]         = jsonFormat1(Relationships)
   implicit val relationshipsSeedFormat: RootJsonFormat[RelationshipsSeed] = jsonFormat1(RelationshipsSeed)
-  implicit val problemFormat: RootJsonFormat[Problem]                     = jsonFormat3(Problem)
+  implicit val problemErrorFormat: RootJsonFormat[ProblemError]           = jsonFormat2(ProblemError)
+  implicit val problemFormat: RootJsonFormat[Problem]                     = jsonFormat5(Problem)
   implicit val onboardingContractInfoFormat: RootJsonFormat[OnboardingContractInfo] = jsonFormat2(
     OnboardingContractInfo
   )
@@ -29,4 +31,18 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val tokenInfoFormat: RootJsonFormat[TokenInfo]                     = jsonFormat3(TokenInfo)
   implicit val bulkPartiesSeedFormat: RootJsonFormat[BulkPartiesSeed]         = jsonFormat1(BulkPartiesSeed)
   implicit val bulkOrganizationsFormat: RootJsonFormat[BulkOrganizations]     = jsonFormat2(BulkOrganizations)
+
+  def problemOf(
+    httpError: StatusCode,
+    errorCode: String,
+    exception: Throwable = new RuntimeException(),
+    defaultMessage: String = "Unknown error"
+  ): Problem =
+    Problem(
+      `type` = "about:blank",
+      status = httpError.intValue,
+      title = httpError.defaultMessage,
+      errors =
+        Seq(ProblemError(code = s"001-$errorCode", detail = Option(exception.getMessage).getOrElse(defaultMessage)))
+    )
 }

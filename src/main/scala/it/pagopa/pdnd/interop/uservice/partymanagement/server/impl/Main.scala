@@ -7,6 +7,7 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDae
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
@@ -22,11 +23,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
   PartyApiMarshallerImpl,
-  PartyApiServiceImpl
+  PartyApiServiceImpl,
+  problemOf
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   Command,
   PartyPersistentBehavior,
@@ -145,7 +146,8 @@ object Main extends App {
               println(item.severity())
             }
             val message = e.results().items().asScala.map(_.message()).mkString("\n")
-            complete(400, Problem(Some(message), 400, "bad request"))(marshallerImpl.toEntityMarshallerProblem)
+            val error   = problemOf(StatusCodes.BadRequest, "0000", defaultMessage = message)
+            complete(error.status, error)(marshallerImpl.toEntityMarshallerProblem)
           })
         )
 
