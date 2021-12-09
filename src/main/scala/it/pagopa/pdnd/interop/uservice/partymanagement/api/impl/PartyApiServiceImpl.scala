@@ -4,6 +4,7 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -102,13 +103,16 @@ class PartyApiServiceImpl(
           .convertToApi(statusReply.getValue)
           .swap
           .fold(
-            _ => createOrganization400(Problem(detail = None, status = 400, title = "some error")),
+            _ => createOrganization400(problemOf(StatusCodes.BadRequest, "001")),
             organization => createOrganization201(organization)
           )
       case Success(_) =>
-        createOrganization400(Problem(detail = None, status = 400, title = "some error"))
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, "0002")
+        createOrganization400(errorResponse)
       case Failure(ex) =>
-        createOrganization400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, "0003", ex)
+        createOrganization400(errorResponse)
+
     }
 
   }
@@ -133,13 +137,11 @@ class PartyApiServiceImpl(
           .convertToApi(statusReply.getValue)
           .swap
           .fold(
-            _ => addOrganizationAttributes404(Problem(detail = None, status = 400, title = "some error")),
+            _ => addOrganizationAttributes404(problemOf(StatusCodes.BadRequest, "0004")),
             organization => addOrganizationAttributes200(organization)
           )
       case statusReply =>
-        addOrganizationAttributes404(
-          Problem(detail = Option(statusReply.getError.getMessage), status = 404, title = "some error")
-        )
+        addOrganizationAttributes404(problemOf(StatusCodes.NotFound, "0005", statusReply.getError))
     }
 
   }
@@ -163,12 +165,9 @@ class PartyApiServiceImpl(
       case statusReply if statusReply.isSuccess =>
         Party
           .convertToApi(statusReply.getValue)
-          .fold(
-            _ => createPerson400(Problem(detail = None, status = 400, title = "some error")),
-            person => createPerson201(person)
-          )
+          .fold(_ => createPerson400(problemOf(StatusCodes.BadRequest, "0006")), person => createPerson201(person))
       case statusReply =>
-        createPerson400(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
+        createPerson400(problemOf(StatusCodes.BadRequest, "0007", statusReply.getError))
     }
 
   }
@@ -249,7 +248,7 @@ class PartyApiServiceImpl(
     onComplete(result) {
       case Success(relationship) => createRelationship201(relationship)
       case Failure(ex) =>
-        createRelationship400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        createRelationship400(problemOf(StatusCodes.BadRequest, "0008", ex))
     }
 
   }
@@ -334,7 +333,7 @@ class PartyApiServiceImpl(
     onComplete(result) {
       case Success(relationships) => getRelationships200(Relationships(relationships))
       case Failure(ex) =>
-        getRelationships400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getRelationships400(problemOf(StatusCodes.BadRequest, "0009", ex))
     }
 
   }
@@ -379,9 +378,9 @@ class PartyApiServiceImpl(
       case Success(token) =>
         getToken200(token)
       case Failure(ex: TokenNotFound) =>
-        getToken404(Problem(detail = Option(ex.getMessage), status = 404, title = "Token not found"))
+        getToken404(problemOf(StatusCodes.NotFound, "0009", ex, "Token not found"))
       case Failure(ex) =>
-        getToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getToken400(problemOf(StatusCodes.BadRequest, "0010", ex))
     }
   }
 
@@ -406,10 +405,10 @@ class PartyApiServiceImpl(
       case Success(statusReplies) if statusReplies.exists(_.isError) =>
         val errors: String =
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
-        consumeToken400(Problem(detail = Option(errors), status = 400, title = "some error"))
+        consumeToken400(problemOf(StatusCodes.BadRequest, "0011", defaultMessage = errors))
       case Success(_) => consumeToken201
       case Failure(ex) =>
-        consumeToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        consumeToken400(problemOf(StatusCodes.BadRequest, "0012", ex))
     }
 
   }
@@ -431,10 +430,10 @@ class PartyApiServiceImpl(
       case Success(statusReplies) if statusReplies.exists(_.isError) =>
         val errors: String =
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
-        invalidateToken400(Problem(detail = Option(errors), status = 400, title = "some error"))
+        invalidateToken400(problemOf(StatusCodes.BadRequest, "0013", defaultMessage = errors))
       case Success(_) => invalidateToken200
       case Failure(ex) =>
-        invalidateToken400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        invalidateToken400(problemOf(StatusCodes.BadRequest, "0014", ex))
     }
 
   }
@@ -500,13 +499,13 @@ class PartyApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
         logger.error(s"Error trying to create element: ${statusReply.getError.getMessage}")
-        failure(Problem(detail = Option(statusReply.getError.getMessage), status = 400, title = "some error"))
+        failure(problemOf(StatusCodes.BadRequest, "0015", statusReply.getError))
       case Success(a) =>
         logger.info(s"Element successfully created")
         success(a.getValue)
       case Failure(ex) =>
         logger.error(s"Error trying to create element: ${ex.getMessage}")
-        failure(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        failure(problemOf(StatusCodes.BadRequest, "0016", ex))
     }
   }
 
@@ -527,8 +526,9 @@ class PartyApiServiceImpl(
       case Success(result) if result.isSuccess =>
         getPartyAttributes200(result.getValue)
       case Success(_) =>
-        complete((500, Problem(None, status = 500, "Unexpected error")))
-      case Failure(ex) => getPartyAttributes404(Problem(Option(ex.getMessage), status = 404, "party not found"))
+        val error = problemOf(StatusCodes.InternalServerError, "0016")
+        complete((error.status, error))
+      case Failure(ex) => getPartyAttributes404(problemOf(StatusCodes.NotFound, "0017", ex, "Party not found"))
     }
   }
 
@@ -583,7 +583,7 @@ class PartyApiServiceImpl(
   ): Route = {
 
     def notFound: Route = getOrganizationById404(
-      Problem(Option(s"Organization $id Not Found"), status = 404, "organization not found")
+      problemOf(StatusCodes.NotFound, "0020", defaultMessage = s"Organization $id Not Found")
     )
 
     val organizations = for {
@@ -598,7 +598,7 @@ class PartyApiServiceImpl(
             Party.convertToApi(reply).swap.fold(_ => notFound, p => getOrganizationById200(p))
           }
       case Failure(ex) =>
-        getOrganizationById404(Problem(Option(ex.getMessage), status = 404, "organization not found"))
+        getOrganizationById404(problemOf(StatusCodes.NotFound, "0019", ex, "Organization not found"))
     }
   }
 
@@ -612,7 +612,9 @@ class PartyApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    def notFound: Route = getPersonById404(Problem(Option(s"Person $id Not Found"), status = 404, "person not found"))
+    def notFound: Route = getPersonById404(
+      problemOf(StatusCodes.NotFound, "0021", defaultMessage = s"Person $id Not Found")
+    )
 
     val persons = for {
       personUUID <- id.toFutureUUID
@@ -625,7 +627,7 @@ class PartyApiServiceImpl(
           Party.convertToApi(reply).fold(_ => notFound, p => getPersonById200(p))
         }
       case Failure(ex) =>
-        getPersonById404(Problem(Option(ex.getMessage), status = 404, "person not found"))
+        getPersonById404(problemOf(StatusCodes.NotFound, "0022", ex, s"Person Not Found"))
     }
   }
 
@@ -653,9 +655,9 @@ class PartyApiServiceImpl(
 
     onComplete(result) {
       case Success(Some(relationship)) => getRelationshipById200(relationship)
-      case Success(None)               => getRelationshipById404(Problem(detail = None, status = 404, title = "some error"))
+      case Success(None)               => getRelationshipById404(problemOf(StatusCodes.NotFound, "0023"))
       case Failure(ex) =>
-        getRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getRelationshipById400(problemOf(StatusCodes.BadRequest, "0024", ex))
     }
   }
 
@@ -685,7 +687,7 @@ class PartyApiServiceImpl(
         )
         bulkOrganizations200(response)
       case Failure(ex) =>
-        bulkOrganizations404(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        bulkOrganizations404(problemOf(StatusCodes.NotFound, "0025", ex))
     }
 
   }
@@ -714,7 +716,7 @@ class PartyApiServiceImpl(
       case Success(_) =>
         activatePartyRelationshipById204
       case Failure(ex) =>
-        activatePartyRelationshipById404(Problem(Option(ex.getMessage), status = 404, "Relationship not found"))
+        activatePartyRelationshipById404(problemOf(StatusCodes.NotFound, "0026", ex, "Relationship not found"))
     }
   }
 
@@ -742,7 +744,7 @@ class PartyApiServiceImpl(
       case Success(_) =>
         suspendPartyRelationshipById204
       case Failure(ex) =>
-        suspendPartyRelationshipById404(Problem(Option(ex.getMessage), status = 404, "Relationship not found"))
+        suspendPartyRelationshipById404(problemOf(StatusCodes.NotFound, "0027", ex, "Relationship not found"))
     }
   }
 
@@ -768,11 +770,14 @@ class PartyApiServiceImpl(
           .convertToApi(statusReply)
           .swap
           .fold(
-            _ => getOrganizationByExternalId400(Problem(detail = None, status = 400, title = "some error")),
+            _ =>
+              getOrganizationByExternalId400(
+                problemOf(StatusCodes.BadRequest, "0028", defaultMessage = "Relationship not found")
+              ),
             organization => getOrganizationByExternalId200(organization)
           )
       case Failure(ex) =>
-        getOrganizationByExternalId400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        getOrganizationByExternalId400(problemOf(StatusCodes.BadRequest, "0029", ex))
     }
 
   }
@@ -803,16 +808,16 @@ class PartyApiServiceImpl(
           deleteRelationshipById204
         } else {
           deleteRelationshipById404(
-            Problem(
-              detail = Some(s"Error while deleting relationship $relationshipId"),
-              status = 404,
-              title = "some error"
+            problemOf(
+              StatusCodes.NotFound,
+              "0030",
+              defaultMessage = s"Error while deleting relationship $relationshipId"
             )
           )
         }
-      case Success(None) => deleteRelationshipById404(Problem(detail = None, status = 404, title = "some error"))
+      case Success(None) => deleteRelationshipById404(problemOf(StatusCodes.NotFound, "0031"))
       case Failure(ex) =>
-        deleteRelationshipById400(Problem(detail = Option(ex.getMessage), status = 400, title = "some error"))
+        deleteRelationshipById400(problemOf(StatusCodes.BadRequest, "0032", ex))
     }
   }
 }
