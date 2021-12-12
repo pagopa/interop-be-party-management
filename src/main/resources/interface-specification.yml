@@ -102,6 +102,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Person'
+        '409':
+          description: Person already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '400':
           description: Invalid ID supplied
           content:
@@ -128,6 +134,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Organization'
+        '409':
+          description: Organization already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '400':
           description: Invalid ID supplied
           content:
@@ -302,6 +314,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Relationship'
+        '409':
+          description: Relationship already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '400':
           description: Invalid ID supplied
           content:
