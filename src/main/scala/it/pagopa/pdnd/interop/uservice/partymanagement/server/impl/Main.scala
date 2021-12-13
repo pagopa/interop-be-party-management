@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.server.impl
 
+import akka.actor.CoordinatedShutdown
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.cluster.ClusterEvent
@@ -9,14 +10,15 @@ import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
-import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
-import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
+import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
+import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
+import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
@@ -42,14 +44,23 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
+import scala.util.Try
+
+//shuts down the actor system in case of startup errors
+case object StartupErrorShutdown extends CoordinatedShutdown.Reason
 
 object Main extends App {
 
-  val fileManager = FileManager
-    .getConcreteImplementation(ApplicationConfiguration.runtimeFileManager)
-    .get //end of the world here: if no valid file manager is configured, the application must break.
+  val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
+    fileManager <- FileManager.getConcreteImplementation(ApplicationConfiguration.runtimeFileManager)
+    keyset      <- JWTConfiguration.jwtReader.loadKeyset()
+    jwtValidator = new DefaultJWTReader with PublicKeysHolder {
+      var publicKeyset = keyset
+    }
+  } yield (fileManager, jwtValidator)
 
-  Kamon.init()
+  val (fileManager, jwtValidator) =
+    dependenciesLoaded.get //THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
 
   def buildPersistentEntity(
     offsetDateTimeSupplier: OffsetDateTimeSupplier
@@ -62,8 +73,9 @@ object Main extends App {
       )
     }
 
-  locally {
+  Kamon.init()
 
+  locally {
     val _ = ActorSystem[Nothing](
       Behaviors.setup[Nothing] { context =>
         import akka.actor.typed.scaladsl.adapter._
@@ -119,14 +131,15 @@ object Main extends App {
             fileManager
           ),
           marshallerImpl,
-          SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
+          jwtValidator.OAuth2JWTValidatorAsContexts
         )
 
-        val healthApi: HealthApi = new HealthApi(
-          new HealthServiceApiImpl(),
-          new HealthApiMarshallerImpl(),
-          SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
-        )
+        val healthApi: HealthApi =
+          new HealthApi(
+            new HealthServiceApiImpl(),
+            new HealthApiMarshallerImpl(),
+            jwtValidator.OAuth2JWTValidatorAsContexts
+          )
 
         val _ = AkkaManagement.get(classicSystem).start()
 
@@ -171,4 +184,5 @@ object Main extends App {
     )
 
   }
+
 }
