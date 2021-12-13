@@ -1,6 +1,5 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.server.impl
 
-import akka.actor.CoordinatedShutdown
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.cluster.ClusterEvent
