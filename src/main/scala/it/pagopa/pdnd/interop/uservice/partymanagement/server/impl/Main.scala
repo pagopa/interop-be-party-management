@@ -46,9 +46,6 @@ import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
-//shuts down the actor system in case of startup errors
-case object StartupErrorShutdown extends CoordinatedShutdown.Reason
-
 object Main extends App {
 
   val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
