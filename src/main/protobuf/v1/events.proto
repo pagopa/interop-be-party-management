@@ -61,8 +61,3 @@ message TokenAddedV1 {
   required TokenV1 token = 1;
 }
 
-message TokenDeletedV1 {
-  required TokenV1 token = 1;
-}
-
-

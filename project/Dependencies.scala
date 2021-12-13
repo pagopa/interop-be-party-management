@@ -77,6 +77,7 @@ object Dependencies {
 
     lazy val commons     = namespace %% "pdnd-interop-commons-utils"        % commonsVersion
     lazy val commonsFile = namespace %% "pdnd-interop-commons-file-manager" % commonsVersion
+    lazy val commonsJWT  = namespace %% "pdnd-interop-commons-jwt"          % commonsVersion
 
   }
 
@@ -132,6 +133,7 @@ object Dependencies {
       openapi4j.operationValidator % Compile,
       pagopa.commons               % Compile,
       pagopa.commonsFile           % Compile,
+      pagopa.commonsJWT            % Compile,
       postgres.jdbc                % Compile,
       scalpb.core                  % "protobuf",
       akka.testkit                 % Test,
