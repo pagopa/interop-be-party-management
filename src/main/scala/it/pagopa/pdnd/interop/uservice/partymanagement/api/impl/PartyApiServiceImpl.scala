@@ -437,12 +437,13 @@ class PartyApiServiceImpl(
     )
   } yield party
 
-  private def getPartyRelationship(relationshipSeed: RelationshipSeed): Future[PersistedPartyRelationship] =
+  private def getPartyRelationship(relationship: Relationship): Future[PersistedPartyRelationship] =
     relationshipByInvolvedParties(
-      from = relationshipSeed.from,
-      to = relationshipSeed.to,
-      role = PersistedPartyRole.fromApi(relationshipSeed.role),
-      product = relationshipSeed.product
+      from = relationship.from,
+      to = relationship.to,
+      role = PersistedPartyRole.fromApi(relationship.role),
+      productId = relationship.product.id,
+      productRole = relationship.product.role
     )
 
   private def isRelationshipAllowed(
@@ -529,7 +530,8 @@ class PartyApiServiceImpl(
     from: UUID,
     to: UUID,
     role: PersistedPartyRole,
-    product: RelationshipProductSeed
+    productId: String,
+    productRole: String
   ): Future[PersistedPartyRelationship] = {
 
     for {
@@ -538,8 +540,8 @@ class PartyApiServiceImpl(
           from = from,
           to = to,
           role = role,
-          product = product.id,
-          productRole = product.role,
+          product = productId,
+          productRole = productRole,
           ref
         )
       )
@@ -558,7 +560,7 @@ class PartyApiServiceImpl(
     role: PersistedPartyRole,
     product: RelationshipProductSeed
   ): Future[Boolean] = {
-    relationshipByInvolvedParties(from, to, role, product).transformWith {
+    relationshipByInvolvedParties(from, to, role, product.id, product.role).transformWith {
       case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
       case Failure(_) => Future.successful(true)
     }

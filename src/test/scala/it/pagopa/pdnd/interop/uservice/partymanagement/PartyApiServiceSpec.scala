@@ -1088,6 +1088,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           role = PartyRole.MANAGER,
           RelationshipProductSeed(id = "p1", role = "admin")
         )
+      val relationship =
+        Relationship(
+          id = UUID.randomUUID(),
+          from = personUuid,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          product = RelationshipProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now()),
+          state = RelationshipState.PENDING,
+          createdAt = OffsetDateTime.now()
+        )
       val relationshipId = UUID.randomUUID()
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
@@ -1102,7 +1112,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
 
-      confirmRelationshipWithToken(relationshipSeed)
+      confirmRelationshipWithToken(relationship)
 
       val suspensionResponse =
         Http()
@@ -1168,6 +1178,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           role = PartyRole.MANAGER,
           RelationshipProductSeed(id = "p1", role = "admin")
         )
+      val relationship =
+        Relationship(
+          id = UUID.randomUUID(),
+          from = personUuid,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          product = RelationshipProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now()),
+          state = RelationshipState.PENDING,
+          createdAt = OffsetDateTime.now()
+        )
       val relationshipId = UUID.randomUUID()
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
@@ -1183,7 +1203,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
 
-      confirmRelationshipWithToken(relationshipSeed)
+      confirmRelationshipWithToken(relationship)
 
       // First suspend the relationship
       val suspensionResponse =
@@ -1264,6 +1284,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           role = PartyRole.MANAGER,
           RelationshipProductSeed(id = "p1", role = "admin")
         )
+      val relationship =
+        Relationship(
+          id = UUID.randomUUID(),
+          from = personUuid,
+          to = orgUuid,
+          role = PartyRole.MANAGER,
+          product = RelationshipProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now()),
+          state = RelationshipState.PENDING,
+          createdAt = OffsetDateTime.now()
+        )
       val relationshipId = UUID.randomUUID()
 
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
@@ -1278,7 +1308,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
 
-      confirmRelationshipWithToken(relationshipSeed)
+      confirmRelationshipWithToken(relationship)
 
       val deleteResponse =
         Http()
@@ -1346,7 +1376,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val relationshipResponse = prepareTest(personSeed1, organizationSeed1, relationshipSeed1, relationshipSeed2)
 
-      val relationships = Unmarshal(relationshipResponse.entity).to[RelationshipsSeed].futureValue
+      val relationships = Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
 
       val tokenSeed =
         TokenSeed(id = tokenId1, relationships = relationships, "checksum", OnboardingContractInfo("1", "test.html"))

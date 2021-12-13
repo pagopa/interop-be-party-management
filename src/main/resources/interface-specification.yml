@@ -920,7 +920,7 @@ components:
           type: string
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
         relationships:
-          $ref: '#/components/schemas/RelationshipsSeed'
+          $ref: '#/components/schemas/Relationships'
         checksum:
           type: string
         contractInfo:

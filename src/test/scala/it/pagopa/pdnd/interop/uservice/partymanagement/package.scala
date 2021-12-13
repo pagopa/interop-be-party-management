@@ -47,12 +47,12 @@ package object partymanagement extends MockFactory {
     create(data, "tokens")
 
   def confirmRelationshipWithToken(
-    relationshipSeed: RelationshipSeed
+    relationship: Relationship
   )(implicit as: ActorSystem, ec: ExecutionContext): HttpResponse = {
     val tokenSeed =
       TokenSeed(
         id = UUID.randomUUID().toString,
-        relationships = RelationshipsSeed(Seq(relationshipSeed)),
+        relationships = Relationships(Seq(relationship)),
         "checksum",
         OnboardingContractInfo("test", "test")
       )
