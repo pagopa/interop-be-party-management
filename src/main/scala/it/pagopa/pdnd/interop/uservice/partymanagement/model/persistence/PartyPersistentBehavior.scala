@@ -115,7 +115,7 @@ object PartyPersistentBehavior {
 
             Effect
               .persist(PartyRelationshipAdded(partyRelationship))
-              .thenRun(_ => replyTo ! StatusReply.Success(()))
+              .thenRun(_ => replyTo ! StatusReply.Success(partyRelationship))
 
           }
 

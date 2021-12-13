@@ -29,7 +29,7 @@ final case class GetOrganizationByExternalId(externalId: String, replyTo: ActorR
 /* PartyRelationship Command */
 final case class AddPartyRelationship(
   partyRelationship: PersistedPartyRelationship,
-  replyTo: ActorRef[StatusReply[Unit]]
+  replyTo: ActorRef[StatusReply[PersistedPartyRelationship]]
 ) extends PartyRelationshipCommand
 
 final case class ConfirmPartyRelationship(

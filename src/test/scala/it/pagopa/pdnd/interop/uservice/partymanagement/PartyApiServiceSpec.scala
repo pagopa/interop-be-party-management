@@ -194,7 +194,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body shouldBe personExpected2
     }
 
-    "return 400 if person already exists" in {
+    "return 409 if person already exists" in {
 
       (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
 
@@ -207,7 +207,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = createPerson(data)
 
-      response.status shouldBe StatusCodes.BadRequest
+      response.status shouldBe StatusCodes.Conflict
 
     }
   }
