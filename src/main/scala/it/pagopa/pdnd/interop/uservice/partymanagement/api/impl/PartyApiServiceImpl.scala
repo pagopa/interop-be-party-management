@@ -109,7 +109,7 @@ class PartyApiServiceImpl(
       case Success(_) =>
         val errorResponse: Problem = problemOf(StatusCodes.Conflict, "0002")
         createOrganization409(errorResponse)
-      case Failure(ex:OrganizationAlreadyExists) =>
+      case Failure(ex: OrganizationAlreadyExists) =>
         val errorResponse: Problem = problemOf(StatusCodes.Conflict, "0003", ex)
         createOrganization409(errorResponse)
       case Failure(ex) =>
