@@ -36,11 +36,6 @@ object Dependencies {
     lazy val s3           = awsNamespace % "s3" % awsSdkVersion
   }
 
-  private[this] object azure {
-    lazy val namespace   = "com.azure"
-    lazy val storageBlob = namespace % "azure-storage-blob" % azureStorageBlobVersion
-  }
-
   private[this] object cats {
     lazy val namespace = "org.typelevel"
     lazy val core      = namespace %% "cats-core" % catsVersion
@@ -124,7 +119,6 @@ object Dependencies {
       akka.slf4j                   % Compile,
       akka.stream                  % Compile,
       aws.s3                       % Compile,
-      azure.storageBlob            % Compile,
       cats.core                    % Compile,
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,

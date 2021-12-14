@@ -7,8 +7,6 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDae
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives.complete
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
@@ -24,8 +22,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
   PartyApiMarshallerImpl,
-  PartyApiServiceImpl,
-  problemOf
+  PartyApiServiceImpl
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
@@ -42,7 +39,6 @@ import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
-import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object Main extends App {
@@ -139,26 +135,7 @@ object Main extends App {
 
         val _ = AkkaManagement.get(classicSystem).start()
 
-        val controller = new Controller(
-          healthApi,
-          partyApi,
-          validationExceptionToRoute = Some(e => {
-            val results = e.results()
-            results.crumbs().asScala.foreach { crumb =>
-              println(crumb.crumb())
-            }
-            results.items().asScala.foreach { item =>
-              println(item.dataCrumbs())
-              println(item.dataJsonPointer())
-              println(item.schemaCrumbs())
-              println(item.message())
-              println(item.severity())
-            }
-            val message = e.results().items().asScala.map(_.message()).mkString("\n")
-            val error   = problemOf(StatusCodes.BadRequest, "0000", defaultMessage = message)
-            complete(error.status, error)(marshallerImpl.toEntityMarshallerProblem)
-          })
-        )
+        val controller = new Controller(healthApi, partyApi)
 
         val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
 
