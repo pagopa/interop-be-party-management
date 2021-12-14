@@ -21,6 +21,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.partymanagement.error.{
   OrganizationAlreadyExists,
   OrganizationNotFound,
+  RelationshipAlreadyExists,
   TokenNotFound
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
@@ -243,7 +244,9 @@ class PartyApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) if statusReply.isSuccess => createRelationship201(statusReply.getValue.toRelationship)
       case Success(statusReply)                          => createRelationship409(problemOf(StatusCodes.Conflict, "0010", statusReply.getError))
-      case Failure(ex)                                   => createRelationship400(problemOf(StatusCodes.BadRequest, "0011", ex))
+      case Failure(ex: RelationshipAlreadyExists) =>
+        createRelationship409(problemOf(StatusCodes.Conflict, "0036", ex))
+      case Failure(ex) => createRelationship400(problemOf(StatusCodes.BadRequest, "0011", ex))
     }
 
   }
@@ -564,7 +567,7 @@ class PartyApiServiceImpl(
     product: RelationshipProductSeed
   ): Future[Boolean] = {
     relationshipByInvolvedParties(from, to, role, product.id, product.role).transformWith {
-      case Success(_) => Future.failed(new RuntimeException("Relationship already existing"))
+      case Success(_) => Future.failed(RelationshipAlreadyExists(from, to, role, product))
       case Failure(_) => Future.successful(true)
     }
   }
