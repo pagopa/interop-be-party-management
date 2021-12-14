@@ -567,8 +567,8 @@ class PartyApiServiceImpl(
     product: RelationshipProductSeed
   ): Future[Boolean] = {
     relationshipByInvolvedParties(from, to, role, product.id, product.role).transformWith {
-      case Success(_) => Future.failed(RelationshipAlreadyExists(from, to, role, product))
-      case Failure(_) => Future.successful(true)
+      case Success(relationship) => Future.failed(RelationshipAlreadyExists(relationship.id))
+      case Failure(_)            => Future.successful(true)
     }
   }
 
