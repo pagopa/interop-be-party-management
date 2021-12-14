@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <define name="applicationName" class="it.pagopa.pdnd.interop.uservice.partymanagement.common.system.LogbackApplicationName"/>
+
+    <property name="LOG_PATTERN" value="${buildinfo.BuildInfo.name}"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
-        <encoder>
-            <pattern>[%date{ISO8601}] [%level] [%logger] - %msg %n</pattern>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="it.pagopa.pdnd.interop.commons.utils.LoggerLayout"/>
         </encoder>
     </appender>
-
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>8192</queueSize>
         <neverBlock>true</neverBlock>
         <appender-ref ref="CONSOLE" />
     </appender>
 
-    <root level="INFO">
+    <root name="application" level="INFO">
         <appender-ref ref="ASYNC"/>
     </root>
 

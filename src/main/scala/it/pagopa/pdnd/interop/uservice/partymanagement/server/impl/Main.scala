@@ -81,10 +81,10 @@ object Main extends App {
 
         val cluster = Cluster(context.system)
 
-        context.log.error(s"""Started [ ${context.system} ]
-                             |   cluster.selfAddress   = ${cluster.selfMember.address}
-                             |   file manager type     = ${fileManager.getClass.getName}
-                             |   build info            = ${buildinfo.BuildInfo.toString}""".stripMargin)
+        context.log.info(s"""Started [ ${context.system} ]
+                            |   cluster.selfAddress   = ${cluster.selfMember.address}
+                            |   file manager type     = ${fileManager.getClass.getName}
+                            |   build info            = ${buildinfo.BuildInfo.toString}""".stripMargin)
 
         val uuidSupplier: UUIDSupplier                     = new UUIDSupplierImpl
         val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplierImp

@@ -2,6 +2,9 @@ package {{invokerPackage}}
 
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import akka.event.Logging
+import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
+import akka.http.scaladsl.server.{Directive0, Route, RouteResult}
 {{#apiInfo}}{{#apis}}{{#operations}}import {{package}}.{{classname}}
 {{/operations}}{{/apis}}{{/apiInfo}}
 import akka.http.scaladsl.server.Directives._
@@ -99,12 +102,28 @@ complete(HttpEntity(ContentTypes.`application/json`, buildinfo.BuildInfo.toJson)
 }
 }
 
+  /**
+    * Logs request and response statuses
+    * @return logging directive
+    */
+  def logHttp: Directive0 = {
+    def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
+      case RouteResult.Complete(res) =>
+        Some(LogEntry(s"Request ${req.uri} : Response ${res.status} ${res.headers}", Logging.DebugLevel))
+      case RouteResult.Rejected(rej) =>
+        Some(LogEntry(s"Request ${req.uri} : Response ${rej}", Logging.DebugLevel))
+    }
+    DebuggingDirectives.logRequestResult(logWithoutBody _)
+  }
+
 lazy val routes: Route = getBuildInfo ~ pathPrefix("{{projectName}}" / interfaceVersion) {
 toStrictEntity(strictnessTimeout) {
 extractRequest {
 request =>
 validationFunction(request){
+logHttp {
 {{#apiInfo}}{{#apis}}{{#operations}}{{classVarName}}.route {{^-last}} ~ {{/-last}}{{/operations}}{{/apis}}{{/apiInfo}}
+}
 }
 } ~ getFromResourceDirectory("swagger-ui") ~ getFromFile(tmpFile)
 }

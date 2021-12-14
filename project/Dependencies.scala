@@ -9,11 +9,16 @@ object Dependencies {
     lazy val actorTyped = namespace %% "akka-actor-typed" % akkaVersion
     lazy val clusterBootstrap =
       "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
-    lazy val clusterHttp     = "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion
-    lazy val clusterSharding = namespace                       %% "akka-cluster-sharding-typed"  % akkaVersion
-    lazy val clusterTools    = namespace                       %% "akka-cluster-tools"           % akkaVersion
-    lazy val clusterTyped    = namespace                       %% "akka-cluster-typed"           % akkaVersion
-    lazy val discovery       = namespace                       %% "akka-discovery"               % akkaVersion
+    lazy val clusterHttp = "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion
+
+    lazy val managementLogLevels =
+      "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
+    lazy val management = "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion
+
+    lazy val clusterSharding = namespace %% "akka-cluster-sharding-typed" % akkaVersion
+    lazy val clusterTools    = namespace %% "akka-cluster-tools"          % akkaVersion
+    lazy val clusterTyped    = namespace %% "akka-cluster-typed"          % akkaVersion
+    lazy val discovery       = namespace %% "akka-discovery"              % akkaVersion
     lazy val discoveryKubernetesApi =
       "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % akkaManagementVersion
     lazy val http             = namespace            %% "akka-http"                    % akkaHttpVersion
@@ -116,6 +121,8 @@ object Dependencies {
       akka.discoveryKubernetesApi  % Compile,
       akka.http                    % Compile,
       akka.httpJson                % Compile,
+      akka.management              % Compile,
+      akka.managementLogLevels     % Compile,
       akka.persistence             % Compile,
       akka.persistenceJdbc         % Compile,
       akka.persistenceQuery        % Compile,
