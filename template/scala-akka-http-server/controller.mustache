@@ -4,7 +4,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.event.Logging
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
-import akka.http.scaladsl.server.{Directive0, Route, RouteResult}
+import akka.http.scaladsl.server.{Directive, Directive1, Directive0, Route, RouteResult}
 {{#apiInfo}}{{#apis}}{{#operations}}import {{package}}.{{classname}}
 {{/operations}}{{/apis}}{{/apiInfo}}
 import akka.http.scaladsl.server.Directives._
