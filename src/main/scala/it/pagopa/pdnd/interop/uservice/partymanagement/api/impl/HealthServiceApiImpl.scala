@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.Logger
-import it.pagopa.pdnd.interop.commons.logging.ContextFieldsToLog
+import it.pagopa.pdnd.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.HealthApiService
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.Problem
 import org.slf4j.LoggerFactory
@@ -15,8 +15,7 @@ class HealthServiceApiImpl extends HealthApiService {
 
   override def getStatus()(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)],
-    contextFieldsToLog: ContextFieldsToLog
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info("Getting component status...")
     val response: Problem = Problem(

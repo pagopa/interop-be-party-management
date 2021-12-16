@@ -46,32 +46,27 @@ import akka.http.scaladsl.server.directives.FileInfo
     {{#hasMarshalling}}import {{classVarName}}Marshaller._
     {{/hasMarshalling}}
 
-   def contextFieldsToLog(uid: Option[String]): Directive1[ContextFieldsToLog] = optionalHeaderValueByName(CORRELATION_ID_HEADER).map(
-       correlationId => ContextFieldsToLog(correlationId, uid)
-   )
-
-   def logHttp(contextFieldsToLog: ContextFieldsToLog): Directive0 = {
-       val context = s"""[${contextFieldsToLog.userId.getOrElse("")}] [${contextFieldsToLog.correlationId.getOrElse("")}]"""
+   private def logHttp(ctxs: Seq[(String, String)]): Directive0 = {
+       val contexts = ctxs.toMap
+       val context =
+         s"""[${contexts.get(UID).getOrElse("")}] [${contexts.get(CORRELATION_ID_HEADER).getOrElse("")}]"""
        def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
          case RouteResult.Complete(res) =>
-           Some(
-             LogEntry(s"${context} - Request ${req.uri} - Response ${res.status}", Logging.InfoLevel)
-           )
+           Some(LogEntry(s"${context} - Request ${req.uri} - Response ${res.status}", Logging.InfoLevel))
          case RouteResult.Rejected(rej) =>
            Some(LogEntry(s"${context} - Request ${req.uri} - Response ${rej}", Logging.InfoLevel))
        }
        DebuggingDirectives.logRequestResult(logWithoutBody _)
-   }
+     }
 
     lazy val route: Route =
     {{#operation}}
         path({{#vendorExtensions.x-paths}}{{#isText}}"{{/isText}}{{value}}{{#isText}}"{{/isText}}{{^-last}} / {{/-last}}{{/vendorExtensions.x-paths}}) { {{^pathParams.isEmpty}}({{#pathParams}}{{paramName}}{{^-last}}, {{/-last}}{{/pathParams}}) => {{/pathParams.isEmpty}}
         {{#lambda.lowercase}}{{httpMethod}}{{/lambda.lowercase}} {
-        wrappingDirective {
-          implicit contexts =>
-            contextFieldsToLog(contexts.find(_._1 == UID).map(_._2)) {
-             implicit contextFieldsToLog =>
-               logHttp(contextFieldsToLog) {
+        optionalHeaderValueByName(CORRELATION_ID_HEADER) { correlationId =>
+               val contextsDirective = wrappingDirective.map(contexts => contexts.prepended((CORRELATION_ID_HEADER, correlationId.getOrElse(""))))
+               contextsDirective { implicit contexts =>
+               logHttp(contexts) {
             {{^queryParams.isEmpty}}
             parameters({{#queryParams}}"{{baseName}}".as[{{dataType}}]{{^required}}.?{{#vendorExtensions.x-has-default-value}}({{{defaultValue}}}){{/vendorExtensions.x-has-default-value}}{{/required}}{{^-last}}, {{/-last}}{{/queryParams}}) { ({{#queryParams}}{{paramName}}{{^-last}}, {{/-last}}{{/queryParams}}) =>{{/queryParams.isEmpty}} {{^headerParams.isEmpty}}
             {{#headerParams}}{{#required}}headerValueByName{{/required}}{{^required}}optionalHeaderValueByName{{/required}}("{{baseName}}") { {{paramName}} => {{/headerParams}}{{/headerParams.isEmpty}}{{^cookieParams.isEmpty}}
@@ -80,7 +75,7 @@ import akka.http.scaladsl.server.directives.FileInfo
             }{{/cookieParams.isEmpty}}{{^headerParams.isEmpty}}
             }{{/headerParams.isEmpty}}{{^queryParams.isEmpty}}
             }{{/queryParams.isEmpty}}
-              }
+            }
             }
           }
         }
@@ -106,7 +101,7 @@ import akka.http.scaladsl.server.directives.FileInfo
         {{/responses}}
         */
         def {{operationId}}({{> operationParam}}){{^vendorExtensions.x-specific-marshallers.isEmpty}}
-            (implicit {{#vendorExtensions.x-specific-marshallers}}toEntityMarshaller{{varName}}: ToEntityMarshaller[{{dataType}}]{{^-last}}, {{/-last}}{{/vendorExtensions.x-specific-marshallers}}, contexts: Seq[(String, String)], contextFieldsToLog: ContextFieldsToLog){{/vendorExtensions.x-specific-marshallers.isEmpty}}: Route
+            (implicit {{#vendorExtensions.x-specific-marshallers}}toEntityMarshaller{{varName}}: ToEntityMarshaller[{{dataType}}]{{^-last}}, {{/-last}}{{/vendorExtensions.x-specific-marshallers}}, contexts: Seq[(String, String)]){{/vendorExtensions.x-specific-marshallers.isEmpty}}: Route
 
     {{/operation}}
     }
