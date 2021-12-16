@@ -53,7 +53,7 @@ object PartyApiServiceSpec {
     .withFallback(testData)
     .resolve()
 
-  def fileManagerType: String = config.getString("uservice-party-management.storage.type")
+  def fileManagerType: String = config.getString("pdnd-interop-commons.storage.type")
 }
 
 class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.config) with AnyWordSpecLike {
