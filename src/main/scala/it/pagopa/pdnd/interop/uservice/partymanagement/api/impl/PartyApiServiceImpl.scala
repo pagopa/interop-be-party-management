@@ -13,7 +13,8 @@ import akka.util.Timeout
 import cats.implicits.toTraverseOps
 import com.typesafe.scalalogging.Logger
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
-import it.pagopa.pdnd.interop.commons.utils.{AkkaUtils, CorrelationId}
+import it.pagopa.pdnd.interop.commons.logging.ContextFieldsToLog
+import it.pagopa.pdnd.interop.commons.utils.{AkkaUtils}
 import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils._
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions._
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
@@ -44,7 +45,7 @@ class PartyApiServiceImpl(
   fileManager: FileManager
 )(implicit ec: ExecutionContext)
     extends PartyApiService {
-  val logger = Logger.takingImplicit[CorrelationId](LoggerFactory.getLogger(this.getClass))
+  val logger = Logger.takingImplicit[ContextFieldsToLog](LoggerFactory.getLogger(this.getClass))
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
@@ -58,7 +59,7 @@ class PartyApiServiceImpl(
     * Code: 404, Message: Organization not found
     */
   override def existsOrganizationById(id: String): Route = {
-    //logger.info(s"Verify organization $id")
+    logger.info(s"Verify organization $id")(ContextFieldsToLog())
 
     val result: Future[Option[Party]] = for {
       uuid <- id.toFutureUUID
@@ -80,7 +81,7 @@ class PartyApiServiceImpl(
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
     logger.info(s"Creating organization ${organizationSeed.description}")
 
@@ -117,7 +118,6 @@ class PartyApiServiceImpl(
       case Failure(ex) =>
         val errorResponse: Problem = problemOf(StatusCodes.BadRequest, "0004", ex)
         createOrganization400(errorResponse)
-
     }
 
   }
@@ -129,9 +129,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info(s"Adding attributes to organization {}", organizationId)
     val result: Future[StatusReply[Party]] = for {
       uuid <- organizationId.toFutureUUID
       r    <- getCommander(organizationId).ask(ref => AddAttributes(uuid, requestBody, ref))
@@ -159,9 +159,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-    logger.info(s"Creating person ${personSeed.id.toString}")
+    logger.info("Creating person {}", personSeed.id.toString)
 
     val party: Party = PersonParty.fromApi(personSeed, offsetDateTimeSupplier)
 
@@ -188,7 +188,7 @@ class PartyApiServiceImpl(
     * Code: 404, Message: Person not found
     */
   override def existsPersonById(id: String): Route = {
-    //logger.info(s"Verify person $id")
+    logger.info("Verify if person with the following id exists: {}", id)(ContextFieldsToLog())
 
     val result: Future[Option[Party]] = for {
       uuid <- id.toFutureUUID
@@ -209,9 +209,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Creating relationship")
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
@@ -267,11 +267,11 @@ class PartyApiServiceImpl(
     toEntityMarshallerRelationships: ToEntityMarshaller[Relationships],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
 
-    logger.error(s"Getting relationships for from: ${from.getOrElse("Empty")}/ to: ${to
-      .getOrElse("Empty")}/roles: $roles/states: $states/products: $products/productRoles: $productRoles")
+    logger.info(s"Getting relationships for from: ${from.getOrElse("Empty")} / to: ${to
+      .getOrElse("Empty")}/ roles: $roles/ states: $states/ products: $products/ productRoles: $productRoles")
 
     def retrieveRelationshipsByTo(
       id: UUID,
@@ -346,9 +346,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerTokenText: ToEntityMarshaller[TokenText],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-    logger.info(s"Creating token ${tokenSeed.toString}")
+    logger.info("Creating token {}", tokenSeed.toString)
 
     val result: Future[StatusReply[TokenText]] = for {
       partyRelationships <- Future.traverse(tokenSeed.relationships.items)(getPartyRelationship)
@@ -368,9 +368,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerTokenInfo: ToEntityMarshaller[TokenInfo],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Getting token {}", tokenId)
     val result: Future[TokenInfo] = for {
       tokenIdUUID <- tokenId.toFutureUUID
       result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
@@ -393,8 +393,9 @@ class PartyApiServiceImpl(
   override def consumeToken(tokenId: String, doc: (FileInfo, File))(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
+    logger.info("Consuming token {}", tokenId)
     val results: Future[Seq[StatusReply[Unit]]] = for {
       tokenIdUUID <- tokenId.toFutureUUID
       found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
@@ -422,8 +423,9 @@ class PartyApiServiceImpl(
   override def invalidateToken(tokenId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
+    logger.info("Invalidating token {}", tokenId)
     val results: Future[Seq[StatusReply[Unit]]] = for {
       tokenIdUUID <- tokenId.toFutureUUID
       found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
@@ -498,17 +500,17 @@ class PartyApiServiceImpl(
   }
 
   private def manageCreationResponse[A](result: Future[StatusReply[A]], success: A => Route, failure: Problem => Route)(
-    implicit correlationId: CorrelationId
+    implicit contextFieldsToLog: ContextFieldsToLog
   ): Route = {
     onComplete(result) {
       case Success(statusReply) if statusReply.isError =>
-        logger.error(s"Error trying to create element: ${statusReply.getError.getMessage}")
+        logger.info("Error trying to create element: {}", statusReply.getError.getMessage)
         failure(problemOf(StatusCodes.BadRequest, "0021", statusReply.getError))
       case Success(a) =>
         logger.info(s"Element successfully created")
         success(a.getValue)
       case Failure(ex) =>
-        logger.error(s"Error trying to create element: ${ex.getMessage}")
+        logger.info("Error trying to create element: {}", ex.getMessage)
         failure(problemOf(StatusCodes.BadRequest, "0022", ex))
     }
   }
@@ -520,9 +522,9 @@ class PartyApiServiceImpl(
   override def getPartyAttributes(id: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Getting party {} attributes", id)
     val attributes: Future[StatusReply[Seq[String]]] = for {
       uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetPartyAttributes(uuid, ref))
@@ -546,7 +548,6 @@ class PartyApiServiceImpl(
     productId: String,
     productRole: String
   ): Future[PersistedPartyRelationship] = {
-
     for {
       maybeRelationship <- getCommander(from.toString).ask(ref =>
         GetPartyRelationshipByAttributes(
@@ -587,9 +588,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Getting organization with id {}", id)
     def notFound: Route = getOrganizationById404(
       problemOf(StatusCodes.NotFound, "0023", defaultMessage = s"Organization $id Not Found")
     )
@@ -618,9 +619,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerPerson: ToEntityMarshaller[Person],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Getting person with id {}", id)
     def notFound: Route = getPersonById404(
       problemOf(StatusCodes.NotFound, "0025", defaultMessage = s"Person $id Not Found")
     )
@@ -647,9 +648,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerRelationship: ToEntityMarshaller[Relationship],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-    logger.info(s"Retrieving relationship $relationshipId")
+    logger.info("Getting relationship with id {}", relationshipId)
 
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -679,8 +680,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerBulkOrganizations: ToEntityMarshaller[BulkOrganizations],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
+    logger.info("Bulk organizations")
 
     def getParty(id: UUID): Future[Option[Party]] =
       getCommander(id.toString).ask(ref => GetParty(id, ref))
@@ -710,9 +712,9 @@ class PartyApiServiceImpl(
   override def activatePartyRelationshipById(relationshipId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Activating relationship with id {}", relationshipId)
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
@@ -740,9 +742,9 @@ class PartyApiServiceImpl(
   override def suspendPartyRelationshipById(relationshipId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-
+    logger.info("Suspending relationship with id {}", relationshipId)
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
@@ -767,9 +769,9 @@ class PartyApiServiceImpl(
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-    logger.info(s"Getting organization $externalId")
+    logger.info("Getting organization with external id {}", externalId)
 
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
@@ -805,9 +807,9 @@ class PartyApiServiceImpl(
   override def deleteRelationshipById(relationshipId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)],
-    correlationId: CorrelationId
+    contextFieldsToLog: ContextFieldsToLog
   ): Route = {
-    logger.info(s"Delete relationship by id: $relationshipId")
+    logger.info("Deleting relationship with id {}", relationshipId)
 
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))

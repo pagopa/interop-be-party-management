@@ -15,7 +15,7 @@ final case class State(
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def addParty(party: Party): State = {
-    logger.error(s"Writing party ${party.id.toString} to state")
+    logger.info(s"Writing party ${party.id.toString} to state")
     val newState = copy(parties = parties + (party.id -> party))
     logger.info(newState.toString)
     newState
