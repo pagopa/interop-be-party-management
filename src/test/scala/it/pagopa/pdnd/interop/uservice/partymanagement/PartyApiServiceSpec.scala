@@ -53,7 +53,7 @@ object PartyApiServiceSpec {
     .withFallback(testData)
     .resolve()
 
-  def fileManagerType: String = config.getString("uservice-party-management.storage.type")
+  def fileManagerType: String = config.getString("pdnd-interop-commons.storage.type")
 }
 
 class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.config) with AnyWordSpecLike {
@@ -296,7 +296,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body shouldBe expected3
     }
 
-    "return 400 if organization already exists" in {
+    "return 409 if organization already exists" in {
 
       (() => uuidSupplier.get).expects().returning(orgUuid4).once()
 
@@ -310,7 +310,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = createOrganization(data)
 
-      response.status shouldBe StatusCodes.BadRequest
+      response.status shouldBe StatusCodes.Conflict
 
     }
   }
@@ -440,7 +440,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body shouldBe rlExpected
     }
 
-    "return 400 if relationship already exists" in {
+    "return 409 if relationship already exists" in {
 
       val personUuid    = UUID.randomUUID()
       val orgUuid       = UUID.randomUUID()
@@ -470,7 +470,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val response = createRelationship(data)
 
-      response.status shouldBe StatusCodes.BadRequest
+      response.status shouldBe StatusCodes.Conflict
 
     }
 
