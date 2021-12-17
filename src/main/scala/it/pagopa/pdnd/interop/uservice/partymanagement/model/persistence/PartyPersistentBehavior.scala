@@ -30,12 +30,12 @@ object PartyPersistentBehavior {
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddParty(party, replyTo) =>
-        logger.error(s"Adding party ${party.id}")
-        logger.error(state.toString)
+        logger.debug(s"Adding party {}", party.id)
+        logger.debug(state.toString)
         state.parties
           .get(party.id)
           .map { _ =>
-            logger.error(s"AddParty found party ${party.id}")
+            logger.debug("AddParty found party {}", party.id)
             replyTo ! StatusReply.Error(s"Party ${party.id} already exists")
             Effect.none[PartyAdded, State]
           }
@@ -52,7 +52,7 @@ object PartyPersistentBehavior {
 
       case GetParty(uuid, replyTo) =>
         val party: Option[Party] = state.parties.get(uuid)
-        party.foreach(p => logger.info(s"Found party ${p.id.toString}"))
+        party.foreach(p => logger.debug("Found party {}", p.id.toString))
         replyTo ! party
 
         Effect.none
@@ -75,7 +75,7 @@ object PartyPersistentBehavior {
         val party: Option[InstitutionParty] = state.parties.collectFirst {
           case (_, o: InstitutionParty) if o.externalId == externalId => o
         }
-        party.foreach(p => logger.info(s"Found organization ${p.id.toString}"))
+        party.foreach(p => logger.debug("Found organization {}", p.id.toString))
         replyTo ! party
 
         Effect.none
@@ -234,7 +234,6 @@ object PartyPersistentBehavior {
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
-//        context.log.error(s"Passivate shard: ${shard.path.name}")
         Effect.none[Event, State]
     }
 
@@ -278,7 +277,6 @@ object PartyPersistentBehavior {
     offsetDateTimeSupplier: OffsetDateTimeSupplier
   ): Behavior[Command] = {
     Behaviors.setup { context =>
-//      context.log.error(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
         context.system.settings.config
           .getInt("uservice-party-management.number-of-events-before-snapshot")

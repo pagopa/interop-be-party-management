@@ -1,6 +1,9 @@
 package {{invokerPackage}}
 
 import akka.http.scaladsl.server.Route
+import akka.event.Logging
+import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
+import akka.http.scaladsl.server.{Directive, Directive1, Directive0, Route, RouteResult}
 {{#apiInfo}}{{#apis}}{{#operations}}import {{package}}.{{classname}}
 {{/operations}}{{/apis}}{{/apiInfo}}
 import akka.http.scaladsl.server.Directives._
@@ -37,6 +40,7 @@ get {
 complete(HttpEntity(ContentTypes.`application/json`, buildinfo.BuildInfo.toJson))
 }
 }
+
 
 lazy val routes: Route = getBuildInfo ~ pathPrefix("{{projectName}}" / interfaceVersion) {
 toStrictEntity(strictnessTimeout) {
