@@ -119,7 +119,7 @@ object PartyPersistentBehavior {
 
           }
 
-      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, replyTo) =>
+      case ConfirmPartyRelationship(partyRelationshipId, filePath, fileInfo, tokenId, replyTo) =>
         state.relationships
           .get(partyRelationshipId)
           .fold {
@@ -129,11 +129,12 @@ object PartyPersistentBehavior {
             Effect
               .persist(
                 PartyRelationshipConfirmed(
-                  t.id,
-                  filePath,
-                  fileInfo.getFileName,
-                  fileInfo.getContentType.toString(),
-                  offsetDateTimeSupplier.get
+                  partyRelationshipId = t.id,
+                  filePath = filePath,
+                  fileName = fileInfo.getFileName,
+                  contentType = fileInfo.getContentType.toString(),
+                  onboardingTokenId = tokenId,
+                  timestamp = offsetDateTimeSupplier.get
                 )
               )
               .thenRun(_ => replyTo ! StatusReply.Success(()))
@@ -258,8 +259,8 @@ object PartyPersistentBehavior {
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
-      case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType, timestamp) =>
-        state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType, timestamp)
+      case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType, tokenId, timestamp) =>
+        state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType, tokenId, timestamp)
       case PartyRelationshipRejected(relationshipId, timestamp)  => state.rejectRelationship(relationshipId, timestamp)
       case PartyRelationshipDeleted(relationshipId, timestamp)   => state.deleteRelationship(relationshipId, timestamp)
       case PartyRelationshipSuspended(relationshipId, timestamp) => state.suspendRelationship(relationshipId, timestamp)

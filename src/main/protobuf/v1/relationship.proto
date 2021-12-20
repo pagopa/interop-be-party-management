@@ -18,7 +18,7 @@ message PartyRelationshipV1 {
   optional string filePath = 10;
   optional string fileName = 11;
   optional string contentType = 12;
-  optional string tokenId = 13;
+  optional string onboardingTokenId = 13;
 
   enum PartyRelationshipStateV1 {
     PENDING = 1;

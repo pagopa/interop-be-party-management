@@ -18,7 +18,7 @@ final case class PersistedPartyRelationship(
   filePath: Option[String],
   fileName: Option[String],
   contentType: Option[String],
-  tokenId: Option[UUID],
+  onboardingTokenId: Option[UUID],
   createdAt: OffsetDateTime,
   updatedAt: Option[OffsetDateTime]
 ) {
@@ -33,7 +33,7 @@ final case class PersistedPartyRelationship(
     filePath = filePath,
     fileName = fileName,
     contentType = contentType,
-    tokenId = tokenId,
+    tokenId = onboardingTokenId,
     createdAt = createdAt,
     updatedAt = updatedAt
   )
@@ -62,7 +62,7 @@ object PersistedPartyRelationship {
       filePath = None,
       fileName = None,
       contentType = None,
-      tokenId = None
+      onboardingTokenId = None
     )
   }
 }

@@ -486,7 +486,7 @@ class PartyApiServiceImpl(
       filePath <- fileManager.store(ApplicationConfiguration.storageContainer)(token.id, fileParts)
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, ref)
+          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, token.id, ref)
         )
       } //TODO atomic?
     } yield results

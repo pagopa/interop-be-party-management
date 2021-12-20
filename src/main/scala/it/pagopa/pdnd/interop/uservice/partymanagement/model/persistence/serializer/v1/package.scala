@@ -74,6 +74,7 @@ package object v1 {
             filePath = event.filePath,
             fileName = event.fileName,
             contentType = event.contentType,
+            onboardingTokenId = event.onboardingTokenId.toString,
             timestamp = event.timestamp.toMillis
           )
       )
@@ -81,13 +82,15 @@ package object v1 {
   implicit def partyRelationshipConfirmedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipConfirmedV1, PartyRelationshipConfirmed] = event =>
     for {
-      uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- event.timestamp.toOffsetDateTime.toEither
+      uuid              <- stringToUUID(event.partyRelationshipId)
+      onboardingTokenId <- stringToUUID(event.onboardingTokenId)
+      timestamp         <- event.timestamp.toOffsetDateTime.toEither
     } yield PartyRelationshipConfirmed(
       partyRelationshipId = uuid,
       filePath = event.filePath,
       fileName = event.fileName,
       contentType = event.contentType,
+      onboardingTokenId = onboardingTokenId,
       timestamp = timestamp
     )
 
