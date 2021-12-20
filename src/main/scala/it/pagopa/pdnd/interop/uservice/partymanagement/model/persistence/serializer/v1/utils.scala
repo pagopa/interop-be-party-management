@@ -99,6 +99,7 @@ object utils {
       to        <- stringToUUID(partyRelationshipV1.to)
       partyRole <- partyRoleFromProtobuf(partyRelationshipV1.role)
       state     <- relationshipStateFromProtobuf(partyRelationshipV1.state)
+      tokenId   <- partyRelationshipV1.tokenId.traverse(_.toUUID.toEither)
       createdAt <- partyRelationshipV1.createdAt.toOffsetDateTime.toEither
       updatedAt <- partyRelationshipV1.updatedAt.traverse(_.toOffsetDateTime).toEither
       timestamp <- partyRelationshipV1.product.createdAt.toOffsetDateTime.toEither
@@ -117,7 +118,8 @@ object utils {
       state = state,
       filePath = partyRelationshipV1.filePath,
       fileName = partyRelationshipV1.fileName,
-      contentType = partyRelationshipV1.contentType
+      contentType = partyRelationshipV1.contentType,
+      tokenId = tokenId
     )
   }
 
