@@ -34,6 +34,7 @@ final case class State(
     filePath: String,
     fileName: String,
     contentType: String,
+    tokenId: UUID,
     timestamp: OffsetDateTime
   ): State = {
     val updated: Map[UUID, PersistedPartyRelationship] =
@@ -44,6 +45,7 @@ final case class State(
           filePath = Some(filePath),
           fileName = Some(fileName),
           contentType = Some(contentType),
+          onboardingTokenId = Some(tokenId),
           updatedAt = Some(timestamp)
         )
       )
