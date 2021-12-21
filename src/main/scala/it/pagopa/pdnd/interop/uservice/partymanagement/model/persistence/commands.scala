@@ -36,6 +36,7 @@ final case class ConfirmPartyRelationship(
   relationshipId: UUID,
   filePath: String,
   fileInfo: FileInfo,
+  tokenId: UUID,
   replyTo: ActorRef[StatusReply[Unit]]
 ) extends PartyRelationshipCommand
 

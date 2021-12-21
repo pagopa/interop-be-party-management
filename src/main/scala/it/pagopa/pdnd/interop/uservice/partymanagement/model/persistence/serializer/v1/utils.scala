@@ -94,14 +94,15 @@ object utils {
 
   def getPartyRelationship(partyRelationshipV1: PartyRelationshipV1): ErrorOr[PersistedPartyRelationship] = {
     for {
-      id        <- stringToUUID(partyRelationshipV1.id)
-      from      <- stringToUUID(partyRelationshipV1.from)
-      to        <- stringToUUID(partyRelationshipV1.to)
-      partyRole <- partyRoleFromProtobuf(partyRelationshipV1.role)
-      state     <- relationshipStateFromProtobuf(partyRelationshipV1.state)
-      createdAt <- partyRelationshipV1.createdAt.toOffsetDateTime.toEither
-      updatedAt <- partyRelationshipV1.updatedAt.traverse(_.toOffsetDateTime).toEither
-      timestamp <- partyRelationshipV1.product.createdAt.toOffsetDateTime.toEither
+      id                <- stringToUUID(partyRelationshipV1.id)
+      from              <- stringToUUID(partyRelationshipV1.from)
+      to                <- stringToUUID(partyRelationshipV1.to)
+      partyRole         <- partyRoleFromProtobuf(partyRelationshipV1.role)
+      state             <- relationshipStateFromProtobuf(partyRelationshipV1.state)
+      onboardingTokenId <- partyRelationshipV1.onboardingTokenId.traverse(_.toUUID.toEither)
+      createdAt         <- partyRelationshipV1.createdAt.toOffsetDateTime.toEither
+      updatedAt         <- partyRelationshipV1.updatedAt.traverse(_.toOffsetDateTime).toEither
+      timestamp         <- partyRelationshipV1.product.createdAt.toOffsetDateTime.toEither
     } yield PersistedPartyRelationship(
       id = id,
       from = from,
@@ -117,7 +118,8 @@ object utils {
       state = state,
       filePath = partyRelationshipV1.filePath,
       fileName = partyRelationshipV1.fileName,
-      contentType = partyRelationshipV1.contentType
+      contentType = partyRelationshipV1.contentType,
+      onboardingTokenId = onboardingTokenId
     )
   }
 

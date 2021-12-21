@@ -23,6 +23,7 @@ final case class PartyRelationshipConfirmed(
   filePath: String,
   fileName: String,
   contentType: String,
+  onboardingTokenId: UUID,
   timestamp: OffsetDateTime
 ) extends PartyRelationshipEvent
 final case class PartyRelationshipRejected(partyRelationshipId: UUID, timestamp: OffsetDateTime)
