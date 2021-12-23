@@ -56,8 +56,8 @@ object PersistedPartyRelationship {
       createdAt = timestamp,
       updatedAt = None,
       state = role match {
-        case Operator => Active
-        case _        => Pending
+        case SubDelegate | Operator => Active
+        case Manager | Delegate     => Pending
       },
       filePath = None,
       fileName = None,
