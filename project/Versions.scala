@@ -18,7 +18,6 @@ object Versions {
   lazy val scalaMockVersion         = "5.1.0"
   lazy val scalatestVersion         = "3.2.9"
   lazy val slickProjectionVersion   = "1.2.2"
-  lazy val swaggerValidatorVersion  = "2.23.0"
 }
 
 object PDNDVersions {

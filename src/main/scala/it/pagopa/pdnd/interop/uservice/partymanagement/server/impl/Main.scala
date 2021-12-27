@@ -19,6 +19,7 @@ import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
 import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
+import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
@@ -39,19 +40,13 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.OffsetDateTimeSupplierImp
 import kamon.Kamon
-import org.slf4j.LoggerFactory
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
-import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
-import com.atlassian.oai.validator.report.ValidationReport
 
 object Main extends App {
-
-  private val logger = LoggerFactory.getLogger(this.getClass)
 
   val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
@@ -145,7 +140,11 @@ object Main extends App {
           partyApi,
           validationExceptionToRoute = Some(report => {
             val error =
-              problemOf(StatusCodes.BadRequest, "0000", defaultMessage = errorFromRequestValidationReport(report))
+              problemOf(
+                StatusCodes.BadRequest,
+                "0000",
+                defaultMessage = OpenapiUtils.errorFromRequestValidationReport(report)
+              )
             complete(error.status, error)(HealthApiMarshallerImpl.toEntityMarshallerProblem)
           })
         )
@@ -169,20 +168,5 @@ object Main extends App {
       "pdnd-interop-uservice-party-management"
     )
 
-  }
-
-  private def errorFromRequestValidationReport(report: ValidationReport): String = {
-    val messageStrings = report.getMessages.asScala.foldLeft[List[String]](List.empty)((tail, m) => {
-      val context = m.getContext.toScala.map(c =>
-        Seq(c.getRequestMethod.toScala, c.getRequestPath.toScala, c.getLocation.toScala).flatten
-      )
-      s"""${m.getAdditionalInfo.asScala.mkString(",")}
-         |${m.getLevel} - ${m.getMessage}
-         |${context.getOrElse(Seq.empty).mkString(" - ")}
-         |""".stripMargin :: tail
-    })
-
-    logger.error("Request failed: {}", messageStrings.mkString)
-    report.getMessages().asScala.map(_.getMessage).mkString(", ")
   }
 }
