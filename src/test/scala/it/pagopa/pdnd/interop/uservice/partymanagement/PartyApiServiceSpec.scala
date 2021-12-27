@@ -15,7 +15,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiMarshaller, PartyApiService}
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiService}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
@@ -58,8 +58,6 @@ object PartyApiServiceSpec {
 
 class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.config) with AnyWordSpecLike {
 
-  val partyApiMarshaller: PartyApiMarshaller = new PartyApiMarshallerImpl
-
   var controller: Option[Controller]                 = None
   var bindServer: Option[Future[Http.ServerBinding]] = None
 
@@ -88,7 +86,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       new PartyApiServiceImpl(system, sharding, persistentEntity, uuidSupplier, offsetDateTimeSupplier, fileManager)
 
     val partyApi: PartyApi =
-      new PartyApi(partyApiService, partyApiMarshaller, wrappingDirective)
+      new PartyApi(partyApiService, PartyApiMarshallerImpl, wrappingDirective)
 
     val healthApi: HealthApi = mock[HealthApi]
 
