@@ -7,6 +7,8 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDae
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives.complete
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
@@ -23,7 +25,8 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
   PartyApiMarshallerImpl,
-  PartyApiServiceImpl
+  PartyApiServiceImpl,
+  problemOf
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
@@ -36,13 +39,19 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.impl.OffsetDateTimeSupplierImp
 import kamon.Kamon
+import org.slf4j.LoggerFactory
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
+import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
+import com.atlassian.oai.validator.report.ValidationReport
 
 object Main extends App {
+
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
@@ -74,7 +83,6 @@ object Main extends App {
         import akka.actor.typed.scaladsl.adapter._
         implicit val classicSystem: classic.ActorSystem = context.system.toClassic
         implicit val executionContext: ExecutionContext = context.system.executionContext
-        val marshallerImpl                              = new PartyApiMarshallerImpl()
 
         val cluster = Cluster(context.system)
 
@@ -123,20 +131,24 @@ object Main extends App {
             offsetDateTimeSupplier,
             fileManager
           ),
-          marshallerImpl,
+          PartyApiMarshallerImpl,
           jwtValidator.OAuth2JWTValidatorAsContexts
         )
 
         val healthApi: HealthApi =
-          new HealthApi(
-            new HealthServiceApiImpl(),
-            new HealthApiMarshallerImpl(),
-            jwtValidator.OAuth2JWTValidatorAsContexts
-          )
+          new HealthApi(new HealthServiceApiImpl(), HealthApiMarshallerImpl, jwtValidator.OAuth2JWTValidatorAsContexts)
 
         val _ = AkkaManagement.get(classicSystem).start()
 
-        val controller = new Controller(healthApi, partyApi)
+        val controller = new Controller(
+          healthApi,
+          partyApi,
+          validationExceptionToRoute = Some(report => {
+            val error =
+              problemOf(StatusCodes.BadRequest, "0000", defaultMessage = errorFromRequestValidationReport(report))
+            complete(error.status, error)(HealthApiMarshallerImpl.toEntityMarshallerProblem)
+          })
+        )
 
         val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
 
@@ -159,4 +171,18 @@ object Main extends App {
 
   }
 
+  private def errorFromRequestValidationReport(report: ValidationReport): String = {
+    val messageStrings = report.getMessages.asScala.foldLeft[List[String]](List.empty)((tail, m) => {
+      val context = m.getContext.toScala.map(c =>
+        Seq(c.getRequestMethod.toScala, c.getRequestPath.toScala, c.getLocation.toScala).flatten
+      )
+      s"""${m.getAdditionalInfo.asScala.mkString(",")}
+         |${m.getLevel} - ${m.getMessage}
+         |${context.getOrElse(Seq.empty).mkString(" - ")}
+         |""".stripMargin :: tail
+    })
+
+    logger.error("Request failed: {}", messageStrings.mkString)
+    report.getMessages().asScala.map(_.getMessage).mkString(", ")
+  }
 }

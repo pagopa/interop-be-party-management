@@ -1,6 +1,7 @@
 object Versions {
   lazy val akkaHttpVersion          = "10.2.6"
   lazy val akkaManagementVersion    = "1.1.1"
+  lazy val akkaPersistenceS3Version = "1.1.41"
   lazy val akkaVersion              = "2.6.17"
   lazy val awsSdkVersion            = "2.17.72"
   lazy val catsVersion              = "2.6.1"
@@ -17,8 +18,7 @@ object Versions {
   lazy val scalaMockVersion         = "5.1.0"
   lazy val scalatestVersion         = "3.2.9"
   lazy val slickProjectionVersion   = "1.2.2"
-  lazy val stateMonitoringVersion   = "0.0.3-SNAPSHOT"
-  lazy val akkaPersistenceS3Version = "1.1.41"
+  lazy val swaggerValidatorVersion  = "2.23.0"
 }
 
 object PDNDVersions {

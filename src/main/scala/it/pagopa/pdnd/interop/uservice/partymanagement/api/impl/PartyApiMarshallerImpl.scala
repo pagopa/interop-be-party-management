@@ -7,7 +7,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.PartyApiMarshaller
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import spray.json._
 
-class PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
+object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
 
   override implicit def fromEntityUnmarshallerStringList: FromEntityUnmarshaller[Seq[String]] =
     sprayJsonUnmarshaller[Seq[String]]
