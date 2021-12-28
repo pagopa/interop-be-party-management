@@ -12,8 +12,8 @@ uservice_party_management {
     container = ${STORAGE_CONTAINER}  //"interop-pdnd-onboarding-files"
     endpoint = ${STORAGE_ENDPOINT}
     application {
-       id = ${STORAGE_APPLICATION_ID}
-       secret = ${STORAGE_APPLICATION_SECRET}
+       id = ${STORAGE_CREDENTIAL_ID}
+       secret = ${STORAGE_CREDENTIAL_SECRET}
     }
   }
 }
