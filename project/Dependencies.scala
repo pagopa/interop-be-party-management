@@ -67,11 +67,6 @@ object Dependencies {
     lazy val mustache = "com.github.spullara.mustache.java" % "compiler" % mustacheVersion
   }
 
-  private[this] object atlassian {
-    lazy val namespace        = "com.atlassian.oai"
-    lazy val swaggerValidator = namespace % "swagger-request-validator-core" % swaggerValidatorVersion
-  }
-
   private[this] object pagopa {
     lazy val namespace = "it.pagopa"
 
@@ -124,7 +119,6 @@ object Dependencies {
       akka.projectionSlick        % Compile,
       akka.slf4j                  % Compile,
       akka.stream                 % Compile,
-      atlassian.swaggerValidator  % Compile,
       aws.s3                      % Compile,
       cats.core                   % Compile,
       kamon.bundle                % Compile,
