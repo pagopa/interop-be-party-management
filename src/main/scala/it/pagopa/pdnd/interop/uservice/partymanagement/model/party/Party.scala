@@ -2,7 +2,13 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.model.party
 
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApiParty
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Organization, OrganizationSeed, Person, PersonSeed}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{
+  Attribute,
+  Organization,
+  OrganizationSeed,
+  Person,
+  PersonSeed
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
@@ -13,17 +19,18 @@ sealed trait Party {
   def start: OffsetDateTime
   def end: Option[OffsetDateTime]
 
-  def addAttributes(attributes: Set[String]): Either[Throwable, Party] = this match {
+  def addAttributes(attributes: Set[Attribute]): Either[Throwable, Party] = this match {
     case _: PersonParty => Left(new RuntimeException("Attributes do not exist for person party"))
     case institutionParty: InstitutionParty =>
-      val updated: Set[String] = institutionParty.attributes ++ attributes
+      val updated: Set[InstitutionAttribute] = institutionParty.attributes ++ attributes.map(attribute =>
+        InstitutionAttribute(attribute.origin, attribute.code)
+      )
       Right(institutionParty.copy(attributes = updated))
   }
 
 }
 
 object Party {
-
   def convertToApi(party: Party): ApiParty =
     party match {
       case personParty: PersonParty =>
@@ -36,11 +43,10 @@ object Party {
             description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
             taxCode = institutionParty.taxCode,
-            attributes = institutionParty.attributes.toSeq
+            attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq
           )
         )
     }
-
 }
 
 final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]) extends Party
@@ -48,6 +54,13 @@ final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[Offset
 object PersonParty {
   def fromApi(person: PersonSeed, offsetDateTimeSupplier: OffsetDateTimeSupplier): PersonParty =
     PersonParty(id = person.id, start = offsetDateTimeSupplier.get, end = None)
+}
+
+final case class InstitutionAttribute(origin: String, code: String)
+
+object InstitutionAttribute {
+  def toApi(attribute: InstitutionAttribute): Attribute   = Attribute(attribute.origin, attribute.code)
+  def fromApi(attribute: Attribute): InstitutionAttribute = InstitutionAttribute(attribute.origin, attribute.code)
 }
 
 final case class InstitutionParty(
@@ -58,7 +71,7 @@ final case class InstitutionParty(
   taxCode: String,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
-  attributes: Set[String]
+  attributes: Set[InstitutionAttribute]
 ) extends Party
 
 object InstitutionParty {
@@ -73,7 +86,7 @@ object InstitutionParty {
       description = organization.description,
       digitalAddress = organization.digitalAddress,
       taxCode = organization.taxCode,
-      attributes = organization.attributes.toSet,
+      attributes = organization.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
       end = None
     )

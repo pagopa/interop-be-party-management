@@ -130,7 +130,7 @@ class PartyApiServiceImpl(
   /** Code: 200, Message: successful operation, DataType: Organization
     * Code: 404, Message: Organization not found, DataType: Problem
     */
-  override def addOrganizationAttributes(organizationId: String, requestBody: Seq[String])(implicit
+  override def addOrganizationAttributes(organizationId: String, requestBody: Seq[Attribute])(implicit
     toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
@@ -543,11 +543,13 @@ class PartyApiServiceImpl(
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Party not found, DataType: Problem
     */
-  override def getPartyAttributes(
-    id: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def getPartyAttributes(id: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerAttributearray: ToEntityMarshaller[Seq[Attribute]],
+    contexts: Seq[(String, String)]
+  ): Route = {
     logger.info("Getting party {} attributes", id)
-    val attributes: Future[StatusReply[Seq[String]]] = for {
+    val attributes: Future[StatusReply[Seq[Attribute]]] = for {
       uuid <- id.toFutureUUID
       r    <- getCommander(id).ask(ref => GetPartyAttributes(uuid, ref))
     } yield r

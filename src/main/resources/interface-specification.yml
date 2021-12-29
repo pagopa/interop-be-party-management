@@ -803,7 +803,20 @@ components:
     Attributes:
       type: array
       items:
-        type: string
+        $ref: '#/components/schemas/Attribute'
+    Attribute:
+      type: object
+      additionalProperties: false
+      properties:
+        origin:
+          type: string
+          description: 'origin of the certified attribute, e.g.: IPA'
+        code:
+          type: string
+          description: 'original identifier as defined at origin side, e.g.: IPA attribute code'
+      required:
+        - origin
+        - code
     RelationshipProductSeed:
       type: object
       properties:
