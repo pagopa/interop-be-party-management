@@ -214,7 +214,7 @@ class ApiInvoker(formats: Formats)(implicit system: ActorSystem) extends CustomC
         Unmarshal(response.entity)
           .to[T]
           .recoverWith {
-            case e ⇒
+            case e =>
             Unmarshaller.stringUnmarshaller(response.entity).transformWith {
                 case Success(st) =>
                   throw ApiError(response.status.intValue, s"Unable to unmarshall content to [$manifest]", Some(st), e)
