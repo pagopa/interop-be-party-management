@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.StringOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
-import it.pagopa.pdnd.interop.uservice.partymanagement.error.ManagerNotSupplied
+import it.pagopa.pdnd.interop.uservice.partymanagement.error.PartyManagementErrors.ManagerNotSupplied
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.{RelationshipBinding, TokenSeed}
 import spray.json._
 
