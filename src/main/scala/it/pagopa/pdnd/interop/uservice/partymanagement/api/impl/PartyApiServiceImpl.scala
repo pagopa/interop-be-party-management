@@ -149,10 +149,8 @@ class PartyApiServiceImpl(
             organization => addOrganizationAttributes200(organization)
           )
       case statusReply =>
-        logger.error("Error adding attributes to organization {} - Not found", organizationId)
-        addOrganizationAttributes404(
-          problemOf(StatusCodes.NotFound, AddAttributesError(statusReply.getError.getMessage))
-        )
+        logger.error("Error adding attributes to organization {} - Not found", organizationId, statusReply.getError)
+        addOrganizationAttributes404(problemOf(StatusCodes.NotFound, AddAttributesError))
     }
 
   }
@@ -189,7 +187,7 @@ class PartyApiServiceImpl(
         createPerson409(errorResponse)
       case Failure(ex) =>
         logger.error("Creating person {}", personSeed.id.toString, ex)
-        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreatePersonError(ex.getMessage))
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreatePersonError)
         createPerson400(errorResponse)
 
     }
@@ -403,7 +401,7 @@ class PartyApiServiceImpl(
         getToken404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex) =>
         logger.error("Getting token failed", ex)
-        getToken400(problemOf(StatusCodes.BadRequest, TokenNotFoundError(ex.getMessage)))
+        getToken400(problemOf(StatusCodes.BadRequest, TokenNotFoundError))
     }
   }
 
