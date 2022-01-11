@@ -4,6 +4,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCode
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
+import it.pagopa.pdnd.interop.commons.utils.errors.ComponentError
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
@@ -32,17 +33,19 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val bulkPartiesSeedFormat: RootJsonFormat[BulkPartiesSeed]         = jsonFormat1(BulkPartiesSeed)
   implicit val bulkOrganizationsFormat: RootJsonFormat[BulkOrganizations]     = jsonFormat2(BulkOrganizations)
 
-  def problemOf(
-    httpError: StatusCode,
-    errorCode: String,
-    exception: Throwable = new RuntimeException(),
-    defaultMessage: String = "Unknown error"
-  ): Problem =
+  final val serviceErrorCodePrefix: String = "001"
+  final val defaultProblemType: String     = "about:blank"
+
+  def problemOf(httpError: StatusCode, error: ComponentError, defaultMessage: String = "Unknown error"): Problem =
     Problem(
-      `type` = "about:blank",
+      `type` = defaultProblemType,
       status = httpError.intValue,
       title = httpError.defaultMessage,
-      errors =
-        Seq(ProblemError(code = s"001-$errorCode", detail = Option(exception.getMessage).getOrElse(defaultMessage)))
+      errors = Seq(
+        ProblemError(
+          code = s"$serviceErrorCodePrefix-${error.code}",
+          detail = Option(error.getMessage).getOrElse(defaultMessage)
+        )
+      )
     )
 }

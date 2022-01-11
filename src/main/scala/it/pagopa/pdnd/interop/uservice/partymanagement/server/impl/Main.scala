@@ -20,6 +20,7 @@ import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
 import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
+import it.pagopa.pdnd.interop.commons.utils.errors.ValidationRequestError
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
@@ -142,8 +143,7 @@ object Main extends App {
             val error =
               problemOf(
                 StatusCodes.BadRequest,
-                "0000",
-                defaultMessage = OpenapiUtils.errorFromRequestValidationReport(report)
+                ValidationRequestError(OpenapiUtils.errorFromRequestValidationReport(report))
               )
             complete(error.status, error)(HealthApiMarshallerImpl.toEntityMarshallerProblem)
           })
