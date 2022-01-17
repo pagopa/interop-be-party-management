@@ -20,7 +20,7 @@ import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
 import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
-import it.pagopa.pdnd.interop.commons.utils.errors.ValidationRequestError
+import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.ValidationRequestError
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
