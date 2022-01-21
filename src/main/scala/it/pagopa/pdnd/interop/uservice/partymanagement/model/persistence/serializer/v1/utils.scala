@@ -137,7 +137,10 @@ object utils {
       createdAt = partyRelationship.createdAt.toMillis,
       updatedAt = partyRelationship.updatedAt.map(_.toMillis),
       state = relationshipStateToProtobuf(partyRelationship.state),
-      filePath = partyRelationship.filePath
+      filePath = partyRelationship.filePath,
+      fileName = partyRelationship.fileName,
+      contentType = partyRelationship.contentType,
+      onboardingTokenId = partyRelationship.onboardingTokenId.map(_.toString)
     )
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
@@ -203,10 +206,10 @@ object utils {
 
   def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PersistedPartyRole] =
     role match {
-      case PartyRoleV1.MANAGER      => Right(Manager)
-      case PartyRoleV1.DELEGATE     => Right(Delegate)
-      case PartyRoleV1.SUB_DELEGATE => Right(SubDelegate)
-      case PartyRoleV1.OPERATOR     => Right(Operator)
+      case PartyRoleV1.MANAGER      => Right(PersistedPartyRole.Manager)
+      case PartyRoleV1.DELEGATE     => Right(PersistedPartyRole.Delegate)
+      case PartyRoleV1.SUB_DELEGATE => Right(PersistedPartyRole.SubDelegate)
+      case PartyRoleV1.OPERATOR     => Right(PersistedPartyRole.Operator)
       case PartyRoleV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party role value $value"))
     }
@@ -224,10 +227,10 @@ object utils {
 
   def partyRoleToProtobuf(role: PersistedPartyRole): PartyRoleV1 =
     role match {
-      case Manager     => PartyRoleV1.MANAGER
-      case Delegate    => PartyRoleV1.DELEGATE
-      case SubDelegate => PartyRoleV1.SUB_DELEGATE
-      case Operator    => PartyRoleV1.OPERATOR
+      case PersistedPartyRole.Manager     => PartyRoleV1.MANAGER
+      case PersistedPartyRole.Delegate    => PartyRoleV1.DELEGATE
+      case PersistedPartyRole.SubDelegate => PartyRoleV1.SUB_DELEGATE
+      case PersistedPartyRole.Operator    => PartyRoleV1.OPERATOR
     }
 
   def relationshipStateToProtobuf(state: PersistedPartyRelationshipState): PartyRelationshipStateV1 =

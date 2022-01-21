@@ -55,7 +55,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
     for {
       id <- tokenSeed.id.toUUID.toEither
       _ <- parties
-        .find(_.role == Manager)
+        .find(_.role == PersistedPartyRole.Manager)
         .toRight(ManagerNotSupplied(tokenSeed.id))
     } yield Token(
       id = id,

@@ -1,11 +1,20 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.persistence.v1
-import it.pagopa.pdnd.interop.commons.utils.TypeConversions.OffsetDateTimeOps
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions.{LongOps, OffsetDateTimeOps}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.{InstitutionParty, Party, PersonParty}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionPartyV1,
   PartyV1,
   PersonPartyV1
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.relationship.{
+  PartyRelationshipProductV1,
+  PartyRelationshipV1
+}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.token.{
+  OnboardingContractInfoV1,
+  PartyRelationshipBindingV1,
+  TokenV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
 import org.scalatest.EitherValues._
@@ -138,6 +147,260 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         )
 
       partyV1.value shouldBe expected.success.value
+
+    }
+
+    /* convert a PartyRelationshipV1 to PartyRelationship */
+
+    "convert a PartyRelationshipV1 to PartyRelationship" in {
+
+      val relationshipId    = UUID.randomUUID()
+      val from              = UUID.randomUUID()
+      val to                = UUID.randomUUID()
+      val productId         = "productId"
+      val productRole       = "productRole"
+      val productCreatedAt  = OffsetDateTime.now()
+      val filePath          = Some("path")
+      val fileName          = Some("fileName")
+      val contentType       = Some("contentType")
+      val onboardingTokenId = UUID.randomUUID()
+      val createdAt         = OffsetDateTime.now()
+      val updatedAt         = OffsetDateTime.now().plusDays(10L)
+
+      val partyRelationshipV1: PartyRelationshipV1 = PartyRelationshipV1(
+        id = relationshipId.toString,
+        from = from.toString,
+        to = to.toString,
+        role = PartyRelationshipV1.PartyRoleV1.MANAGER,
+        product = PartyRelationshipProductV1(id = productId, role = productRole, createdAt = productCreatedAt.toMillis),
+        createdAt = createdAt.toMillis,
+        updatedAt = Some(updatedAt.toMillis),
+        state = PartyRelationshipV1.PartyRelationshipStateV1.ACTIVE,
+        filePath = filePath,
+        fileName = fileName,
+        contentType = contentType,
+        onboardingTokenId = Some(onboardingTokenId.toString)
+      )
+
+      val partyRelationship: Either[Throwable, PersistedPartyRelationship] = getPartyRelationship(partyRelationshipV1)
+
+      val expected: Try[PersistedPartyRelationship] = for {
+        c  <- createdAt.toMillis.toOffsetDateTime
+        u  <- updatedAt.toMillis.toOffsetDateTime
+        pc <- productCreatedAt.toMillis.toOffsetDateTime
+      } yield PersistedPartyRelationship(
+        id = relationshipId,
+        from = from,
+        to = to,
+        role = PersistedPartyRole.Manager,
+        product = PersistedProduct(id = productId, role = productRole, createdAt = pc),
+        state = PersistedPartyRelationshipState.Active,
+        filePath = filePath,
+        fileName = fileName,
+        contentType = contentType,
+        onboardingTokenId = Some(onboardingTokenId),
+        createdAt = c,
+        updatedAt = Some(u)
+      )
+
+      partyRelationship.value shouldBe expected.success.value
+
+    }
+
+    /* convert a PartyRelationship to PartyRelationshipV1 */
+
+    "convert a PartyRelationship to PartyRelationshipV1" in {
+
+      val relationshipId    = UUID.randomUUID()
+      val from              = UUID.randomUUID()
+      val to                = UUID.randomUUID()
+      val productId         = "productId"
+      val productRole       = "productRole"
+      val productCreatedAt  = OffsetDateTime.now()
+      val filePath          = Some("path")
+      val fileName          = Some("fileName")
+      val contentType       = Some("contentType")
+      val onboardingTokenId = UUID.randomUUID()
+      val createdAt         = OffsetDateTime.now()
+      val updatedAt         = OffsetDateTime.now().plusDays(10L)
+
+      val persistedPartyRelationship: Try[PersistedPartyRelationship] =
+        for {
+          c  <- createdAt.toMillis.toOffsetDateTime
+          u  <- updatedAt.toMillis.toOffsetDateTime
+          pc <- productCreatedAt.toMillis.toOffsetDateTime
+        } yield PersistedPartyRelationship(
+          id = relationshipId,
+          from = from,
+          to = to,
+          role = PersistedPartyRole.Manager,
+          product = PersistedProduct(id = productId, role = productRole, createdAt = pc),
+          state = PersistedPartyRelationshipState.Active,
+          filePath = filePath,
+          fileName = fileName,
+          contentType = contentType,
+          onboardingTokenId = Some(onboardingTokenId),
+          createdAt = c,
+          updatedAt = Some(u)
+        )
+
+      val partyRelationshipV1: Try[PartyRelationshipV1] = persistedPartyRelationship.map(getPartyRelationshipV1)
+
+      val expected: PartyRelationshipV1 = PartyRelationshipV1(
+        id = relationshipId.toString,
+        from = from.toString,
+        to = to.toString,
+        role = PartyRelationshipV1.PartyRoleV1.MANAGER,
+        product = PartyRelationshipProductV1(id = productId, role = productRole, createdAt = productCreatedAt.toMillis),
+        createdAt = createdAt.toMillis,
+        updatedAt = Some(updatedAt.toMillis),
+        state = PartyRelationshipV1.PartyRelationshipStateV1.ACTIVE,
+        filePath = filePath,
+        fileName = fileName,
+        contentType = contentType,
+        onboardingTokenId = Some(onboardingTokenId.toString)
+      )
+
+      partyRelationshipV1.success.value shouldBe expected
+
+    }
+
+    /* convert a TokenV1 to Token */
+    "convert a TokenV1 to Token" in {
+
+      val id                                     = UUID.randomUUID()
+      val partyId                                = UUID.randomUUID()
+      val relationshipId                         = UUID.randomUUID()
+      val validity: OffsetDateTime               = OffsetDateTime.now()
+      val checksum: String                       = "checksum"
+      val path: String                           = "path"
+      val version: String                        = "version"
+      val contractInfo: OnboardingContractInfoV1 = OnboardingContractInfoV1(path = path, version = version)
+
+      val tokenV1: Try[TokenV1] = validity.asFormattedString.map(v =>
+        TokenV1(
+          id = id.toString,
+          legals =
+            Seq(PartyRelationshipBindingV1(partyId = partyId.toString, relationshipId = relationshipId.toString)),
+          validity = v,
+          checksum = checksum,
+          contractInfo = contractInfo
+        )
+      )
+
+      val token: Either[Throwable, Token] = tokenV1.toEither.flatMap(getToken)
+
+      val expected = Token(
+        id = id,
+        checksum = checksum,
+        legals = Seq(PartyRelationshipBinding(partyId = partyId, relationshipId = relationshipId)),
+        validity = validity,
+        contractInfo = TokenOnboardingContractInfo(path = path, version = version)
+      )
+
+      token.value shouldBe expected
+
+    }
+
+    "convert a Token to TokenV1" in {
+
+      val id                                     = UUID.randomUUID()
+      val partyId                                = UUID.randomUUID()
+      val relationshipId                         = UUID.randomUUID()
+      val validity: OffsetDateTime               = OffsetDateTime.now()
+      val checksum: String                       = "checksum"
+      val path: String                           = "path"
+      val version: String                        = "version"
+      val contractInfo: OnboardingContractInfoV1 = OnboardingContractInfoV1(path = path, version = version)
+
+      val token = Token(
+        id = id,
+        checksum = checksum,
+        legals = Seq(PartyRelationshipBinding(partyId = partyId, relationshipId = relationshipId)),
+        validity = validity,
+        contractInfo = TokenOnboardingContractInfo(path = path, version = version)
+      )
+
+      val tokenV1: ErrorOr[TokenV1] = getTokenV1(token)
+
+      val expected: Try[TokenV1] = validity.asFormattedString.map(v =>
+        TokenV1(
+          id = id.toString,
+          legals =
+            Seq(PartyRelationshipBindingV1(partyId = partyId.toString, relationshipId = relationshipId.toString)),
+          validity = v,
+          checksum = checksum,
+          contractInfo = contractInfo
+        )
+      )
+
+      tokenV1.value shouldBe expected.success.value
+
+    }
+
+    "convert a PartyRoleV1 to PersistedPartyRole" in {
+
+      partyRoleFromProtobuf(PartyRelationshipV1.PartyRoleV1.MANAGER).value shouldBe PersistedPartyRole.Manager
+      partyRoleFromProtobuf(PartyRelationshipV1.PartyRoleV1.DELEGATE).value shouldBe PersistedPartyRole.Delegate
+      partyRoleFromProtobuf(PartyRelationshipV1.PartyRoleV1.SUB_DELEGATE).value shouldBe PersistedPartyRole.SubDelegate
+      partyRoleFromProtobuf(PartyRelationshipV1.PartyRoleV1.OPERATOR).value shouldBe PersistedPartyRole.Operator
+
+    }
+
+    "convert a PersistedPartyRole to PartyRoleV1" in {
+
+      partyRoleToProtobuf(PersistedPartyRole.Manager) shouldBe PartyRelationshipV1.PartyRoleV1.MANAGER
+      partyRoleToProtobuf(PersistedPartyRole.Delegate) shouldBe PartyRelationshipV1.PartyRoleV1.DELEGATE
+      partyRoleToProtobuf(PersistedPartyRole.SubDelegate) shouldBe PartyRelationshipV1.PartyRoleV1.SUB_DELEGATE
+      partyRoleToProtobuf(PersistedPartyRole.Operator) shouldBe PartyRelationshipV1.PartyRoleV1.OPERATOR
+
+    }
+
+    "convert a PartyRelationshipStateV1 to PersistedPartyRelationshipState" in {
+
+      relationshipStateFromProtobuf(
+        PartyRelationshipV1.PartyRelationshipStateV1.PENDING
+      ).value shouldBe PersistedPartyRelationshipState.Pending
+
+      relationshipStateFromProtobuf(
+        PartyRelationshipV1.PartyRelationshipStateV1.ACTIVE
+      ).value shouldBe PersistedPartyRelationshipState.Active
+
+      relationshipStateFromProtobuf(
+        PartyRelationshipV1.PartyRelationshipStateV1.SUSPENDED
+      ).value shouldBe PersistedPartyRelationshipState.Suspended
+
+      relationshipStateFromProtobuf(
+        PartyRelationshipV1.PartyRelationshipStateV1.DELETED
+      ).value shouldBe PersistedPartyRelationshipState.Deleted
+
+      relationshipStateFromProtobuf(
+        PartyRelationshipV1.PartyRelationshipStateV1.REJECTED
+      ).value shouldBe PersistedPartyRelationshipState.Rejected
+
+    }
+
+    "convert a PersistedPartyRelationshipState to PartyRelationshipStateV1" in {
+
+      relationshipStateToProtobuf(
+        PersistedPartyRelationshipState.Pending
+      ) shouldBe PartyRelationshipV1.PartyRelationshipStateV1.PENDING
+
+      relationshipStateToProtobuf(
+        PersistedPartyRelationshipState.Active
+      ) shouldBe PartyRelationshipV1.PartyRelationshipStateV1.ACTIVE
+
+      relationshipStateToProtobuf(
+        PersistedPartyRelationshipState.Suspended
+      ) shouldBe PartyRelationshipV1.PartyRelationshipStateV1.SUSPENDED
+
+      relationshipStateToProtobuf(
+        PersistedPartyRelationshipState.Rejected
+      ) shouldBe PartyRelationshipV1.PartyRelationshipStateV1.REJECTED
+
+      relationshipStateToProtobuf(
+        PersistedPartyRelationshipState.Deleted
+      ) shouldBe PartyRelationshipV1.PartyRelationshipStateV1.DELETED
 
     }
 

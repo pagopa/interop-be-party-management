@@ -487,7 +487,8 @@ class PartyApiServiceImpl(
     Either
       .cond(
         currentPartyRelationships.exists(_.state == PersistedPartyRelationshipState.Active) ||
-          Set[PersistedPartyRole](Manager, Delegate).contains(partyRelationships.role),
+          Set[PersistedPartyRole](PersistedPartyRole.Manager, PersistedPartyRole.Delegate)
+            .contains(partyRelationships.role),
         partyRelationships,
         new RuntimeException("Operator without active manager")
       )
