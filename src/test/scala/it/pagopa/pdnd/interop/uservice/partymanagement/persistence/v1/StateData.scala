@@ -52,6 +52,20 @@ object StateData {
   val relationship: PersistedPartyRelationship =
     createPartyRelationship(relationshipId, PersistedPartyRole.Manager, PersistedPartyRelationshipState.Active)
 
+  val legal1: PartyRelationshipBinding = PartyRelationshipBinding(institutionPartyId, managerPendingId)
+  val legal2: PartyRelationshipBinding = PartyRelationshipBinding(institutionPartyId, delegatePendingId)
+
+  val contractInfo: TokenOnboardingContractInfo = TokenOnboardingContractInfo(version = version, path = path)
+
+  val token: Token =
+    Token(
+      id = tokenId,
+      legals = Seq(legal1, legal2),
+      validity = validity,
+      checksum = checksum,
+      contractInfo = contractInfo
+    )
+
   final val state: State = {
 
     val parties: Map[UUID, Party] =
@@ -146,20 +160,6 @@ object StateData {
 
     val operatorDeleted =
       createPartyRelationship(operatorDeletedId, PersistedPartyRole.Operator, PersistedPartyRelationshipState.Deleted)
-
-    val legal1 = PartyRelationshipBinding(institutionPartyId, managerPending.id)
-    val legal2 = PartyRelationshipBinding(institutionPartyId, delegatePending.id)
-
-    val contractInfo = TokenOnboardingContractInfo(version = version, path = path)
-
-    val token =
-      Token(
-        id = tokenId,
-        legals = Seq(legal1, legal2),
-        validity = validity,
-        checksum = checksum,
-        contractInfo = contractInfo
-      )
 
     val tokens: Map[UUID, Token] = Map(token.id -> token)
 

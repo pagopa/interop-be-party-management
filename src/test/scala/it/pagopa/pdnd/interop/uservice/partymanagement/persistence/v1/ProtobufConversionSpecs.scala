@@ -6,16 +6,26 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   AttributesAdded,
   PartyAdded,
   PartyDeleted,
+  PartyRelationshipActivated,
   PartyRelationshipAdded,
-  PartyRelationshipConfirmed
+  PartyRelationshipConfirmed,
+  PartyRelationshipDeleted,
+  PartyRelationshipRejected,
+  PartyRelationshipSuspended,
+  TokenAdded
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events.{
   AttributesAddedV1,
   PartyAddedV1,
   PartyDeletedV1,
+  PartyRelationshipActivatedV1,
   PartyRelationshipAddedV1,
-  PartyRelationshipConfirmedV1
+  PartyRelationshipConfirmedV1,
+  PartyRelationshipDeletedV1,
+  PartyRelationshipRejectedV1,
+  PartyRelationshipSuspendedV1,
+  TokenAddedV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionPartyV1,
@@ -550,6 +560,151 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         timestamp = StateCommonData.start.toMillis,
         onboardingTokenId = StateCommonData.onboardingTokenId.toString
       )
+    }
+
+    "deserialize PartyRelationshipRejectedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipRejectedV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            timestamp = StateCommonData.timestamp.toMillis
+          )
+        )
+
+      result.value shouldBe PartyRelationshipRejected(
+        partyRelationshipId = StateCommonData.relationshipId,
+        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+      )
+
+    }
+
+    "serialize PartyRelationshipRejected" in {
+
+      val result = PersistEventSerializer.to(
+        PartyRelationshipRejected(
+          partyRelationshipId = StateCommonData.relationshipId,
+          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+        )
+      )
+
+      result.value shouldBe PartyRelationshipRejectedV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        timestamp = StateCommonData.timestamp.toMillis
+      )
+    }
+
+    "deserialize PartyRelationshipDeletedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipDeletedV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            timestamp = StateCommonData.timestamp.toMillis
+          )
+        )
+
+      result.value shouldBe PartyRelationshipDeleted(
+        partyRelationshipId = StateCommonData.relationshipId,
+        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+      )
+
+    }
+
+    "serialize PartyRelationshipDeleted" in {
+
+      val result = PersistEventSerializer.to(
+        PartyRelationshipDeleted(
+          partyRelationshipId = StateCommonData.relationshipId,
+          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+        )
+      )
+
+      result.value shouldBe PartyRelationshipDeletedV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        timestamp = StateCommonData.timestamp.toMillis
+      )
+    }
+
+    "deserialize PartyRelationshipSuspendedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipSuspendedV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            timestamp = StateCommonData.timestamp.toMillis
+          )
+        )
+
+      result.value shouldBe PartyRelationshipSuspended(
+        partyRelationshipId = StateCommonData.relationshipId,
+        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+      )
+
+    }
+
+    "serialize PartyRelationshipSuspended" in {
+
+      val result = PersistEventSerializer.to(
+        PartyRelationshipSuspended(
+          partyRelationshipId = StateCommonData.relationshipId,
+          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+        )
+      )
+
+      result.value shouldBe PartyRelationshipSuspendedV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        timestamp = StateCommonData.timestamp.toMillis
+      )
+    }
+
+    "deserialize PartyRelationshipActivatedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipActivatedV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            timestamp = StateCommonData.timestamp.toMillis
+          )
+        )
+
+      result.value shouldBe PartyRelationshipActivated(
+        partyRelationshipId = StateCommonData.relationshipId,
+        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+      )
+
+    }
+
+    "serialize PartyRelationshipActivated" in {
+
+      val result = PersistEventSerializer.to(
+        PartyRelationshipActivated(
+          partyRelationshipId = StateCommonData.relationshipId,
+          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+        )
+      )
+
+      result.value shouldBe PartyRelationshipActivatedV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        timestamp = StateCommonData.timestamp.toMillis
+      )
+    }
+
+    "deserialize TokenAddedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(TokenAddedV1(StateV1Data.tokenV1))
+
+      result.value shouldBe TokenAdded(StateData.token)
+
+    }
+
+    "serialize TokenAdded" in {
+
+      val result =
+        PersistEventSerializer.to(TokenAdded(StateData.token))
+
+      result.value shouldBe TokenAddedV1(StateV1Data.tokenV1)
     }
 
   }

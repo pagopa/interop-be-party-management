@@ -74,6 +74,22 @@ object StateV1Data {
       PartyRelationshipV1.PartyRelationshipStateV1.ACTIVE
     )
 
+  val legalV1: PartyRelationshipBindingV1 =
+    PartyRelationshipBindingV1(institutionPartyId.toString, managerPendingId.toString)
+  val legalV2: PartyRelationshipBindingV1 =
+    PartyRelationshipBindingV1(institutionPartyId.toString, delegatePendingId.toString)
+
+  val contractInfoV1: OnboardingContractInfoV1 = OnboardingContractInfoV1(version = version, path = path)
+
+  val tokenV1: TokenV1 =
+    TokenV1(
+      id = tokenId.toString,
+      legals = Seq(legalV1, legalV2),
+      validity = validity.asFormattedString.success.value,
+      checksum = checksum,
+      contractInfo = contractInfoV1
+    )
+
   final val stateV1: StateV1 = {
 
     val partiesV1: Seq[PartiesV1] =
@@ -208,20 +224,6 @@ object StateV1Data {
       PartyRelationshipV1.PartyRoleV1.OPERATOR,
       PartyRelationshipV1.PartyRelationshipStateV1.DELETED
     )
-
-    val legalV1 = PartyRelationshipBindingV1(institutionPartyId.toString, managerPendingV1.id)
-    val legalV2 = PartyRelationshipBindingV1(institutionPartyId.toString, delegatePendingV1.id)
-
-    val contractInfoV1 = OnboardingContractInfoV1(version = version, path = path)
-
-    val tokenV1 =
-      TokenV1(
-        id = tokenId.toString,
-        legals = Seq(legalV1, legalV2),
-        validity = validity.asFormattedString.success.value,
-        checksum = checksum,
-        contractInfo = contractInfoV1
-      )
 
     val tokensV1: Seq[TokensV1] =
       Seq(TokensV1(key = tokenId.toString, value = tokenV1))

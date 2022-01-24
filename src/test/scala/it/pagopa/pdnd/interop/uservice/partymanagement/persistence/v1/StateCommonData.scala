@@ -8,6 +8,7 @@ object StateCommonData {
   val end       = OffsetDateTime.now()
   val createdAt = OffsetDateTime.now()
   val updatedAt = OffsetDateTime.now()
+  val timestamp = OffsetDateTime.now()
 
   val personPartyId      = UUID.randomUUID()
   val institutionPartyId = UUID.randomUUID()
