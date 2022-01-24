@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.persistence.v1
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.{LongOps, OffsetDateTimeOps}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionPartyV1,
   PartyV1,
@@ -17,6 +18,10 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   TokenV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.utils._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.{
+  PersistEventDeserializer,
+  PersistEventSerializer
+}
 import org.scalatest.EitherValues._
 import org.scalatest.TryValues._
 import org.scalatest.matchers.should.Matchers
@@ -404,6 +409,24 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
 
     }
 
+    "deserialize StateV1" in {
+
+      val result = PersistEventDeserializer.from(StateV1Data.stateV1)
+
+      result.value.tokens shouldBe StateData.state.tokens
+      result.value.parties shouldBe StateData.state.parties
+      result.value.relationships shouldBe StateData.state.relationships
+
+    }
+  }
+
+  "serialize State" in {
+
+    val result = PersistEventSerializer.to(StateData.state)
+
+    result.value.tokens.sortBy(_.key) shouldBe StateV1Data.stateV1.tokens.sortBy(_.key)
+    result.value.parties.sortBy(_.key) shouldBe StateV1Data.stateV1.parties.sortBy(_.key)
+    result.value.relationships.sortBy(_.key) shouldBe StateV1Data.stateV1.relationships.sortBy(_.key)
   }
 
 }
