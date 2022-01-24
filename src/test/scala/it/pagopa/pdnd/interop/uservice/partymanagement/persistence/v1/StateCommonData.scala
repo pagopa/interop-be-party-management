@@ -22,6 +22,7 @@ object StateCommonData {
   val productRole      = "productRole"
   val productCreatedAt = OffsetDateTime.now()
 
+  val relationshipId     = UUID.randomUUID()
   val noneTestId         = UUID.randomUUID()
   val managerActiveId    = UUID.randomUUID()
   val managerPendingId   = UUID.randomUUID()

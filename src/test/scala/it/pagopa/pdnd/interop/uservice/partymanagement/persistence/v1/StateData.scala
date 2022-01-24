@@ -8,49 +8,54 @@ import org.scalatest.TryValues._
 import java.util.UUID
 
 object StateData {
+
   import StateCommonData._
 
-  final val state: State = {
-    val personParty = PersonParty(id = personPartyId, start = start, end = Some(end))
+  val product: PersistedProduct = PersistedProduct(
+    id = productId,
+    role = productRole,
+    createdAt = productCreatedAt.toMillis.toOffsetDateTime.success.value
+  )
 
-    val institutionParty = InstitutionParty(
-      id = institutionPartyId,
-      externalId = externalId2.toString,
-      description = description,
-      digitalAddress = digitalAddress,
-      taxCode = taxCode,
-      start = start,
-      end = None,
-      attributes = attributes.toSet
-    )
+  def createPartyRelationship(
+    partyRelationshipId: UUID,
+    role: PersistedPartyRole,
+    state: PersistedPartyRelationshipState
+  ): PersistedPartyRelationship = PersistedPartyRelationship(
+    id = partyRelationshipId,
+    from = personPartyId,
+    to = institutionPartyId,
+    role = role,
+    product = product,
+    createdAt = createdAt.toMillis.toOffsetDateTime.success.value,
+    updatedAt = Some(updatedAt.toMillis.toOffsetDateTime.success.value),
+    state = state,
+    filePath = Some(filePath),
+    fileName = Some(fileName),
+    contentType = Some(contentType),
+    onboardingTokenId = Some(onboardingTokenId)
+  )
+
+  val personParty: PersonParty = PersonParty(id = personPartyId, start = start, end = Some(end))
+
+  val institutionParty: InstitutionParty = InstitutionParty(
+    id = institutionPartyId,
+    externalId = externalId2.toString,
+    description = description,
+    digitalAddress = digitalAddress,
+    taxCode = taxCode,
+    start = start,
+    end = None,
+    attributes = attributes.toSet
+  )
+
+  val relationship: PersistedPartyRelationship =
+    createPartyRelationship(relationshipId, PersistedPartyRole.Manager, PersistedPartyRelationshipState.Active)
+
+  final val state: State = {
 
     val parties: Map[UUID, Party] =
       Map(personParty.id -> personParty, institutionParty.id -> institutionParty)
-
-    val product = PersistedProduct(
-      id = productId,
-      role = productRole,
-      createdAt = productCreatedAt.toMillis.toOffsetDateTime.success.value
-    )
-
-    def createPartyRelationship(
-      partyRelationshipId: UUID,
-      role: PersistedPartyRole,
-      state: PersistedPartyRelationshipState
-    ) = PersistedPartyRelationship(
-      id = partyRelationshipId,
-      from = personPartyId,
-      to = institutionPartyId,
-      role = role,
-      product = product,
-      createdAt = createdAt.toMillis.toOffsetDateTime.success.value,
-      updatedAt = Some(updatedAt.toMillis.toOffsetDateTime.success.value),
-      state = state,
-      filePath = Some(filePath),
-      fileName = Some(fileName),
-      contentType = Some(contentType),
-      onboardingTokenId = Some(onboardingTokenId)
-    )
 
     val noneTest =
       createPartyRelationship(noneTestId, PersistedPartyRole.Manager, PersistedPartyRelationshipState.Active).copy(

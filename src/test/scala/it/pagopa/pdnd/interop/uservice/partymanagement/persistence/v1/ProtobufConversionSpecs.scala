@@ -2,7 +2,21 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.persistence.v1
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.{LongOps, OffsetDateTimeOps}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.utils.ErrorOr
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
+  AttributesAdded,
+  PartyAdded,
+  PartyDeleted,
+  PartyRelationshipAdded,
+  PartyRelationshipConfirmed
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1._
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.events.{
+  AttributesAddedV1,
+  PartyAddedV1,
+  PartyDeletedV1,
+  PartyRelationshipAddedV1,
+  PartyRelationshipConfirmedV1
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionPartyV1,
   PartyV1,
@@ -418,15 +432,126 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       result.value.relationships shouldBe StateData.state.relationships
 
     }
-  }
 
-  "serialize State" in {
+    "serialize State" in {
 
-    val result = PersistEventSerializer.to(StateData.state)
+      val result = PersistEventSerializer.to(StateData.state)
 
-    result.value.tokens.sortBy(_.key) shouldBe StateV1Data.stateV1.tokens.sortBy(_.key)
-    result.value.parties.sortBy(_.key) shouldBe StateV1Data.stateV1.parties.sortBy(_.key)
-    result.value.relationships.sortBy(_.key) shouldBe StateV1Data.stateV1.relationships.sortBy(_.key)
+      result.value.tokens.sortBy(_.key) shouldBe StateV1Data.stateV1.tokens.sortBy(_.key)
+      result.value.parties.sortBy(_.key) shouldBe StateV1Data.stateV1.parties.sortBy(_.key)
+      result.value.relationships.sortBy(_.key) shouldBe StateV1Data.stateV1.relationships.sortBy(_.key)
+    }
+
+    "deserialize PartyAddedV1" in {
+
+      val result = PersistEventDeserializer.from(PartyAddedV1(party = StateV1Data.personPartyV1))
+
+      result.value.party shouldBe StateData.personParty
+
+    }
+
+    "serialize PartyAdded" in {
+
+      val result = PersistEventSerializer.to(PartyAdded(party = StateData.personParty))
+
+      result.value.party shouldBe StateV1Data.personPartyV1
+    }
+
+    "deserialize PartyDeletedV1" in {
+
+      val result = PersistEventDeserializer.from(PartyDeletedV1(party = StateV1Data.personPartyV1))
+
+      result.value.party shouldBe StateData.personParty
+
+    }
+
+    "serialize PartyDeleted" in {
+
+      val result = PersistEventSerializer.to(PartyDeleted(party = StateData.personParty))
+
+      result.value.party shouldBe StateV1Data.personPartyV1
+    }
+
+    "deserialize AttributesAddedV1" in {
+
+      val result = PersistEventDeserializer.from(AttributesAddedV1(party = StateV1Data.personPartyV1))
+
+      result.value.party shouldBe StateData.personParty
+
+    }
+
+    "serialize AttributesAdded" in {
+
+      val result = PersistEventSerializer.to(AttributesAdded(party = StateData.personParty))
+
+      result.value.party shouldBe StateV1Data.personPartyV1
+    }
+
+    "deserialize PartyRelationshipAddedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(PartyRelationshipAddedV1(partyRelationship = StateV1Data.relationshipV1))
+
+      result.value.partyRelationship shouldBe StateData.relationship
+
+    }
+
+    "serialize PartyRelationshipAdded" in {
+
+      val result = PersistEventSerializer.to(PartyRelationshipAdded(partyRelationship = StateData.relationship))
+
+      result.value.partyRelationship shouldBe StateV1Data.relationshipV1
+    }
+
+    "deserialize PartyRelationshipConfirmedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipConfirmedV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            filePath = StateCommonData.filePath,
+            fileName = StateCommonData.filePath,
+            contentType = StateCommonData.contentType,
+            timestamp = StateCommonData.start.toMillis,
+            onboardingTokenId = StateCommonData.onboardingTokenId.toString
+          )
+        )
+
+      result.value shouldBe PartyRelationshipConfirmed(
+        partyRelationshipId = StateCommonData.relationshipId,
+        filePath = StateCommonData.filePath,
+        fileName = StateCommonData.filePath,
+        contentType = StateCommonData.contentType,
+        timestamp = StateCommonData.start.toMillis.toOffsetDateTime.success.value,
+        onboardingTokenId = StateCommonData.onboardingTokenId
+      )
+
+    }
+
+    "serialize PartyRelationshipConfirmed" in {
+
+      val result =
+        PersistEventSerializer.to(
+          PartyRelationshipConfirmed(
+            partyRelationshipId = StateCommonData.relationshipId,
+            filePath = StateCommonData.filePath,
+            fileName = StateCommonData.filePath,
+            contentType = StateCommonData.contentType,
+            timestamp = StateCommonData.start.toMillis.toOffsetDateTime.success.value,
+            onboardingTokenId = StateCommonData.onboardingTokenId
+          )
+        )
+
+      result.value shouldBe PartyRelationshipConfirmedV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        filePath = StateCommonData.filePath,
+        fileName = StateCommonData.filePath,
+        contentType = StateCommonData.contentType,
+        timestamp = StateCommonData.start.toMillis,
+        onboardingTokenId = StateCommonData.onboardingTokenId.toString
+      )
+    }
+
   }
 
 }

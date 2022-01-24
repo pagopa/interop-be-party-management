@@ -28,52 +28,59 @@ object StateV1Data {
 
   import StateCommonData._
 
+  val productV1: PartyRelationshipProductV1 =
+    PartyRelationshipProductV1(id = productId, role = productRole, createdAt = productCreatedAt.toMillis)
+
+  def createPartyRelationshipV1(
+    partyRelationshipId: UUID,
+    role: PartyRelationshipV1.PartyRoleV1,
+    state: PartyRelationshipV1.PartyRelationshipStateV1
+  ): PartyRelationshipV1 = PartyRelationshipV1(
+    id = partyRelationshipId.toString,
+    from = personPartyId.toString,
+    to = institutionPartyId.toString,
+    role = role,
+    product = productV1,
+    createdAt = createdAt.toMillis,
+    updatedAt = Some(updatedAt.toMillis),
+    state = state,
+    filePath = Some(filePath),
+    fileName = Some(fileName),
+    contentType = Some(contentType),
+    onboardingTokenId = Some(onboardingTokenId.toString)
+  )
+
+  val personPartyV1: PersonPartyV1 = PersonPartyV1(
+    id = personPartyId.toString,
+    start = start.asFormattedString.success.value,
+    end = Some(end.asFormattedString.success.value)
+  )
+
+  val institutionPartyV1: InstitutionPartyV1 = InstitutionPartyV1(
+    id = institutionPartyId.toString,
+    externalId = externalId2.toString,
+    description = description,
+    digitalAddress = digitalAddress,
+    taxCode = taxCode,
+    start = start.asFormattedString.success.value,
+    end = None,
+    attributes = attributes
+  )
+
+  val relationshipV1: PartyRelationshipV1 =
+    createPartyRelationshipV1(
+      relationshipId,
+      PartyRelationshipV1.PartyRoleV1.MANAGER,
+      PartyRelationshipV1.PartyRelationshipStateV1.ACTIVE
+    )
+
   final val stateV1: StateV1 = {
-
-    val personPartyV1 = PersonPartyV1(
-      id = personPartyId.toString,
-      start = start.asFormattedString.success.value,
-      end = Some(end.asFormattedString.success.value)
-    )
-
-    val institutionPartyV1 = InstitutionPartyV1(
-      id = institutionPartyId.toString,
-      externalId = externalId2.toString,
-      description = description,
-      digitalAddress = digitalAddress,
-      taxCode = taxCode,
-      start = start.asFormattedString.success.value,
-      end = None,
-      attributes = attributes
-    )
 
     val partiesV1: Seq[PartiesV1] =
       Seq(
         PartiesV1(key = personPartyId.toString, value = personPartyV1),
         PartiesV1(key = institutionPartyId.toString, value = institutionPartyV1)
       )
-
-    val productV1 =
-      PartyRelationshipProductV1(id = productId, role = productRole, createdAt = productCreatedAt.toMillis)
-
-    def createPartyRelationshipV1(
-      partyRelationshipId: UUID,
-      role: PartyRelationshipV1.PartyRoleV1,
-      state: PartyRelationshipV1.PartyRelationshipStateV1
-    ) = PartyRelationshipV1(
-      id = partyRelationshipId.toString,
-      from = personPartyId.toString,
-      to = institutionPartyId.toString,
-      role = role,
-      product = productV1,
-      createdAt = createdAt.toMillis,
-      updatedAt = Some(updatedAt.toMillis),
-      state = state,
-      filePath = Some(filePath),
-      fileName = Some(fileName),
-      contentType = Some(contentType),
-      onboardingTokenId = Some(onboardingTokenId.toString)
-    )
 
     val noneTestV1 =
       createPartyRelationshipV1(
