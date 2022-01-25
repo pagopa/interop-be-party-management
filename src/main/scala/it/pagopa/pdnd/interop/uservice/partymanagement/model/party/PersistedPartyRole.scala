@@ -5,19 +5,19 @@ import spray.json.DefaultJsonProtocol
 
 sealed trait PersistedPartyRole {
   def toApi: PartyRole = this match {
-    case Manager     => PartyRole.MANAGER
-    case Delegate    => PartyRole.DELEGATE
-    case SubDelegate => PartyRole.SUB_DELEGATE
-    case Operator    => PartyRole.OPERATOR
+    case PersistedPartyRole.Manager     => PartyRole.MANAGER
+    case PersistedPartyRole.Delegate    => PartyRole.DELEGATE
+    case PersistedPartyRole.SubDelegate => PartyRole.SUB_DELEGATE
+    case PersistedPartyRole.Operator    => PartyRole.OPERATOR
   }
 }
 
-case object Manager     extends PersistedPartyRole
-case object Delegate    extends PersistedPartyRole
-case object SubDelegate extends PersistedPartyRole
-case object Operator    extends PersistedPartyRole
-
 object PersistedPartyRole extends DefaultJsonProtocol {
+
+  case object Manager     extends PersistedPartyRole
+  case object Delegate    extends PersistedPartyRole
+  case object SubDelegate extends PersistedPartyRole
+  case object Operator    extends PersistedPartyRole
 
   def fromApi(role: PartyRole): PersistedPartyRole = role match {
     case PartyRole.MANAGER      => Manager

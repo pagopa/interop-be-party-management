@@ -75,7 +75,7 @@ lazy val client = project
   .settings(
     name := "pdnd-interop-uservice-party-management-client",
     scalacOptions := Seq(),
-    scalafmtOnCompile:= true,
+    scalafmtOnCompile := true,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
@@ -98,7 +98,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "pdnd-interop-uservice-party-management",
     Test / parallelExecution := false,
-    scalafmtOnCompile:= true,
+    scalafmtOnCompile := true,
     dockerBuildOptions ++= Seq("--network=host"),
     dockerRepository := Some(System.getenv("DOCKER_REPO")),
     dockerBaseImage := "adoptopenjdk:11-jdk-hotspot",
@@ -124,4 +124,4 @@ lazy val root = (project in file("."))
 javaAgents += "io.kamon" % "kanela-agent" % "1.0.11"
 
 Test / fork := true
-javaOptions in Test += "-Dconfig.file=src/test/resources/application-test.conf"
+Test / javaOptions += "-Dconfig.file=src/test/resources/application-test.conf"
