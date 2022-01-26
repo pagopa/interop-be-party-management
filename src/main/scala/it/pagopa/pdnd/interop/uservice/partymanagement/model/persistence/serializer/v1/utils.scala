@@ -7,6 +7,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.PersistedPart
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
+  InstitutionAttributeV1,
   InstitutionPartyV1,
   PartyV1,
   PersonPartyV1
@@ -55,7 +56,7 @@ object utils {
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
-          attributes = i.attributes.toSet,
+          attributes = i.attributes.map(a => InstitutionAttribute(a.origin, a.code)).toSet,
           start = start,
           end = end
         )
@@ -82,7 +83,7 @@ object utils {
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
-          attributes = i.attributes.toSeq,
+          attributes = i.attributes.map(a => InstitutionAttributeV1(a.origin, a.code)).toSeq,
           start = start,
           end = end
         )

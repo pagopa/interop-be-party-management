@@ -58,14 +58,14 @@ object PartyPersistentBehavior {
         Effect.none
 
       case GetPartyAttributes(uuid, replyTo) =>
-        val statusReply: StatusReply[Seq[String]] = state.parties
+        val statusReply: StatusReply[Seq[InstitutionAttribute]] = state.parties
           .get(uuid)
           .map {
             case institutionParty: InstitutionParty => StatusReply.success(institutionParty.attributes.toSeq)
-            case _: PersonParty                     => StatusReply.success(Seq.empty[String])
+            case _: PersonParty                     => StatusReply.success(Seq.empty[InstitutionAttribute])
           }
           .getOrElse {
-            StatusReply.Error[Seq[String]](s"Party $uuid not found")
+            StatusReply.Error[Seq[InstitutionAttribute]](s"Party $uuid not found")
           }
 
         replyTo ! statusReply
