@@ -56,13 +56,6 @@ object PersonParty {
     PersonParty(id = person.id, start = offsetDateTimeSupplier.get, end = None)
 }
 
-final case class InstitutionAttribute(origin: String, code: String)
-
-object InstitutionAttribute {
-  def toApi(attribute: InstitutionAttribute): Attribute   = Attribute(attribute.origin, attribute.code)
-  def fromApi(attribute: Attribute): InstitutionAttribute = InstitutionAttribute(attribute.origin, attribute.code)
-}
-
 final case class InstitutionParty(
   id: UUID,
   externalId: String,

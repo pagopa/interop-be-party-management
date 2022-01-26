@@ -8,7 +8,7 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils._
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.party._
-import it.pagopa.pdnd.interop.uservice.partymanagement.model.{Attribute, PartyRole, RelationshipState, TokenText}
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.{PartyRole, RelationshipState, TokenText}
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
@@ -58,15 +58,14 @@ object PartyPersistentBehavior {
         Effect.none
 
       case GetPartyAttributes(uuid, replyTo) =>
-        val statusReply: StatusReply[Seq[Attribute]] = state.parties
+        val statusReply: StatusReply[Seq[InstitutionAttribute]] = state.parties
           .get(uuid)
           .map {
-            case institutionParty: InstitutionParty =>
-              StatusReply.success(institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq)
-            case _: PersonParty => StatusReply.success(Seq.empty[Attribute])
+            case institutionParty: InstitutionParty => StatusReply.success(institutionParty.attributes.toSeq)
+            case _: PersonParty                     => StatusReply.success(Seq.empty[InstitutionAttribute])
           }
           .getOrElse {
-            StatusReply.Error[Seq[Attribute]](s"Party $uuid not found")
+            StatusReply.Error[Seq[InstitutionAttribute]](s"Party $uuid not found")
           }
 
         replyTo ! statusReply
