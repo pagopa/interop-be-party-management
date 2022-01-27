@@ -28,6 +28,7 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.seriali
   TokenAddedV1
 }
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
+  InstitutionAttributeV1,
   InstitutionPartyV1,
   PartyV1,
   PersonPartyV1
@@ -85,7 +86,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes     = Set("a", "b")
+      val attributes =
+        Set(InstitutionAttribute(origin = "origin", code = "a"), InstitutionAttribute(origin = "origin", code = "b"))
 
       val partyV1: Try[InstitutionPartyV1] =
         for {
@@ -99,7 +101,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           taxCode = taxCode,
           start = start,
           end = Some(end),
-          attributes = attributes.toSeq
+          attributes =
+            attributes.toSeq.map(attribute => InstitutionAttributeV1(origin = attribute.origin, code = attribute.code))
         )
 
       val party: Either[Throwable, Party] = partyV1.toEither.flatMap(getParty)
@@ -145,7 +148,11 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes     = Set("a", "b")
+      val attributes =
+        Seq(
+          InstitutionAttributeV1(origin = "origin", code = "a"),
+          InstitutionAttributeV1(origin = "origin", code = "b")
+        )
 
       val party: InstitutionParty = InstitutionParty(
         id = id,
@@ -155,7 +162,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         taxCode = taxCode,
         start = start,
         end = Some(end),
-        attributes = attributes
+        attributes = attributes.map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code)).toSet
       )
 
       val partyV1: Either[Throwable, PartyV1] = getPartyV1(party)

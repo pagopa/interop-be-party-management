@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice.partymanagement.persistence.v1
 
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.OffsetDateTimeOps
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1.party.{
+  InstitutionAttributeV1,
   InstitutionPartyV1,
   PersonPartyV1
 }
@@ -64,7 +65,7 @@ object StateV1Data {
     taxCode = taxCode,
     start = start.asFormattedString.success.value,
     end = None,
-    attributes = attributes
+    attributes = attributes.map(attr => InstitutionAttributeV1(origin = attr.origin, code = attr.code))
   )
 
   val relationshipV1: PartyRelationshipV1 =
