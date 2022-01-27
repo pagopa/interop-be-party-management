@@ -1,5 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.persistence.v1
 
+import it.pagopa.pdnd.interop.uservice.partymanagement.model.party.InstitutionAttribute
+
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -17,7 +19,8 @@ object StateCommonData {
   val description    = "description"
   val digitalAddress = "digitalAddress"
   val taxCode        = "taxCode"
-  val attributes     = Seq("a", "b")
+  val attributes =
+    Seq(InstitutionAttribute(origin = "origin", code = "a"), InstitutionAttribute(origin = "origin", code = "b"))
 
   val productId        = "productId"
   val productRole      = "productRole"
