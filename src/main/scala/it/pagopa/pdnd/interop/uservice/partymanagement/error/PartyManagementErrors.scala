@@ -83,4 +83,6 @@ object PartyManagementErrors {
   final case object OrganizationBadRequest
       extends ComponentError("0038", "Bad request for getting organization by external id")
 
+  final case class TokenExpired(tokenId: String) extends ComponentError("0039", s"Token $tokenId has expired")
+
 }

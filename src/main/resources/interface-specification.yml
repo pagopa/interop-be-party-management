@@ -552,14 +552,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenInfo'
-        '404':
-          description: Token not found
+        '400':
+          description: Invalid ID supplied
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        '400':
-          description: Invalid ID supplied
+        '404':
+          description: Token not found
           content:
             application/problem+json:
               schema:
@@ -601,6 +601,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
     delete:
       tags:
         - party
@@ -620,6 +626,12 @@ paths:
           description: successful operation
         '400':
           description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
           content:
             application/problem+json:
               schema:
