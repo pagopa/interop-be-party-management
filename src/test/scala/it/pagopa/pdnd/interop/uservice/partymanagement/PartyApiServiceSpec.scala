@@ -136,7 +136,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "create a new person" in {
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       val response = prepareTest(personSeed1)
 
@@ -150,7 +150,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 200 if the person exists" in {
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       prepareTest(personSeed2)
 
@@ -170,7 +170,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return the person if exists" in {
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       prepareTest(personSeed3)
 
@@ -194,14 +194,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 409 if person already exists" in {
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       val seed = PersonSeed(id = personUuid4)
       val _    = prepareTest(seed)
 
       val data = Marshal(seed).to[MessageEntity].map(_.dataBytes).futureValue
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       val response = createPerson(data)
 
@@ -234,7 +234,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       (() => uuidSupplier.get).expects().returning(orgUuid1).once()
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       val response = prepareTest(orgSeed1)
 
@@ -250,7 +250,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       (() => uuidSupplier.get).expects().returning(orgUuid2).once()
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       prepareTest(orgSeed2)
 
@@ -272,7 +272,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       (() => uuidSupplier.get).expects().returning(orgUuid3).once()
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       prepareTest(orgSeed3)
 
@@ -298,13 +298,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       (() => uuidSupplier.get).expects().returning(orgUuid4).once()
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       prepareTest(orgSeed4)
 
       val data = Marshal(orgSeed4).to[MessageEntity].map(_.dataBytes).futureValue
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once()
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
       val response = createOrganization(data)
 
@@ -366,9 +366,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once() // Create organization
       (() => uuidSupplier.get).expects().returning(relUuid).once() // Create relationship
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
 
       val response = prepareTest(personSeed = personSeed, organizationSeed = orgSeed, relationshipSeed = rlSeed)
 
@@ -400,12 +400,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -414,9 +414,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()                  // Create organization
       (() => uuidSupplier.get).expects().returning(rlExpected.items.head.id).once() // Create relationship
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
 
       prepareTest(personSeed = personSeed, organizationSeed = orgSeed, relationshipSeed = rlSeed)
 
@@ -456,11 +456,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           RelationshipProductSeed(id = "p1", role = "admin")
         )
 
-      (() => uuidSupplier.get).expects().returning(orgUuid).once()             // Create organization
-      (() => uuidSupplier.get).expects().returning(relUuid).once()             // Create relationship
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => uuidSupplier.get).expects().returning(orgUuid).once()                  // Create organization
+      (() => uuidSupplier.get).expects().returning(relUuid).once()                  // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
 
       prepareTest(personSeed = personSeed, organizationSeed = orgSeed, relationshipSeed = rlSeed)
 
@@ -507,12 +507,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid1,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           ),
           Relationship(
@@ -520,12 +520,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -535,11 +535,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedDelegate)
@@ -605,12 +605,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           ),
           Relationship(
@@ -618,12 +618,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid3,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "api", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "api", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -634,13 +634,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
       (() => uuidSupplier.get).expects().returning(relUuid3).once() // Create relationship3
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person3
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship3
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person3
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship3
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
@@ -707,12 +707,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestamp),
+            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           ),
           Relationship(
@@ -720,12 +720,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid3,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "IO", role = "security", createdAt = timestamp),
+            product = RelationshipProduct(id = "IO", role = "security", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -736,13 +736,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
       (() => uuidSupplier.get).expects().returning(relUuid3).once() // Create relationship3
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person3
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship3
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person3
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship3
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedPDND)
@@ -800,12 +800,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -815,11 +815,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedDelegate)
@@ -876,12 +876,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid1,
             to = orgUuid,
             role = PartyRole.MANAGER,
-            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           ),
           Relationship(
@@ -889,12 +889,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestamp),
+            product = RelationshipProduct(id = "p1", role = "security", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -904,11 +904,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedPending)
@@ -965,12 +965,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             from = personUuid2,
             to = orgUuid,
             role = PartyRole.DELEGATE,
-            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestamp),
+            product = RelationshipProduct(id = "PDND", role = "security", createdAt = timestampValid),
             state = RelationshipState.PENDING,
             filePath = None,
             fileName = None,
             contentType = None,
-            createdAt = timestamp,
+            createdAt = timestampValid,
             updatedAt = None
           )
         )
@@ -980,11 +980,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
@@ -1039,11 +1039,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relUuid1).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relUuid2).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
 
       prepareTest(personSeed = personSeed1, organizationSeed = orgSeed, relationshipSeed = rlSeedAdmin)
       prepareTest(personSeed = personSeed2, organizationSeed = orgSeed, relationshipSeed = rlSeedSecurity)
@@ -1101,11 +1101,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
       (() => uuidSupplier.get).expects().returning(relationshipId).once() // Create relationship
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship updated At
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Suspend relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Confirm relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Suspend relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
@@ -1191,12 +1191,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
       (() => uuidSupplier.get).expects().returning(relationshipId).once() // Create relationship
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Suspend relationship updated At
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Activate relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Confirm relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Suspend relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Activate relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
@@ -1297,11 +1297,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
       (() => uuidSupplier.get).expects().returning(relationshipId).once() // Create relationship
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Confirm relationship
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Delete relationship updated At
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Confirm relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Delete relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, organizationSeed = organizationSeed, relationshipSeed = relationshipSeed)
@@ -1339,7 +1339,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     }
 
     "fail if relationship does not exist" in {
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Delete relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Delete relationship
 
       val response =
         Http()
@@ -1366,11 +1366,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(createTokenUuid0).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(createTokenUuid1).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
 
       val relationshipResponse = prepareTest(personSeed1, organizationSeed1, relationshipSeed1, relationshipSeed2)
 
@@ -1391,14 +1391,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relationshipId1).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relationshipId2).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
       (() => offsetDateTimeSupplier.get)
         .expects()
-        .returning(timestamp)
+        .returning(timestampValid)
         .repeated(tokenSeed1.relationships.items.size) // Consume token
 
       val relationshipResponse = prepareTest(personSeed2, organizationSeed2, relationshipSeed3, relationshipSeed4)
@@ -1435,14 +1435,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(relationshipId3).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relationshipId4).once() // Create relationship2
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person2
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship1
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
       (() => offsetDateTimeSupplier.get)
         .expects()
-        .returning(timestamp)
+        .returning(timestampValid)
         .repeated(tokenSeed2.relationships.items.size) // Consume token
 
       val relationshipResponse = prepareTest(personSeed3, organizationSeed3, relationshipSeed5, relationshipSeed6)
@@ -1479,6 +1479,68 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       body.items.map(_.state) should contain only RelationshipState.REJECTED
 
+    }
+
+    "throw an error if the token is expired" in {
+      (() => uuidSupplier.get).expects().returning(orgId4).once()          // Create organization
+      (() => uuidSupplier.get).expects().returning(relationshipId5).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId6).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampExpired).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampExpired).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampExpired).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampExpired).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampExpired).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestampExpired)
+        .repeated(tokenSeed3.relationships.items.size) // Consume token
+
+      val relationshipResponse = prepareTest(personSeed4, organizationSeed4, relationshipSeed7, relationshipSeed8)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed3).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText = token3.id.toString
+
+      val formData = Multipart.FormData
+        .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
+        .toEntity
+
+      val consumedResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/$tokenText",
+              method = HttpMethods.POST,
+              headers = multipart,
+              entity = formData
+            )
+          )
+          .futureValue
+      consumedResponse.status shouldBe StatusCodes.BadRequest
+    }
+
+    "throw an error if the token does not exist" in {
+      val formData = Multipart.FormData
+        .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
+        .toEntity
+
+      val consumedResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/${UUID.randomUUID().toString}",
+              method = HttpMethods.POST,
+              headers = multipart,
+              entity = formData
+            )
+          )
+          .futureValue
+      consumedResponse.status shouldBe StatusCodes.NotFound
     }
   }
 
@@ -1540,9 +1602,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => uuidSupplier.get).expects().returning(orgUuid).once()        // Create organization
       (() => uuidSupplier.get).expects().returning(relationshipId).once() // Create relationship
 
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create organization
-      (() => offsetDateTimeSupplier.get).expects().returning(timestamp).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
 
       prepareTest(personSeed = personSeed, organizationSeed = orgSeed, relationshipSeed = rlSeed)
 
@@ -1567,12 +1629,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           from = personUuid,
           to = orgUuid,
           role = rlSeed.role,
-          product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestamp),
+          product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
           state = RelationshipState.PENDING,
           filePath = None,
           fileName = None,
           contentType = None,
-          createdAt = timestamp,
+          createdAt = timestampValid,
           updatedAt = None
         )
     }

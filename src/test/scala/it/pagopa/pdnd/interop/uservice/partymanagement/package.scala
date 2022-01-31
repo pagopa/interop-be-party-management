@@ -24,7 +24,8 @@ package object partymanagement extends MockFactory {
   val uuidSupplier: UUIDSupplier                     = mock[UUIDSupplier]
   val offsetDateTimeSupplier: OffsetDateTimeSupplier = mock[OffsetDateTimeSupplier]
 
-  final val timestamp = OffsetDateTime.parse("2021-11-26T13:57:43.314689+01:00")
+  final val timestampValid   = OffsetDateTime.now()
+  final val timestampExpired = OffsetDateTime.parse("2021-11-26T13:57:43.314689+01:00")
 
   final lazy val url: String =
     s"http://localhost:8088/pdnd-interop-uservice-party-management/${buildinfo.BuildInfo.interfaceVersion}"

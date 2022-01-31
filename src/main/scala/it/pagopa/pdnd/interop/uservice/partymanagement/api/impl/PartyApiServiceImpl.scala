@@ -419,7 +419,8 @@ class PartyApiServiceImpl(
       token       <- found.toFuture(TokenNotFound(tokenId))
       results <-
         if (token.isValid) confirmRelationships(token, doc)
-        else processRelationships(token, RejectPartyRelationship)
+        else
+          processRelationships(token, RejectPartyRelationship).flatMap(_ => Future.failed(TokenExpired(tokenId)))
     } yield results
 
     onComplete(results) {
@@ -429,6 +430,9 @@ class PartyApiServiceImpl(
         logger.error("Consuming token failed: {}", errors)
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
       case Success(_) => consumeToken201
+      case Failure(ex: TokenNotFound) =>
+        logger.error("Token not found", ex)
+        consumeToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
       case Failure(ex) =>
         logger.error("Consuming token failed", ex)
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenError(ex.getMessage)))
@@ -457,6 +461,9 @@ class PartyApiServiceImpl(
         logger.error("Invalidating token failed: {}", errors)
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenBadRequest(errors)))
       case Success(_) => invalidateToken200
+      case Failure(ex: TokenNotFound) =>
+        logger.error("Token not found", ex)
+        invalidateToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
       case Failure(ex) =>
         logger.error("Invalidating token failed", ex)
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenError(ex.getMessage)))
