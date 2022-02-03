@@ -19,8 +19,10 @@ object StateCommonData {
   val description    = "description"
   val digitalAddress = "digitalAddress"
   val taxCode        = "taxCode"
-  val attributes =
-    Seq(InstitutionAttribute(origin = "origin", code = "a"), InstitutionAttribute(origin = "origin", code = "b"))
+  val attributes = Seq(
+    InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
+    InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
+  )
 
   val productId        = "productId"
   val productRole      = "productRole"

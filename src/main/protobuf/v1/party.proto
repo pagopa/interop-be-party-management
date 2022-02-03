@@ -34,4 +34,5 @@ message InstitutionPartyV1 {
 message InstitutionAttributeV1 {
   required string origin = 1;
   required string code = 2;
+  required string description = 3;
 }

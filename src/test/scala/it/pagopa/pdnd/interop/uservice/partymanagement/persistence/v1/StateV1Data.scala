@@ -65,7 +65,9 @@ object StateV1Data {
     taxCode = taxCode,
     start = start.asFormattedString.success.value,
     end = None,
-    attributes = attributes.map(attr => InstitutionAttributeV1(origin = attr.origin, code = attr.code))
+    attributes = attributes.map(attr =>
+      InstitutionAttributeV1(origin = attr.origin, code = attr.code, description = attr.description)
+    )
   )
 
   val relationshipV1: PartyRelationshipV1 =

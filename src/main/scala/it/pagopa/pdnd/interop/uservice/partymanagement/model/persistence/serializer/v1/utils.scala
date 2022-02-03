@@ -56,7 +56,9 @@ object utils {
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
-          attributes = i.attributes.map(a => InstitutionAttribute(a.origin, a.code)).toSet,
+          attributes = i.attributes
+            .map(a => InstitutionAttribute(origin = a.origin, code = a.code, description = a.description))
+            .toSet,
           start = start,
           end = end
         )
@@ -83,7 +85,9 @@ object utils {
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
-          attributes = i.attributes.map(a => InstitutionAttributeV1(a.origin, a.code)).toSeq,
+          attributes = i.attributes
+            .map(a => InstitutionAttributeV1(origin = a.origin, code = a.code, description = a.description))
+            .toSeq,
           start = start,
           end = end
         )
