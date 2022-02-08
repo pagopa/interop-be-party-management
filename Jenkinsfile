@@ -51,14 +51,14 @@ pipeline {
       }
     }
 
-    stage('Apply Kubernetes files') {
+    stage('Apply Kubernetes files') {z
       agent { label 'sbt-template' }
       environment {
         POSTGRES = credentials('postgres-db')
         AWS = credentials('jenkins-aws')
         STORAGE_USR="${AWS_USR}"
         STORAGE_PSW="${AWS_PSW}"
-        MAIN_AUDIENCE = credentials('main-audience')
+        MAIN_AUDIENCE = "${env.MAIN_AUDIENCE}""
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
         REPLICAS_NR = 1
       }
