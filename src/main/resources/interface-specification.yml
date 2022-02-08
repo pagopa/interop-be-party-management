@@ -826,9 +826,13 @@ components:
         code:
           type: string
           description: 'original identifier as defined at origin side, e.g.: IPA attribute code'
+        description:
+          type: string
+          description: 'human readable description of the attribute'
       required:
         - origin
         - code
+        - description
     RelationshipProductSeed:
       type: object
       properties:

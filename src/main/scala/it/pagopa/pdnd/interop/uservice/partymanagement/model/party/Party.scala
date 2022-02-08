@@ -23,7 +23,7 @@ sealed trait Party {
     case _: PersonParty => Left(new RuntimeException("Attributes do not exist for person party"))
     case institutionParty: InstitutionParty =>
       val updated: Set[InstitutionAttribute] = institutionParty.attributes ++ attributes.map(attribute =>
-        InstitutionAttribute(attribute.origin, attribute.code)
+        InstitutionAttribute(origin = attribute.origin, code = attribute.code, description = attribute.description)
       )
       Right(institutionParty.copy(attributes = updated))
   }

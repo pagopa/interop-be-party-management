@@ -86,8 +86,10 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes =
-        Set(InstitutionAttribute(origin = "origin", code = "a"), InstitutionAttribute(origin = "origin", code = "b"))
+      val attributes = Set(
+        InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
+        InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
+      )
 
       val partyV1: Try[InstitutionPartyV1] =
         for {
@@ -101,8 +103,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           taxCode = taxCode,
           start = start,
           end = Some(end),
-          attributes =
-            attributes.toSeq.map(attribute => InstitutionAttributeV1(origin = attribute.origin, code = attribute.code))
+          attributes = attributes.toSeq.map(attribute =>
+            InstitutionAttributeV1(
+              origin = attribute.origin,
+              code = attribute.code,
+              description = attribute.description
+            )
+          )
         )
 
       val party: Either[Throwable, Party] = partyV1.toEither.flatMap(getParty)
@@ -150,8 +157,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val end            = OffsetDateTime.now().plusDays(10L)
       val attributes =
         Seq(
-          InstitutionAttributeV1(origin = "origin", code = "a"),
-          InstitutionAttributeV1(origin = "origin", code = "b")
+          InstitutionAttributeV1(origin = "origin", code = "a", description = "description_a"),
+          InstitutionAttributeV1(origin = "origin", code = "b", description = "description_b")
         )
 
       val party: InstitutionParty = InstitutionParty(
@@ -162,7 +169,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         taxCode = taxCode,
         start = start,
         end = Some(end),
-        attributes = attributes.map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code)).toSet
+        attributes = attributes
+          .map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code, description = attr.description))
+          .toSet
       )
 
       val partyV1: Either[Throwable, PartyV1] = getPartyV1(party)
