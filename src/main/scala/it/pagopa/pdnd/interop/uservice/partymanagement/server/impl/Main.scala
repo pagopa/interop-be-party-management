@@ -55,8 +55,9 @@ object Main extends App {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
     keyset      <- JWTConfiguration.jwtReader.loadKeyset()
     jwtValidator = new DefaultJWTReader with PublicKeysHolder {
-      var publicKeyset                                                                 = keyset
-      override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] = getClaimsVerifier()
+      var publicKeyset = keyset
+      override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+        getClaimsVerifier(audience = ApplicationConfiguration.jwtAudience)
     }
   } yield (fileManager, jwtValidator)
 

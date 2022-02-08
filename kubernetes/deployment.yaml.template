@@ -88,6 +88,8 @@ spec:
                   key: STORAGE_PSW
             - name: TOKEN_VALIDITY_HOURS
               value: "{{tokenValidityHours}}"
+            - name: MAIN_AUDIENCE
+              value: "{{mainAudience}}"
             - name: WELL_KNOWN_URL
               value: "{{wellKnownURL}}"
             - name: NAMESPACE
