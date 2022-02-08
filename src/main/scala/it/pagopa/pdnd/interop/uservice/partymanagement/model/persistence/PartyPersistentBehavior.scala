@@ -26,7 +26,7 @@ object PartyPersistentBehavior {
     offsetDateTimeSupplier: OffsetDateTimeSupplier
   ): (State, Command) => Effect[Event, State] = { (state, command) =>
     val idleTimeout =
-      context.system.settings.config.getDuration("uservice-party-management.idle-timeout")
+      context.system.settings.config.getDuration("party-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddParty(party, replyTo) =>
@@ -280,7 +280,7 @@ object PartyPersistentBehavior {
     Behaviors.setup { context =>
       val numberOfEvents =
         context.system.settings.config
-          .getInt("uservice-party-management.number-of-events-before-snapshot")
+          .getInt("party-management.number-of-events-before-snapshot")
       EventSourcedBehavior[Command, Event, State](
         persistenceId = persistenceId,
         emptyState = State.empty,

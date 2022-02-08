@@ -7,14 +7,14 @@ import scala.jdk.CollectionConverters.ListHasAsScala
 object ApplicationConfiguration {
   lazy val config: Config = ConfigFactory.load()
 
-  lazy val  serverPort: Int = config.getInt("uservice-party-management.port")
+  lazy val serverPort: Int = config.getInt("party-management.port")
 
-  lazy val  tokenValidityHours: Long = config.getLong("uservice-party-management.token-validity-hours")
+  lazy val tokenValidityHours: Long = config.getLong("party-management.token-validity-hours")
 
-  lazy val  jwtAudience: Set[String] = config.getStringList("uservice-party-management.jwt.audience").asScala.toSet
+  lazy val jwtAudience: Set[String] = config.getStringList("party-management.jwt.audience").asScala.toSet
 
-  lazy val  storageContainer: String = config.getString("uservice-party-management.storage.container")
+  lazy val storageContainer: String = config.getString("party-management.storage.container")
 
-  lazy val  contractPath: String = config.getString("uservice-party-management.storage.contract-path")
+  lazy val contractPath: String = config.getString("party-management.storage.contract-path")
 
 }
