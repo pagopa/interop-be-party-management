@@ -58,6 +58,7 @@ pipeline {
         AWS = credentials('jenkins-aws')
         STORAGE_USR="${AWS_USR}"
         STORAGE_PSW="${AWS_PSW}"
+        MAIN_AUDIENCE = "${env.MAIN_AUDIENCE}"
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
         REPLICAS_NR = 1
       }

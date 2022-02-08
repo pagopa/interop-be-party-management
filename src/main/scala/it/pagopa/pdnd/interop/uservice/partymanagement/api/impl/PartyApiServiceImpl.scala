@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import cats.implicits.toTraverseOps
-import com.typesafe.scalalogging.Logger
+import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
@@ -41,7 +41,9 @@ class PartyApiServiceImpl(
   fileManager: FileManager
 )(implicit ec: ExecutionContext)
     extends PartyApiService {
-  val logger = Logger.takingImplicit[ContextFieldsToLog](LoggerFactory.getLogger(this.getClass))
+
+  val logger: LoggerTakingImplicit[ContextFieldsToLog] =
+    Logger.takingImplicit[ContextFieldsToLog](LoggerFactory.getLogger(this.getClass))
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
@@ -517,7 +519,10 @@ class PartyApiServiceImpl(
 
   private def confirmRelationships(token: Token, fileParts: (FileInfo, File)): Future[Seq[StatusReply[Unit]]] = {
     for {
-      filePath <- fileManager.store(ApplicationConfiguration.storageContainer)(token.id, fileParts)
+      filePath <- fileManager.store(ApplicationConfiguration.storageContainer, ApplicationConfiguration.contractPath)(
+        token.id,
+        fileParts
+      )
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, token.id, ref)
