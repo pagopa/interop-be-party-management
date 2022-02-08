@@ -51,7 +51,7 @@ pipeline {
       }
     }
 
-    stage('Apply Kubernetes files') {z
+    stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
       environment {
         POSTGRES = credentials('postgres-db')
