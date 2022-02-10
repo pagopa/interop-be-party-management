@@ -13,9 +13,16 @@ import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDi
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PartyApiService}
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.{
+  HealthApi,
+  PartyApi,
+  PartyApiService,
+  PublicApi,
+  PublicApiService
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
@@ -83,14 +90,35 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
 
     val partyApiService: PartyApiService =
-      new PartyApiServiceImpl(system, sharding, persistentEntity, uuidSupplier, offsetDateTimeSupplier, fileManager)
+      new PartyApiServiceImpl(
+        system = system,
+        sharding = sharding,
+        entity = persistentEntity,
+        uuidSupplier = uuidSupplier,
+        offsetDateTimeSupplier = offsetDateTimeSupplier
+      )
 
     val partyApi: PartyApi =
       new PartyApi(partyApiService, PartyApiMarshallerImpl, wrappingDirective)
 
+    val publicApiService: PublicApiService =
+      new PublicApiServiceImpl(
+        system = system,
+        sharding = sharding,
+        entity = persistentEntity,
+        fileManager = fileManager
+      )
+
+    val publicApi: PublicApi =
+      new PublicApi(
+        publicApiService,
+        PublicApiMarshallerImpl,
+        SecurityDirectives.authenticateOAuth2("public", AkkaUtils.PassThroughAuthenticator)
+      )
+
     val healthApi: HealthApi = mock[HealthApi]
 
-    controller = Some(new Controller(healthApi, partyApi)(classicSystem))
+    controller = Some(new Controller(health = healthApi, party = partyApi, public = publicApi)(classicSystem))
 
     controller foreach { controller =>
       bindServer = Some(

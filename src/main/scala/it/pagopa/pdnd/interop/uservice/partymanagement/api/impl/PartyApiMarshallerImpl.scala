@@ -43,8 +43,6 @@ object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport w
   override implicit def fromEntityUnmarshallerBulkPartiesSeed: FromEntityUnmarshaller[BulkPartiesSeed] =
     sprayJsonUnmarshaller[BulkPartiesSeed]
 
-  override implicit def toEntityMarshallerTokenInfo: ToEntityMarshaller[TokenInfo] = sprayJsonMarshaller[TokenInfo]
-
   override implicit def fromEntityUnmarshallerAttributeList: FromEntityUnmarshaller[Seq[Attribute]] =
     sprayJsonUnmarshaller[Seq[Attribute]]
 
