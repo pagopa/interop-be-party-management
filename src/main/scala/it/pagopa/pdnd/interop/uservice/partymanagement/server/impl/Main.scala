@@ -145,7 +145,7 @@ object Main extends App {
             fileManager = fileManager
           ),
           PublicApiMarshallerImpl,
-          SecurityDirectives.authenticateBasic("public", AkkaUtils.PassThroughAuthenticator)
+          SecurityDirectives.authenticateBasic("Public", AkkaUtils.PassThroughAuthenticator)
         )
 
         val healthApi: HealthApi =
