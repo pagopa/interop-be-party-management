@@ -20,8 +20,6 @@ import scala.concurrent.{Await, ExecutionContext}
 
 object TokenApiServiceData {
 
-  // format: off
-
   lazy final val createTokenUuid0 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9210")
   lazy final val createTokenUuid1 = UUID.fromString("37f8dce0-0a5b-476b-9fdd-a7a658eb9211")
 
@@ -50,11 +48,47 @@ object TokenApiServiceData {
   lazy final val institutionId3 = "id13"
   lazy final val institutionId4 = "id14"
 
-  lazy final val organizationSeed1 = OrganizationSeed(institutionId1, "Institutions Nine", "mail9@mail.org", "taxCode",    attributes = Seq.empty, products = Set.empty)
-  lazy final val organizationSeed2 = OrganizationSeed(institutionId2, "Institutions Ten", "mail10@mail.org", "taxCode",    attributes = Seq.empty, products = Set.empty)
-  lazy final val organizationSeed3 = OrganizationSeed(institutionId3, "Institutions Eleven", "mail11@mail.org", "taxCode", attributes = Seq.empty, products = Set.empty)
-  lazy final val organizationSeed4 = OrganizationSeed(institutionId4, "Institutions Twelve", "mail11@mail.org", "taxCode", attributes = Seq.empty, products = Set.empty)
-
+  lazy final val organizationSeed1 = OrganizationSeed(
+    institutionId = institutionId1,
+    description = "Institutions Nine",
+    digitalAddress = "mail9@mail.org",
+    address = "address1",
+    zipCode = "zipCode1",
+    taxCode = "taxCode",
+    attributes = Seq.empty,
+    products = Set.empty
+  )
+  lazy final val organizationSeed2 = OrganizationSeed(
+    institutionId = institutionId2,
+    description = "Institutions Ten",
+    digitalAddress = "mail10@mail.org",
+    address = "address2",
+    zipCode = "zipCode2",
+    taxCode = "taxCode",
+    attributes = Seq.empty,
+    products = Set.empty
+  )
+  lazy final val organizationSeed3 = OrganizationSeed(
+    institutionId = institutionId3,
+    description = "Institutions Eleven",
+    digitalAddress = "mail11@mail.org",
+    address = "address3",
+    zipCode = "zipCode3",
+    taxCode = "taxCode",
+    attributes = Seq.empty,
+    products = Set.empty
+  )
+  lazy final val organizationSeed4 = OrganizationSeed(
+    institutionId = institutionId4,
+    description = "Institutions Twelve",
+    digitalAddress = "mail11@mail.org",
+    address = "address4",
+    zipCode = "zipCode4",
+    taxCode = "taxCode",
+    attributes = Seq.empty,
+    products = Set.empty
+  )
+  // format: off
   lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed1 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed3 = RelationshipSeed(from = personId2, to = orgId2, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))

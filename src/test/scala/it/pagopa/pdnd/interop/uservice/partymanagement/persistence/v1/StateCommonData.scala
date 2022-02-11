@@ -18,6 +18,8 @@ object StateCommonData {
   val externalId2    = UUID.randomUUID()
   val description    = "description"
   val digitalAddress = "digitalAddress"
+  val address        = "address"
+  val zipCode        = "zipCode"
   val taxCode        = "taxCode"
   val attributes = Seq(
     InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),

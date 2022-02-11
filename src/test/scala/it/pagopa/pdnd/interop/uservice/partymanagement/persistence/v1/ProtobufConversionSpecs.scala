@@ -83,6 +83,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val externalId     = "externalId"
       val description    = "description"
       val digitalAddress = "digitalAddress"
+      val address        = "address"
+      val zipCode        = "zipCode"
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
@@ -100,6 +102,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           externalId = externalId,
           description = description,
           digitalAddress = digitalAddress,
+          address = address,
+          zipCode = zipCode,
           taxCode = taxCode,
           start = start,
           end = Some(end),
@@ -119,6 +123,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         externalId = externalId,
         description = description,
         digitalAddress = digitalAddress,
+        address = address,
+        zipCode = zipCode,
         taxCode = taxCode,
         start = start,
         end = Some(end),
@@ -152,6 +158,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val externalId     = "externalId"
       val description    = "description"
       val digitalAddress = "digitalAddress"
+      val address        = "address"
+      val zipCode        = "zipCode"
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
@@ -166,6 +174,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         externalId = externalId,
         description = description,
         digitalAddress = digitalAddress,
+        address = address,
+        zipCode = zipCode,
         taxCode = taxCode,
         start = start,
         end = Some(end),
@@ -185,10 +195,12 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           externalId = externalId,
           description = description,
           digitalAddress = digitalAddress,
+          address = address,
+          zipCode = zipCode,
           taxCode = taxCode,
           start = start,
           end = Some(end),
-          attributes = attributes.toSeq
+          attributes = attributes
         )
 
       partyV1.value shouldBe expected.success.value

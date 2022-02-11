@@ -726,6 +726,12 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
+        address:
+          example: via del campo
+          type: string
+        zipCode:
+          example: 20100
+          type: string
         taxCode:
           description: organization tax code
           type: string
@@ -741,6 +747,8 @@ components:
         - institutionId
         - description
         - digitalAddress
+        - address
+        - zipCode
         - taxCode
         - attributes
         - products
@@ -763,6 +771,12 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
+        address:
+          example: via del campo
+          type: string
+        zipCode:
+          example: 20100
+          type: string
         taxCode:
           description: organization tax code
           type: string
@@ -773,6 +787,8 @@ components:
         - institutionId
         - description
         - digitalAddress
+        - address
+        - zipCode
         - taxCode
         - attributes
       additionalProperties: false
