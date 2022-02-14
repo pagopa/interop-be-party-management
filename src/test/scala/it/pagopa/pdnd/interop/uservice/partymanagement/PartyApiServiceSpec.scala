@@ -16,7 +16,13 @@ import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.partymanagement.api._
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.{
+  HealthApi,
+  PartyApi,
+  PartyApiService,
+  PublicApi,
+  PublicApiService
+}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
