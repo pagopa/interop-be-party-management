@@ -1,18 +1,16 @@
 package it.pagopa.pdnd.interop.uservice.partymanagement.api.impl
 
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import akka.util.Timeout
 import cats.implicits.toTraverseOps
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
-import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
 import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils._
@@ -27,7 +25,6 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
-import java.io.File
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -37,8 +34,7 @@ class PartyApiServiceImpl(
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
   uuidSupplier: UUIDSupplier,
-  offsetDateTimeSupplier: OffsetDateTimeSupplier,
-  fileManager: FileManager
+  offsetDateTimeSupplier: OffsetDateTimeSupplier
 )(implicit ec: ExecutionContext)
     extends PartyApiService {
 
@@ -379,100 +375,6 @@ class PartyApiServiceImpl(
 
   }
 
-  /** Code: 200, Message: successful operation, DataType: TokenInfo
-    * Code: 404, Message: Token not found, DataType: Problem
-    * Code: 400, Message: Invalid ID supplied, DataType: Problem
-    */
-  override def getToken(tokenId: String)(implicit
-    toEntityMarshallerTokenInfo: ToEntityMarshaller[TokenInfo],
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)]
-  ): Route = {
-    logger.info("Getting token {}", tokenId)
-    val result: Future[TokenInfo] = for {
-      tokenIdUUID <- tokenId.toFutureUUID
-      result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-      token       <- result.toFuture(TokenNotFound(tokenId))
-    } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
-
-    onComplete(result) {
-      case Success(token) =>
-        getToken200(token)
-      case Failure(ex: TokenNotFound) =>
-        logger.error("Getting token failed", ex)
-        getToken404(problemOf(StatusCodes.NotFound, ex))
-      case Failure(ex) =>
-        logger.error("Getting token failed", ex)
-        getToken400(problemOf(StatusCodes.BadRequest, TokenNotFoundError))
-    }
-  }
-
-  /** Code: 201, Message: successful operation
-    * Code: 400, Message: Invalid ID supplied, DataType: Problem
-    */
-  override def consumeToken(tokenId: String, doc: (FileInfo, File))(implicit
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)]
-  ): Route = {
-    logger.info("Consuming token {}", tokenId)
-    val results: Future[Seq[StatusReply[Unit]]] = for {
-      tokenIdUUID <- tokenId.toFutureUUID
-      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-      token       <- found.toFuture(TokenNotFound(tokenId))
-      results <-
-        if (token.isValid) confirmRelationships(token, doc)
-        else
-          processRelationships(token, RejectPartyRelationship).flatMap(_ => Future.failed(TokenExpired(tokenId)))
-    } yield results
-
-    onComplete(results) {
-      case Success(statusReplies) if statusReplies.exists(_.isError) =>
-        val errors: String =
-          statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
-        logger.error("Consuming token failed: {}", errors)
-        consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
-      case Success(_) => consumeToken201
-      case Failure(ex: TokenNotFound) =>
-        logger.error("Token not found", ex)
-        consumeToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
-      case Failure(ex) =>
-        logger.error("Consuming token failed", ex)
-        consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenError(ex.getMessage)))
-    }
-
-  }
-
-  /** Code: 201, Message: successful operation
-    * Code: 400, Message: Invalid ID supplied, DataType: Problem
-    */
-  override def invalidateToken(
-    tokenId: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
-    logger.info("Invalidating token {}", tokenId)
-    val results: Future[Seq[StatusReply[Unit]]] = for {
-      tokenIdUUID <- tokenId.toFutureUUID
-      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-      token       <- found.toFuture(TokenNotFound(tokenId))
-      results     <- processRelationships(token, RejectPartyRelationship)
-    } yield results
-
-    onComplete(results) {
-      case Success(statusReplies) if statusReplies.exists(_.isError) =>
-        val errors: String =
-          statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
-        logger.error("Invalidating token failed: {}", errors)
-        invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenBadRequest(errors)))
-      case Success(_) => invalidateToken200
-      case Failure(ex: TokenNotFound) =>
-        logger.error("Token not found", ex)
-        invalidateToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
-      case Failure(ex) =>
-        logger.error("Invalidating token failed", ex)
-        invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenError(ex.getMessage)))
-    }
-
-  }
-
   private def getParty(id: UUID)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
     found <- getCommander(id.toString).ask(ref => GetParty(id, ref))
     party <- found.fold(Future.failed[Party](new RuntimeException(s"Party ${id.toString} not found")))(p =>
@@ -502,33 +404,6 @@ class PartyApiServiceImpl(
         new RuntimeException("Operator without active manager")
       )
       .toTry
-  }
-
-  private def processRelationships(
-    token: Token,
-    commandFunc: (UUID, ActorRef[StatusReply[Unit]]) => Command
-  ): Future[Seq[StatusReply[Unit]]] = {
-    for {
-      results <- Future.traverse(token.legals) { partyRelationshipBinding =>
-        getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          commandFunc(partyRelationshipBinding.relationshipId, ref)
-        )
-      } //TODO atomic?
-    } yield results
-  }
-
-  private def confirmRelationships(token: Token, fileParts: (FileInfo, File)): Future[Seq[StatusReply[Unit]]] = {
-    for {
-      filePath <- fileManager.store(ApplicationConfiguration.storageContainer, ApplicationConfiguration.contractPath)(
-        token.id,
-        fileParts
-      )
-      results <- Future.traverse(token.legals) { partyRelationshipBinding =>
-        getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
-          ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, token.id, ref)
-        )
-      } //TODO atomic?
-    } yield results
   }
 
   private def manageCreationResponse[A](result: Future[StatusReply[A]], success: A => Route, failure: Problem => Route)(

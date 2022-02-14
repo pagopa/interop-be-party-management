@@ -9,6 +9,7 @@ import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
+import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
@@ -21,7 +22,7 @@ import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
 import it.pagopa.pdnd.interop.commons.jwt.service.impl.{DefaultJWTReader, getClaimsVerifier}
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
-import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
+import it.pagopa.pdnd.interop.commons.utils.{AkkaUtils, OpenapiUtils}
 import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.ValidationRequestError
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
@@ -30,9 +31,11 @@ import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{
   HealthServiceApiImpl,
   PartyApiMarshallerImpl,
   PartyApiServiceImpl,
+  PublicApiMarshallerImpl,
+  PublicApiServiceImpl,
   problemOf
 }
-import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi}
+import it.pagopa.pdnd.interop.uservice.partymanagement.api.{HealthApi, PartyApi, PublicApi}
 import it.pagopa.pdnd.interop.uservice.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.{
   Command,
@@ -124,15 +127,25 @@ object Main extends App {
 
         val partyApi: PartyApi = new PartyApi(
           new PartyApiServiceImpl(
-            context.system,
-            sharding,
-            partyPersistentEntity,
-            uuidSupplier,
-            offsetDateTimeSupplier,
-            fileManager
+            system = context.system,
+            sharding = sharding,
+            entity = partyPersistentEntity,
+            uuidSupplier = uuidSupplier,
+            offsetDateTimeSupplier = offsetDateTimeSupplier
           ),
           PartyApiMarshallerImpl,
           jwtValidator.OAuth2JWTValidatorAsContexts
+        )
+
+        val publicApi: PublicApi = new PublicApi(
+          new PublicApiServiceImpl(
+            system = context.system,
+            sharding = sharding,
+            entity = partyPersistentEntity,
+            fileManager = fileManager
+          ),
+          PublicApiMarshallerImpl,
+          SecurityDirectives.authenticateBasic("Public", AkkaUtils.PassThroughAuthenticator)
         )
 
         val healthApi: HealthApi =
@@ -141,8 +154,9 @@ object Main extends App {
         val _ = AkkaManagement.get(classicSystem).start()
 
         val controller = new Controller(
-          healthApi,
-          partyApi,
+          health = healthApi,
+          party = partyApi,
+          public = publicApi,
           validationExceptionToRoute = Some(report => {
             val error =
               problemOf(
