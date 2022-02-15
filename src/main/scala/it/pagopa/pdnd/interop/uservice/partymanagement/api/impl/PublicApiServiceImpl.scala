@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives.{complete, onComplete}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
-import cats.implicits.toTraverseOps
+import cats.implicits._
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
@@ -214,13 +214,12 @@ class PublicApiServiceImpl(
     }
   }
 
-  private def isTokenNotConsumed(tokenId: String, relationships: Seq[PersistedPartyRelationship]): Future[Unit] =
-    Either
-      .cond(
-        relationships.nonEmpty && relationships.forall(_.state == PersistedPartyRelationshipState.Pending),
-        (),
-        TokenAlreadyConsumed(tokenId)
-      )
+  private def isTokenNotConsumed(tokenId: String, relationships: Seq[PersistedPartyRelationship]): Future[Unit] = {
+    val error: Either[Throwable, Unit] = Left(TokenAlreadyConsumed(tokenId))
+    error
+      .unlessA(relationships.nonEmpty && relationships.forall(_.state == PersistedPartyRelationshipState.Pending))
       .toFuture
+
+  }
 
 }
