@@ -5,10 +5,11 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives.onComplete
+import akka.http.scaladsl.server.Directives.{complete, onComplete}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
+import cats.implicits._
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
@@ -70,7 +71,7 @@ class PublicApiServiceImpl(
         getToken404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex) =>
         logger.error("Getting token failed", ex)
-        getToken400(problemOf(StatusCodes.BadRequest, TokenNotFoundError))
+        complete(problemOf(StatusCodes.InternalServerError, GetTokenFatalError(tokenId, ex.getMessage)))
     }
   }
 
@@ -165,6 +166,60 @@ class PublicApiServiceImpl(
         )
       } //TODO atomic?
     } yield results
+  }
+
+  /** Code: 200, Message: successful operation, DataType: TokenInfo
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    * Code: 404, Message: Token not found, DataType: Problem
+    */
+  override def verifyToken(tokenId: String)(implicit
+    toEntityMarshallerTokenInfo: ToEntityMarshaller[TokenInfo],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    def getRelationship(relationshipId: UUID): Future[PersistedPartyRelationship] = {
+      for {
+        results      <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(relationshipId, ref)))
+        relationship <- results.find(_.isDefined).flatten.toFuture(GetRelationshipNotFound(relationshipId.toString))
+      } yield relationship
+    }
+
+    val result: Future[TokenInfo] =
+      for {
+        uuid          <- tokenId.toFutureUUID
+        found         <- getCommander(tokenId).ask(ref => GetToken(uuid, ref))
+        token         <- found.toFuture(TokenNotFound(tokenId))
+        relationships <- token.legals.traverse(r => getRelationship(r.relationshipId))
+        _             <- isTokenNotConsumed(tokenId, relationships)
+      } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
+
+    onComplete(result) {
+      case Success(tokenInfo) => verifyToken200(tokenInfo)
+      case Failure(ex: TokenNotFound) =>
+        logger.error("Token not found", ex)
+        verifyToken404(problemOf(StatusCodes.NotFound, ex))
+      case Failure(ex: TokenAlreadyConsumed) =>
+        logger.error("Token already consumed", ex)
+        verifyToken409(problemOf(StatusCodes.Conflict, ex))
+      case Failure(ex: GetRelationshipNotFound) =>
+        logger.error("Missing token relationships", ex)
+        verifyToken400(problemOf(StatusCodes.BadRequest, ex))
+      case Failure(ex) =>
+        logger.error("Verifying token failed", ex)
+        complete(problemOf(StatusCodes.InternalServerError, TokenVerificationFatalError(tokenId, ex.getMessage)))
+    }
+  }
+
+  private def isTokenNotConsumed(tokenId: String, relationships: Seq[PersistedPartyRelationship]): Future[Unit] = {
+    val error: Either[Throwable, Unit] = Left(TokenAlreadyConsumed(tokenId))
+    error
+      .unlessA(relationships.nonEmpty && relationships.forall(_.state == PersistedPartyRelationshipState.Pending))
+      .toFuture
+
   }
 
 }

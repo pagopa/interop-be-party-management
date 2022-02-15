@@ -62,6 +62,8 @@ object StateV1Data {
     externalId = externalId2.toString,
     description = description,
     digitalAddress = digitalAddress,
+    address = address,
+    zipCode = zipCode,
     taxCode = taxCode,
     start = start.asFormattedString.success.value,
     end = None,

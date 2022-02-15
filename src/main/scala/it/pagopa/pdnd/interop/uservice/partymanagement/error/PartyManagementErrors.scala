@@ -29,7 +29,8 @@ object PartyManagementErrors {
   final case object GetRelationshipsError extends ComponentError("0013", "Error while getting relationships")
 
   final case class TokenNotFound(tokenId: String) extends ComponentError("0014", s"Token $tokenId not found")
-  final case object TokenNotFoundError            extends ComponentError("0015", "Token not found")
+  final case class GetTokenFatalError(tokenId: String, error: String)
+      extends ComponentError("0015", s"Something went wrong trying to get token $tokenId: $error")
 
   final case class ConsumeTokenBadRequest(errors: String)
       extends ComponentError("0016", s"Error while consuming token with errors: $errors")
@@ -84,5 +85,11 @@ object PartyManagementErrors {
       extends ComponentError("0038", "Bad request for getting organization by external id")
 
   final case class TokenExpired(tokenId: String) extends ComponentError("0039", s"Token $tokenId has expired")
+
+  final case class TokenAlreadyConsumed(tokenId: String)
+      extends ComponentError("0040", s"Token $tokenId has already consumed")
+
+  final case class TokenVerificationFatalError(tokenId: String, error: String)
+      extends ComponentError("0041", s"Something went wrong trying to verify token $tokenId: $error")
 
 }

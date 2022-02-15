@@ -545,7 +545,7 @@ paths:
       parameters:
         - name: tokenId
           in: path
-          description: The token id to verify
+          description: The token id to retrieve
           required: true
           schema:
             description: to be defined
@@ -558,12 +558,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenInfo'
-        '400':
-          description: Invalid ID supplied
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
         '404':
           description: Token not found
           content:
@@ -640,6 +634,48 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '404':
           description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /tokens/{tokenId}/verify:
+    post:
+      security: [ ]
+      tags:
+        - public
+      summary: Verify if the token is already consumed
+      description: Return ok
+      operationId: verifyToken
+      parameters:
+        - name: tokenId
+          in: path
+          description: The token id to verify
+          required: true
+          schema:
+            description: to be defined
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenInfo'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Token already consumed
           content:
             application/problem+json:
               schema:
@@ -726,6 +762,12 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
+        address:
+          example: via del campo
+          type: string
+        zipCode:
+          example: 20100
+          type: string
         taxCode:
           description: organization tax code
           type: string
@@ -741,6 +783,8 @@ components:
         - institutionId
         - description
         - digitalAddress
+        - address
+        - zipCode
         - taxCode
         - attributes
         - products
@@ -763,6 +807,12 @@ components:
           example: email@pec.mail.org
           format: email
           type: string
+        address:
+          example: via del campo
+          type: string
+        zipCode:
+          example: 20100
+          type: string
         taxCode:
           description: organization tax code
           type: string
@@ -773,6 +823,8 @@ components:
         - institutionId
         - description
         - digitalAddress
+        - address
+        - zipCode
         - taxCode
         - attributes
       additionalProperties: false
