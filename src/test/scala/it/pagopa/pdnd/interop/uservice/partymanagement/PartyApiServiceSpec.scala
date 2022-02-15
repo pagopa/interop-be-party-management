@@ -15,14 +15,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.Authenticator
+import it.pagopa.pdnd.interop.uservice.partymanagement.api._
 import it.pagopa.pdnd.interop.uservice.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.partymanagement.api.{
-  HealthApi,
-  PartyApi,
-  PartyApiService,
-  PublicApi,
-  PublicApiService
-}
 import it.pagopa.pdnd.interop.uservice.partymanagement.model._
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.partymanagement.server.impl.Main
@@ -1521,7 +1515,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val relationships = Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
 
       val tokenSeed =
-        TokenSeed(id = tokenId1, relationships = relationships, "checksum", OnboardingContractInfo("1", "test.html"))
+        TokenSeed(
+          id = tokenId1.toString,
+          relationships = relationships,
+          "checksum",
+          OnboardingContractInfo("1", "test.html")
+        )
 
       val tokenData = Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes).futureValue
 
@@ -1686,6 +1685,140 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           .futureValue
       consumedResponse.status shouldBe StatusCodes.NotFound
     }
+
+    "verify a token" in {
+
+      (() => uuidSupplier.get).expects().returning(orgId5).once()          // Create organization
+      (() => uuidSupplier.get).expects().returning(relationshipId7).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId8).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestampValid)
+        .repeated(tokenSeed4.relationships.items.size) // Consume token
+
+      val relationshipResponse = prepareTest(personSeed5, organizationSeed5, relationshipSeed9, relationshipSeed10)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed4).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText = token4.id.toString
+
+      val response =
+        Http()
+          .singleRequest(HttpRequest(uri = s"$url/tokens/$tokenText/verify", method = HttpMethods.POST))
+          .futureValue
+
+      response.status shouldBe StatusCodes.OK
+    }
+
+    "return 404 trying to verify a non-existent token " in {
+
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/tokens/${UUID.randomUUID().toString}/verify", method = HttpMethods.POST)
+          )
+          .futureValue
+
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+    "return 409 trying to verify a token already consumed (activated token)" in {
+      (() => uuidSupplier.get).expects().returning(orgId6).once()           // Create organization
+      (() => uuidSupplier.get).expects().returning(relationshipId9).once()  // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId10).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestampValid)
+        .repeated(tokenSeed5.relationships.items.size) // Consume token
+
+      val relationshipResponse = prepareTest(personSeed6, organizationSeed6, relationshipSeed11, relationshipSeed12)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed5).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText = token5.id.toString
+
+      val formData = Multipart.FormData
+        .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
+        .toEntity
+
+      val _ =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/$tokenText",
+              method = HttpMethods.POST,
+              headers = multipart,
+              entity = formData
+            )
+          )
+          .futureValue
+
+      val response =
+        Http()
+          .singleRequest(HttpRequest(uri = s"$url/tokens/$tokenText/verify", method = HttpMethods.POST))
+          .futureValue
+
+      response.status shouldBe StatusCodes.Conflict
+    }
+
+    "return 409 trying to verify a token already consumed (rejected token)" in {
+      (() => uuidSupplier.get).expects().returning(orgId7).once()           // Create organization
+      (() => uuidSupplier.get).expects().returning(relationshipId11).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId12).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestampValid)
+        .repeated(tokenSeed6.relationships.items.size) // Consume token
+
+      val relationshipResponse = prepareTest(personSeed7, organizationSeed7, relationshipSeed13, relationshipSeed14)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed6).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText = token6.id.toString
+
+      val _ =
+        Http()
+          .singleRequest(HttpRequest(uri = s"$url/tokens/$tokenText", method = HttpMethods.DELETE))
+          .futureValue
+
+      val response =
+        Http()
+          .singleRequest(HttpRequest(uri = s"$url/tokens/$tokenText/verify", method = HttpMethods.POST))
+          .futureValue
+
+      response.status shouldBe StatusCodes.Conflict
+    }
+
   }
 
   "Lookup a relationship by UUID" must {

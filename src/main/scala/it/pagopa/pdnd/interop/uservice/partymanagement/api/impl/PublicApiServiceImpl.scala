@@ -207,7 +207,7 @@ class PublicApiServiceImpl(
         verifyToken409(problemOf(StatusCodes.Conflict, ex))
       case Failure(ex: GetRelationshipNotFound) =>
         logger.error("Missing token relationships", ex)
-        verifyToken404(problemOf(StatusCodes.BadRequest, ex))
+        verifyToken400(problemOf(StatusCodes.BadRequest, ex))
       case Failure(ex) =>
         logger.error("Verifying token failed", ex)
         complete(problemOf(StatusCodes.InternalServerError, TokenVerificationFatalError(tokenId, ex.getMessage)))
