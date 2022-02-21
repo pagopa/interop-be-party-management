@@ -155,7 +155,7 @@ metadata:
   namespace: {{name}}
 spec:
   rules:
-    - host: {{repository}}
+    - host: gateway.interop.pdnd.dev
       http:
         paths:
           - path: /{{name}}
