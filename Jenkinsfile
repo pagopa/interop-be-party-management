@@ -60,7 +60,7 @@ pipeline {
         STORAGE_USR="${AWS_USR}"
         STORAGE_PSW="${AWS_PSW}"
         MAIN_AUDIENCE = "${env.MAIN_AUDIENCE}"
-        DOCKER_REPO = 'ghcr.io/pagopa'
+        DOCKER_REPO = 'https://ghcr.io/pagopa'
         REPLICAS_NR = 1
       }
       steps {
