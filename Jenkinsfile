@@ -34,17 +34,18 @@ pipeline {
     stage('Test and Deploy µservice') {
       agent { label 'sbt-template' }
       environment {
-        NEXUS = 'gateway.interop.pdnd.dev'
-        DOCKER_REPO = 'gateway.interop.pdnd.dev'
-        MAVEN_REPO = 'gateway.interop.pdnd.dev'
+        NEXUS = "${env.NEXUS}"
+        DOCKER_REPO = 'ghcr.io/pagopa'
+        MAVEN_REPO = "${env.MAVEN_REPO}"
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
+        CR_PAT = credentials('container-registry-pat')
         PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
       }
       steps {
         container('sbt-container') {
           unstash "pdnd_trust_store"
           script {
-            sh '''docker login $NEXUS -u $NEXUS_CREDENTIALS_USR -p $NEXUS_CREDENTIALS_PSW'''
+            sh '''echo $CR_PAT_PSW | docker login $DOCKER_REPO  -u $CR_PAT_USR --password-stdin'''
             sbtAction 'test docker:publish "project client" publish'
           }
         }
@@ -59,7 +60,7 @@ pipeline {
         STORAGE_USR="${AWS_USR}"
         STORAGE_PSW="${AWS_PSW}"
         MAIN_AUDIENCE = "${env.MAIN_AUDIENCE}"
-        DOCKER_REPO = 'gateway.interop.pdnd.dev'
+        DOCKER_REPO = 'ghcr.io/pagopa'
         REPLICAS_NR = 1
       }
       steps {
