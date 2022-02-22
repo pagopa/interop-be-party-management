@@ -7,7 +7,7 @@ import "v1/relationship.proto";
 import "v1/token.proto";
 
 option (scalapb.options) = {
-  package_name: "it.pagopa.pdnd.interop.uservice.partymanagement.model.persistence.serializer.v1"
+  package_name: "it.pagopa.interop.partymanagement.model.persistence.serializer.v1"
   no_default_values_in_constructor : true
 };
 
