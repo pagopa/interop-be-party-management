@@ -20,7 +20,7 @@ spec:
         - name: regcred
       containers:
         - name: {{name}}
-          image: {{repository}}/services/{{name}}:{{version}}
+          image: {{repository}}/{{name}}:{{version}}
           command: ["bin/{{name}}"]
           args: ["-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
@@ -155,7 +155,7 @@ metadata:
   namespace: {{name}}
 spec:
   rules:
-    - host: {{repository}}
+    - host: gateway.interop.pdnd.dev
       http:
         paths:
           - path: /{{name}}
