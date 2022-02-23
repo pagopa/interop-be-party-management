@@ -9,7 +9,7 @@ In order to launch this component you MUST configure a valid file manager using 
 uservice_party_management {
   storage {
     type = ${STORAGE_TYPE}
-    container = ${STORAGE_CONTAINER}  //"interop-pdnd-onboarding-files"
+    container = ${STORAGE_CONTAINER}  //"interop-onboarding-files"
     endpoint = ${STORAGE_ENDPOINT}
     application {
        id = ${STORAGE_CREDENTIAL_ID}

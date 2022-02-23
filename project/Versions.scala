@@ -20,6 +20,6 @@ object Versions {
   lazy val slickProjectionVersion   = "1.2.2"
 }
 
-object PDNDVersions {
+object PagopaVersions {
   lazy val commonsVersion = "0.1.1-SNAPSHOT"
 }
