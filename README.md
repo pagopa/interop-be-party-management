@@ -6,7 +6,7 @@
 In order to launch this component you MUST configure a valid file manager using the following parameters:
 
 ```
-uservice_party_management {
+interop-commons {
   storage {
     type = ${STORAGE_TYPE}
     container = ${STORAGE_CONTAINER}  //"interop-onboarding-files"
@@ -38,7 +38,7 @@ So far, this component offers the following implementations:
 e.g.: If you like to use S3 file manager, you should configure the storage as follows:
 
 ```
-uservice_party_management {
+interop-commons {
   storage {
     type = "S3"
     //...
