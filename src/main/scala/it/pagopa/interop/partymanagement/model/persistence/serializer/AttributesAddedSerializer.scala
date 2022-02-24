@@ -1,7 +1,7 @@
 package it.pagopa.interop.partymanagement.model.persistence.serializer
 
 import akka.serialization.SerializerWithStringManifest
-import it.pagopa.interop.partymanagement.model.persistence.{AttributesAdded, PartyAdded}
+import it.pagopa.interop.partymanagement.model.persistence.AttributesAdded
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1._
 
 import java.io.NotSerializableException
@@ -16,7 +16,7 @@ class AttributesAddedSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val AttributesAddedManifest: String = classOf[PartyAdded].getName
+  final val AttributesAddedManifest: String = classOf[AttributesAdded].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case event: AttributesAdded => serialize(event, AttributesAddedManifest, currentVersion)
