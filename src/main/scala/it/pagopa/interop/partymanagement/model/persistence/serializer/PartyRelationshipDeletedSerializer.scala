@@ -1,7 +1,7 @@
 package it.pagopa.interop.partymanagement.model.persistence.serializer
 
 import akka.serialization.SerializerWithStringManifest
-import it.pagopa.interop.partymanagement.model.persistence.PartyRelationshipRejected
+import it.pagopa.interop.partymanagement.model.persistence.PartyRelationshipDeleted
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1._
 
 import java.io.NotSerializableException
@@ -16,10 +16,10 @@ class PartyRelationshipDeletedSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val PartyRelationshipDeletedManifest: String = classOf[PartyRelationshipRejected].getName
+  final val PartyRelationshipDeletedManifest: String = classOf[PartyRelationshipDeleted].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: PartyRelationshipRejected => serialize(event, PartyRelationshipDeletedManifest, currentVersion)
+    case event: PartyRelationshipDeleted => serialize(event, PartyRelationshipDeletedManifest, currentVersion)
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
