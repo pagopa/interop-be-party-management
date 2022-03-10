@@ -17,4 +17,7 @@ object ApplicationConfiguration {
 
   lazy val contractPath: String = config.getString("party-management.storage.contract-path")
 
+  lazy val numberOfProjectionTags: Int = config.getInt("akka.cluster.sharding.number-of-shards")
+  def projectionTag(index: Int)        = s"interop-be-party-management-persistence|$index"
+
 }

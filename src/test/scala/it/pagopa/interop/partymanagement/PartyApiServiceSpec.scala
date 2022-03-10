@@ -4,7 +4,7 @@ import akka.actor
 import akka.actor.testkit.typed.scaladsl.{ActorTestKit, ScalaTestWithActorTestKit}
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
@@ -18,8 +18,9 @@ import it.pagopa.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.interop.partymanagement.api._
 import it.pagopa.interop.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.interop.partymanagement.model._
+import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.interop.partymanagement.server.Controller
-import it.pagopa.interop.partymanagement.server.impl.Main
+import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.OffsetDateTime
@@ -74,7 +75,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   override def beforeAll(): Unit = {
 
-    val persistentEntity = Main.buildPersistentEntity(offsetDateTimeSupplier)
+    val persistentEntity = Entity(PartyPersistentBehavior.TypeKey)(behaviorFactory(offsetDateTimeSupplier))
 
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
 
