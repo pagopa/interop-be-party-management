@@ -36,8 +36,8 @@ package object partymanagement extends MockFactory {
     headers.`Content-Type`(ContentType(MediaTypes.`multipart/form-data`))
   )
 
-  def createOrganization(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
-    create(data, "organizations")
+  def createInstitution(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
+    create(data, "institutions")
 
   def createPerson(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
     create(data, "persons")

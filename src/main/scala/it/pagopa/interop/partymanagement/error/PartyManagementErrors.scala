@@ -6,12 +6,12 @@ import java.util.UUID
 
 object PartyManagementErrors {
 
-  final case object CreateOrganizationBadRequest extends ComponentError("0001", "Bad request for organization creation")
-  final case object CreateOrganizationConflict   extends ComponentError("0002", "Conflict while creating organization")
-  final case class OrganizationAlreadyExists(externalId: String)
-      extends ComponentError("0003", s"Organization with external ID $externalId already exists")
-  final case class CreateOrganizationError(message: String)
-      extends ComponentError("0004", s"Organization creation failed: $message")
+  final case object CreateInstitutionBadRequest extends ComponentError("0001", "Bad request for institution creation")
+  final case object CreateInstitutionConflict   extends ComponentError("0002", "Conflict while creating institution")
+  final case class InstitutionAlreadyExists(externalId: String)
+      extends ComponentError("0003", s"Institution with external ID $externalId already exists")
+  final case class CreateInstitutionError(message: String)
+      extends ComponentError("0004", s"Institution creation failed: $message")
 
   final case object AddAttributesBadRequest extends ComponentError("0005", "Bad request for adding attributes")
   final case object AddAttributesError      extends ComponentError("0006", "Error while adding attributes error")
@@ -51,8 +51,8 @@ object PartyManagementErrors {
   final case object PartyAttributesNotFound
       extends ComponentError("0023", "Error while getting party attributes - party not found")
 
-  final case class GetOrganizationNotFound(id: String) extends ComponentError("0024", s"Organization $id not found")
-  final case object GetOrganizationError               extends ComponentError("0025", "Error while getting organization")
+  final case class GetInstitutionNotFound(id: String) extends ComponentError("0024", s"Institution $id not found")
+  final case object GetInstitutionError               extends ComponentError("0025", "Error while getting institution")
 
   final case class GetRelationshipNotFound(id: String) extends ComponentError("0026", s"Relationship $id not found")
   final case object GetRelationshipError               extends ComponentError("0027", "Error while getting relationship")
@@ -60,8 +60,7 @@ object PartyManagementErrors {
   final case class GetPersonNotFound(id: String) extends ComponentError("0028", s"Person $id not found")
   final case object GetPersonError               extends ComponentError("0029", "Error while getting person")
 
-  final case object GetBulkOrganizationsError
-      extends ComponentError("0030", "Error while getting organizations in bulk")
+  final case object GetBulkInstitutionsError extends ComponentError("0030", "Error while getting institutions in bulk")
 
   final case class ActivateRelationshipError(id: String)
       extends ComponentError("0031", s"Error while activating relationship with id $id")
@@ -78,11 +77,11 @@ object PartyManagementErrors {
   final case class ManagerNotSupplied(tokenId: String)
       extends ComponentError("0036", s"Token $tokenId can't be generated because no manager party has been supplied")
 
-  final case class OrganizationNotFound(externalId: String)
-      extends ComponentError("0037", s"Organization with external ID $externalId not found")
+  final case class InstitutionNotFound(externalId: String)
+      extends ComponentError("0037", s"Institution with external ID $externalId not found")
 
-  final case object OrganizationBadRequest
-      extends ComponentError("0038", "Bad request for getting organization by external id")
+  final case object InstitutionBadRequest
+      extends ComponentError("0038", "Bad request for getting institution by external id")
 
   final case class TokenExpired(tokenId: String) extends ComponentError("0039", s"Token $tokenId has expired")
 

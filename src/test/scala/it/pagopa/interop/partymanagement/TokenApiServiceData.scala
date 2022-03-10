@@ -63,7 +63,7 @@ object TokenApiServiceData {
   lazy final val institutionId6 = "id16"
   lazy final val institutionId7 = "id17"
 
-  lazy final val organizationSeed1 = OrganizationSeed(
+  lazy final val institutionSeed1 = InstitutionSeed(
     institutionId = institutionId1,
     description = "Institutions Nine",
     digitalAddress = "mail9@mail.org",
@@ -73,7 +73,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty
   )
-  lazy final val organizationSeed2 = OrganizationSeed(
+  lazy final val institutionSeed2 = InstitutionSeed(
     institutionId = institutionId2,
     description = "Institutions Ten",
     digitalAddress = "mail10@mail.org",
@@ -83,7 +83,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty
   )
-  lazy final val organizationSeed3 = OrganizationSeed(
+  lazy final val institutionSeed3 = InstitutionSeed(
     institutionId = institutionId3,
     description = "Institutions Eleven",
     digitalAddress = "mail11@mail.org",
@@ -93,7 +93,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty
   )
-  lazy final val organizationSeed4 = OrganizationSeed(
+  lazy final val institutionSeed4 = InstitutionSeed(
     institutionId = institutionId4,
     description = "Institutions Twelve",
     digitalAddress = "mail11@mail.org",
@@ -103,7 +103,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty
   )
-  lazy final val organizationSeed5 = OrganizationSeed(
+  lazy final val institutionSeed5 = InstitutionSeed(
     institutionId = institutionId5,
     description = "Institutions Fifteen",
     digitalAddress = "mail15@mail.org",
@@ -113,7 +113,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty
   )
-  lazy final val organizationSeed6 = OrganizationSeed(
+  lazy final val institutionSeed6 = InstitutionSeed(
     institutionId = institutionId6,
     description = "Institutions Sixteen",
     digitalAddress = "mail15@mail.org",
@@ -123,7 +123,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty
   )
-  lazy final val organizationSeed7 = OrganizationSeed(
+  lazy final val institutionSeed7 = InstitutionSeed(
     institutionId = institutionId7,
     description = "Institutions Seventeen",
     digitalAddress = "mail15@mail.org",
@@ -207,13 +207,13 @@ object TokenApiServiceData {
 
   def prepareTest(
     personSeed: PersonSeed,
-    organizationSeed: OrganizationSeed,
+    institutionSeed: InstitutionSeed,
     relationshipOne: RelationshipSeed,
     relationshipTwo: RelationshipSeed
   )(implicit
     as: ActorSystem,
     mp: Marshaller[PersonSeed, MessageEntity],
-    mo: Marshaller[OrganizationSeed, MessageEntity],
+    mo: Marshaller[InstitutionSeed, MessageEntity],
     mr: Marshaller[RelationshipSeed, MessageEntity],
     ec: ExecutionContext
   ): HttpResponse = {
@@ -221,9 +221,9 @@ object TokenApiServiceData {
 
     val _ = createPerson(personRequestData)
 
-    val orgRequestData = Await.result(Marshal(organizationSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+    val orgRequestData = Await.result(Marshal(institutionSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
-    val _ = createOrganization(orgRequestData)
+    val _ = createInstitution(orgRequestData)
 
     val rlRequestData1 = Await.result(Marshal(relationshipOne).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 

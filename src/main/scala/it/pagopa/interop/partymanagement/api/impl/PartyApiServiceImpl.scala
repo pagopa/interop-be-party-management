@@ -50,10 +50,10 @@ class PartyApiServiceImpl(
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
 
   /** Code: 200, Message: successful operation
-    * Code: 404, Message: Organization not found
+    * Code: 404, Message: Institution not found
     */
-  override def existsOrganizationById(id: String): Route = {
-    logger.info(s"Verify organization $id")(Seq.empty)
+  override def existsInstitutionById(id: String): Route = {
+    logger.info(s"Verify institution $id")(Seq.empty)
 
     val result: Future[Option[Party]] = for {
       uuid <- id.toFutureUUID
@@ -62,76 +62,77 @@ class PartyApiServiceImpl(
 
     onSuccess(result) {
       case Some(party) =>
-        Party.convertToApi(party).swap.fold(_ => existsOrganizationById404, _ => existsOrganizationById200)
-      case None => existsOrganizationById404
+        Party.convertToApi(party).swap.fold(_ => existsInstitutionById404, _ => existsInstitutionById200)
+      case None => existsInstitutionById404
     }
 
   }
 
-  /** Code: 201, Message: successful operation, DataType: Organization
+  /** Code: 201, Message: successful operation, DataType: Institution
+    * Code: 409, Message: Institution already exists, DataType: Problem
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
-  override def createOrganization(organizationSeed: OrganizationSeed)(implicit
-    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+  override def createInstitution(institutionSeed: InstitutionSeed)(implicit
+    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info(s"Creating organization ${organizationSeed.description}")
+    logger.info(s"Creating institution ${institutionSeed.description}")
 
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val organization: Future[StatusReply[Party]] = for {
-      shardOrgs <- commanders.traverse(_.ask(ref => GetOrganizationByExternalId(organizationSeed.institutionId, ref)))
+    val institution: Future[StatusReply[Party]] = for {
+      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(institutionSeed.institutionId, ref)))
       maybeExistingOrg = shardOrgs.flatten.headOption
       newOrg <- maybeExistingOrg
-        .toLeft(InstitutionParty.fromApi(organizationSeed, uuidSupplier, offsetDateTimeSupplier))
+        .toLeft(InstitutionParty.fromApi(institutionSeed, uuidSupplier, offsetDateTimeSupplier))
         .left
-        .map(_ => OrganizationAlreadyExists(organizationSeed.institutionId))
+        .map(_ => InstitutionAlreadyExists(institutionSeed.institutionId))
         .toFuture
       result <- getCommander(newOrg.id.toString).ask(ref => AddParty(newOrg, ref))
     } yield result
 
-    onComplete(organization) {
+    onComplete(institution) {
       case Success(statusReply) if statusReply.isSuccess =>
         Party
           .convertToApi(statusReply.getValue)
           .swap
           .fold(
             _ => {
-              logger.error(s"Creating organization ${organizationSeed.description} - Bad request")
-              createOrganization400(problemOf(StatusCodes.BadRequest, CreateOrganizationBadRequest))
+              logger.error(s"Creating institution ${institutionSeed.description} - Bad request")
+              createInstitution400(problemOf(StatusCodes.BadRequest, CreateInstitutionBadRequest))
             },
-            organization => createOrganization201(organization)
+            institution => createInstitution201(institution)
           )
       case Success(_) =>
-        val errorResponse: Problem = problemOf(StatusCodes.Conflict, CreateOrganizationConflict)
-        createOrganization409(errorResponse)
-      case Failure(ex: OrganizationAlreadyExists) =>
-        logger.error(s"Creating organization ${organizationSeed.description} - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.Conflict, CreateInstitutionConflict)
+        createInstitution409(errorResponse)
+      case Failure(ex: InstitutionAlreadyExists) =>
+        logger.error(s"Creating institution ${institutionSeed.description} - ${ex.getMessage}")
         val errorResponse: Problem = problemOf(StatusCodes.Conflict, ex)
-        createOrganization409(errorResponse)
+        createInstitution409(errorResponse)
       case Failure(ex) =>
-        logger.error(s"Creating organization ${organizationSeed.description} - ${ex.getMessage}")
-        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateOrganizationError(ex.getMessage))
-        createOrganization400(errorResponse)
+        logger.error(s"Creating institution ${institutionSeed.description} - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionError(ex.getMessage))
+        createInstitution400(errorResponse)
     }
 
   }
 
-  /** Code: 200, Message: successful operation, DataType: Organization
-    * Code: 404, Message: Organization not found, DataType: Problem
+  /** Code: 200, Message: successful operation, DataType: Institution
+    * Code: 404, Message: Institution not found, DataType: Problem
     */
-  override def addOrganizationAttributes(organizationId: String, requestBody: Seq[Attribute])(implicit
-    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+  override def addInstitutionAttributes(id: String, attribute: Seq[Attribute])(implicit
+    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info(s"Adding attributes to organization {}", organizationId)
+    logger.info(s"Adding attributes to institution {}", id)
     val result: Future[StatusReply[Party]] = for {
-      uuid <- organizationId.toFutureUUID
-      r    <- getCommander(organizationId).ask(ref => AddAttributes(uuid, requestBody, ref))
+      uuid <- id.toFutureUUID
+      r    <- getCommander(id).ask(ref => AddAttributes(uuid, attribute, ref))
     } yield r
 
     onSuccess(result) {
@@ -141,16 +142,14 @@ class PartyApiServiceImpl(
           .swap
           .fold(
             _ => {
-              logger.error(s"Error adding attributes to organization ${organizationId} - Bad request")
-              addOrganizationAttributes404(problemOf(StatusCodes.BadRequest, AddAttributesBadRequest))
+              logger.error(s"Error adding attributes to institution $id - Bad request")
+              addInstitutionAttributes404(problemOf(StatusCodes.BadRequest, AddAttributesBadRequest))
             },
-            organization => addOrganizationAttributes200(organization)
+            institution => addInstitutionAttributes200(institution)
           )
       case statusReply =>
-        logger.error(
-          s"Error adding attributes to organization ${organizationId} - Not found - ${statusReply.getError.getMessage}"
-        )
-        addOrganizationAttributes404(problemOf(StatusCodes.NotFound, AddAttributesError))
+        logger.error(s"Error adding attributes to institution $id - Not found - ${statusReply.getError.getMessage}")
+        addInstitutionAttributes404(problemOf(StatusCodes.NotFound, AddAttributesError))
     }
 
   }
@@ -208,7 +207,7 @@ class PartyApiServiceImpl(
     onSuccess(result) {
       case Some(party) => Party.convertToApi(party).fold(_ => existsPersonById404, _ => existsPersonById200)
       case None =>
-        logger.error(s"Error while verifying if person with the following id exists ${id} - Not found")(Seq.empty)
+        logger.error(s"Error while verifying if person with the following id exists $id - Not found")(Seq.empty)
         existsPersonById404
     }
 
@@ -444,10 +443,10 @@ class PartyApiServiceImpl(
         getPartyAttributes200(result.getValue.map(InstitutionAttribute.toApi))
       case Success(_) =>
         val error = problemOf(StatusCodes.InternalServerError, GetPartyAttributesError)
-        logger.error(s"Error while getting party ${id} attributes - Internal server error")
+        logger.error(s"Error while getting party $id attributes - Internal server error")
         complete((error.status, error))
       case Failure(ex) =>
-        logger.error(s"Error while getting party ${id} attributes - ${ex.getMessage}")
+        logger.error(s"Error while getting party $id attributes - ${ex.getMessage}")
         getPartyAttributes404(problemOf(StatusCodes.NotFound, PartyAttributesNotFound))
     }
   }
@@ -492,32 +491,32 @@ class PartyApiServiceImpl(
     }
   }
 
-  /** Code: 200, Message: Organization, DataType: Organization
+  /** Code: 200, Message: Institution, DataType: Institution
     * Code: 400, Message: Bad Request, DataType: Problem
-    * Code: 404, Message: Organization not found, DataType: Problem
+    * Code: 404, Message: Institution not found, DataType: Problem
     */
-  override def getOrganizationById(id: String)(implicit
-    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+  override def getInstitutionById(id: String)(implicit
+    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info("Getting organization with id {}", id)
-    def notFound: Route = getOrganizationById404(problemOf(StatusCodes.NotFound, GetOrganizationNotFound(id)))
+    logger.info("Getting institution with id {}", id)
+    def notFound: Route = getInstitutionById404(problemOf(StatusCodes.NotFound, GetInstitutionNotFound(id)))
 
-    val organizations = for {
-      organizationUUID <- id.toFutureUUID
-      results          <- getCommander(id).ask(ref => GetParty(organizationUUID, ref))
+    val institutions = for {
+      institutionUUID <- id.toFutureUUID
+      results         <- getCommander(id).ask(ref => GetParty(institutionUUID, ref))
     } yield results
 
-    onComplete(organizations) {
+    onComplete(institutions) {
       case Success(result) =>
         result
           .fold(notFound) { reply =>
-            Party.convertToApi(reply).swap.fold(_ => notFound, p => getOrganizationById200(p))
+            Party.convertToApi(reply).swap.fold(_ => notFound, p => getInstitutionById200(p))
           }
       case Failure(ex) =>
-        logger.error(s"Error getting organization with id $id - ${ex.getMessage}")
-        getOrganizationById404(problemOf(StatusCodes.NotFound, GetOrganizationError))
+        logger.error(s"Error getting institution with id $id - ${ex.getMessage}")
+        getInstitutionById404(problemOf(StatusCodes.NotFound, GetInstitutionError))
     }
   }
 
@@ -574,24 +573,24 @@ class PartyApiServiceImpl(
     onComplete(result) {
       case Success(Some(relationship)) => getRelationshipById200(relationship)
       case Success(None) =>
-        logger.error(s"Error while getting relationship with id ${relationshipId} - Not found")
+        logger.error(s"Error while getting relationship with id $relationshipId - Not found")
         getRelationshipById404(problemOf(StatusCodes.NotFound, GetRelationshipNotFound(relationshipId)))
       case Failure(ex) =>
-        logger.error(s"Error while getting relationship with id ${relationshipId} - ${ex.getMessage}")
+        logger.error(s"Error while getting relationship with id $relationshipId - ${ex.getMessage}")
         getRelationshipById400(problemOf(StatusCodes.BadRequest, GetRelationshipError))
     }
   }
 
-  /** Code: 200, Message: array of organizations, DataType: Seq[Organization]
+  /** Code: 200, Message: collection of institutions, DataType: BulkInstitutions
     * Code: 400, Message: Bad Request, DataType: Problem
-    * Code: 404, Message: Organization not found, DataType: Problem
+    * Code: 404, Message: Institutions not found, DataType: Problem
     */
-  override def bulkOrganizations(bulkPartiesSeed: BulkPartiesSeed)(implicit
-    toEntityMarshallerBulkOrganizations: ToEntityMarshaller[BulkOrganizations],
+  override def bulkInstitutions(bulkPartiesSeed: BulkPartiesSeed)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerBulkInstitutions: ToEntityMarshaller[BulkInstitutions],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info("Bulk organizations")
+    logger.info("Bulk institutions")
 
     def getParty(id: UUID): Future[Option[Party]] =
       getCommander(id.toString).ask(ref => GetParty(id, ref))
@@ -600,17 +599,17 @@ class PartyApiServiceImpl(
 
     onComplete(result) {
       case Success(replies) =>
-        val organizations: Seq[Organization] =
-          replies.flatten.flatMap(p => Party.convertToApi(p).swap.fold(_ => None, org => Some(org)))
+        val institutions: Seq[Institution] =
+          replies.flatten.flatMap(p => Party.convertToApi(p).swap.fold(_ => None, inst => Some(inst)))
 
-        val response = BulkOrganizations(
-          found = organizations,
-          notFound = bulkPartiesSeed.partyIdentifiers.diff(organizations.map(_.id)).map(_.toString)
+        val response = BulkInstitutions(
+          found = institutions,
+          notFound = bulkPartiesSeed.partyIdentifiers.diff(institutions.map(_.id)).map(_.toString)
         )
-        bulkOrganizations200(response)
+        bulkInstitutions200(response)
       case Failure(ex) =>
-        logger.error(s"Error while processing bulk organizations - ${ex.getMessage}")
-        bulkOrganizations404(problemOf(StatusCodes.NotFound, GetBulkOrganizationsError))
+        logger.error(s"Error while processing bulk institutions - ${ex.getMessage}")
+        bulkInstitutions404(problemOf(StatusCodes.NotFound, GetBulkInstitutionsError))
     }
 
   }
@@ -639,7 +638,7 @@ class PartyApiServiceImpl(
       case Success(_) =>
         activatePartyRelationshipById204
       case Failure(ex) =>
-        logger.error(s"Error while activating relationship with id ${relationshipId} - ${ex.getMessage}")
+        logger.error(s"Error while activating relationship with id $relationshipId - ${ex.getMessage}")
         activatePartyRelationshipById404(problemOf(StatusCodes.NotFound, ActivateRelationshipError(relationshipId)))
     }
   }
@@ -668,42 +667,42 @@ class PartyApiServiceImpl(
       case Success(_) =>
         suspendPartyRelationshipById204
       case Failure(ex) =>
-        logger.error(s"Error while suspending relationship with id ${relationshipId} - ${ex.getMessage}")
+        logger.error(s"Error while suspending relationship with id $relationshipId - ${ex.getMessage}")
         suspendPartyRelationshipById404(problemOf(StatusCodes.NotFound, SuspendingRelationshipError))
     }
   }
 
-  override def getOrganizationByExternalId(externalId: String)(implicit
-    toEntityMarshallerOrganization: ToEntityMarshaller[Organization],
+  override def getInstitutionByExternalId(externalId: String)(implicit
+    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    logger.info("Getting organization with external id {}", externalId)
+    logger.info("Getting institution with external id {}", externalId)
 
     val commanders = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    val organization: Future[InstitutionParty] = for {
-      shardOrgs <- commanders.traverse(_.ask(ref => GetOrganizationByExternalId(externalId, ref)))
-      result    <- shardOrgs.flatten.headOption.toFuture(OrganizationNotFound(externalId))
+    val institution: Future[InstitutionParty] = for {
+      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(externalId, ref)))
+      result    <- shardOrgs.flatten.headOption.toFuture(InstitutionNotFound(externalId))
     } yield result
 
-    onComplete(organization) {
+    onComplete(institution) {
       case Success(statusReply) =>
         Party
           .convertToApi(statusReply)
           .swap
           .fold(
             _ => {
-              logger.error(s"Error while getting organization with external id ${externalId} - Not found")
-              getOrganizationByExternalId400(problemOf(StatusCodes.BadRequest, OrganizationNotFound(externalId)))
+              logger.error(s"Error while getting institution with external id $externalId - Not found")
+              getInstitutionByExternalId400(problemOf(StatusCodes.BadRequest, InstitutionNotFound(externalId)))
             },
-            organization => getOrganizationByExternalId200(organization)
+            institution => getInstitutionByExternalId200(institution)
           )
       case Failure(ex) =>
-        logger.error(s"Error while getting organization with external id ${externalId} - ${ex.getMessage}")
-        getOrganizationByExternalId400(problemOf(StatusCodes.BadRequest, OrganizationBadRequest))
+        logger.error(s"Error while getting institution with external id $externalId - ${ex.getMessage}")
+        getInstitutionByExternalId400(problemOf(StatusCodes.BadRequest, InstitutionBadRequest))
     }
 
   }
@@ -733,14 +732,14 @@ class PartyApiServiceImpl(
         if (reply.isSuccess) {
           deleteRelationshipById204
         } else {
-          logger.error(s"Error while deleting relationship with id ${relationshipId} - Not found")
+          logger.error(s"Error while deleting relationship with id $relationshipId - Not found")
           deleteRelationshipById404(problemOf(StatusCodes.NotFound, DeletingRelationshipError(relationshipId)))
         }
       case Success(None) =>
-        logger.error(s"Error while deleting relationship with id ${relationshipId} - Not found")
+        logger.error(s"Error while deleting relationship with id $relationshipId - Not found")
         deleteRelationshipById404(problemOf(StatusCodes.NotFound, DeletingRelationshipNotFound(relationshipId)))
       case Failure(ex) =>
-        logger.error(s"Error while deleting relationship with id ${relationshipId} - ${ex.getMessage}")
+        logger.error(s"Error while deleting relationship with id $relationshipId - ${ex.getMessage}")
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, DeletingRelationshipBadRequest(relationshipId)))
     }
   }

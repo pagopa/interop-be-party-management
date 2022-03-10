@@ -2,7 +2,7 @@ package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.interop.partymanagement.common.system.ApiParty
-import it.pagopa.interop.partymanagement.model.{Attribute, Organization, OrganizationSeed, Person, PersonSeed}
+import it.pagopa.interop.partymanagement.model.{Attribute, InstitutionSeed, Institution, Person, PersonSeed}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
@@ -31,7 +31,7 @@ object Party {
         Right(Person(id = personParty.id))
       case institutionParty: InstitutionParty =>
         Left(
-          Organization(
+          Institution(
             id = institutionParty.id,
             institutionId = institutionParty.externalId,
             description = institutionParty.description,
@@ -67,19 +67,19 @@ final case class InstitutionParty(
 
 object InstitutionParty {
   def fromApi(
-    organization: OrganizationSeed,
+    institution: InstitutionSeed,
     uuidSupplier: UUIDSupplier,
     offsetDateTimeSupplier: OffsetDateTimeSupplier
   ): InstitutionParty = {
     InstitutionParty(
       id = uuidSupplier.get,
-      externalId = organization.institutionId,
-      description = organization.description,
-      digitalAddress = organization.digitalAddress,
-      taxCode = organization.taxCode,
-      address = organization.address,
-      zipCode = organization.zipCode,
-      attributes = organization.attributes.map(InstitutionAttribute.fromApi).toSet,
+      externalId = institution.institutionId,
+      description = institution.description,
+      digitalAddress = institution.digitalAddress,
+      taxCode = institution.taxCode,
+      address = institution.address,
+      zipCode = institution.zipCode,
+      attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
       end = None
     )

@@ -18,10 +18,6 @@ message AttributesAddedV1 {
   required PartyV1 party = 1;
 }
 
-message OrganizationProductsAddedV1 {
-  required PartyV1 party = 1;
-}
-
 message PartyDeletedV1 {
   required PartyV1 party = 1;
 }

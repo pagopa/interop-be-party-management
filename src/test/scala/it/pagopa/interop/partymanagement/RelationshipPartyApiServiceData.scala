@@ -10,11 +10,10 @@ import scala.concurrent.{Await, ExecutionContext}
 
 object RelationshipPartyApiServiceData {
 
-  def prepareTest(personSeed: PersonSeed, organizationSeed: OrganizationSeed, relationshipSeed: RelationshipSeed)(
-    implicit
+  def prepareTest(personSeed: PersonSeed, institutionSeed: InstitutionSeed, relationshipSeed: RelationshipSeed)(implicit
     as: ActorSystem,
     mp: Marshaller[PersonSeed, MessageEntity],
-    mo: Marshaller[OrganizationSeed, MessageEntity],
+    mo: Marshaller[InstitutionSeed, MessageEntity],
     mr: Marshaller[RelationshipSeed, MessageEntity],
     ec: ExecutionContext
   ): HttpResponse = {
@@ -22,9 +21,9 @@ object RelationshipPartyApiServiceData {
 
     val _ = createPerson(personData)
 
-    val organizationData = Await.result(Marshal(organizationSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
+    val institutionData = Await.result(Marshal(institutionSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 
-    val _ = createOrganization(organizationData)
+    val _ = createInstitution(institutionData)
 
     val rlRequestData = Await.result(Marshal(relationshipSeed).to[MessageEntity].map(_.dataBytes), Duration.Inf)
 

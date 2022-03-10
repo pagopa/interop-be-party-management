@@ -71,24 +71,24 @@ object PartyPersistentBehavior {
         replyTo ! statusReply
         Effect.none
 
-      case GetOrganizationByExternalId(externalId, replyTo) =>
+      case GetInstitutionByExternalId(externalId, replyTo) =>
         val party: Option[InstitutionParty] = state.parties.collectFirst {
           case (_, o: InstitutionParty) if o.externalId == externalId => o
         }
-        party.foreach(p => logger.debug("Found organization {}", p.id.toString))
+        party.foreach(p => logger.debug("Found institution {}", p.id.toString))
         replyTo ! party
 
         Effect.none
 
-      case AddAttributes(organizationId, attributes, replyTo) =>
+      case AddAttributes(institutionId, attributes, replyTo) =>
         state.parties
-          .get(organizationId)
+          .get(institutionId)
           .map { p =>
             val updated: Either[Throwable, Party] = p.addAttributes(attributes.toSet)
             updated.fold[Effect[AttributesAdded, State]](
               ex => {
                 replyTo ! StatusReply.Error(
-                  s"Something goes wrong trying to update attributes for party $organizationId: ${ex.getMessage}"
+                  s"Something goes wrong trying to update attributes for party $institutionId: ${ex.getMessage}"
                 )
                 Effect.none[AttributesAdded, State]
               },
@@ -100,7 +100,7 @@ object PartyPersistentBehavior {
             )
           }
           .getOrElse {
-            replyTo ! StatusReply.Error(s"Party $organizationId not found")
+            replyTo ! StatusReply.Error(s"Party $institutionId not found")
             Effect.none[AttributesAdded, State]
           }
 
