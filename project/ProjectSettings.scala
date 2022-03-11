@@ -18,8 +18,8 @@ object ProjectSettings {
   private val commitSha: Option[String] = Try(Process(s"git rev-parse --short HEAD").lineStream_!.head).toOption
 
   private val interfaceVersion: String = ComputeVersion.version.split("\\.") match {
-    case Array(major, minor, _*) =>
-      s"$major.$minor"
+    case Array(major, minor, _*) => s"$major.$minor"
+    case _                       => "0.0"
   }
 
   //lifts some useful data in BuildInfo instance
