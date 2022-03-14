@@ -1,10 +1,10 @@
 package it.pagopa.interop.partymanagement.server.impl
 
-import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorSystem, Behavior}
 import akka.cluster.ClusterEvent
-import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDaemonProcess}
-import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
+import akka.cluster.sharding.typed.ShardingEnvelope
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityContext, ShardedDaemonProcess}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
@@ -22,10 +22,10 @@ import it.pagopa.interop.commons.files.service.FileManager
 import it.pagopa.interop.commons.jwt.service.JWTReader
 import it.pagopa.interop.commons.jwt.service.impl.{DefaultJWTReader, getClaimsVerifier}
 import it.pagopa.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
-import it.pagopa.interop.commons.utils.{AkkaUtils, OpenapiUtils}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ValidationRequestError
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.interop.commons.utils.service.impl.UUIDSupplierImpl
+import it.pagopa.interop.commons.utils.{AkkaUtils, OpenapiUtils}
 import it.pagopa.interop.partymanagement.api.impl.{
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
@@ -37,6 +37,7 @@ import it.pagopa.interop.partymanagement.api.impl.{
 }
 import it.pagopa.interop.partymanagement.api.{HealthApi, PartyApi, PublicApi}
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
+import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{numberOfProjectionTags, projectionTag}
 import it.pagopa.interop.partymanagement.model.persistence.{Command, PartyPersistentBehavior, PartyPersistentProjection}
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
@@ -63,18 +64,18 @@ object Main extends App {
   val (fileManager, jwtValidator) =
     dependenciesLoaded.get //THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
 
-  def buildPersistentEntity(
-    offsetDateTimeSupplier: OffsetDateTimeSupplier
-  ): Entity[Command, ShardingEnvelope[Command]] =
-    Entity(typeKey = PartyPersistentBehavior.TypeKey) { entityContext =>
+  Kamon.init()
+
+  def behaviorFactory(offsetDateTimeSupplier: OffsetDateTimeSupplier): EntityContext[Command] => Behavior[Command] = {
+    entityContext =>
+      val index = math.abs(entityContext.entityId.hashCode % numberOfProjectionTags)
       PartyPersistentBehavior(
         entityContext.shard,
         PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId),
-        offsetDateTimeSupplier
+        offsetDateTimeSupplier,
+        projectionTag(index)
       )
-    }
-
-  Kamon.init()
+  }
 
   locally {
     val _ = ActorSystem[Nothing](
@@ -96,27 +97,23 @@ object Main extends App {
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
         val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
-          buildPersistentEntity(offsetDateTimeSupplier)
+          Entity(PartyPersistentBehavior.TypeKey)(behaviorFactory(offsetDateTimeSupplier))
 
         val _ = sharding.init(partyPersistentEntity)
-
-        val settings: ClusterShardingSettings = partyPersistentEntity.settings match {
-          case None    => ClusterShardingSettings(context.system)
-          case Some(s) => s
-        }
 
         val persistence: String =
           classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
 
-        if (persistence == "jdbc-journal") {
+        val enabled = false
+        if (persistence == "jdbc-journal" && enabled) {
           val dbConfig: DatabaseConfig[JdbcProfile] =
             DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
-          val partyPersistentProjection = PartyPersistentProjection(context.system, partyPersistentEntity, dbConfig)
+          val partyPersistentProjection = new PartyPersistentProjection(context.system, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
             name = "party-projections",
-            numberOfInstances = settings.numberOfShards,
-            behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentProjection.projections(i)),
+            numberOfInstances = numberOfProjectionTags,
+            behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentProjection.projection(projectionTag(i))),
             stopMessage = ProjectionBehavior.Stop
           )
         }
