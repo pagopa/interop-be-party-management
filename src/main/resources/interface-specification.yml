@@ -206,11 +206,11 @@ paths:
           description: successful operation
         '404':
           description: Institution not found
-  /institutions/external/{id}:
+  /institutions/external/{externalId}:
     parameters:
       - schema:
           type: string
-        name: id
+        name: externalId
         in: path
         required: true
         description: External Institution ID
