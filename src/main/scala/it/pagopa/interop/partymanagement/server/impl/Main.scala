@@ -37,7 +37,11 @@ import it.pagopa.interop.partymanagement.api.impl.{
 }
 import it.pagopa.interop.partymanagement.api.{HealthApi, PartyApi, PublicApi}
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
-import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{numberOfProjectionTags, projectionTag}
+import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{
+  numberOfProjectionTags,
+  projectionTag,
+  projectionsEnabled
+}
 import it.pagopa.interop.partymanagement.model.persistence.{Command, PartyPersistentBehavior, PartyPersistentProjection}
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
@@ -101,11 +105,7 @@ object Main extends App {
 
         val _ = sharding.init(partyPersistentEntity)
 
-        val persistence: String =
-          classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
-
-        val enabled = false
-        if (persistence == "jdbc-journal" && enabled) {
+        if (projectionsEnabled) {
           val dbConfig: DatabaseConfig[JdbcProfile] =
             DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
           val partyPersistentProjection = new PartyPersistentProjection(context.system, dbConfig)
