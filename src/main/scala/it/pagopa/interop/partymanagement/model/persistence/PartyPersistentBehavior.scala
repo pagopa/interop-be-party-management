@@ -275,7 +275,8 @@ object PartyPersistentBehavior {
   def apply(
     shard: ActorRef[ClusterSharding.ShardCommand],
     persistenceId: PersistenceId,
-    offsetDateTimeSupplier: OffsetDateTimeSupplier
+    offsetDateTimeSupplier: OffsetDateTimeSupplier,
+    projectionTag: String
   ): Behavior[Command] = {
     Behaviors.setup { context =>
       val numberOfEvents =
@@ -287,7 +288,7 @@ object PartyPersistentBehavior {
         commandHandler = commandHandler(shard, context, offsetDateTimeSupplier),
         eventHandler = eventHandler
       ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = numberOfEvents, keepNSnapshots = 1))
-        .withTagger(_ => Set(persistenceId.id))
+        .withTagger(_ => Set(projectionTag))
         .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
     }
   }
