@@ -19,6 +19,11 @@ tags:
     externalDocs:
       description: Find out more
       url: 'http://swagger.io'
+  - name: external
+    description: External id endpoints
+    externalDocs:
+      description: Find out more
+      url: 'http://swagger.io'
   - name: public
     description: Public endpoints
     externalDocs:
@@ -206,39 +211,6 @@ paths:
           description: successful operation
         '404':
           description: Institution not found
-  /institutions/external/{externalId}:
-    parameters:
-      - schema:
-          type: string
-        name: externalId
-        in: path
-        required: true
-        description: External Institution ID
-    get:
-      summary: Retrieves Institution by ID
-      tags:
-        - party
-      responses:
-        '200':
-          description: Institution
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Institution'
-        '400':
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: Institution not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-      operationId: getInstitutionByExternalId
-      description: 'returns the identified institution, if any.'
   /institutions/{id}/attributes:
     parameters:
       - schema:
@@ -299,6 +271,39 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /external/institutions/{institutionId}:
+    parameters:
+      - schema:
+          type: string
+        name: institutionId
+        in: path
+        required: true
+        description: External Institution ID
+    get:
+      summary: Retrieves Institution by ID
+      tags:
+        - external
+      responses:
+        '200':
+          description: Institution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Institution not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getInstitutionByExternalId
+      description: 'returns the identified institution, if any.'
   /relationships:
     post:
       tags:
@@ -680,20 +685,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /status:
-    get:
-      tags:
-        - health
-      summary: Health status endpoint
-      description: Return ok
-      operationId: getStatus
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
   '/bulk/institutions':
     post:
       summary: Retrieves a collection of institutions
@@ -726,6 +717,20 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: bulkInstitutions
       description: 'returns a collection of all the parties for the corresponding identifiers.'
+  /status:
+    get:
+      tags:
+        - health
+      summary: Health status endpoint
+      description: Return ok
+      operationId: getStatus
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     PersonSeed:

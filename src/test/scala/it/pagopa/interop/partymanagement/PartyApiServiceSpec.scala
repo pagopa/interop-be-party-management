@@ -96,6 +96,12 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     val partyApi: PartyApi =
       new PartyApi(partyApiService, PartyApiMarshallerImpl, wrappingDirective)
 
+    val externalApiService: ExternalApiService =
+      new ExternalApiServiceImpl(system = system, sharding = sharding, entity = persistentEntity)
+
+    val externalApi: ExternalApi =
+      new ExternalApi(externalApiService, ExternalApiMarshallerImpl, wrappingDirective)
+
     val publicApiService: PublicApiService =
       new PublicApiServiceImpl(
         system = system,
@@ -113,7 +119,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     val healthApi: HealthApi = mock[HealthApi]
 
-    controller = Some(new Controller(health = healthApi, party = partyApi, public = publicApi)(classicSystem))
+    controller = Some(
+      new Controller(health = healthApi, party = partyApi, external = externalApi, public = publicApi)(classicSystem)
+    )
 
     controller foreach { controller =>
       bindServer = Some(

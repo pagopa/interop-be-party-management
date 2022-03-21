@@ -672,41 +672,6 @@ class PartyApiServiceImpl(
     }
   }
 
-  override def getInstitutionByExternalId(externalId: String)(implicit
-    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)]
-  ): Route = {
-    logger.info("Getting institution with external id {}", externalId)
-
-    val commanders = (0 until settings.numberOfShards)
-      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-      .toList
-
-    val institution: Future[InstitutionParty] = for {
-      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(externalId, ref)))
-      result    <- shardOrgs.flatten.headOption.toFuture(InstitutionNotFound(externalId))
-    } yield result
-
-    onComplete(institution) {
-      case Success(statusReply) =>
-        Party
-          .convertToApi(statusReply)
-          .swap
-          .fold(
-            _ => {
-              logger.error(s"Error while getting institution with external id $externalId - Not found")
-              getInstitutionByExternalId400(problemOf(StatusCodes.BadRequest, InstitutionNotFound(externalId)))
-            },
-            institution => getInstitutionByExternalId200(institution)
-          )
-      case Failure(ex) =>
-        logger.error(s"Error while getting institution with external id $externalId - ${ex.getMessage}")
-        getInstitutionByExternalId400(problemOf(StatusCodes.BadRequest, InstitutionBadRequest))
-    }
-
-  }
-
   /** Code: 204, Message: relationship deleted
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Relationship not found, DataType: Problem
