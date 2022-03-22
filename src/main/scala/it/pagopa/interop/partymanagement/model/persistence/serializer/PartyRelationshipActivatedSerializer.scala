@@ -16,14 +16,18 @@ class PartyRelationshipActivatedSerializer extends SerializerWithStringManifest 
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val PartyRelationshipActivatedManifest: String = classOf[PartyRelationshipActivated].getName
+  final val className: String = classOf[PartyRelationshipActivated].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: PartyRelationshipActivated => serialize(event, PartyRelationshipActivatedManifest, currentVersion)
+    case event: PartyRelationshipActivated => serialize(event, className, currentVersion)
+    case _ =>
+      throw new NotSerializableException(
+        s"Unable to handle manifest: [[${manifest(o)}]], currentVersion: [[$currentVersion]] "
+      )
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
-    case PartyRelationshipActivatedManifest :: `version1` :: Nil =>
+    case `className` :: `version1` :: Nil =>
       deserialize(v1.events.PartyRelationshipActivatedV1, bytes, manifest, version1)
     case _ =>
       throw new NotSerializableException(
