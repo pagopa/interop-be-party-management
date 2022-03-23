@@ -45,7 +45,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val contractInfoFormat: RootJsonFormat[TokenOnboardingContractInfo] = jsonFormat2(
     TokenOnboardingContractInfo.apply
   )
-  implicit val format: RootJsonFormat[Token] = jsonFormat5(Token.apply)
+  implicit val format: RootJsonFormat[Token]                                   = jsonFormat5(Token.apply)
 
   def generate(
     tokenSeed: TokenSeed,
@@ -54,7 +54,7 @@ object Token extends SprayJsonSupport with DefaultJsonProtocol {
   ): Either[Throwable, Token] = {
     for {
       id <- tokenSeed.id.toUUID.toEither
-      _ <- parties
+      _  <- parties
         .find(_.role == PersistedPartyRole.Manager)
         .toRight(ManagerNotSupplied(tokenSeed.id))
     } yield Token(

@@ -16,16 +16,20 @@ class TokenAddedSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val TokenAddedManifest: String = classOf[TokenAdded].getName
+  final val className: String = classOf[TokenAdded].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: TokenAdded => serialize(event, TokenAddedManifest, currentVersion)
+    case event: TokenAdded => serialize(event, className, currentVersion)
+    case _                 =>
+      throw new NotSerializableException(
+        s"Unable to handle manifest: [[${manifest(o)}]], currentVersion: [[$currentVersion]] "
+      )
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
-    case TokenAddedManifest :: `version1` :: Nil =>
+    case `className` :: `version1` :: Nil =>
       deserialize(v1.events.TokenAddedV1, bytes, manifest, currentVersion)
-    case _ =>
+    case _                                =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
       )

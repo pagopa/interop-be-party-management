@@ -73,7 +73,7 @@ final case class State(
       case Some(relationship) =>
         val updatedRelationship = relationship.copy(state = newStatus, updatedAt = Some(timestamp))
         copy(relationships = relationships + (relationship.id -> updatedRelationship))
-      case None =>
+      case None               =>
         this
     }
 

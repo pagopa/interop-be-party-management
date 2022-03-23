@@ -5,8 +5,8 @@ import sbt._
 object Dependencies {
 
   private[this] object akka {
-    lazy val namespace  = "com.typesafe.akka"
-    lazy val actorTyped = namespace %% "akka-actor-typed" % akkaVersion
+    lazy val namespace        = "com.typesafe.akka"
+    lazy val actorTyped       = namespace %% "akka-actor-typed" % akkaVersion
     lazy val clusterBootstrap =
       "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
     lazy val clusterHttp = "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion
@@ -15,10 +15,10 @@ object Dependencies {
       "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
     lazy val management = "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion
 
-    lazy val clusterSharding = namespace %% "akka-cluster-sharding-typed" % akkaVersion
-    lazy val clusterTools    = namespace %% "akka-cluster-tools"          % akkaVersion
-    lazy val clusterTyped    = namespace %% "akka-cluster-typed"          % akkaVersion
-    lazy val discovery       = namespace %% "akka-discovery"              % akkaVersion
+    lazy val clusterSharding        = namespace %% "akka-cluster-sharding-typed" % akkaVersion
+    lazy val clusterTools           = namespace %% "akka-cluster-tools"          % akkaVersion
+    lazy val clusterTyped           = namespace %% "akka-cluster-typed"          % akkaVersion
+    lazy val discovery              = namespace %% "akka-discovery"              % akkaVersion
     lazy val discoveryKubernetesApi =
       "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % akkaManagementVersion
     lazy val http             = namespace            %% "akka-http"                    % akkaHttpVersion
@@ -29,16 +29,11 @@ object Dependencies {
     lazy val persistenceQuery = namespace            %% "akka-persistence-query"       % akkaVersion
     lazy val projection       = "com.lightbend.akka" %% "akka-projection-eventsourced" % projectionVersion
     // Warning: this is community driven
-    lazy val projectionSlick = "com.lightbend.akka" %% "akka-projection-slick"    % slickProjectionVersion
-    lazy val slf4j           = namespace            %% "akka-slf4j"               % akkaVersion
-    lazy val stream          = namespace            %% "akka-stream-typed"        % akkaVersion
-    lazy val testkit         = namespace            %% "akka-actor-testkit-typed" % akkaVersion
+    lazy val projectionSlick  = "com.lightbend.akka" %% "akka-projection-slick"        % slickProjectionVersion
+    lazy val slf4j            = namespace            %% "akka-slf4j"                   % akkaVersion
+    lazy val stream           = namespace            %% "akka-stream-typed"            % akkaVersion
+    lazy val testkit          = namespace            %% "akka-actor-testkit-typed"     % akkaVersion
 
-  }
-
-  private[this] object aws {
-    lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val s3           = awsNamespace % "s3" % awsSdkVersion
   }
 
   private[this] object cats {
@@ -98,7 +93,7 @@ object Dependencies {
   object Jars {
     lazy val `server`: Seq[ModuleID] = Seq(
       // For making Java 12 happy
-      "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
+      "javax.annotation"          % "javax.annotation-api" % "1.3.2" % "compile",
       //
       akka.actorTyped             % Compile,
       akka.clusterBootstrap       % Compile,
@@ -119,7 +114,6 @@ object Dependencies {
       akka.projectionSlick        % Compile,
       akka.slf4j                  % Compile,
       akka.stream                 % Compile,
-      aws.s3                      % Compile,
       cats.core                   % Compile,
       kamon.bundle                % Compile,
       kamon.prometheus            % Compile,
@@ -134,7 +128,7 @@ object Dependencies {
       scalatest.core              % Test,
       scalamock.core              % Test
     )
-    lazy val client: Seq[ModuleID] =
+    lazy val client: Seq[ModuleID]   =
       Seq(
         akka.stream     % Compile,
         akka.http       % Compile,

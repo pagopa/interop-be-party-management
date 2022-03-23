@@ -14,7 +14,7 @@ sealed trait Party {
   def end: Option[OffsetDateTime]
 
   def addAttributes(attributes: Set[Attribute]): Either[Throwable, Party] = this match {
-    case _: PersonParty => Left(new RuntimeException("Attributes do not exist for person party"))
+    case _: PersonParty                     => Left(new RuntimeException("Attributes do not exist for person party"))
     case institutionParty: InstitutionParty =>
       val updated: Set[InstitutionAttribute] = institutionParty.attributes ++ attributes.map(attribute =>
         InstitutionAttribute(origin = attribute.origin, code = attribute.code, description = attribute.description)
@@ -27,7 +27,7 @@ sealed trait Party {
 object Party {
   def convertToApi(party: Party): ApiParty =
     party match {
-      case personParty: PersonParty =>
+      case personParty: PersonParty           =>
         Right(Person(id = personParty.id))
       case institutionParty: InstitutionParty =>
         Left(
