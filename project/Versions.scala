@@ -1,5 +1,5 @@
 object Versions {
-  lazy val akkaHttpVersion          = "10.2.6"
+  lazy val akkaHttpVersion          = "10.2.9"
   lazy val akkaManagementVersion    = "1.1.1"
   lazy val akkaPersistenceS3Version = "1.1.41"
   lazy val akkaVersion              = "2.6.17"
