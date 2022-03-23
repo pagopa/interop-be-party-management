@@ -148,7 +148,7 @@ object PartyPersistentBehavior {
             Effect
               .persist(PartyRelationshipRejected(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
-          case None =>
+          case None      =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
@@ -161,7 +161,7 @@ object PartyPersistentBehavior {
             Effect
               .persist(PartyRelationshipDeleted(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
-          case None =>
+          case None      =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
@@ -174,7 +174,7 @@ object PartyPersistentBehavior {
             Effect
               .persist(PartyRelationshipSuspended(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
-          case None =>
+          case None      =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
@@ -187,7 +187,7 @@ object PartyPersistentBehavior {
             Effect
               .persist(PartyRelationshipActivated(rel.id, offsetDateTimeSupplier.get))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
-          case None =>
+          case None      =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
             Effect.none
         }
@@ -199,14 +199,14 @@ object PartyPersistentBehavior {
 
       case GetPartyRelationshipsByFrom(from, roles, states, products, productRoles, replyTo) =>
         val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.from == from).toList
-        val filtered: List[PersistedPartyRelationship] =
+        val filtered: List[PersistedPartyRelationship]      =
           filterRelationships(relationships, roles, states, products, productRoles)
         replyTo ! filtered
         Effect.none
 
       case GetPartyRelationshipsByTo(to, roles, states, products, productRoles, replyTo) =>
         val relationships: List[PersistedPartyRelationship] = state.relationships.values.filter(_.to == to).toList
-        val filtered: List[PersistedPartyRelationship] =
+        val filtered: List[PersistedPartyRelationship]      =
           filterRelationships(relationships, roles, states, products, productRoles)
         replyTo ! filtered
         Effect.none
@@ -266,7 +266,7 @@ object PartyPersistentBehavior {
       case PartyRelationshipSuspended(relationshipId, timestamp) => state.suspendRelationship(relationshipId, timestamp)
       case PartyRelationshipActivated(relationshipId, timestamp) =>
         state.activateRelationship(relationshipId, timestamp)
-      case TokenAdded(token) => state.addToken(token)
+      case TokenAdded(token)                                     => state.addToken(token)
     }
 
   val TypeKey: EntityTypeKey[Command] =

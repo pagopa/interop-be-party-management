@@ -65,12 +65,12 @@ class PublicApiServiceImpl(
     } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
 
     onComplete(result) {
-      case Success(token) =>
+      case Success(token)             =>
         getToken200(token)
       case Failure(ex: TokenNotFound) =>
         logger.error(s"Getting token failed - ${ex.getMessage}")
         getToken404(problemOf(StatusCodes.NotFound, ex))
-      case Failure(ex) =>
+      case Failure(ex)                =>
         logger.error(s"Getting token failed - ${ex.getMessage}")
         complete(problemOf(StatusCodes.InternalServerError, GetTokenFatalError(tokenId, ex.getMessage)))
     }
@@ -88,7 +88,7 @@ class PublicApiServiceImpl(
       tokenIdUUID <- tokenId.toFutureUUID
       found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
       token       <- found.toFuture(TokenNotFound(tokenId))
-      results <-
+      results     <-
         if (token.isValid) confirmRelationships(token, doc)
         else
           processRelationships(token, RejectPartyRelationship).flatMap(_ => Future.failed(TokenExpired(tokenId)))
@@ -100,11 +100,11 @@ class PublicApiServiceImpl(
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
         logger.error(s"Consuming token failed: ${errors}")
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
-      case Success(_) => consumeToken201
-      case Failure(ex: TokenNotFound) =>
+      case Success(_)                                                => consumeToken201
+      case Failure(ex: TokenNotFound)                                =>
         logger.error(s"Token not found - ${ex.getMessage}")
         consumeToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
-      case Failure(ex) =>
+      case Failure(ex)                                               =>
         logger.error(s"Consuming token failed - ${ex.getMessage}")
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenError(ex.getMessage)))
     }
@@ -131,11 +131,11 @@ class PublicApiServiceImpl(
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
         logger.error(s"Invalidating token failed: ${errors}")
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenBadRequest(errors)))
-      case Success(_) => invalidateToken200
-      case Failure(ex: TokenNotFound) =>
+      case Success(_)                                                => invalidateToken200
+      case Failure(ex: TokenNotFound)                                =>
         logger.error(s"Token not found - ${ex.getMessage}")
         invalidateToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
-      case Failure(ex) =>
+      case Failure(ex)                                               =>
         logger.error(s"Invalidating token failed - ${ex.getMessage}")
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenError(ex.getMessage)))
     }
@@ -151,7 +151,7 @@ class PublicApiServiceImpl(
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           commandFunc(partyRelationshipBinding.relationshipId, ref)
         )
-      } //TODO atomic?
+      } // TODO atomic?
     } yield results
   }
 
@@ -161,11 +161,11 @@ class PublicApiServiceImpl(
         token.id,
         fileParts
       )
-      results <- Future.traverse(token.legals) { partyRelationshipBinding =>
+      results  <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, token.id, ref)
         )
-      } //TODO atomic?
+      } // TODO atomic?
     } yield results
   }
 
@@ -199,17 +199,17 @@ class PublicApiServiceImpl(
       } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
 
     onComplete(result) {
-      case Success(tokenInfo) => verifyToken200(tokenInfo)
-      case Failure(ex: TokenNotFound) =>
+      case Success(tokenInfo)                   => verifyToken200(tokenInfo)
+      case Failure(ex: TokenNotFound)           =>
         logger.error(s"Token not found - ${ex.getMessage}")
         verifyToken404(problemOf(StatusCodes.NotFound, ex))
-      case Failure(ex: TokenAlreadyConsumed) =>
+      case Failure(ex: TokenAlreadyConsumed)    =>
         logger.error(s"Token already consumed - ${ex.getMessage}")
         verifyToken409(problemOf(StatusCodes.Conflict, ex))
       case Failure(ex: GetRelationshipNotFound) =>
         logger.error(s"Missing token relationships - ${ex.getMessage}")
         verifyToken400(problemOf(StatusCodes.BadRequest, ex))
-      case Failure(ex) =>
+      case Failure(ex)                          =>
         logger.error(s"Verifying token failed - ${ex.getMessage}")
         complete(problemOf(StatusCodes.InternalServerError, TokenVerificationFatalError(tokenId, ex.getMessage)))
     }
