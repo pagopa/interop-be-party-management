@@ -52,8 +52,7 @@ final case class State(
     copy(relationships = updated)
   }
 
-  def rejectRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
-    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Rejected, timestamp)
+  def rejectRelationship(relationshipId: UUID): State = copy(relationships = relationships - relationshipId)
 
   def suspendRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
     updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Suspended, timestamp)

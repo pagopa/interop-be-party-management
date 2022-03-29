@@ -100,17 +100,12 @@ package object v1 {
 
   implicit def partyRelationshipRejectedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
-    for {
-      uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- event.timestamp.toOffsetDateTime.toEither
-    } yield PartyRelationshipRejected(uuid, timestamp)
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
 
   implicit def partyRelationshipRejectedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
     event =>
-      Right[Throwable, PartyRelationshipRejectedV1](
-        PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
-      )
+      Right[Throwable, PartyRelationshipRejectedV1](PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString))
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>

@@ -592,32 +592,19 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
 
       val result =
         PersistEventDeserializer.from(
-          PartyRelationshipRejectedV1(
-            partyRelationshipId = StateCommonData.relationshipId.toString,
-            timestamp = StateCommonData.timestamp.toMillis
-          )
+          PartyRelationshipRejectedV1(partyRelationshipId = StateCommonData.relationshipId.toString)
         )
 
-      result.value shouldBe PartyRelationshipRejected(
-        partyRelationshipId = StateCommonData.relationshipId,
-        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
-      )
+      result.value shouldBe PartyRelationshipRejected(partyRelationshipId = StateCommonData.relationshipId)
 
     }
 
     "serialize PartyRelationshipRejected" in {
 
-      val result = PersistEventSerializer.to(
-        PartyRelationshipRejected(
-          partyRelationshipId = StateCommonData.relationshipId,
-          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
-        )
-      )
+      val result =
+        PersistEventSerializer.to(PartyRelationshipRejected(partyRelationshipId = StateCommonData.relationshipId))
 
-      result.value shouldBe PartyRelationshipRejectedV1(
-        partyRelationshipId = StateCommonData.relationshipId.toString,
-        timestamp = StateCommonData.timestamp.toMillis
-      )
+      result.value shouldBe PartyRelationshipRejectedV1(partyRelationshipId = StateCommonData.relationshipId.toString)
     }
 
     "deserialize PartyRelationshipDeletedV1" in {

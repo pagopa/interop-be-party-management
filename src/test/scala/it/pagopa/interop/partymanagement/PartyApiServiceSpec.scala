@@ -1617,7 +1617,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       val body = Unmarshal(response.entity).to[Relationships].futureValue
 
-      body.items.map(_.state) should contain only RelationshipState.REJECTED
+      body.items shouldBe Seq.empty
 
     }
 
@@ -1778,7 +1778,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.Conflict
     }
 
-    "return 409 trying to verify a token already consumed (rejected token)" in {
+    "return 400 trying to verify a token already consumed (rejected token)" in {
       (() => uuidSupplier.get).expects().returning(orgId7).once()           // Create organization
       (() => uuidSupplier.get).expects().returning(relationshipId11).once() // Create relationship1
       (() => uuidSupplier.get).expects().returning(relationshipId12).once() // Create relationship2
@@ -1813,7 +1813,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           .singleRequest(HttpRequest(uri = s"$url/tokens/$tokenText/verify", method = HttpMethods.POST))
           .futureValue
 
-      response.status shouldBe StatusCodes.Conflict
+      response.status shouldBe StatusCodes.BadRequest
     }
 
   }

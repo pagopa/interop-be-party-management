@@ -46,7 +46,6 @@ message PartyRelationshipDeletedV1 {
 
 message PartyRelationshipRejectedV1 {
   required string partyRelationshipId = 1;
-  required int64 timestamp = 2;
 }
 
 message PartyRelationshipSuspendedV1 {

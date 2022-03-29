@@ -146,7 +146,7 @@ object PartyPersistentBehavior {
         relationship match {
           case Some(rel) =>
             Effect
-              .persist(PartyRelationshipRejected(rel.id, offsetDateTimeSupplier.get))
+              .persist(PartyRelationshipRejected(rel.id))
               .thenRun(_ => replyTo ! StatusReply.Success(()))
           case None      =>
             replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
@@ -261,7 +261,7 @@ object PartyPersistentBehavior {
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType, tokenId, timestamp) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType, tokenId, timestamp)
-      case PartyRelationshipRejected(relationshipId, timestamp)  => state.rejectRelationship(relationshipId, timestamp)
+      case PartyRelationshipRejected(relationshipId)             => state.rejectRelationship(relationshipId)
       case PartyRelationshipDeleted(relationshipId, timestamp)   => state.deleteRelationship(relationshipId, timestamp)
       case PartyRelationshipSuspended(relationshipId, timestamp) => state.suspendRelationship(relationshipId, timestamp)
       case PartyRelationshipActivated(relationshipId, timestamp) =>

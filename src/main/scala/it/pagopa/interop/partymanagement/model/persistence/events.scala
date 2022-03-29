@@ -26,8 +26,7 @@ final case class PartyRelationshipConfirmed(
   onboardingTokenId: UUID,
   timestamp: OffsetDateTime
 ) extends PartyRelationshipEvent
-final case class PartyRelationshipRejected(partyRelationshipId: UUID, timestamp: OffsetDateTime)
-    extends PartyRelationshipEvent
+final case class PartyRelationshipRejected(partyRelationshipId: UUID)                  extends PartyRelationshipEvent
 final case class PartyRelationshipDeleted(partyRelationshipId: UUID, timestamp: OffsetDateTime)
     extends PartyRelationshipEvent
 final case class PartyRelationshipSuspended(partyRelationshipId: UUID, timestamp: OffsetDateTime)
