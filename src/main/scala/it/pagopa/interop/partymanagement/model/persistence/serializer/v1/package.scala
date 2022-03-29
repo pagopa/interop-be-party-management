@@ -100,9 +100,7 @@ package object v1 {
 
   implicit def partyRelationshipRejectedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
-    for {
-      uuid <- stringToUUID(event.partyRelationshipId)
-    } yield PartyRelationshipRejected(uuid)
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
 
   implicit def partyRelationshipRejectedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
