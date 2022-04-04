@@ -16,17 +16,21 @@ class StateSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val StateManifest: String = classOf[State].getName
+  final val className: String = classOf[State].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case s: State => serialize(s, StateManifest, currentVersion)
+    case s: State => serialize(s, className, currentVersion)
+    case _        =>
+      throw new NotSerializableException(
+        s"Unable to handle manifest: [[${manifest(o)}]], currentVersion: [[$currentVersion]] "
+      )
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef =
     manifest.split('|').toList match {
-      case StateManifest :: `version1` :: Nil =>
+      case `className` :: `version1` :: Nil =>
         deserialize(v1.state.StateV1, bytes, manifest, version1)
-      case _ =>
+      case _                                =>
         throw new NotSerializableException(
           s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
         )

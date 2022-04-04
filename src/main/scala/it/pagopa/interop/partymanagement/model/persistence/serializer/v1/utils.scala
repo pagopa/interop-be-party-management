@@ -65,11 +65,11 @@ object utils {
           end = end
         )
       }.toEither
-    case Empty => Left(new RuntimeException("Deserialization from protobuf failed"))
+    case Empty                 => Left(new RuntimeException("Deserialization from protobuf failed"))
   }
 
   def getPartyV1(party: Party): ErrorOr[PartyV1] = party match {
-    case p: PersonParty =>
+    case p: PersonParty      =>
       {
         for {
           start <- p.start.asFormattedString
@@ -215,21 +215,21 @@ object utils {
 
   def partyRoleFromProtobuf(role: PartyRoleV1): ErrorOr[PersistedPartyRole] =
     role match {
-      case PartyRoleV1.MANAGER      => Right(PersistedPartyRole.Manager)
-      case PartyRoleV1.DELEGATE     => Right(PersistedPartyRole.Delegate)
-      case PartyRoleV1.SUB_DELEGATE => Right(PersistedPartyRole.SubDelegate)
-      case PartyRoleV1.OPERATOR     => Right(PersistedPartyRole.Operator)
+      case PartyRoleV1.MANAGER             => Right(PersistedPartyRole.Manager)
+      case PartyRoleV1.DELEGATE            => Right(PersistedPartyRole.Delegate)
+      case PartyRoleV1.SUB_DELEGATE        => Right(PersistedPartyRole.SubDelegate)
+      case PartyRoleV1.OPERATOR            => Right(PersistedPartyRole.Operator)
       case PartyRoleV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party role value $value"))
     }
 
   def relationshipStateFromProtobuf(state: PartyRelationshipStateV1): ErrorOr[PersistedPartyRelationshipState] =
     state match {
-      case PartyRelationshipStateV1.PENDING   => Right(Pending)
-      case PartyRelationshipStateV1.ACTIVE    => Right(Active)
-      case PartyRelationshipStateV1.SUSPENDED => Right(Suspended)
-      case PartyRelationshipStateV1.DELETED   => Right(Deleted)
-      case PartyRelationshipStateV1.REJECTED  => Right(Rejected)
+      case PartyRelationshipStateV1.PENDING             => Right(Pending)
+      case PartyRelationshipStateV1.ACTIVE              => Right(Active)
+      case PartyRelationshipStateV1.SUSPENDED           => Right(Suspended)
+      case PartyRelationshipStateV1.DELETED             => Right(Deleted)
+      case PartyRelationshipStateV1.REJECTED            => Right(Rejected)
       case PartyRelationshipStateV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party relationship state value $value"))
     }

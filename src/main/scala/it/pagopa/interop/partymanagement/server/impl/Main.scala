@@ -61,14 +61,14 @@ object Main extends App {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
     keyset      <- JWTConfiguration.jwtReader.loadKeyset()
     jwtValidator = new DefaultJWTReader with PublicKeysHolder {
-      var publicKeyset = keyset
+      var publicKeyset                                                                 = keyset
       override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
         getClaimsVerifier(audience = ApplicationConfiguration.jwtAudience)
     }
   } yield (fileManager, jwtValidator)
 
   val (fileManager, jwtValidator) =
-    dependenciesLoaded.get //THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
+    dependenciesLoaded.get // THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
 
   Kamon.init()
 
@@ -110,7 +110,7 @@ object Main extends App {
         if (projectionsEnabled) {
           val dbConfig: DatabaseConfig[JdbcProfile] =
             DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
-          val partyPersistentProjection = new PartyPersistentProjection(context.system, dbConfig)
+          val partyPersistentProjection             = new PartyPersistentProjection(context.system, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
             name = "party-projections",

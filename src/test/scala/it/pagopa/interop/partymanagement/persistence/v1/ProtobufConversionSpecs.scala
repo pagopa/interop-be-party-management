@@ -59,9 +59,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
   "Protobuf conversions" should {
 
     "convert a PartyV1 (PersonPartyV1) to Party (PersonParty)" in {
-      val id    = UUID.randomUUID()
-      val start = OffsetDateTime.now()
-      val end   = OffsetDateTime.now().plusDays(10L)
+      val id                          = UUID.randomUUID()
+      val start                       = OffsetDateTime.now()
+      val end                         = OffsetDateTime.now().plusDays(10L)
       val partyV1: Try[PersonPartyV1] =
         for {
           start <- start.asFormattedString
@@ -86,7 +86,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes = Set(
+      val attributes     = Set(
         InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
         InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
       )
@@ -161,7 +161,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val taxCode        = "taxCode"
       val start          = OffsetDateTime.now()
       val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes =
+      val attributes     =
         Seq(
           InstitutionAttributeV1(origin = "origin", code = "a", description = "description_a"),
           InstitutionAttributeV1(origin = "origin", code = "b", description = "description_b")
@@ -592,32 +592,19 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
 
       val result =
         PersistEventDeserializer.from(
-          PartyRelationshipRejectedV1(
-            partyRelationshipId = StateCommonData.relationshipId.toString,
-            timestamp = StateCommonData.timestamp.toMillis
-          )
+          PartyRelationshipRejectedV1(partyRelationshipId = StateCommonData.relationshipId.toString)
         )
 
-      result.value shouldBe PartyRelationshipRejected(
-        partyRelationshipId = StateCommonData.relationshipId,
-        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
-      )
+      result.value shouldBe PartyRelationshipRejected(partyRelationshipId = StateCommonData.relationshipId)
 
     }
 
     "serialize PartyRelationshipRejected" in {
 
-      val result = PersistEventSerializer.to(
-        PartyRelationshipRejected(
-          partyRelationshipId = StateCommonData.relationshipId,
-          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
-        )
-      )
+      val result =
+        PersistEventSerializer.to(PartyRelationshipRejected(partyRelationshipId = StateCommonData.relationshipId))
 
-      result.value shouldBe PartyRelationshipRejectedV1(
-        partyRelationshipId = StateCommonData.relationshipId.toString,
-        timestamp = StateCommonData.timestamp.toMillis
-      )
+      result.value shouldBe PartyRelationshipRejectedV1(partyRelationshipId = StateCommonData.relationshipId.toString)
     }
 
     "deserialize PartyRelationshipDeletedV1" in {

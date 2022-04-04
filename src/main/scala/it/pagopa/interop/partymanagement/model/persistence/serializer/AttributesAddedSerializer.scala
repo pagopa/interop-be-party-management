@@ -16,16 +16,20 @@ class AttributesAddedSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val AttributesAddedManifest: String = classOf[AttributesAdded].getName
+  final val className: String = classOf[AttributesAdded].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: AttributesAdded => serialize(event, AttributesAddedManifest, currentVersion)
+    case event: AttributesAdded => serialize(event, className, currentVersion)
+    case _                      =>
+      throw new NotSerializableException(
+        s"Unable to handle manifest: [[${manifest(o)}]], currentVersion: [[$currentVersion]] "
+      )
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
-    case AttributesAddedManifest :: `version1` :: Nil =>
+    case `className` :: `version1` :: Nil =>
       deserialize(v1.events.AttributesAddedV1, bytes, manifest, version1)
-    case _ =>
+    case _                                =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
       )

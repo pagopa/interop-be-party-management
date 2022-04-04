@@ -55,7 +55,7 @@ object PartyManagementErrors {
   final case object GetInstitutionError               extends ComponentError("0025", "Error while getting institution")
 
   final case class GetRelationshipNotFound(id: String) extends ComponentError("0026", s"Relationship $id not found")
-  final case object GetRelationshipError               extends ComponentError("0027", "Error while getting relationship")
+  final case object GetRelationshipError extends ComponentError("0027", "Error while getting relationship")
 
   final case class GetPersonNotFound(id: String) extends ComponentError("0028", s"Person $id not found")
   final case object GetPersonError               extends ComponentError("0029", "Error while getting person")

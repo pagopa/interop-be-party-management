@@ -16,17 +16,20 @@ class PartyDeletedSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val PartyDeletedManifest: String = classOf[PartyDeleted].getName
+  final val className: String = classOf[PartyDeleted].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: PartyDeleted => serialize(event, PartyDeletedManifest, currentVersion)
-
+    case event: PartyDeleted => serialize(event, className, currentVersion)
+    case _                   =>
+      throw new NotSerializableException(
+        s"Unable to handle manifest: [[${manifest(o)}]], currentVersion: [[$currentVersion]] "
+      )
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
-    case PartyDeletedManifest :: `version1` :: Nil =>
+    case `className` :: `version1` :: Nil =>
       deserialize(v1.events.PartyAddedV1, bytes, manifest, version1)
-    case _ =>
+    case _                                =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
       )

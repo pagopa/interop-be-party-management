@@ -41,7 +41,7 @@ final case class PersistedPartyRelationship(
 }
 
 object PersistedPartyRelationship {
-  //TODO add role check
+  // TODO add role check
   def create(
     uuidSupplier: UUIDSupplier,
     offsetDateTimeSupplier: OffsetDateTimeSupplier

@@ -63,7 +63,7 @@ class PartyApiServiceImpl(
     onSuccess(result) {
       case Some(party) =>
         Party.convertToApi(party).swap.fold(_ => existsInstitutionById404, _ => existsInstitutionById200)
-      case None => existsInstitutionById404
+      case None        => existsInstitutionById404
     }
 
   }
@@ -106,14 +106,14 @@ class PartyApiServiceImpl(
             },
             institution => createInstitution201(institution)
           )
-      case Success(_) =>
+      case Success(_)                                    =>
         val errorResponse: Problem = problemOf(StatusCodes.Conflict, CreateInstitutionConflict)
         createInstitution409(errorResponse)
-      case Failure(ex: InstitutionAlreadyExists) =>
+      case Failure(ex: InstitutionAlreadyExists)         =>
         logger.error(s"Creating institution ${institutionSeed.description} - ${ex.getMessage}")
         val errorResponse: Problem = problemOf(StatusCodes.Conflict, ex)
         createInstitution409(errorResponse)
-      case Failure(ex) =>
+      case Failure(ex)                                   =>
         logger.error(s"Creating institution ${institutionSeed.description} - ${ex.getMessage}")
         val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionError(ex.getMessage))
         createInstitution400(errorResponse)
@@ -147,7 +147,7 @@ class PartyApiServiceImpl(
             },
             institution => addInstitutionAttributes200(institution)
           )
-      case statusReply =>
+      case statusReply                          =>
         logger.error(s"Error adding attributes to institution $id - Not found - ${statusReply.getError.getMessage}")
         addInstitutionAttributes404(problemOf(StatusCodes.NotFound, AddAttributesError))
     }
@@ -180,11 +180,11 @@ class PartyApiServiceImpl(
             },
             person => createPerson201(person)
           )
-      case Success(_) =>
+      case Success(_)                                    =>
         logger.error(s"Creating person ${personSeed.id} - Conflict")
         val errorResponse: Problem = problemOf(StatusCodes.Conflict, CreatePersonConflict)
         createPerson409(errorResponse)
-      case Failure(ex) =>
+      case Failure(ex)                                   =>
         logger.error(s"Creating person ${personSeed.id} - ${ex.getMessage}")
         val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreatePersonError)
         createPerson400(errorResponse)
@@ -206,7 +206,7 @@ class PartyApiServiceImpl(
 
     onSuccess(result) {
       case Some(party) => Party.convertToApi(party).fold(_ => existsPersonById404, _ => existsPersonById200)
-      case None =>
+      case None        =>
         logger.error(s"Error while verifying if person with the following id exists $id - Not found")(Seq.empty)
         existsPersonById404
     }
@@ -251,19 +251,19 @@ class PartyApiServiceImpl(
           )
         )
         .map(_.flatten)
-      verified          <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
-      partyRelationship <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
+      verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
+      partyRelationship         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
     } yield partyRelationship
 
     onComplete(result) {
       case Success(statusReply) if statusReply.isSuccess => createRelationship201(statusReply.getValue.toRelationship)
-      case Success(statusReply) =>
+      case Success(statusReply)                          =>
         logger.error(s"Error while creating relationship - Conflict - ${statusReply.getError.getMessage}")
         createRelationship409(problemOf(StatusCodes.Conflict, CreateRelationshipConflict))
-      case Failure(ex: RelationshipAlreadyExists) =>
+      case Failure(ex: RelationshipAlreadyExists)        =>
         logger.error(s"Error while creating relationship - ${ex.getMessage}")
         createRelationship409(problemOf(StatusCodes.Conflict, ex))
-      case Failure(ex) =>
+      case Failure(ex)                                   =>
         logger.error(s"Error while creating relationship - ${ex.getMessage}")
         createRelationship400(problemOf(StatusCodes.BadRequest, CreateRelationshipError(ex.getMessage)))
     }
@@ -287,7 +287,7 @@ class PartyApiServiceImpl(
   ): Route = {
 
     logger.info(s"Getting relationships for from: ${from.getOrElse("Empty")} / to: ${to
-      .getOrElse("Empty")}/ roles: $roles/ states: $states/ products: $products/ productRoles: $productRoles")
+        .getOrElse("Empty")}/ roles: $roles/ states: $states/ products: $products/ productRoles: $productRoles")
 
     def retrieveRelationshipsByTo(
       id: UUID,
@@ -332,9 +332,9 @@ class PartyApiServiceImpl(
     ): Future[List[Relationship]] = (from, to) match {
       case (Some(f), Some(t)) =>
         retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
-      case (Some(f), None) => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
-      case (None, Some(t)) => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
-      case _               => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
+      case (Some(f), None)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
+      case (None, Some(t))    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
+      case _ => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
     }
 
     val result: Future[List[Relationship]] = for {
@@ -349,7 +349,7 @@ class PartyApiServiceImpl(
 
     onComplete(result) {
       case Success(relationships) => getRelationships200(Relationships(relationships))
-      case Failure(ex) =>
+      case Failure(ex)            =>
         logger.error(s"Error while getting relationships - ${ex.getMessage}")
         getRelationships400(problemOf(StatusCodes.BadRequest, GetRelationshipsError))
     }
@@ -414,10 +414,10 @@ class PartyApiServiceImpl(
       case Success(statusReply) if statusReply.isError =>
         logger.error(s"Error trying to create element - ${statusReply.getError.getMessage}")
         failure(problemOf(StatusCodes.BadRequest, CreateTokenBadRequest(statusReply.getError.getMessage)))
-      case Success(a) =>
+      case Success(a)                                  =>
         logger.info(s"Element successfully created")
         success(a.getValue)
-      case Failure(ex) =>
+      case Failure(ex)                                 =>
         logger.error(s"Error trying to create element - ${ex.getMessage}")
         failure(problemOf(StatusCodes.BadRequest, CreateTokenError(ex.getMessage)))
     }
@@ -441,11 +441,11 @@ class PartyApiServiceImpl(
     onComplete(attributes) {
       case Success(result) if result.isSuccess =>
         getPartyAttributes200(result.getValue.map(InstitutionAttribute.toApi))
-      case Success(_) =>
+      case Success(_)                          =>
         val error = problemOf(StatusCodes.InternalServerError, GetPartyAttributesError)
         logger.error(s"Error while getting party $id attributes - Internal server error")
         complete((error.status, error))
-      case Failure(ex) =>
+      case Failure(ex)                         =>
         logger.error(s"Error while getting party $id attributes - ${ex.getMessage}")
         getPartyAttributes404(problemOf(StatusCodes.NotFound, PartyAttributesNotFound))
     }
@@ -470,7 +470,7 @@ class PartyApiServiceImpl(
           ref
         )
       )
-      result <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
+      result            <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
     } yield result
 
   }
@@ -514,7 +514,7 @@ class PartyApiServiceImpl(
           .fold(notFound) { reply =>
             Party.convertToApi(reply).swap.fold(_ => notFound, p => getInstitutionById200(p))
           }
-      case Failure(ex) =>
+      case Failure(ex)     =>
         logger.error(s"Error getting institution with id $id - ${ex.getMessage}")
         getInstitutionById404(problemOf(StatusCodes.NotFound, GetInstitutionError))
     }
@@ -542,7 +542,7 @@ class PartyApiServiceImpl(
         result.fold(notFound) { reply =>
           Party.convertToApi(reply).fold(_ => notFound, p => getPersonById200(p))
         }
-      case Failure(ex) =>
+      case Failure(ex)     =>
         logger.error(s"Error while getting person with id $id - ${ex.getMessage}")
         getPersonById404(problemOf(StatusCodes.NotFound, GetPersonError))
     }
@@ -572,10 +572,10 @@ class PartyApiServiceImpl(
 
     onComplete(result) {
       case Success(Some(relationship)) => getRelationshipById200(relationship)
-      case Success(None) =>
+      case Success(None)               =>
         logger.error(s"Error while getting relationship with id $relationshipId - Not found")
         getRelationshipById404(problemOf(StatusCodes.NotFound, GetRelationshipNotFound(relationshipId)))
-      case Failure(ex) =>
+      case Failure(ex)                 =>
         logger.error(s"Error while getting relationship with id $relationshipId - ${ex.getMessage}")
         getRelationshipById400(problemOf(StatusCodes.BadRequest, GetRelationshipError))
     }
@@ -607,7 +607,7 @@ class PartyApiServiceImpl(
           notFound = bulkPartiesSeed.partyIdentifiers.diff(institutions.map(_.id)).map(_.toString)
         )
         bulkInstitutions200(response)
-      case Failure(ex) =>
+      case Failure(ex)      =>
         logger.error(s"Error while processing bulk institutions - ${ex.getMessage}")
         bulkInstitutions404(problemOf(StatusCodes.NotFound, GetBulkInstitutionsError))
     }
@@ -627,15 +627,15 @@ class PartyApiServiceImpl(
       .toList
 
     val result = for {
-      uuid <- relationshipId.toFutureUUID
+      uuid              <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => ActivatePartyRelationship(uuid, ref)).transform(Success(_))
       )
-      _ <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+      _                 <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
     } yield ()
 
     onComplete(result) {
-      case Success(_) =>
+      case Success(_)  =>
         activatePartyRelationshipById204
       case Failure(ex) =>
         logger.error(s"Error while activating relationship with id $relationshipId - ${ex.getMessage}")
@@ -656,15 +656,15 @@ class PartyApiServiceImpl(
       .toList
 
     val result = for {
-      uuid <- relationshipId.toFutureUUID
+      uuid              <- relationshipId.toFutureUUID
       resultsCollection <- Future.traverse(commanders)(
         _.ask(ref => SuspendPartyRelationship(uuid, ref)).transform(Success(_))
       )
-      _ <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+      _                 <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
     } yield ()
 
     onComplete(result) {
-      case Success(_) =>
+      case Success(_)  =>
         suspendPartyRelationshipById204
       case Failure(ex) =>
         logger.error(s"Error while suspending relationship with id $relationshipId - ${ex.getMessage}")
@@ -700,10 +700,10 @@ class PartyApiServiceImpl(
           logger.error(s"Error while deleting relationship with id $relationshipId - Not found")
           deleteRelationshipById404(problemOf(StatusCodes.NotFound, DeletingRelationshipError(relationshipId)))
         }
-      case Success(None) =>
+      case Success(None)        =>
         logger.error(s"Error while deleting relationship with id $relationshipId - Not found")
         deleteRelationshipById404(problemOf(StatusCodes.NotFound, DeletingRelationshipNotFound(relationshipId)))
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(s"Error while deleting relationship with id $relationshipId - ${ex.getMessage}")
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, DeletingRelationshipBadRequest(relationshipId)))
     }

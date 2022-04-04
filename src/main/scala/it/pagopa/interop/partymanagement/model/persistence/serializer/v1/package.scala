@@ -16,10 +16,10 @@ package object v1 {
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state =>
       for {
-        parties <- state.parties
+        parties       <- state.parties
           .traverse[ErrorOr, (UUID, Party)](extractTupleFromPartiesV1)
           .map(_.toMap)
-        tokens <- state.tokens
+        tokens        <- state.tokens
           .traverse[ErrorOr, (UUID, Token)](extractTupleFromTokensV1)
           .map(_.toMap)
         relationships <- state.relationships
@@ -33,7 +33,7 @@ package object v1 {
         parties <- state.parties.toSeq.traverse[ErrorOr, PartiesV1] { case (k, v) =>
           getPartyV1(v).map(party => PartiesV1(k.toString, party))
         }
-        tokens <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
+        tokens  <- state.tokens.toSeq.traverse[ErrorOr, TokensV1] { case (k, v) =>
           getTokenV1(v).map(token => TokensV1(k.toString, token))
         }
         relationships = state.relationships.toSeq
@@ -100,17 +100,12 @@ package object v1 {
 
   implicit def partyRelationshipRejectedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipRejectedV1, PartyRelationshipRejected] = event =>
-    for {
-      uuid      <- stringToUUID(event.partyRelationshipId)
-      timestamp <- event.timestamp.toOffsetDateTime.toEither
-    } yield PartyRelationshipRejected(uuid, timestamp)
+    stringToUUID(event.partyRelationshipId).map(PartyRelationshipRejected)
 
   implicit def partyRelationshipRejectedV1PersistEventSerializer
     : PersistEventSerializer[PartyRelationshipRejected, PartyRelationshipRejectedV1] =
     event =>
-      Right[Throwable, PartyRelationshipRejectedV1](
-        PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
-      )
+      Right[Throwable, PartyRelationshipRejectedV1](PartyRelationshipRejectedV1.of(event.partyRelationshipId.toString))
 
   implicit def partyRelationshipDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[PartyRelationshipDeletedV1, PartyRelationshipDeleted] = event =>
