@@ -23,9 +23,9 @@ final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[Unit]]
 final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])        extends PartyCommand
 final case class GetPartyAttributes(partyId: UUID, replyTo: ActorRef[StatusReply[Seq[InstitutionAttribute]]])
     extends PartyCommand
-final case class AddAttributes(organizationId: UUID, attributes: Seq[Attribute], replyTo: ActorRef[StatusReply[Party]])
+final case class AddAttributes(institutionId: UUID, attributes: Seq[Attribute], replyTo: ActorRef[StatusReply[Party]])
     extends PartyCommand
-final case class GetOrganizationByExternalId(externalId: String, replyTo: ActorRef[Option[InstitutionParty]])
+final case class GetInstitutionByExternalId(externalId: String, replyTo: ActorRef[Option[InstitutionParty]])
     extends PartyCommand
 
 /* PartyRelationship Command */

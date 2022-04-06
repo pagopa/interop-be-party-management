@@ -27,6 +27,8 @@ import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.interop.commons.utils.{AkkaUtils, OpenapiUtils}
 import it.pagopa.interop.partymanagement.api.impl.{
+  ExternalApiMarshallerImpl,
+  ExternalApiServiceImpl,
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
   PartyApiMarshallerImpl,
@@ -35,7 +37,7 @@ import it.pagopa.interop.partymanagement.api.impl.{
   PublicApiServiceImpl,
   problemOf
 }
-import it.pagopa.interop.partymanagement.api.{HealthApi, PartyApi, PublicApi}
+import it.pagopa.interop.partymanagement.api.{ExternalApi, HealthApi, PartyApi, PublicApi}
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{
   numberOfProjectionTags,
@@ -130,6 +132,12 @@ object Main extends App {
           jwtValidator.OAuth2JWTValidatorAsContexts
         )
 
+        val externalApi: ExternalApi = new ExternalApi(
+          new ExternalApiServiceImpl(system = context.system, sharding = sharding, entity = partyPersistentEntity),
+          ExternalApiMarshallerImpl,
+          jwtValidator.OAuth2JWTValidatorAsContexts
+        )
+
         val publicApi: PublicApi = new PublicApi(
           new PublicApiServiceImpl(
             system = context.system,
@@ -149,6 +157,7 @@ object Main extends App {
         val controller = new Controller(
           health = healthApi,
           party = partyApi,
+          external = externalApi,
           public = publicApi,
           validationExceptionToRoute = Some(report => {
             val error =

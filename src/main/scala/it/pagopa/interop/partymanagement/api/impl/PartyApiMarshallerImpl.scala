@@ -11,8 +11,8 @@ object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport w
 
   override implicit def toEntityMarshallerPerson: ToEntityMarshaller[Person] = sprayJsonMarshaller[Person]
 
-  override implicit def toEntityMarshallerOrganization: ToEntityMarshaller[Organization] =
-    sprayJsonMarshaller[Organization]
+  override implicit def toEntityMarshallerInstitution: ToEntityMarshaller[Institution] =
+    sprayJsonMarshaller[Institution]
 
   override implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] =
     sprayJsonMarshaller[Problem]
@@ -20,8 +20,8 @@ object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport w
   override implicit def fromEntityUnmarshallerPersonSeed: FromEntityUnmarshaller[PersonSeed] =
     sprayJsonUnmarshaller[PersonSeed]
 
-  override implicit def fromEntityUnmarshallerOrganizationSeed: FromEntityUnmarshaller[OrganizationSeed] =
-    sprayJsonUnmarshaller[OrganizationSeed]
+  override implicit def fromEntityUnmarshallerInstitutionSeed: FromEntityUnmarshaller[InstitutionSeed] =
+    sprayJsonUnmarshaller[InstitutionSeed]
 
   override implicit def toEntityMarshallerRelationships: ToEntityMarshaller[Relationships] =
     sprayJsonMarshaller[Relationships]
@@ -37,8 +37,8 @@ object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport w
   override implicit def toEntityMarshallerRelationship: ToEntityMarshaller[Relationship] =
     sprayJsonMarshaller[Relationship]
 
-  override implicit def toEntityMarshallerBulkOrganizations: ToEntityMarshaller[BulkOrganizations] =
-    sprayJsonMarshaller[BulkOrganizations]
+  override implicit def toEntityMarshallerBulkInstitutions: ToEntityMarshaller[BulkInstitutions] =
+    sprayJsonMarshaller[BulkInstitutions]
 
   override implicit def fromEntityUnmarshallerBulkPartiesSeed: FromEntityUnmarshaller[BulkPartiesSeed] =
     sprayJsonUnmarshaller[BulkPartiesSeed]
