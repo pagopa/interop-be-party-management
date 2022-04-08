@@ -782,6 +782,14 @@ components:
             type: string
             description: product names associated to this institution
           uniqueItems: true
+        origin:
+          type: string
+          description: The origin form which the institution has been retrieved
+          example: IPA
+        institutionType:
+          type: string
+          description: institution type
+          example: PA
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
@@ -793,6 +801,8 @@ components:
         - taxCode
         - attributes
         - products
+        - origin
+        - institutionType
       additionalProperties: false
     Institution:
       type: object
@@ -821,6 +831,14 @@ components:
         taxCode:
           description: institution tax code
           type: string
+        origin:
+          type: string
+          description: The origin form which the institution has been retrieved
+          example: IPA
+        institutionType:
+          type: string
+          description: institution type
+          example: PA
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
@@ -832,6 +850,8 @@ components:
         - zipCode
         - taxCode
         - attributes
+        - origin
+        - institutionType
       additionalProperties: false
     BulkInstitutions:
       type: object
@@ -923,6 +943,13 @@ components:
           $ref: '#/components/schemas/PartyRole'
         product:
           $ref: '#/components/schemas/RelationshipProductSeed'
+        pricingPlan:
+          type: string
+          description: pricing plan
+        institution:
+          $ref: '#/components/schemas/InstitutionUpdate'
+        billing:
+          $ref: '#/components/schemas/Billing'
       additionalProperties: false
       required:
         - from
@@ -976,6 +1003,13 @@ components:
           $ref: '#/components/schemas/RelationshipProduct'
         state:
           $ref: '#/components/schemas/RelationshipState'
+        pricingPlan:
+          type: string
+          description: pricing plan
+        institution:
+          $ref: '#/components/schemas/InstitutionUpdate'
+        billing:
+          $ref: '#/components/schemas/Billing'
         createdAt:
           type: string
           format: date-time
@@ -1136,6 +1170,42 @@ components:
       required:
         - code
         - detail
+    InstitutionUpdate:
+      type: object
+      properties:
+        institutionType:
+          type: string
+          example: PA
+          description: The type of the institution
+        description:
+          type: string
+          example: AGENCY X
+        digitalAddress:
+          example: email@pec.mail.org
+          format: email
+          type: string
+        address:
+          example: via del campo
+          type: string
+        taxCode:
+          description: institution tax code
+          type: string
+    Billing:
+      type: object
+      properties:
+        vatNumber:
+          description: institution vat number
+          type: string
+        recipientCode:
+          description: institution recipient code
+          type: string
+        publicServices:
+          description: institution recipient code
+          type: boolean
+      required:
+        - vatNumber
+        - recipientCode
+      additionalProperties: false
   securitySchemes:
     bearerAuth:
       type: http
