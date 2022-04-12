@@ -389,14 +389,27 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeed          =
         RelationshipSeed(
           from = personUuid,
           to = institutionUuid,
           role = PartyRole.MANAGER,
-          RelationshipProductSeed(id = "p1", role = "admin")
+          RelationshipProductSeed(id = "p1", role = "admin"),
+          pricingPlan = Option("PRICING_PLAN"),
+          billing = Option(Billing("VATNUMBER", "RECIPIENTCODE", Option(true))),
+          institutionUpdate = Option(
+            InstitutionUpdate(
+              Option("PAOVERRIDE"),
+              Option("DESCRIPTIONOVERRIDE"),
+              Option("MAILOVERRIDE"),
+              Option("ADDRESSOVERRIDE"),
+              Option("TAXCODEOVERRIDE")
+            )
+          )
         )
 
       (() => uuidSupplier.get).expects().returning(institutionUuid).once() // Create institution
@@ -427,14 +440,27 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         zipCode = "zipCode",
         taxCode = "taxCode",
         products = Set.empty,
-        attributes = Seq.empty
+        attributes = Seq.empty,
+        origin = "IPA",
+        institutionType = "PA"
       )
       val rlSeed          =
         RelationshipSeed(
           from = personUuid,
           to = institutionUuid,
           role = PartyRole.MANAGER,
-          RelationshipProductSeed(id = "p1", role = "admin")
+          RelationshipProductSeed(id = "p1", role = "admin"),
+          pricingPlan = Option("PRICING_PLAN"),
+          billing = Option(Billing("VATNUMBER", "RECIPIENTCODE", Option(true))),
+          institutionUpdate = Option(
+            InstitutionUpdate(
+              Option("PAOVERRIDE"),
+              Option("DESCRIPTIONOVERRIDE"),
+              Option("MAILOVERRIDE"),
+              Option("ADDRESSOVERRIDE"),
+              Option("TAXCODEOVERRIDE")
+            )
+          )
         )
 
       val rlExpected = Relationships(
@@ -450,7 +476,18 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
             fileName = None,
             contentType = None,
             createdAt = timestampValid,
-            updatedAt = None
+            updatedAt = None,
+            pricingPlan = Option("PRICING_PLAN"),
+            billing = Option(Billing("VATNUMBER", "RECIPIENTCODE", Option(true))),
+            institutionUpdate = Option(
+              InstitutionUpdate(
+                Option("PAOVERRIDE"),
+                Option("DESCRIPTIONOVERRIDE"),
+                Option("MAILOVERRIDE"),
+                Option("ADDRESSOVERRIDE"),
+                Option("TAXCODEOVERRIDE")
+              )
+            )
           )
         )
       )
@@ -499,7 +536,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeed          =
         RelationshipSeed(
@@ -545,7 +584,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -647,7 +688,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -758,7 +801,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -866,7 +911,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -951,7 +998,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1049,7 +1098,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1135,7 +1186,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1202,7 +1255,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val relationshipSeed =
         RelationshipSeed(
@@ -1301,7 +1356,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val relationshipSeed =
         RelationshipSeed(
@@ -1416,7 +1473,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val relationshipSeed =
         RelationshipSeed(
@@ -1880,7 +1939,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           zipCode = "zipCode",
           taxCode = "taxCode",
           products = Set.empty,
-          attributes = Seq.empty
+          attributes = Seq.empty,
+          origin = "IPA",
+          institutionType = "PA"
         )
       val rlSeed          =
         RelationshipSeed(

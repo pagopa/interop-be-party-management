@@ -39,6 +39,8 @@ object Party {
             taxCode = institutionParty.taxCode,
             address = institutionParty.address,
             zipCode = institutionParty.zipCode,
+            origin = institutionParty.origin,
+            institutionType = institutionParty.institutionType,
             attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq
           )
         )
@@ -60,6 +62,8 @@ final case class InstitutionParty(
   taxCode: String,
   address: String,
   zipCode: String,
+  origin: String,
+  institutionType: String,
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   attributes: Set[InstitutionAttribute]
@@ -79,6 +83,8 @@ object InstitutionParty {
       taxCode = institution.taxCode,
       address = institution.address,
       zipCode = institution.zipCode,
+      origin = institution.origin,
+      institutionType = institution.institutionType,
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
       end = None

@@ -235,7 +235,10 @@ class PartyApiServiceImpl(
         from.id,
         to.id,
         role,
-        seed.product
+        seed.product,
+        pricingPlan = seed.pricingPlan,
+        billing = seed.billing,
+        institutionUpdate = seed.institutionUpdate
       )
       currentPartyRelationships <- commanders
         .traverse(

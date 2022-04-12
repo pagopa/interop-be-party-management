@@ -35,6 +35,8 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
+  BillingV1,
+  InstitutionUpdateV1,
   PartyRelationshipProductV1,
   PartyRelationshipV1
 }
@@ -77,16 +79,18 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
     }
 
     "convert a PartyV1 (InstitutionPartyV1) to Party (InstitutionParty)" in {
-      val id             = UUID.randomUUID()
-      val externalId     = "externalId"
-      val description    = "description"
-      val digitalAddress = "digitalAddress"
-      val address        = "address"
-      val zipCode        = "zipCode"
-      val taxCode        = "taxCode"
-      val start          = OffsetDateTime.now()
-      val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes     = Set(
+      val id              = UUID.randomUUID()
+      val externalId      = "externalId"
+      val description     = "description"
+      val digitalAddress  = "digitalAddress"
+      val address         = "address"
+      val zipCode         = "zipCode"
+      val taxCode         = "taxCode"
+      val start           = OffsetDateTime.now()
+      val end             = OffsetDateTime.now().plusDays(10L)
+      val origin          = "IPA"
+      val institutionType = "PA"
+      val attributes      = Set(
         InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
         InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
       )
@@ -105,6 +109,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           taxCode = taxCode,
           start = start,
           end = Some(end),
+          origin = Option(origin),
+          institutionType = Option(institutionType),
           attributes = attributes.toSeq.map(attribute =>
             InstitutionAttributeV1(
               origin = attribute.origin,
@@ -126,6 +132,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         taxCode = taxCode,
         start = start,
         end = Some(end),
+        origin = origin,
+        institutionType = institutionType,
         attributes = attributes
       )
 
@@ -152,16 +160,18 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
     }
 
     "convert a Party (InstitutionParty) to PartyV1 (InstitutionPartyV1)" in {
-      val id             = UUID.randomUUID()
-      val externalId     = "externalId"
-      val description    = "description"
-      val digitalAddress = "digitalAddress"
-      val address        = "address"
-      val zipCode        = "zipCode"
-      val taxCode        = "taxCode"
-      val start          = OffsetDateTime.now()
-      val end            = OffsetDateTime.now().plusDays(10L)
-      val attributes     =
+      val id              = UUID.randomUUID()
+      val externalId      = "externalId"
+      val description     = "description"
+      val digitalAddress  = "digitalAddress"
+      val address         = "address"
+      val zipCode         = "zipCode"
+      val taxCode         = "taxCode"
+      val start           = OffsetDateTime.now()
+      val end             = OffsetDateTime.now().plusDays(10L)
+      val origin          = "IPA"
+      val institutionType = "PA"
+      val attributes      =
         Seq(
           InstitutionAttributeV1(origin = "origin", code = "a", description = "description_a"),
           InstitutionAttributeV1(origin = "origin", code = "b", description = "description_b")
@@ -177,6 +187,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         taxCode = taxCode,
         start = start,
         end = Some(end),
+        origin = origin,
+        institutionType = institutionType,
         attributes = attributes
           .map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code, description = attr.description))
           .toSet
@@ -198,6 +210,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           taxCode = taxCode,
           start = start,
           end = Some(end),
+          origin = Option(origin),
+          institutionType = Option(institutionType),
           attributes = attributes
         )
 
@@ -219,6 +233,17 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val fileName          = Some("fileName")
       val contentType       = Some("contentType")
       val onboardingTokenId = UUID.randomUUID()
+      val pricingPlan       = Option("PRICING_PLAN")
+      val billing           = Option(BillingV1("VATNUMBER", "RECIPIENTCODE", Option(true)))
+      val institutionUpdate = Option(
+        InstitutionUpdateV1(
+          Option("PAOVERRIDE"),
+          Option("DESCRIPTIONOVERRIDE"),
+          Option("MAILOVERRIDE"),
+          Option("ADDRESSOVERRIDE"),
+          Option("TAXCODEOVERRIDE")
+        )
+      )
       val createdAt         = OffsetDateTime.now()
       val updatedAt         = OffsetDateTime.now().plusDays(10L)
 
@@ -234,7 +259,10 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         filePath = filePath,
         fileName = fileName,
         contentType = contentType,
-        onboardingTokenId = Some(onboardingTokenId.toString)
+        onboardingTokenId = Some(onboardingTokenId.toString),
+        pricingPlan = pricingPlan,
+        institutionUpdate = institutionUpdate,
+        billing = billing
       )
 
       val partyRelationship: Either[Throwable, PersistedPartyRelationship] = getPartyRelationship(partyRelationshipV1)
@@ -255,7 +283,12 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         contentType = contentType,
         onboardingTokenId = Some(onboardingTokenId),
         createdAt = c,
-        updatedAt = Some(u)
+        updatedAt = Some(u),
+        pricingPlan = pricingPlan,
+        institutionUpdate = institutionUpdate.map(i =>
+          PersistedInstitutionUpdate(i.institutionType, i.description, i.digitalAddress, i.address, i.taxCode)
+        ),
+        billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
       )
 
       partyRelationship.value shouldBe expected.success.value
@@ -276,6 +309,17 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val fileName          = Some("fileName")
       val contentType       = Some("contentType")
       val onboardingTokenId = UUID.randomUUID()
+      val pricingPlan       = Option("PRICING_PLAN")
+      val billing           = Option(BillingV1("VATNUMBER", "RECIPIENTCODE", Option(true)))
+      val institutionUpdate = Option(
+        InstitutionUpdateV1(
+          Option("PAOVERRIDE"),
+          Option("DESCRIPTIONOVERRIDE"),
+          Option("MAILOVERRIDE"),
+          Option("ADDRESSOVERRIDE"),
+          Option("TAXCODEOVERRIDE")
+        )
+      )
       val createdAt         = OffsetDateTime.now()
       val updatedAt         = OffsetDateTime.now().plusDays(10L)
 
@@ -296,7 +340,12 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           contentType = contentType,
           onboardingTokenId = Some(onboardingTokenId),
           createdAt = c,
-          updatedAt = Some(u)
+          updatedAt = Some(u),
+          pricingPlan = pricingPlan,
+          institutionUpdate = institutionUpdate.map(i =>
+            PersistedInstitutionUpdate(i.institutionType, i.description, i.digitalAddress, i.address, i.taxCode)
+          ),
+          billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
         )
 
       val partyRelationshipV1: Try[PartyRelationshipV1] = persistedPartyRelationship.map(getPartyRelationshipV1)
@@ -313,7 +362,10 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         filePath = filePath,
         fileName = fileName,
         contentType = contentType,
-        onboardingTokenId = Some(onboardingTokenId.toString)
+        onboardingTokenId = Some(onboardingTokenId.toString),
+        pricingPlan = pricingPlan,
+        billing = billing,
+        institutionUpdate = institutionUpdate
       )
 
       partyRelationshipV1.success.value shouldBe expected

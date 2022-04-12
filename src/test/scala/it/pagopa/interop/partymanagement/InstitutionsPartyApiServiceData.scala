@@ -29,7 +29,9 @@ object InstitutionsPartyApiServiceData {
     zipCode = "zipCode1",
     taxCode = "taxCode",
     products = Set.empty,
-    attributes = Seq.empty
+    attributes = Seq.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed2 =
     InstitutionSeed(
@@ -40,7 +42,9 @@ object InstitutionsPartyApiServiceData {
       zipCode = "zipCode2",
       taxCode = "taxCode",
       products = Set.empty,
-      attributes = Seq.empty
+      attributes = Seq.empty,
+      origin = "IPA",
+      institutionType = "PA"
     )
   lazy final val institutionSeed3 =
     InstitutionSeed(
@@ -51,7 +55,9 @@ object InstitutionsPartyApiServiceData {
       zipCode = "zipCode3",
       taxCode = "taxCode",
       products = Set.empty,
-      attributes = Seq.empty
+      attributes = Seq.empty,
+      origin = "IPA",
+      institutionType = "PA"
     )
   lazy final val institutionSeed4 =
     InstitutionSeed(
@@ -62,7 +68,9 @@ object InstitutionsPartyApiServiceData {
       zipCode = "zipCode4",
       taxCode = "taxCode",
       products = Set.empty,
-      attributes = Seq.empty
+      attributes = Seq.empty,
+      origin = "IPA",
+      institutionType = "PA"
     )
 
   lazy final val expected1 = Institution(
@@ -73,7 +81,9 @@ object InstitutionsPartyApiServiceData {
     zipCode = "zipCode1",
     taxCode = "taxCode",
     id = institutionUuid1,
-    attributes = Seq.empty
+    attributes = Seq.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
 
   lazy final val expected3 = Institution(
@@ -84,7 +94,9 @@ object InstitutionsPartyApiServiceData {
     zipCode = "zipCode3",
     taxCode = "taxCode",
     id = institutionUuid3,
-    attributes = Seq.empty
+    attributes = Seq.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
 
   def prepareTest(

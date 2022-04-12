@@ -71,7 +71,9 @@ object TokenApiServiceData {
     zipCode = "zipCode1",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed2 = InstitutionSeed(
     institutionId = institutionId2,
@@ -81,7 +83,9 @@ object TokenApiServiceData {
     zipCode = "zipCode2",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed3 = InstitutionSeed(
     institutionId = institutionId3,
@@ -91,7 +95,9 @@ object TokenApiServiceData {
     zipCode = "zipCode3",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed4 = InstitutionSeed(
     institutionId = institutionId4,
@@ -101,7 +107,9 @@ object TokenApiServiceData {
     zipCode = "zipCode4",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed5 = InstitutionSeed(
     institutionId = institutionId5,
@@ -111,7 +119,9 @@ object TokenApiServiceData {
     zipCode = "zipCode4",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed6 = InstitutionSeed(
     institutionId = institutionId6,
@@ -121,7 +131,9 @@ object TokenApiServiceData {
     zipCode = "zipCode5",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
   lazy final val institutionSeed7 = InstitutionSeed(
     institutionId = institutionId7,
@@ -131,7 +143,9 @@ object TokenApiServiceData {
     zipCode = "zipCode6",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty
+    products = Set.empty,
+    origin = "IPA",
+    institutionType = "PA"
   )
 
   // format: off
@@ -176,18 +190,18 @@ object TokenApiServiceData {
   lazy final val relationshipId11 = UUID.randomUUID()
   lazy final val relationshipId12 = UUID.randomUUID()
 
-  lazy final val partyRelationship1 = PersistedPartyRelationship(id = relationshipId1, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId2, to = orgId2, role = PersistedPartyRole.Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship2 = PersistedPartyRelationship(id = relationshipId2, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId2, to = orgId2, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship3 = PersistedPartyRelationship(id = relationshipId3, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = PersistedPartyRole.Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship4 = PersistedPartyRelationship(id = relationshipId4, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship5 = PersistedPartyRelationship(id = relationshipId5, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId4, to = orgId4, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship6 = PersistedPartyRelationship(id = relationshipId6, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId4, to = orgId4, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship7 = PersistedPartyRelationship(id = relationshipId7, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId5, to = orgId5, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship8 = PersistedPartyRelationship(id = relationshipId8, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId5, to = orgId5, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship9 = PersistedPartyRelationship(id = relationshipId9, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId6, to = orgId6, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship10 = PersistedPartyRelationship(id = relationshipId10, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId6, to = orgId6, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship11 = PersistedPartyRelationship(id = relationshipId11, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId7, to = orgId7, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
-  lazy final val partyRelationship12 = PersistedPartyRelationship(id = relationshipId12, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId7, to = orgId7, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None)
+  lazy final val partyRelationship1 = PersistedPartyRelationship(id = relationshipId1, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId2, to = orgId2, role = PersistedPartyRole.Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship2 = PersistedPartyRelationship(id = relationshipId2, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId2, to = orgId2, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship3 = PersistedPartyRelationship(id = relationshipId3, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = PersistedPartyRole.Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship4 = PersistedPartyRelationship(id = relationshipId4, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId3, to = orgId3, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship5 = PersistedPartyRelationship(id = relationshipId5, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId4, to = orgId4, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship6 = PersistedPartyRelationship(id = relationshipId6, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId4, to = orgId4, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship7 = PersistedPartyRelationship(id = relationshipId7, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId5, to = orgId5, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship8 = PersistedPartyRelationship(id = relationshipId8, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId5, to = orgId5, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship9 = PersistedPartyRelationship(id = relationshipId9, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId6, to = orgId6, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship10 = PersistedPartyRelationship(id = relationshipId10, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId6, to = orgId6, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship11 = PersistedPartyRelationship(id = relationshipId11, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId7, to = orgId7, role = PersistedPartyRole.Manager, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
+  lazy final val partyRelationship12 = PersistedPartyRelationship(id = relationshipId12, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId7, to = orgId7, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
 
   lazy val tokenSeed1: TokenSeed = TokenSeed(id = tokenId2.toString, relationships = Relationships(Seq(relationship1, relationship2)), "checksum", OnboardingContractInfo("test", "test"))
   lazy val tokenSeed2: TokenSeed = TokenSeed(id = tokenId3.toString, relationships = Relationships(Seq(relationship3, relationship4)), "checksum", OnboardingContractInfo("test", "test"))

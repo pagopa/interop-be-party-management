@@ -9,17 +9,19 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
+  implicit val institutionUpdateFormat: RootJsonFormat[InstitutionUpdate]             = jsonFormat5(InstitutionUpdate)
+  implicit val billingFormat: RootJsonFormat[Billing]                                 = jsonFormat3(Billing)
   implicit val attributeFormat: RootJsonFormat[Attribute]                             = jsonFormat3(Attribute)
   implicit val personSeedFormat: RootJsonFormat[PersonSeed]                           = jsonFormat1(PersonSeed)
   implicit val personFormat: RootJsonFormat[Person]                                   = jsonFormat1(Person)
-  implicit val institutionSeedFormat: RootJsonFormat[InstitutionSeed]                 = jsonFormat8(InstitutionSeed)
-  implicit val institutionFormat: RootJsonFormat[Institution]                         = jsonFormat8(Institution)
+  implicit val institutionSeedFormat: RootJsonFormat[InstitutionSeed]                 = jsonFormat10(InstitutionSeed)
+  implicit val institutionFormat: RootJsonFormat[Institution]                         = jsonFormat10(Institution)
   implicit val relationshipProductFormat: RootJsonFormat[RelationshipProduct]         = jsonFormat3(RelationshipProduct)
-  implicit val relationshipFormat: RootJsonFormat[Relationship]                       = jsonFormat12(Relationship)
+  implicit val relationshipFormat: RootJsonFormat[Relationship]                       = jsonFormat15(Relationship)
   implicit val relationshipProductSeedFormat: RootJsonFormat[RelationshipProductSeed] = jsonFormat2(
     RelationshipProductSeed
   )
-  implicit val relationshipSeedFormat: RootJsonFormat[RelationshipSeed]               = jsonFormat4(RelationshipSeed)
+  implicit val relationshipSeedFormat: RootJsonFormat[RelationshipSeed]               = jsonFormat7(RelationshipSeed)
   implicit val relationshipsFormat: RootJsonFormat[Relationships]                     = jsonFormat1(Relationships)
   implicit val relationshipsSeedFormat: RootJsonFormat[RelationshipsSeed]             = jsonFormat1(RelationshipsSeed)
   implicit val problemErrorFormat: RootJsonFormat[ProblemError]                       = jsonFormat2(ProblemError)

@@ -18,7 +18,9 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   PartyRelationshipProductV1,
-  PartyRelationshipV1
+  PartyRelationshipV1,
+  InstitutionUpdateV1,
+  BillingV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -58,6 +60,8 @@ object utils {
           taxCode = i.taxCode,
           address = i.address,
           zipCode = i.zipCode,
+          origin = i.origin.getOrElse("IPA"),
+          institutionType = i.institutionType.getOrElse("PA"),
           attributes = i.attributes
             .map(a => InstitutionAttribute(origin = a.origin, code = a.code, description = a.description))
             .toSet,
@@ -89,6 +93,8 @@ object utils {
           taxCode = i.taxCode,
           address = i.address,
           zipCode = i.zipCode,
+          origin = Option(i.origin),
+          institutionType = Option(i.institutionType),
           attributes = i.attributes
             .map(a => InstitutionAttributeV1(origin = a.origin, code = a.code, description = a.description))
             .toSeq,
@@ -128,7 +134,20 @@ object utils {
       filePath = partyRelationshipV1.filePath,
       fileName = partyRelationshipV1.fileName,
       contentType = partyRelationshipV1.contentType,
-      onboardingTokenId = onboardingTokenId
+      onboardingTokenId = onboardingTokenId,
+      pricingPlan = partyRelationshipV1.pricingPlan,
+      institutionUpdate = partyRelationshipV1.institutionUpdate.map(i =>
+        PersistedInstitutionUpdate(
+          institutionType = i.institutionType,
+          description = i.description,
+          digitalAddress = i.digitalAddress,
+          address = i.address,
+          taxCode = i.taxCode
+        )
+      ),
+      billing = partyRelationshipV1.billing.map(i =>
+        PersistedBilling(vatNumber = i.vatNumber, recipientCode = i.recipientCode, publicServices = i.publicServices)
+      )
     )
   }
 
@@ -149,7 +168,20 @@ object utils {
       filePath = partyRelationship.filePath,
       fileName = partyRelationship.fileName,
       contentType = partyRelationship.contentType,
-      onboardingTokenId = partyRelationship.onboardingTokenId.map(_.toString)
+      onboardingTokenId = partyRelationship.onboardingTokenId.map(_.toString),
+      pricingPlan = partyRelationship.pricingPlan,
+      institutionUpdate = partyRelationship.institutionUpdate.map(i =>
+        InstitutionUpdateV1(
+          institutionType = i.institutionType,
+          description = i.description,
+          digitalAddress = i.digitalAddress,
+          address = i.address,
+          taxCode = i.taxCode
+        )
+      ),
+      billing = partyRelationship.billing.map(i =>
+        BillingV1(vatNumber = i.vatNumber, recipientCode = i.recipientCode, publicServices = i.publicServices)
+      )
     )
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
