@@ -946,7 +946,7 @@ components:
         pricingPlan:
           type: string
           description: pricing plan
-        institution:
+        institutionUpdate:
           $ref: '#/components/schemas/InstitutionUpdate'
         billing:
           $ref: '#/components/schemas/Billing'
@@ -1006,7 +1006,7 @@ components:
         pricingPlan:
           type: string
           description: pricing plan
-        institution:
+        institutionUpdate:
           $ref: '#/components/schemas/InstitutionUpdate'
         billing:
           $ref: '#/components/schemas/Billing'
