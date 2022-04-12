@@ -211,6 +211,46 @@ paths:
           description: successful operation
         '404':
           description: Institution not found
+  /institutions/{id}/update:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: Institution ID
+    post:
+      summary: Updates an Institution by ID
+      tags:
+        - party
+      operationId: updateInstitutionById
+      description: 'update the identified institution, if any.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Institution'
+      responses:
+        '200':
+          description: Institution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Institution not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /institutions/{id}/attributes:
     parameters:
       - schema:

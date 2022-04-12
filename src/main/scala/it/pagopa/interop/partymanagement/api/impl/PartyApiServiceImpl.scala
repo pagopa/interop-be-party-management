@@ -122,6 +122,76 @@ class PartyApiServiceImpl(
   }
 
   /** Code: 200, Message: successful operation, DataType: Institution
+   * Code: 405, Message: Institution not found, DataType: Problem
+   * Code: 400, Message: Invalid ID supplied, DataType: Problem
+   */
+  override def updateInstitutionById(id: String, institution: Institution)(implicit
+    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Updating institution $id")
+
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val updatedInstitution: Future[StatusReply[Party]] = for {
+      uuid      <- id.toFutureUUID
+      shardOrgs <- commanders.traverse(_.ask(ref => GetParty(uuid, ref)))
+      maybeExistingOrg = shardOrgs.flatten.headOption
+      updatedOrg <- maybeExistingOrg
+        .map(i =>
+          InstitutionParty(
+            id = uuid,
+            externalId = institution.institutionId,
+            description = institution.description,
+            digitalAddress = institution.digitalAddress,
+            taxCode = institution.taxCode,
+            address = institution.address,
+            zipCode = institution.zipCode,
+            origin = institution.origin,
+            institutionType = institution.institutionType,
+            start = i.start,
+            end = i.end,
+            attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet
+          )
+        )
+        .toRight(() => None)
+        .left
+        .map(_ => GetInstitutionNotFound(id))
+        .toFuture
+      result     <- getCommander(updatedOrg.id.toString).ask(ref => UpdateParty(updatedOrg, ref))
+    } yield result
+
+    onComplete(updatedInstitution) {
+      case Success(statusReply) if statusReply.isSuccess =>
+        Party
+          .convertToApi(statusReply.getValue)
+          .swap
+          .fold(
+            _ => {
+              logger.error(s"Updating institution $id - Bad request")
+              updateInstitutionById400(problemOf(StatusCodes.BadRequest, CreateInstitutionBadRequest))
+            },
+            institution => updateInstitutionById200(institution)
+          )
+      case Success(_)                                    =>
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionConflict)
+        updateInstitutionById400(errorResponse)
+      case Failure(ex: GetInstitutionNotFound)           =>
+        logger.error(s"Updating institution $id - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.NotFound, ex)
+        updateInstitutionById404(errorResponse)
+      case Failure(ex)                                   =>
+        logger.error(s"Updating institution $id - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionError(ex.getMessage))
+        updateInstitutionById400(errorResponse)
+    }
+
+  }
+
+  /** Code: 200, Message: successful operation, DataType: Institution
     * Code: 404, Message: Institution not found, DataType: Problem
     */
   override def addInstitutionAttributes(id: String, attribute: Seq[Attribute])(implicit

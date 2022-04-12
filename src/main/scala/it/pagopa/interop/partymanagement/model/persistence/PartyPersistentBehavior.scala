@@ -45,6 +45,22 @@ object PartyPersistentBehavior {
               .thenRun(_ => replyTo ! StatusReply.Success(party))
           }
 
+      case UpdateParty(party, replyTo) =>
+        logger.debug(s"Updating party {}", party.id)
+        logger.debug(state.toString)
+        state.parties
+          .get(party.id)
+          .map { _ =>
+            Effect
+              .persist(PartyUpdated(party))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(party))
+          }
+          .getOrElse {
+            logger.debug("UpdateParty not found party {}", party.id)
+            replyTo ! StatusReply.Error(s"Party ${party.id} not exists")
+            Effect.none[PartyUpdated, State]
+          }
+
       case DeleteParty(party, replyTo) =>
         Effect
           .persist(PartyDeleted(party))
@@ -256,6 +272,7 @@ object PartyPersistentBehavior {
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
       case PartyAdded(party)                         => state.addParty(party)
+      case PartyUpdated(party)                       => state.updateParty(party)
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)

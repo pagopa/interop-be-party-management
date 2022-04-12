@@ -13,6 +13,7 @@ sealed trait TokenEvent             extends Event
 
 /* Party Event */
 final case class PartyAdded(party: Party)      extends PartyEvent
+final case class PartyUpdated(party: Party)    extends PartyEvent
 final case class PartyDeleted(party: Party)    extends PartyEvent
 final case class AttributesAdded(party: Party) extends PartyEvent
 
