@@ -30,13 +30,14 @@ generateCode := {
   import sys.process._
 
   val openApiCommand: String = {
-    System.getProperty("os.name").toLowerCase match {
-      case win if win.contains("win") => "openapi-generator-cli-win.bat"
-      case default => "openapi-generator-cli"
+    if(System.getProperty("os.name").toLowerCase.contains("win")) {
+      "openapi-generator-cli-win.bat"
+    } else {
+      "openapi-generator-cli"
     }
   }
 
-  Process(s"""${openApiCommand} generate -t template/scala-akka-http-server
+  Process(s"""$openApiCommand generate -t template/scala-akka-http-server
              |                               -i src/main/resources/interface-specification.yml
              |                               -g scala-akka-http-server
              |                               -p projectName=${projectName.value}
@@ -47,7 +48,7 @@ generateCode := {
              |                               -p entityStrictnessTimeout=15
              |                               -o generated""".stripMargin).!!
 
-  Process(s"""${openApiCommand} generate -t template/scala-akka-http-client
+  Process(s"""$openApiCommand generate -t template/scala-akka-http-client
              |                               -i src/main/resources/interface-specification.yml
              |                               -g scala-akka
              |                               -p projectName=${projectName.value}
