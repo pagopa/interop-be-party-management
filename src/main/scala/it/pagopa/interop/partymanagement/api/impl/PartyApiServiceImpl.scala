@@ -132,14 +132,14 @@ class PartyApiServiceImpl(
   ): Route = {
     logger.info(s"Updating institution $id")
 
-    val commanders = (0 until settings.numberOfShards)
+    val commander: EntityRef[Command] = getCommander(id)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
     val updatedInstitution: Future[StatusReply[Party]] = for {
       uuid      <- id.toFutureUUID
-      shardOrgs <- commanders.traverse(_.ask(ref => GetParty(uuid, ref)))
-      maybeExistingOrg = shardOrgs.flatten.headOption
+      found <- commander.ask(ref => GetParty(uuid, ref))
+      party       <- found.toFuture(InstitutionNotFound(id))
       updatedOrg <- maybeExistingOrg
         .map(i =>
           InstitutionParty(
