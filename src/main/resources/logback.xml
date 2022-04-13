@@ -12,7 +12,7 @@
         <appender-ref ref="CONSOLE" />
     </appender>
 
-    <root name="application" level="INFO">
+    <root name="application" level="DEBUG">
         <appender-ref ref="ASYNC"/>
     </root>
 
