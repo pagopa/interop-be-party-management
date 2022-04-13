@@ -2,11 +2,13 @@ package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.interop.partymanagement.common.system.ApiParty
-import it.pagopa.interop.partymanagement.model.{Attribute, InstitutionSeed, Institution, Person, PersonSeed}
+import it.pagopa.interop.partymanagement.error.PartyManagementErrors.InvalidParty
+import it.pagopa.interop.partymanagement.model.{Attribute, Institution, InstitutionSeed, Person, PersonSeed}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
+import scala.concurrent.Future
 
 sealed trait Party {
   def id: UUID
@@ -89,5 +91,12 @@ object InstitutionParty {
       start = offsetDateTimeSupplier.get,
       end = None
     )
+  }
+
+  def extractInstitutionParty(party: Party): Future[InstitutionParty] = {
+    party match {
+      case p: InstitutionParty => Future.successful(p)
+      case p                   => Future.failed(InvalidParty(InstitutionParty.toString, p.toString))
+    }
   }
 }
