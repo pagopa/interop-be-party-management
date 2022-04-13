@@ -338,6 +338,54 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.Conflict
 
     }
+
+    "update existing institution" in {
+
+      (() => uuidSupplier.get).expects().returning(institutionUuid1).once()
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
+
+      prepareTest(institutionSeed1)
+
+      val updated = expected1.copy(description = s"UPDATED_${expected1.description}")
+
+      val data = Marshal(updated).to[MessageEntity].map(_.dataBytes).futureValue
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
+
+      val response = updateInstitution(institutionId1, data)
+
+      response.status shouldBe StatusCodes.OK
+
+      val body = Unmarshal(response.entity).to[Institution].futureValue
+
+      body shouldBe updated
+    }
+
+    "update NOT existing institution" in {
+      val data = Marshal(expected1).to[MessageEntity].map(_.dataBytes).futureValue
+
+      val response = updateInstitution(institutionId1, data)
+
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+    "update existing institution changing externalId" in {
+
+      (() => uuidSupplier.get).expects().returning(institutionUuid1).once()
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
+
+      prepareTest(institutionSeed1)
+
+      val updated = expected1.copy(institutionId = s"UPDATED_${expected1.institutionId}")
+
+      val data = Marshal(updated).to[MessageEntity].map(_.dataBytes).futureValue
+
+      val response = updateInstitution(institutionId1, data)
+
+      response.status shouldBe StatusCodes.BadRequest
+    }
   }
 
   "Working on relationships" must {
