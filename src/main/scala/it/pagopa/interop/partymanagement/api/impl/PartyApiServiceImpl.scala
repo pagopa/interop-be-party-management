@@ -135,54 +135,38 @@ class PartyApiServiceImpl(
     val commander: EntityRef[Command] = getCommander(id)
 
     val updatedInstitution: Future[StatusReply[Party]] = for {
-      uuid       <- id.toFutureUUID
-      found      <- commander.ask(ref => GetParty(uuid, ref))
-      party      <- found.toFuture(UpdateInstitutionNotFound(id)).map(InstitutionParty.extractInstitutionParty)
-      updatedOrg <- party
-        .map(p => {
-          if (p.externalId != institution.institutionId) {
-            Left(
-              Failure(
-                UpdateInstitutionBadRequest(
-                  id,
-                  s"Cannot update externalId ${p.externalId} -> ${institution.institutionId}"
-                )
-              )
+      uuid             <- id.toFutureUUID
+      institutionParty <- commander.ask(ref => GetParty(uuid, ref)).flatMap {
+        case Some(x: InstitutionParty) => Future.successful(x)
+        case Some(x: PersonParty)      => Future.failed(InvalidParty("InstitutionParty", x.toString))
+        case None                      => Future.failed(UpdateInstitutionNotFound(id))
+      }
+      updatedOrg       <-
+        if (institutionParty.externalId == institution.institutionId) {
+          Future.successful(
+            InstitutionParty.fromInstitution(institution)(uuid, institutionParty.start, institutionParty.end)
+          )
+        } else {
+          Future.failed(
+            UpdateInstitutionBadRequest(
+              id,
+              s"Cannot update externalId ${institutionParty.externalId} -> ${institution.institutionId}"
             )
-          } else {
-            Right(
-              InstitutionParty(
-                id = uuid,
-                externalId = institution.institutionId,
-                description = institution.description,
-                digitalAddress = institution.digitalAddress,
-                taxCode = institution.taxCode,
-                address = institution.address,
-                zipCode = institution.zipCode,
-                origin = institution.origin,
-                institutionType = institution.institutionType,
-                start = p.start,
-                end = p.end,
-                attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet
-              )
-            )
-          }
-        })
-      result     <- updatedOrg
-        .fold(e => e.toFuture, p => commander.ask(ref => UpdateParty(p, ref)))
+          )
+        }
+      result           <- commander.ask(ref => UpdateParty(updatedOrg, ref))
     } yield result
 
     onComplete(updatedInstitution) {
       case Success(statusReply) if statusReply.isSuccess =>
         Party
           .convertToApi(statusReply.getValue)
-          .swap
           .fold(
+            institution => updateInstitutionById200(institution),
             _ => {
               logger.error(s"Updating institution $id - Bad request")
               updateInstitutionById400(problemOf(StatusCodes.BadRequest, CreateInstitutionBadRequest))
-            },
-            institution => updateInstitutionById200(institution)
+            }
           )
       case Success(_)                                    =>
         val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionConflict)
