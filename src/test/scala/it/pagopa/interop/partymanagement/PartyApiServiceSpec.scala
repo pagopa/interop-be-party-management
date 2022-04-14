@@ -377,7 +377,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.NotFound
     }
 
-    "return 409 when updating an existing institution changing its externalId and block the update" in {
+    "return 400 when updating an existing institution changing its externalId and block the update" in {
       val uuid        = UUID.randomUUID()
       val institution = institutionSeed1.copy(institutionId = randomString())
       val expected    = expected1.copy(id = uuid, institutionId = institution.institutionId)
