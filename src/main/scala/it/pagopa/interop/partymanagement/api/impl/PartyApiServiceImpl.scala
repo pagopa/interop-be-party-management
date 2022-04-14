@@ -136,7 +136,8 @@ class PartyApiServiceImpl(
 
     val updatedInstitution: Future[StatusReply[Party]] = for {
       uuid             <- id.toFutureUUID
-      institutionParty <- commander.ask(ref => GetParty(uuid, ref)).flatMap {
+      party <- commander.ask(ref => GetParty(uuid, ref))
+      institutionParty <- party match {
         case Some(x: InstitutionParty) => Future.successful(x)
         case Some(x: PersonParty)      => Future.failed(InvalidParty("InstitutionParty", x.toString))
         case None                      => Future.failed(UpdateInstitutionNotFound(id))
