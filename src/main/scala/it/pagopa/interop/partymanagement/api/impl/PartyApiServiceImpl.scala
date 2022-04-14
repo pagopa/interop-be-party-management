@@ -137,7 +137,7 @@ class PartyApiServiceImpl(
     val updatedInstitution: Future[StatusReply[Party]] = for {
       uuid       <- id.toFutureUUID
       found      <- commander.ask(ref => GetParty(uuid, ref))
-      party      <- found.toFuture(InstitutionNotFound(id)).map(InstitutionParty.extractInstitutionParty)
+      party      <- found.toFuture(UpdateInstitutionNotFound(id)).map(InstitutionParty.extractInstitutionParty)
       updatedOrg <- party
         .map(p => {
           if (p.externalId != institution.institutionId) {
@@ -187,7 +187,7 @@ class PartyApiServiceImpl(
       case Success(_)                                    =>
         val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionConflict)
         updateInstitutionById400(errorResponse)
-      case Failure(ex: GetInstitutionNotFound)           =>
+      case Failure(ex: UpdateInstitutionNotFound)        =>
         logger.error(s"Updating institution $id - ${ex.getMessage}")
         val errorResponse: Problem = problemOf(StatusCodes.NotFound, ex)
         updateInstitutionById404(errorResponse)

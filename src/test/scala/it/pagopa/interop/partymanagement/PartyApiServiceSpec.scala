@@ -339,21 +339,28 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     }
 
-    "update existing institution" in {
+    "allow to update of an existing institution" in {
+      val uuid        = UUID.randomUUID()
+      val institution = institutionSeed1.copy(institutionId = "newInstitutionId")
 
-      (() => uuidSupplier.get).expects().returning(institutionUuid1).once()
+      (() => uuidSupplier.get).expects().returning(uuid).once()
 
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
-      prepareTest(institutionSeed1)
+      prepareTest(institution)
 
-      val updated = expected1.copy(description = s"UPDATED_${expected1.description}")
+      val updated =
+        expected1.copy(
+          id = uuid,
+          institutionId = institution.institutionId,
+          description = s"UPDATED_${expected1.description}"
+        )
 
       val data = Marshal(updated).to[MessageEntity].map(_.dataBytes).futureValue
 
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
-      val response = updateInstitution(institutionId1, data)
+      val response = updateInstitution(uuid.toString, data)
 
       response.status shouldBe StatusCodes.OK
 
@@ -362,29 +369,46 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body shouldBe updated
     }
 
-    "update NOT existing institution" in {
+    "not allow to update NOT existing institution" in {
       val data = Marshal(expected1).to[MessageEntity].map(_.dataBytes).futureValue
 
-      val response = updateInstitution(institutionId1, data)
+      val response = updateInstitution(UUID.randomUUID.toString, data)
 
       response.status shouldBe StatusCodes.NotFound
     }
 
-    "update existing institution changing externalId" in {
+    "return 409 when updating an existing institution changing its externalId and block the update" in {
+      val uuid        = UUID.randomUUID()
+      val institution = institutionSeed1.copy(institutionId = randomString())
+      val expected    = expected1.copy(id = uuid, institutionId = institution.institutionId)
 
-      (() => uuidSupplier.get).expects().returning(institutionUuid1).once()
+      (() => uuidSupplier.get).expects().returning(uuid).once()
 
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
-      prepareTest(institutionSeed1)
+      prepareTest(institution)
 
-      val updated = expected1.copy(institutionId = s"UPDATED_${expected1.institutionId}")
+      val updated =
+        expected.copy(institutionId = s"UPDATED_${expected.institutionId}", address = s"UPDATED_${expected.address}")
 
       val data = Marshal(updated).to[MessageEntity].map(_.dataBytes).futureValue
 
-      val response = updateInstitution(institutionId1, data)
+      val response = updateInstitution(uuid.toString, data)
 
       response.status shouldBe StatusCodes.BadRequest
+
+      val responseGET =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/institutions/${uuid.toString}", method = HttpMethods.GET, headers = authorization)
+          )
+          .futureValue
+
+      responseGET.status shouldBe StatusCodes.OK
+
+      val bodyGET = Unmarshal(responseGET.entity).to[Institution].futureValue
+
+      bodyGET shouldBe expected
     }
   }
 
