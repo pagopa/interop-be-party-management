@@ -341,7 +341,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "allow to update of an existing institution" in {
       val uuid        = UUID.randomUUID()
-      val institution = institutionSeed1.copy(institutionId = "newInstitutionId")
+      val institution = institutionSeed1.copy(externalId = "newExternalId", originId = "newOriginId")
 
       (() => uuidSupplier.get).expects().returning(uuid).once()
 
@@ -352,7 +352,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val updated =
         expected1.copy(
           id = uuid,
-          institutionId = institution.institutionId,
+          externalId = institution.externalId,
+          originId = institution.originId,
           description = s"UPDATED_${expected1.description}"
         )
 
@@ -379,8 +380,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     "return 400 when updating an existing institution changing its externalId and block the update" in {
       val uuid        = UUID.randomUUID()
-      val institution = institutionSeed1.copy(institutionId = randomString())
-      val expected    = expected1.copy(id = uuid, institutionId = institution.institutionId)
+      val institution = institutionSeed1.copy(externalId = randomString(), originId = randomString())
+      val expected    = expected1.copy(id = uuid, externalId = institution.externalId, originId = institution.originId)
 
       (() => uuidSupplier.get).expects().returning(uuid).once()
 
@@ -388,14 +389,23 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       prepareTest(institution)
 
-      val updated =
-        expected.copy(institutionId = s"UPDATED_${expected.institutionId}", address = s"UPDATED_${expected.address}")
+      val updatedExternalId =
+        expected.copy(externalId = s"UPDATED_${expected.externalId}", address = s"UPDATED_${expected.address}")
 
-      val data = Marshal(updated).to[MessageEntity].map(_.dataBytes).futureValue
+      val dataExternalId = Marshal(updatedExternalId).to[MessageEntity].map(_.dataBytes).futureValue
 
-      val response = updateInstitution(uuid.toString, data)
+      val responseExternalId = updateInstitution(uuid.toString, dataExternalId)
 
-      response.status shouldBe StatusCodes.BadRequest
+      responseExternalId.status shouldBe StatusCodes.BadRequest
+
+      val updatedOriginId =
+        expected.copy(originId = s"UPDATED_${expected.originId}", address = s"UPDATED_${expected.address}")
+
+      val dataOriginId = Marshal(updatedOriginId).to[MessageEntity].map(_.dataBytes).futureValue
+
+      val responseOrigin = updateInstitution(uuid.toString, dataOriginId)
+
+      responseOrigin.status shouldBe StatusCodes.BadRequest
 
       val responseGET =
         Http()
@@ -449,12 +459,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val personUuid      = UUID.randomUUID()
       val institutionUuid = UUID.randomUUID()
       val relUuid         = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed      = PersonSeed(personUuid)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -501,11 +513,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val personUuid      = UUID.randomUUID()
       val institutionUuid = UUID.randomUUID()
       val relUuid         = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed      = PersonSeed(personUuid)
       val institutionSeed = InstitutionSeed(
-        institutionId = institutionId,
+        externalId = externalId,
+        originId = originId,
         description = "Institutions One",
         digitalAddress = "mail1@mail.org",
         address = "address",
@@ -596,12 +610,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val personUuid      = UUID.randomUUID()
       val institutionUuid = UUID.randomUUID()
       val relUuid         = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed      = PersonSeed(personUuid)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -643,13 +659,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val institutionUuid = UUID.randomUUID()
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -746,14 +764,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
       val relUuid3        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val personSeed3     = PersonSeed(personUuid3)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -859,14 +879,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
       val relUuid3        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val personSeed3     = PersonSeed(personUuid3)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -970,13 +992,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val institutionUuid = UUID.randomUUID()
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1057,13 +1081,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val institutionUuid = UUID.randomUUID()
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1157,13 +1183,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val institutionUuid = UUID.randomUUID()
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1245,13 +1273,15 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val institutionUuid = UUID.randomUUID()
       val relUuid1        = UUID.randomUUID()
       val relUuid2        = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed1     = PersonSeed(personUuid1)
       val personSeed2     = PersonSeed(personUuid2)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1316,11 +1346,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     "succeed" in {
       val personUuid       = UUID.randomUUID()
       val institutionUuid  = UUID.randomUUID()
-      val institutionId    = randomString()
+      val externalId       = randomString()
+      val originId         = randomString()
       val personSeed       = PersonSeed(id = personUuid)
       val institutionSeed  =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1417,11 +1449,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     "succeed" in {
       val personUuid       = UUID.randomUUID()
       val institutionUuid  = UUID.randomUUID()
-      val institutionId    = randomString()
+      val externalId       = randomString()
+      val originId         = randomString()
       val personSeed       = PersonSeed(id = personUuid)
       val institutionSeed  =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1534,11 +1568,13 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
     "succeed" in {
       val personUuid       = UUID.randomUUID()
       val institutionUuid  = UUID.randomUUID()
-      val institutionId    = randomString()
+      val externalId       = randomString()
+      val originId         = randomString()
       val personSeed       = PersonSeed(id = personUuid)
       val institutionSeed  =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",
@@ -1999,12 +2035,14 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       val personUuid      = UUID.randomUUID()
       val institutionUuid = UUID.randomUUID()
       val relationshipId  = UUID.randomUUID()
-      val institutionId   = randomString()
+      val externalId      = randomString()
+      val originId        = randomString()
 
       val personSeed      = PersonSeed(personUuid)
       val institutionSeed =
         InstitutionSeed(
-          institutionId = institutionId,
+          externalId = externalId,
+          originId = originId,
           description = "Institutions One",
           digitalAddress = "mail1@mail.org",
           address = "address",

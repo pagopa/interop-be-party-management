@@ -20,6 +20,7 @@ object StateCommonData {
   val institutionPartyId = UUID.randomUUID()
 
   val externalId2     = UUID.randomUUID()
+  val originId2       = UUID.randomUUID()
   val description     = "description"
   val digitalAddress  = "digitalAddress"
   val address         = "address"

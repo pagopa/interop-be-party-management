@@ -311,11 +311,11 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /external/institutions/{institutionId}:
+  /external/institutions/{externalId}:
     parameters:
       - schema:
           type: string
-        name: institutionId
+        name: externalId
         in: path
         required: true
         description: External Institution ID
@@ -796,8 +796,12 @@ components:
     InstitutionSeed:
       type: object
       properties:
-        institutionId:
-          description: institution id (e.g iPA code)
+        externalId:
+          description: external institution id
+          example: 'c_f205'
+          type: string
+        originId:
+          description: origin institution id (e.g iPA code)
           example: 'c_f205'
           type: string
         description:
@@ -833,7 +837,8 @@ components:
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
-        - institutionId
+        - externalId
+        - originId
         - description
         - digitalAddress
         - address
@@ -851,8 +856,12 @@ components:
           type: string
           format: uuid
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
-        institutionId:
-          description: institution id (e.g iPA code)
+        externalId:
+          description: external institution id
+          example: 'c_f205'
+          type: string
+        originId:
+          description: origin institution id (e.g iPA code)
           example: 'c_f205'
           type: string
         description:
@@ -883,7 +892,8 @@ components:
           $ref: '#/components/schemas/Attributes'
       required:
         - id
-        - institutionId
+        - externalId
+        - originId
         - description
         - digitalAddress
         - address

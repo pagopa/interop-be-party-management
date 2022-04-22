@@ -16,13 +16,18 @@ object InstitutionsPartyApiServiceData {
   lazy final val institutionUuid3 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9212")
   lazy final val institutionUuid4 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9213")
 
-  lazy final val institutionId1 = "id1"
-  lazy final val institutionId2 = "id2"
-  lazy final val institutionId3 = "id3"
-  lazy final val institutionId4 = "id4"
+  lazy final val externalId1 = "ext_id1"
+  lazy final val originId1   = "origin_id1"
+  lazy final val externalId2 = "ext_id2"
+  lazy final val originId2   = "origin_id2"
+  lazy final val externalId3 = "ext_id3"
+  lazy final val originId3   = "origin_id3"
+  lazy final val externalId4 = "ext_id4"
+  lazy final val originId4   = "origin_id4"
 
   lazy final val institutionSeed1 = InstitutionSeed(
-    institutionId = institutionId1,
+    externalId = externalId1,
+    originId = originId1,
     description = "Institutions One",
     digitalAddress = "mail1@mail.org",
     address = "address1",
@@ -35,7 +40,8 @@ object InstitutionsPartyApiServiceData {
   )
   lazy final val institutionSeed2 =
     InstitutionSeed(
-      institutionId = institutionId2,
+      externalId = externalId2,
+      originId = originId2,
       description = "Institutions Two",
       digitalAddress = "mail2@mail.org",
       address = "address2",
@@ -48,7 +54,8 @@ object InstitutionsPartyApiServiceData {
     )
   lazy final val institutionSeed3 =
     InstitutionSeed(
-      institutionId = institutionId3,
+      externalId = externalId3,
+      originId = originId3,
       description = "Institutions Three",
       digitalAddress = "mail3@mail.org",
       address = "address3",
@@ -61,7 +68,8 @@ object InstitutionsPartyApiServiceData {
     )
   lazy final val institutionSeed4 =
     InstitutionSeed(
-      institutionId = institutionId4,
+      externalId = externalId4,
+      originId = originId4,
       description = "Institutions Four",
       digitalAddress = "mail4@mail.org",
       address = "address4",
@@ -74,7 +82,8 @@ object InstitutionsPartyApiServiceData {
     )
 
   lazy final val expected1 = Institution(
-    institutionId = institutionId1,
+    externalId = externalId1,
+    originId = originId1,
     description = "Institutions One",
     digitalAddress = "mail1@mail.org",
     address = "address1",
@@ -87,7 +96,8 @@ object InstitutionsPartyApiServiceData {
   )
 
   lazy final val expected3 = Institution(
-    institutionId = institutionId3,
+    externalId = externalId3,
+    originId = originId3,
     description = "Institutions Three",
     digitalAddress = "mail3@mail.org",
     address = "address3",

@@ -96,15 +96,15 @@ object PartyPersistentBehavior {
 
         Effect.none
 
-      case AddAttributes(institutionId, attributes, replyTo) =>
+      case AddAttributes(id, attributes, replyTo) =>
         state.parties
-          .get(institutionId)
+          .get(id)
           .map { p =>
             val updated: Either[Throwable, Party] = p.addAttributes(attributes.toSet)
             updated.fold[Effect[AttributesAdded, State]](
               ex => {
                 replyTo ! StatusReply.Error(
-                  s"Something goes wrong trying to update attributes for party $institutionId: ${ex.getMessage}"
+                  s"Something goes wrong trying to update attributes for party $id: ${ex.getMessage}"
                 )
                 Effect.none[AttributesAdded, State]
               },
@@ -116,7 +116,7 @@ object PartyPersistentBehavior {
             )
           }
           .getOrElse {
-            replyTo ! StatusReply.Error(s"Party $institutionId not found")
+            replyTo ! StatusReply.Error(s"Party $id not found")
             Effect.none[AttributesAdded, State]
           }
 

@@ -97,7 +97,7 @@ object PartyManagementErrors {
   final case class UpdateInstitutionNotFound(id: String)
       extends ComponentError("0043", s"Cannot find institution having id $id")
 
-  final case class UpdateInstitutionBadRequest(institutionId: String, cause: String)
-      extends ComponentError("0044", s"Something went wrong updating institution as $institutionId: $cause")
+  final case class UpdateInstitutionBadRequest(id: String, cause: String)
+      extends ComponentError("0044", s"Something went wrong updating institution as $id: $cause")
 
 }

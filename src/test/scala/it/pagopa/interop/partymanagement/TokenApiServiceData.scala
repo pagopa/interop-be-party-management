@@ -55,16 +55,24 @@ object TokenApiServiceData {
   lazy final val personSeed6 = PersonSeed(id = personId6)
   lazy final val personSeed7 = PersonSeed(id = personId7)
 
-  lazy final val institutionId1 = "id9"
-  lazy final val institutionId2 = "id10"
-  lazy final val institutionId3 = "id13"
-  lazy final val institutionId4 = "id14"
-  lazy final val institutionId5 = "id15"
-  lazy final val institutionId6 = "id16"
-  lazy final val institutionId7 = "id17"
+  lazy final val externalId1 = "ext_id9"
+  lazy final val originId1   = "origin_id9"
+  lazy final val externalId2 = "ext_id10"
+  lazy final val originId2   = "origin_id10"
+  lazy final val externalId3 = "ext_id13"
+  lazy final val originId3   = "origin_id13"
+  lazy final val externalId4 = "ext_id14"
+  lazy final val originId4   = "origin_id14"
+  lazy final val externalId5 = "ext_id15"
+  lazy final val originId5   = "origin_id15"
+  lazy final val externalId6 = "ext_id16"
+  lazy final val originId6   = "origin_id16"
+  lazy final val externalId7 = "ext_id17"
+  lazy final val originId7   = "origin_id17"
 
   lazy final val institutionSeed1 = InstitutionSeed(
-    institutionId = institutionId1,
+    externalId = externalId1,
+    originId = originId1,
     description = "Institutions Nine",
     digitalAddress = "mail9@mail.org",
     address = "address1",
@@ -76,7 +84,8 @@ object TokenApiServiceData {
     institutionType = "PA"
   )
   lazy final val institutionSeed2 = InstitutionSeed(
-    institutionId = institutionId2,
+    externalId = externalId2,
+    originId = originId2,
     description = "Institutions Ten",
     digitalAddress = "mail10@mail.org",
     address = "address2",
@@ -88,7 +97,8 @@ object TokenApiServiceData {
     institutionType = "PA"
   )
   lazy final val institutionSeed3 = InstitutionSeed(
-    institutionId = institutionId3,
+    externalId = externalId3,
+    originId = originId3,
     description = "Institutions Eleven",
     digitalAddress = "mail11@mail.org",
     address = "address3",
@@ -100,7 +110,8 @@ object TokenApiServiceData {
     institutionType = "PA"
   )
   lazy final val institutionSeed4 = InstitutionSeed(
-    institutionId = institutionId4,
+    externalId = externalId4,
+    originId = originId4,
     description = "Institutions Twelve",
     digitalAddress = "mail11@mail.org",
     address = "address4",
@@ -112,7 +123,8 @@ object TokenApiServiceData {
     institutionType = "PA"
   )
   lazy final val institutionSeed5 = InstitutionSeed(
-    institutionId = institutionId5,
+    externalId = externalId5,
+    originId = originId5,
     description = "Institutions Fifteen",
     digitalAddress = "mail15@mail.org",
     address = "address4",
@@ -124,7 +136,8 @@ object TokenApiServiceData {
     institutionType = "PA"
   )
   lazy final val institutionSeed6 = InstitutionSeed(
-    institutionId = institutionId6,
+    externalId = externalId6,
+    originId = originId6,
     description = "Institutions Sixteen",
     digitalAddress = "mail15@mail.org",
     address = "address5",
@@ -136,7 +149,8 @@ object TokenApiServiceData {
     institutionType = "PA"
   )
   lazy final val institutionSeed7 = InstitutionSeed(
-    institutionId = institutionId7,
+    externalId = externalId7,
+    originId = originId7,
     description = "Institutions Seventeen",
     digitalAddress = "mail15@mail.org",
     address = "address6",
