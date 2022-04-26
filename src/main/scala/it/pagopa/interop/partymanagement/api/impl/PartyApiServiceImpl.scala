@@ -136,12 +136,8 @@ class PartyApiServiceImpl(
 
     val updatedInstitution: Future[StatusReply[Party]] = for {
       uuid             <- id.toFutureUUID
-      party <- commander.ask(ref => GetParty(uuid, ref))
-      institutionParty <- party match {
-        case Some(x: InstitutionParty) => Future.successful(x)
-        case Some(x: PersonParty)      => Future.failed(InvalidParty("InstitutionParty", x.toString))
-        case None                      => Future.failed(UpdateInstitutionNotFound(id))
-      }
+      party            <- commander.ask(ref => GetParty(uuid, ref))
+      institutionParty <- Party.extractInstitutionParty(partyId = id, party = party)
       updatedOrg       <-
         if (institutionParty.externalId == institution.institutionId) {
           Future.successful(
@@ -404,7 +400,7 @@ class PartyApiServiceImpl(
         retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
       case (Some(f), None)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
       case (None, Some(t))    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
-      case _ => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
+      case _                  => Future.failed(MissingQueryParam)
     }
 
     val result: Future[List[Relationship]] = for {
@@ -448,9 +444,7 @@ class PartyApiServiceImpl(
 
   private def getParty(id: UUID)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
     found <- getCommander(id.toString).ask(ref => GetParty(id, ref))
-    party <- found.fold(Future.failed[Party](new RuntimeException(s"Party ${id.toString} not found")))(p =>
-      Future.successful(p)
-    )
+    party <- found.toFuture(PartyNotFound(id.toString))
   } yield party
 
   private def getPartyRelationship(relationship: Relationship): Future[PersistedPartyRelationship] =
@@ -472,7 +466,7 @@ class PartyApiServiceImpl(
           Set[PersistedPartyRole](PersistedPartyRole.Manager, PersistedPartyRole.Delegate)
             .contains(partyRelationships.role),
         partyRelationships,
-        new RuntimeException("Operator without active manager")
+        NoValidManagerFound
       )
       .toTry
   }
@@ -540,7 +534,7 @@ class PartyApiServiceImpl(
           ref
         )
       )
-      result            <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
+      result            <- maybeRelationship.toFuture(RelationshipNotFound)
     } yield result
 
   }
