@@ -463,7 +463,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeed          =
         RelationshipSeed(
@@ -514,7 +514,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         products = Set.empty,
         attributes = Seq.empty,
         origin = "IPA",
-        institutionType = "PA"
+        institutionType = Option("PA")
       )
       val rlSeed          =
         RelationshipSeed(
@@ -610,7 +610,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeed          =
         RelationshipSeed(
@@ -658,7 +658,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -762,7 +762,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -875,7 +875,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -985,7 +985,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1072,7 +1072,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1172,7 +1172,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1260,7 +1260,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeedAdmin     =
         RelationshipSeed(
@@ -1329,7 +1329,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val relationshipSeed =
         RelationshipSeed(
@@ -1430,7 +1430,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val relationshipSeed =
         RelationshipSeed(
@@ -1547,7 +1547,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val relationshipSeed =
         RelationshipSeed(
@@ -2013,7 +2013,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           products = Set.empty,
           attributes = Seq.empty,
           origin = "IPA",
-          institutionType = "PA"
+          institutionType = Option("PA")
         )
       val rlSeed          =
         RelationshipSeed(

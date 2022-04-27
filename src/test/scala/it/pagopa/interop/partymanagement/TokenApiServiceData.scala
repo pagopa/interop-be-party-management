@@ -73,7 +73,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed2 = InstitutionSeed(
     institutionId = institutionId2,
@@ -85,7 +85,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed3 = InstitutionSeed(
     institutionId = institutionId3,
@@ -97,7 +97,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed4 = InstitutionSeed(
     institutionId = institutionId4,
@@ -109,7 +109,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed5 = InstitutionSeed(
     institutionId = institutionId5,
@@ -121,7 +121,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed6 = InstitutionSeed(
     institutionId = institutionId6,
@@ -133,7 +133,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed7 = InstitutionSeed(
     institutionId = institutionId7,
@@ -145,7 +145,7 @@ object TokenApiServiceData {
     attributes = Seq.empty,
     products = Set.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
 
   // format: off
