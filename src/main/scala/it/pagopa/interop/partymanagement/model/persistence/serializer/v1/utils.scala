@@ -61,7 +61,7 @@ object utils {
           address = i.address,
           zipCode = i.zipCode,
           origin = i.origin.getOrElse("IPA"),
-          institutionType = i.institutionType.getOrElse("PA"),
+          institutionType = i.institutionType,
           attributes = i.attributes
             .map(a => InstitutionAttribute(origin = a.origin, code = a.code, description = a.description))
             .toSet,
@@ -94,7 +94,7 @@ object utils {
           address = i.address,
           zipCode = i.zipCode,
           origin = Option(i.origin),
-          institutionType = Option(i.institutionType),
+          institutionType = i.institutionType,
           attributes = i.attributes
             .map(a => InstitutionAttributeV1(origin = a.origin, code = a.code, description = a.description))
             .toSeq,

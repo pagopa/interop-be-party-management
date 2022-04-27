@@ -52,7 +52,7 @@ object StateData {
     start = start,
     end = None,
     origin = origin,
-    institutionType = institutionType,
+    institutionType = Option(institutionType),
     attributes = attributes.toSet
   )
 

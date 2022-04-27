@@ -194,10 +194,10 @@ class PublicApiServiceImpl(
         val party: Party =
           if (institutionParty.origin == ipaOrigin)
             institutionParty
-              .copy(institutionType = institutionUpdate.institutionType.getOrElse(institutionParty.institutionType))
+              .copy(institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType))
           else
             institutionParty.copy(
-              institutionType = institutionUpdate.institutionType.getOrElse(institutionParty.institutionType),
+              institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
               address = institutionUpdate.address.getOrElse(institutionParty.address),
               taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
               description = institutionUpdate.description.getOrElse(institutionParty.description),

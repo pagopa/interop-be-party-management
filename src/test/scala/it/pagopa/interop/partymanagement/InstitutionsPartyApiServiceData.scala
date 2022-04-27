@@ -83,7 +83,7 @@ object InstitutionsPartyApiServiceData {
     id = institutionUuid1,
     attributes = Seq.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
 
   lazy final val expected3 = Institution(
@@ -96,7 +96,7 @@ object InstitutionsPartyApiServiceData {
     id = institutionUuid3,
     attributes = Seq.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
 
   def prepareTest(

@@ -135,7 +135,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         start = start,
         end = Some(end),
         origin = origin,
-        institutionType = institutionType,
+        institutionType = Option(institutionType),
         attributes = attributes
       )
 
@@ -190,7 +190,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         start = start,
         end = Some(end),
         origin = origin,
-        institutionType = institutionType,
+        institutionType = Option(institutionType),
         attributes = attributes
           .map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code, description = attr.description))
           .toSet

@@ -75,7 +75,7 @@ final case class InstitutionParty(
   address: String,
   zipCode: String,
   origin: String,
-  institutionType: String,
+  institutionType: Option[String],
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   attributes: Set[InstitutionAttribute]
@@ -96,7 +96,7 @@ object InstitutionParty {
       address = institution.address,
       zipCode = institution.zipCode,
       origin = institution.origin,
-      institutionType = institution.institutionType,
+      institutionType = Option(institution.institutionType),
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
       end = None
