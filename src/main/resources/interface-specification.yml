@@ -901,7 +901,6 @@ components:
         - taxCode
         - attributes
         - origin
-        - institutionType
       additionalProperties: false
     BulkInstitutions:
       type: object

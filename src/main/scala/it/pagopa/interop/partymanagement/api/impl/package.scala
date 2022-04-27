@@ -51,4 +51,6 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
         )
       )
     )
+
+  final val ipaOrigin: String = "IPA"
 }
