@@ -17,6 +17,6 @@ object ApplicationConfiguration {
   val contractPath: String = config.getString("party-management.storage.contract-path")
 
   val numberOfProjectionTags: Int = config.getInt("akka.cluster.sharding.number-of-shards")
-  def projectionTag(index: Int)        = s"interop-be-party-management-persistence|$index"
+  def projectionTag(index: Int)   = s"interop-be-party-management-persistence|$index"
   val projectionsEnabled: Boolean = config.getBoolean("akka.projection.enabled")
 }
