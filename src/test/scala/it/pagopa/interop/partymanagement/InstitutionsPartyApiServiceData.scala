@@ -36,7 +36,7 @@ object InstitutionsPartyApiServiceData {
     products = Set.empty,
     attributes = Seq.empty,
     origin = "IPA",
-    institutionType = "PA"
+    institutionType = Option("PA")
   )
   lazy final val institutionSeed2 =
     InstitutionSeed(
@@ -50,7 +50,7 @@ object InstitutionsPartyApiServiceData {
       products = Set.empty,
       attributes = Seq.empty,
       origin = "IPA",
-      institutionType = "PA"
+      institutionType = Option("PA")
     )
   lazy final val institutionSeed3 =
     InstitutionSeed(
@@ -64,7 +64,7 @@ object InstitutionsPartyApiServiceData {
       products = Set.empty,
       attributes = Seq.empty,
       origin = "IPA",
-      institutionType = "PA"
+      institutionType = Option("PA")
     )
   lazy final val institutionSeed4 =
     InstitutionSeed(
@@ -78,7 +78,7 @@ object InstitutionsPartyApiServiceData {
       products = Set.empty,
       attributes = Seq.empty,
       origin = "IPA",
-      institutionType = "PA"
+      institutionType = Option("PA")
     )
 
   lazy final val expected1 = Institution(

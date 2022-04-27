@@ -99,7 +99,7 @@ object InstitutionParty {
       address = institution.address,
       zipCode = institution.zipCode,
       origin = institution.origin,
-      institutionType = Option(institution.institutionType),
+      institutionType = institution.institutionType,
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
       end = None
