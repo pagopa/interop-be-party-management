@@ -100,4 +100,16 @@ object PartyManagementErrors {
   final case class UpdateInstitutionBadRequest(institutionId: String, cause: String)
       extends ComponentError("0044", s"Something went wrong updating institution as $institutionId: $cause")
 
+  final case object MissingQueryParam
+      extends ComponentError("0045", s"At least one query parameter between [from, to] must be passed")
+
+  final case class PartyNotFound(partyId: String) extends ComponentError("0046", s"Party $partyId not found")
+
+  final case object NoValidManagerFound extends ComponentError("0047", s"Operator without active manager")
+
+  final case object RelationshipNotFound extends ComponentError("0048", s"Relationship not found")
+
+  final case object NoAttributeForPartyPerson
+      extends ComponentError("0049", s"Attributes do not exist for person party")
+
 }

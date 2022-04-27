@@ -20,7 +20,7 @@ import it.pagopa.interop.partymanagement.common.system.{ApplicationConfiguration
 import it.pagopa.interop.partymanagement.error.PartyManagementErrors._
 import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState.Pending
-import it.pagopa.interop.partymanagement.model.party.{PersistedPartyRelationship, Token}
+import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence._
 import org.slf4j.LoggerFactory
 
@@ -166,7 +166,47 @@ class PublicApiServiceImpl(
           ConfirmPartyRelationship(partyRelationshipBinding.relationshipId, filePath, fileParts._1, token.id, ref)
         )
       } // TODO atomic?
+      _        <- updateInstitutionOnConfirmation(token)
     } yield results
+  }
+
+  private def updateInstitutionOnConfirmation(token: Token) = {
+    for {
+      relationships    <- Future.traverse(token.legals)(legal =>
+        getCommander(legal.partyId.toString).ask(ref => GetPartyRelationshipById(legal.relationshipId, ref))
+      )
+      manager          <- relationships
+        .find(_.exists(_.role == PersistedPartyRole.Manager))
+        .flatten
+        .toFuture(ManagerNotSupplied(token.id.toString))
+      party            <- getCommander(manager.to.toString).ask(ref => GetParty(manager.to, ref))
+      institutionParty <- Party.extractInstitutionParty(partyId = manager.to.toString, party = party)
+      _                <- updateInstitutionWithRelationship(institutionParty, manager)
+    } yield ()
+  }
+
+  private def updateInstitutionWithRelationship(
+    institutionParty: InstitutionParty,
+    relationship: PersistedPartyRelationship
+  ): Future[StatusReply[Party]] = {
+    relationship.institutionUpdate.fold(Future.successful(StatusReply.Success[Party](institutionParty))) {
+      institutionUpdate =>
+        val party: Party =
+          if (institutionParty.origin == ipaOrigin)
+            institutionParty
+              .copy(institutionType = institutionUpdate.institutionType.getOrElse(institutionParty.institutionType))
+          else
+            institutionParty.copy(
+              institutionType = institutionUpdate.institutionType.getOrElse(institutionParty.institutionType),
+              address = institutionUpdate.address.getOrElse(institutionParty.address),
+              taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
+              description = institutionUpdate.description.getOrElse(institutionParty.description),
+              digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress)
+            )
+
+        getCommander(party.id.toString).ask(ref => UpdateParty(party, ref))
+    }
+
   }
 
   /** Code: 200, Message: successful operation, DataType: TokenInfo
