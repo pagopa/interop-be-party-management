@@ -14,7 +14,7 @@ object Versions {
   lazy val postgresVersion          = "42.3.3"
   lazy val projectionVersion        = "1.2.1"
   lazy val scalaMockVersion         = "5.2.0"
-  lazy val scalatestVersion         = "3.2.11"
+  lazy val scalatestVersion         = "3.2.12"
   lazy val slickProjectionVersion   = "1.2.2"
 }
 
