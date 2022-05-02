@@ -91,4 +91,25 @@ object PartyManagementErrors {
   final case class TokenVerificationFatalError(tokenId: String, error: String)
       extends ComponentError("0041", s"Something went wrong trying to verify token $tokenId: $error")
 
+  final case class InvalidParty(expectedType: String, obtained: String)
+      extends ComponentError("0042", s"Something went wrong reading party as $expectedType: $obtained")
+
+  final case class UpdateInstitutionNotFound(id: String)
+      extends ComponentError("0043", s"Cannot find institution having id $id")
+
+  final case class UpdateInstitutionBadRequest(institutionId: String, cause: String)
+      extends ComponentError("0044", s"Something went wrong updating institution as $institutionId: $cause")
+
+  final case object MissingQueryParam
+      extends ComponentError("0045", s"At least one query parameter between [from, to] must be passed")
+
+  final case class PartyNotFound(partyId: String) extends ComponentError("0046", s"Party $partyId not found")
+
+  final case object NoValidManagerFound extends ComponentError("0047", s"Operator without active manager")
+
+  final case object RelationshipNotFound extends ComponentError("0048", s"Relationship not found")
+
+  final case object NoAttributeForPartyPerson
+      extends ComponentError("0049", s"Attributes do not exist for person party")
+
 }

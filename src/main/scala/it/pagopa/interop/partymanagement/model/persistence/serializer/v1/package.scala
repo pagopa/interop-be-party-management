@@ -48,6 +48,12 @@ package object v1 {
   implicit def partyAddedV1PersistEventSerializer: PersistEventSerializer[PartyAdded, PartyAddedV1] = event =>
     getPartyV1(event.party).map(PartyAddedV1.of)
 
+  implicit def partyUpdatedV1PersistEventDeserializer: PersistEventDeserializer[PartyUpdatedV1, PartyUpdated] = event =>
+    getParty(event.party).map(PartyUpdated)
+
+  implicit def partyUpdatedV1PersistEventSerializer: PersistEventSerializer[PartyUpdated, PartyUpdatedV1] = event =>
+    getPartyV1(event.party).map(PartyUpdatedV1.of)
+
   implicit def partyDeletedV1PersistEventDeserializer: PersistEventDeserializer[PartyDeletedV1, PartyDeleted] =
     event => getParty(event.party).map(PartyDeleted)
 

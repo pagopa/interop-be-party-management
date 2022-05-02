@@ -31,6 +31,8 @@ message InstitutionPartyV1 {
   repeated InstitutionAttributeV1 attributes = 8;
   required string address = 9;
   required string zipCode = 10;
+  optional string origin = 11;
+  optional string institutionType = 12;
 }
 
 message InstitutionAttributeV1 {

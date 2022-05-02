@@ -7,6 +7,8 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
+  BillingV1,
+  InstitutionUpdateV1,
   PartyRelationshipProductV1,
   PartyRelationshipV1
 }
@@ -32,6 +34,20 @@ object StateV1Data {
   val productV1: PartyRelationshipProductV1 =
     PartyRelationshipProductV1(id = productId, role = productRole, createdAt = productCreatedAt.toMillis)
 
+  val institutionUpdateV1: Option[InstitutionUpdateV1] = institutionUpdate.map(i =>
+    InstitutionUpdateV1(
+      institutionType = i.institutionType,
+      description = i.description,
+      digitalAddress = i.digitalAddress,
+      address = i.address,
+      taxCode = i.taxCode
+    )
+  )
+
+  val billingV1: Option[BillingV1] = billing.map(b =>
+    BillingV1(vatNumber = b.vatNumber, recipientCode = b.recipientCode, publicServices = b.publicServices)
+  )
+
   def createPartyRelationshipV1(
     partyRelationshipId: UUID,
     role: PartyRelationshipV1.PartyRoleV1,
@@ -48,7 +64,10 @@ object StateV1Data {
     filePath = Some(filePath),
     fileName = Some(fileName),
     contentType = Some(contentType),
-    onboardingTokenId = Some(onboardingTokenId.toString)
+    onboardingTokenId = Some(onboardingTokenId.toString),
+    pricingPlan = pricingPlan,
+    institutionUpdate = institutionUpdateV1,
+    billing = billingV1
   )
 
   val personPartyV1: PersonPartyV1 = PersonPartyV1(
@@ -67,6 +86,8 @@ object StateV1Data {
     taxCode = taxCode,
     start = start.asFormattedString.success.value,
     end = None,
+    origin = Option(origin),
+    institutionType = Option(institutionType),
     attributes = attributes.map(attr =>
       InstitutionAttributeV1(origin = attr.origin, code = attr.code, description = attr.description)
     )

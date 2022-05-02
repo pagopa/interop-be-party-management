@@ -2,11 +2,17 @@ package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.interop.partymanagement.common.system.ApiParty
-import it.pagopa.interop.partymanagement.model.{Attribute, InstitutionSeed, Institution, Person, PersonSeed}
+import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
+  InvalidParty,
+  NoAttributeForPartyPerson,
+  UpdateInstitutionNotFound
+}
+import it.pagopa.interop.partymanagement.model.{Attribute, Institution, InstitutionSeed, Person, PersonSeed}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
 import java.util.UUID
+import scala.concurrent.Future
 
 sealed trait Party {
   def id: UUID
@@ -14,7 +20,7 @@ sealed trait Party {
   def end: Option[OffsetDateTime]
 
   def addAttributes(attributes: Set[Attribute]): Either[Throwable, Party] = this match {
-    case _: PersonParty                     => Left(new RuntimeException("Attributes do not exist for person party"))
+    case _: PersonParty                     => Left(NoAttributeForPartyPerson)
     case institutionParty: InstitutionParty =>
       val updated: Set[InstitutionAttribute] = institutionParty.attributes ++ attributes.map(attribute =>
         InstitutionAttribute(origin = attribute.origin, code = attribute.code, description = attribute.description)
@@ -39,10 +45,18 @@ object Party {
             taxCode = institutionParty.taxCode,
             address = institutionParty.address,
             zipCode = institutionParty.zipCode,
+            origin = institutionParty.origin,
+            institutionType = institutionParty.institutionType,
             attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq
           )
         )
     }
+
+  def extractInstitutionParty(partyId: String, party: Option[Party]) = party match {
+    case Some(x: InstitutionParty) => Future.successful(x)
+    case Some(x: PersonParty)      => Future.failed(InvalidParty("InstitutionParty", x.toString))
+    case None                      => Future.failed(UpdateInstitutionNotFound(partyId))
+  }
 }
 
 final case class PersonParty(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]) extends Party
@@ -60,6 +74,8 @@ final case class InstitutionParty(
   taxCode: String,
   address: String,
   zipCode: String,
+  origin: String,
+  institutionType: Option[String],
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   attributes: Set[InstitutionAttribute]
@@ -79,9 +95,30 @@ object InstitutionParty {
       taxCode = institution.taxCode,
       address = institution.address,
       zipCode = institution.zipCode,
+      origin = institution.origin,
+      institutionType = institution.institutionType,
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
       end = None
     )
   }
+
+  def fromInstitution(
+    institution: Institution
+  )(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]): InstitutionParty =
+    InstitutionParty(
+      id = id,
+      externalId = institution.institutionId,
+      description = institution.description,
+      digitalAddress = institution.digitalAddress,
+      taxCode = institution.taxCode,
+      address = institution.address,
+      zipCode = institution.zipCode,
+      origin = institution.origin,
+      institutionType = institution.institutionType,
+      start = start,
+      end = end,
+      attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet
+    )
+
 }

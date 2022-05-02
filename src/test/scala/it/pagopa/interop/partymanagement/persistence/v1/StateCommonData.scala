@@ -1,6 +1,10 @@
 package it.pagopa.interop.partymanagement.persistence.v1
 
-import it.pagopa.interop.partymanagement.model.party.InstitutionAttribute
+import it.pagopa.interop.partymanagement.model.party.{
+  InstitutionAttribute,
+  PersistedBilling,
+  PersistedInstitutionUpdate
+}
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -15,13 +19,15 @@ object StateCommonData {
   val personPartyId      = UUID.randomUUID()
   val institutionPartyId = UUID.randomUUID()
 
-  val externalId2    = UUID.randomUUID()
-  val description    = "description"
-  val digitalAddress = "digitalAddress"
-  val address        = "address"
-  val zipCode        = "zipCode"
-  val taxCode        = "taxCode"
-  val attributes     = Seq(
+  val externalId2     = UUID.randomUUID()
+  val description     = "description"
+  val digitalAddress  = "digitalAddress"
+  val address         = "address"
+  val zipCode         = "zipCode"
+  val taxCode         = "taxCode"
+  val origin          = "IPA"
+  val institutionType = "PA"
+  val attributes      = Seq(
     InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
     InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
   )
@@ -66,4 +72,17 @@ object StateCommonData {
   val checksum = "checksum"
   val version  = "version"
   val path     = "path"
+
+  val pricingPlan       = Option("PRICING_PLAN")
+  val billing           = Option(PersistedBilling("VATNUMBER", "RECIPIENTCODE", Option(true)))
+  val institutionUpdate = Option(
+    PersistedInstitutionUpdate(
+      Option("PAOVERRIDE"),
+      Option("DESCRIPTIONOVERRIDE"),
+      Option("MAILOVERRIDE"),
+      Option("ADDRESSOVERRIDE"),
+      Option("TAXCODEOVERRIDE")
+    )
+  )
+
 }

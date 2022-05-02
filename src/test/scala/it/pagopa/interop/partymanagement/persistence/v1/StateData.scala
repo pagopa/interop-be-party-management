@@ -33,7 +33,10 @@ object StateData {
     filePath = Some(filePath),
     fileName = Some(fileName),
     contentType = Some(contentType),
-    onboardingTokenId = Some(onboardingTokenId)
+    onboardingTokenId = Some(onboardingTokenId),
+    pricingPlan = pricingPlan,
+    institutionUpdate = institutionUpdate,
+    billing = billing
   )
 
   val personParty: PersonParty = PersonParty(id = personPartyId, start = start, end = Some(end))
@@ -48,6 +51,8 @@ object StateData {
     taxCode = taxCode,
     start = start,
     end = None,
+    origin = origin,
+    institutionType = Option(institutionType),
     attributes = attributes.toSet
   )
 

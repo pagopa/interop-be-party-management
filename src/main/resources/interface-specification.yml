@@ -211,6 +211,46 @@ paths:
           description: successful operation
         '404':
           description: Institution not found
+  /institutions/{id}/update:
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: Institution ID
+    post:
+      summary: Updates an Institution by ID
+      tags:
+        - party
+      operationId: updateInstitutionById
+      description: 'update the identified institution, if any.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Institution'
+      responses:
+        '200':
+          description: Institution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Institution not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /institutions/{id}/attributes:
     parameters:
       - schema:
@@ -782,6 +822,14 @@ components:
             type: string
             description: product names associated to this institution
           uniqueItems: true
+        origin:
+          type: string
+          description: The origin form which the institution has been retrieved
+          example: IPA
+        institutionType:
+          type: string
+          description: institution type
+          example: PA
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
@@ -793,6 +841,7 @@ components:
         - taxCode
         - attributes
         - products
+        - origin
       additionalProperties: false
     Institution:
       type: object
@@ -821,6 +870,14 @@ components:
         taxCode:
           description: institution tax code
           type: string
+        origin:
+          type: string
+          description: The origin form which the institution has been retrieved
+          example: IPA
+        institutionType:
+          type: string
+          description: institution type
+          example: PA
         attributes:
           $ref: '#/components/schemas/Attributes'
       required:
@@ -832,6 +889,7 @@ components:
         - zipCode
         - taxCode
         - attributes
+        - origin
       additionalProperties: false
     BulkInstitutions:
       type: object
@@ -923,6 +981,13 @@ components:
           $ref: '#/components/schemas/PartyRole'
         product:
           $ref: '#/components/schemas/RelationshipProductSeed'
+        pricingPlan:
+          type: string
+          description: pricing plan
+        institutionUpdate:
+          $ref: '#/components/schemas/InstitutionUpdate'
+        billing:
+          $ref: '#/components/schemas/Billing'
       additionalProperties: false
       required:
         - from
@@ -976,6 +1041,13 @@ components:
           $ref: '#/components/schemas/RelationshipProduct'
         state:
           $ref: '#/components/schemas/RelationshipState'
+        pricingPlan:
+          type: string
+          description: pricing plan
+        institutionUpdate:
+          $ref: '#/components/schemas/InstitutionUpdate'
+        billing:
+          $ref: '#/components/schemas/Billing'
         createdAt:
           type: string
           format: date-time
@@ -1136,6 +1208,42 @@ components:
       required:
         - code
         - detail
+    InstitutionUpdate:
+      type: object
+      properties:
+        institutionType:
+          type: string
+          example: PA
+          description: The type of the institution
+        description:
+          type: string
+          example: AGENCY X
+        digitalAddress:
+          example: email@pec.mail.org
+          format: email
+          type: string
+        address:
+          example: via del campo
+          type: string
+        taxCode:
+          description: institution tax code
+          type: string
+    Billing:
+      type: object
+      properties:
+        vatNumber:
+          description: institution vat number
+          type: string
+        recipientCode:
+          description: institution recipient code
+          type: string
+        publicServices:
+          description: institution recipient code
+          type: boolean
+      required:
+        - vatNumber
+        - recipientCode
+      additionalProperties: false
   securitySchemes:
     bearerAuth:
       type: http

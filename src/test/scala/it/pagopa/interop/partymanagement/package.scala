@@ -39,6 +39,9 @@ package object partymanagement extends MockFactory {
   def createInstitution(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
     create(data, "institutions")
 
+  def updateInstitution(id: String, data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
+    create(data, s"institutions/$id/update")
+
   def createPerson(data: Source[ByteString, Any])(implicit actorSystem: ActorSystem): HttpResponse =
     create(data, "persons")
 

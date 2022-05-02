@@ -20,6 +20,9 @@ message PartyRelationshipV1 {
   optional string fileName = 11;
   optional string contentType = 12;
   optional string onboardingTokenId = 13;
+  optional string pricingPlan = 14;
+  optional InstitutionUpdateV1 institutionUpdate = 15;
+  optional BillingV1 billing = 16;
 
   enum PartyRelationshipStateV1 {
     PENDING = 1;
@@ -41,4 +44,18 @@ message PartyRelationshipProductV1 {
   required string id = 1;
   required string role = 2;
   required int64 createdAt = 3;
+}
+
+message InstitutionUpdateV1 {
+  optional string institutionType = 1;
+  optional string description = 2;
+  optional string digitalAddress = 3;
+  optional string address = 4;
+  optional string taxCode = 5;
+}
+
+message BillingV1 {
+  required string vatNumber = 1;
+  required string recipientCode = 2;
+  optional bool publicServices = 3;
 }

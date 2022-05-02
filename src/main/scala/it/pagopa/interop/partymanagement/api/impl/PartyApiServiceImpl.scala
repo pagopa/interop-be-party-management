@@ -122,6 +122,69 @@ class PartyApiServiceImpl(
   }
 
   /** Code: 200, Message: successful operation, DataType: Institution
+   * Code: 405, Message: Institution not found, DataType: Problem
+   * Code: 400, Message: Invalid ID supplied, DataType: Problem
+   */
+  override def updateInstitutionById(id: String, institution: Institution)(implicit
+    toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Updating institution $id")
+
+    val commander: EntityRef[Command] = getCommander(id)
+
+    val updatedInstitution: Future[StatusReply[Party]] = for {
+      uuid             <- id.toFutureUUID
+      party            <- commander.ask(ref => GetParty(uuid, ref))
+      institutionParty <- Party.extractInstitutionParty(partyId = id, party = party)
+      updatedOrg       <-
+        if (institutionParty.externalId == institution.institutionId) {
+          Future.successful(
+            InstitutionParty.fromInstitution(institution)(uuid, institutionParty.start, institutionParty.end)
+          )
+        } else {
+          Future.failed(
+            UpdateInstitutionBadRequest(
+              id,
+              s"Cannot update externalId ${institutionParty.externalId} -> ${institution.institutionId}"
+            )
+          )
+        }
+      result           <- commander.ask(ref => UpdateParty(updatedOrg, ref))
+    } yield result
+
+    onComplete(updatedInstitution) {
+      case Success(statusReply) if statusReply.isSuccess =>
+        Party
+          .convertToApi(statusReply.getValue)
+          .fold(
+            institution => updateInstitutionById200(institution),
+            _ => {
+              logger.error(s"Updating institution $id - Bad request")
+              updateInstitutionById400(problemOf(StatusCodes.BadRequest, CreateInstitutionBadRequest))
+            }
+          )
+      case Success(_)                                    =>
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionConflict)
+        updateInstitutionById400(errorResponse)
+      case Failure(ex: UpdateInstitutionNotFound)        =>
+        logger.error(s"Updating institution $id - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.NotFound, ex)
+        updateInstitutionById404(errorResponse)
+      case Failure(ex: UpdateInstitutionBadRequest)      =>
+        logger.error(s"Updating institution $id - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, ex)
+        updateInstitutionById400(errorResponse)
+      case Failure(ex)                                   =>
+        logger.error(s"Updating institution $id - ${ex.getMessage}")
+        val errorResponse: Problem = problemOf(StatusCodes.BadRequest, CreateInstitutionError(ex.getMessage))
+        updateInstitutionById400(errorResponse)
+    }
+
+  }
+
+  /** Code: 200, Message: successful operation, DataType: Institution
     * Code: 404, Message: Institution not found, DataType: Problem
     */
   override def addInstitutionAttributes(id: String, attribute: Seq[Attribute])(implicit
@@ -235,7 +298,10 @@ class PartyApiServiceImpl(
         from.id,
         to.id,
         role,
-        seed.product
+        seed.product,
+        pricingPlan = seed.pricingPlan,
+        billing = seed.billing,
+        institutionUpdate = seed.institutionUpdate
       )
       currentPartyRelationships <- commanders
         .traverse(
@@ -334,7 +400,7 @@ class PartyApiServiceImpl(
         retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
       case (Some(f), None)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
       case (None, Some(t))    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
-      case _ => Future.failed(new RuntimeException("At least one query parameter between [from, to] must be passed"))
+      case _                  => Future.failed(MissingQueryParam)
     }
 
     val result: Future[List[Relationship]] = for {
@@ -378,9 +444,7 @@ class PartyApiServiceImpl(
 
   private def getParty(id: UUID)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
     found <- getCommander(id.toString).ask(ref => GetParty(id, ref))
-    party <- found.fold(Future.failed[Party](new RuntimeException(s"Party ${id.toString} not found")))(p =>
-      Future.successful(p)
-    )
+    party <- found.toFuture(PartyNotFound(id.toString))
   } yield party
 
   private def getPartyRelationship(relationship: Relationship): Future[PersistedPartyRelationship] =
@@ -402,7 +466,7 @@ class PartyApiServiceImpl(
           Set[PersistedPartyRole](PersistedPartyRole.Manager, PersistedPartyRole.Delegate)
             .contains(partyRelationships.role),
         partyRelationships,
-        new RuntimeException("Operator without active manager")
+        NoValidManagerFound
       )
       .toTry
   }
@@ -470,7 +534,7 @@ class PartyApiServiceImpl(
           ref
         )
       )
-      result            <- maybeRelationship.toFuture(new RuntimeException("Relationship not found"))
+      result            <- maybeRelationship.toFuture(RelationshipNotFound)
     } yield result
 
   }
