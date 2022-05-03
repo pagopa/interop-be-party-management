@@ -94,8 +94,8 @@ object PartyManagementErrors {
   final case class InvalidParty(expectedType: String, obtained: String)
       extends ComponentError("0042", s"Something went wrong reading party as $expectedType: $obtained")
 
-  final case class UpdateInstitutionNotFound(institutionId: String)
-      extends ComponentError("0043", s"Cannot find institution having id $institutionId")
+  final case class UpdateInstitutionNotFound(id: String)
+      extends ComponentError("0043", s"Cannot find institution having id $id")
 
   final case class UpdateInstitutionBadRequest(institutionId: String, cause: String)
       extends ComponentError("0044", s"Something went wrong updating institution as $institutionId: $cause")
