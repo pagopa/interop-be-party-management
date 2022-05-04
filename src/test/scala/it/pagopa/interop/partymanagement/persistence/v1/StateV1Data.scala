@@ -79,6 +79,7 @@ object StateV1Data {
   val institutionPartyV1: InstitutionPartyV1 = InstitutionPartyV1(
     id = institutionPartyId.toString,
     externalId = externalId2.toString,
+    originId = Option(originId2.toString),
     description = description,
     digitalAddress = digitalAddress,
     address = address,

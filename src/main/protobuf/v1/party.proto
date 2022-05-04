@@ -33,6 +33,7 @@ message InstitutionPartyV1 {
   required string zipCode = 10;
   optional string origin = 11;
   optional string institutionType = 12;
+  optional string originId = 13;
 }
 
 message InstitutionAttributeV1 {
