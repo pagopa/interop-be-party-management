@@ -83,6 +83,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
     "convert a PartyV1 (InstitutionPartyV1) to Party (InstitutionParty)" in {
       val id              = UUID.randomUUID()
       val externalId      = "externalId"
+      val originId        = "originId"
       val description     = "description"
       val digitalAddress  = "digitalAddress"
       val address         = "address"
@@ -104,6 +105,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         } yield InstitutionPartyV1(
           id = id.toString,
           externalId = externalId,
+          originId = Option(originId),
           description = description,
           digitalAddress = digitalAddress,
           address = address,
@@ -127,6 +129,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val expected: InstitutionParty = InstitutionParty(
         id = id,
         externalId = externalId,
+        originId = originId,
         description = description,
         digitalAddress = digitalAddress,
         address = address,
@@ -164,6 +167,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
     "convert a Party (InstitutionParty) to PartyV1 (InstitutionPartyV1)" in {
       val id              = UUID.randomUUID()
       val externalId      = "externalId"
+      val originId        = "originId"
       val description     = "description"
       val digitalAddress  = "digitalAddress"
       val address         = "address"
@@ -182,6 +186,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       val party: InstitutionParty = InstitutionParty(
         id = id,
         externalId = externalId,
+        originId = originId,
         description = description,
         digitalAddress = digitalAddress,
         address = address,
@@ -205,6 +210,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         } yield InstitutionPartyV1(
           id = id.toString,
           externalId = externalId,
+          originId = Option(originId),
           description = description,
           digitalAddress = digitalAddress,
           address = address,

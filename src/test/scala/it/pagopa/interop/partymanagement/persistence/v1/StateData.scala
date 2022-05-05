@@ -44,6 +44,7 @@ object StateData {
   val institutionParty: InstitutionParty = InstitutionParty(
     id = institutionPartyId,
     externalId = externalId2.toString,
+    originId = originId2.toString,
     description = description,
     digitalAddress = digitalAddress,
     address = address,

@@ -84,12 +84,12 @@ class PartyApiServiceImpl(
       .toList
 
     val institution: Future[StatusReply[Party]] = for {
-      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(institutionSeed.institutionId, ref)))
+      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(institutionSeed.externalId, ref)))
       maybeExistingOrg = shardOrgs.flatten.headOption
       newOrg <- maybeExistingOrg
         .toLeft(InstitutionParty.fromApi(institutionSeed, uuidSupplier, offsetDateTimeSupplier))
         .left
-        .map(_ => InstitutionAlreadyExists(institutionSeed.institutionId))
+        .map(_ => InstitutionAlreadyExists(institutionSeed.externalId))
         .toFuture
       result <- getCommander(newOrg.id.toString).ask(ref => AddParty(newOrg, ref))
     } yield result
@@ -139,7 +139,9 @@ class PartyApiServiceImpl(
       party            <- commander.ask(ref => GetParty(uuid, ref))
       institutionParty <- Party.extractInstitutionParty(partyId = id, party = party)
       updatedOrg       <-
-        if (institutionParty.externalId == institution.institutionId) {
+        if (
+          institutionParty.externalId == institution.externalId && institutionParty.originId == institution.originId
+        ) {
           Future.successful(
             InstitutionParty.fromInstitution(institution)(uuid, institutionParty.start, institutionParty.end)
           )
@@ -147,7 +149,7 @@ class PartyApiServiceImpl(
           Future.failed(
             UpdateInstitutionBadRequest(
               id,
-              s"Cannot update externalId ${institutionParty.externalId} -> ${institution.institutionId}"
+              s"Cannot update externalId and originId ${institutionParty.externalId} -> ${institution.externalId} ; ${institutionParty.originId} -> ${institution.originId}"
             )
           )
         }

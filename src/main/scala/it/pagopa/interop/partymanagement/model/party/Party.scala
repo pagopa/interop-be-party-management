@@ -39,7 +39,8 @@ object Party {
         Left(
           Institution(
             id = institutionParty.id,
-            institutionId = institutionParty.externalId,
+            externalId = institutionParty.externalId,
+            originId = institutionParty.originId,
             description = institutionParty.description,
             digitalAddress = institutionParty.digitalAddress,
             taxCode = institutionParty.taxCode,
@@ -69,6 +70,7 @@ object PersonParty {
 final case class InstitutionParty(
   id: UUID,
   externalId: String,
+  originId: String,
   description: String,
   digitalAddress: String,
   taxCode: String,
@@ -89,7 +91,8 @@ object InstitutionParty {
   ): InstitutionParty = {
     InstitutionParty(
       id = uuidSupplier.get,
-      externalId = institution.institutionId,
+      externalId = institution.externalId,
+      originId = institution.originId,
       description = institution.description,
       digitalAddress = institution.digitalAddress,
       taxCode = institution.taxCode,
@@ -108,7 +111,8 @@ object InstitutionParty {
   )(id: UUID, start: OffsetDateTime, end: Option[OffsetDateTime]): InstitutionParty =
     InstitutionParty(
       id = id,
-      externalId = institution.institutionId,
+      externalId = institution.externalId,
+      originId = institution.originId,
       description = institution.description,
       digitalAddress = institution.digitalAddress,
       taxCode = institution.taxCode,

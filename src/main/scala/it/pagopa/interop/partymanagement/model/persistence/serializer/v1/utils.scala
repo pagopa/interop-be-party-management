@@ -55,6 +55,7 @@ object utils {
         } yield InstitutionParty(
           id = UUID.fromString(i.id),
           externalId = i.externalId,
+          originId = i.originId.getOrElse(i.externalId),
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
@@ -88,6 +89,7 @@ object utils {
         } yield InstitutionPartyV1(
           id = i.id.toString,
           externalId = i.externalId,
+          originId = Option(i.originId),
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
