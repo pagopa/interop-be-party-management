@@ -70,7 +70,7 @@ class ExternalApiServiceImpl(
             institution => getInstitutionByExternalId200(institution)
           )
       case Failure(ex)          =>
-        logger.error(s"Error while getting institution with external id $externalId - ${ex.getMessage}")
+        logger.error(s"Error while getting institution with external id $externalId", ex)
         getInstitutionByExternalId400(problemOf(StatusCodes.BadRequest, InstitutionBadRequest))
     }
 

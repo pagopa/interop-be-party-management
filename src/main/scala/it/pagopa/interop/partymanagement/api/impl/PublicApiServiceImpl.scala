@@ -68,10 +68,10 @@ class PublicApiServiceImpl(
       case Success(token)             =>
         getToken200(token)
       case Failure(ex: TokenNotFound) =>
-        logger.error(s"Getting token failed - ${ex.getMessage}")
+        logger.error(s"Getting token failed", ex)
         getToken404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex)                =>
-        logger.error(s"Getting token failed - ${ex.getMessage}")
+        logger.error(s"Getting token failed", ex)
         complete(problemOf(StatusCodes.InternalServerError, GetTokenFatalError(tokenId, ex.getMessage)))
     }
   }
@@ -102,10 +102,10 @@ class PublicApiServiceImpl(
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
       case Success(_)                                                => consumeToken201
       case Failure(ex: TokenNotFound)                                =>
-        logger.error(s"Token not found - ${ex.getMessage}")
+        logger.error(s"Token not found", ex)
         consumeToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
       case Failure(ex)                                               =>
-        logger.error(s"Consuming token failed - ${ex.getMessage}")
+        logger.error(s"Consuming token failed", ex)
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenError(ex.getMessage)))
     }
 
@@ -133,10 +133,10 @@ class PublicApiServiceImpl(
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenBadRequest(errors)))
       case Success(_)                                                => invalidateToken200
       case Failure(ex: TokenNotFound)                                =>
-        logger.error(s"Token not found - ${ex.getMessage}")
+        logger.error(s"Token not found", ex)
         invalidateToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
       case Failure(ex)                                               =>
-        logger.error(s"Invalidating token failed - ${ex.getMessage}")
+        logger.error(s"Invalidating token failed", ex)
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenError(ex.getMessage)))
     }
 
@@ -241,16 +241,16 @@ class PublicApiServiceImpl(
     onComplete(result) {
       case Success(tokenInfo)                   => verifyToken200(tokenInfo)
       case Failure(ex: TokenNotFound)           =>
-        logger.error(s"Token not found - ${ex.getMessage}")
+        logger.error(s"Token not found", ex)
         verifyToken404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex: TokenAlreadyConsumed)    =>
-        logger.error(s"Token already consumed - ${ex.getMessage}")
+        logger.error(s"Token already consumed", ex)
         verifyToken409(problemOf(StatusCodes.Conflict, ex))
       case Failure(ex: GetRelationshipNotFound) =>
-        logger.error(s"Missing token relationships - ${ex.getMessage}")
+        logger.error(s"Missing token relationships", ex)
         verifyToken400(problemOf(StatusCodes.BadRequest, ex))
       case Failure(ex)                          =>
-        logger.error(s"Verifying token failed - ${ex.getMessage}")
+        logger.error(s"Verifying token failed", ex)
         complete(problemOf(StatusCodes.InternalServerError, TokenVerificationFatalError(tokenId, ex.getMessage)))
     }
   }
