@@ -79,7 +79,7 @@ object TokenApiServiceData {
     zipCode = "zipCode1",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )
@@ -92,7 +92,7 @@ object TokenApiServiceData {
     zipCode = "zipCode2",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )
@@ -105,7 +105,7 @@ object TokenApiServiceData {
     zipCode = "zipCode3",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )
@@ -118,7 +118,7 @@ object TokenApiServiceData {
     zipCode = "zipCode4",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )
@@ -131,7 +131,7 @@ object TokenApiServiceData {
     zipCode = "zipCode4",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )
@@ -144,7 +144,7 @@ object TokenApiServiceData {
     zipCode = "zipCode5",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )
@@ -157,7 +157,7 @@ object TokenApiServiceData {
     zipCode = "zipCode6",
     taxCode = "taxCode",
     attributes = Seq.empty,
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     origin = "IPA",
     institutionType = Option("PA")
   )

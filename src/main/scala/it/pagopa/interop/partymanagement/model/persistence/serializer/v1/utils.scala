@@ -9,6 +9,7 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.P
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionAttributeV1,
   InstitutionPartyV1,
+  InstitutionProductV1,
   PartyV1,
   PersonPartyV1
 }
@@ -17,10 +18,10 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
   PartyRoleV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
-  PartyRelationshipProductV1,
-  PartyRelationshipV1,
+  BillingV1,
   InstitutionUpdateV1,
-  BillingV1
+  PartyRelationshipProductV1,
+  PartyRelationshipV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -55,14 +56,17 @@ object utils {
         } yield InstitutionParty(
           id = UUID.fromString(i.id),
           externalId = i.externalId,
-          originId = i.originId.getOrElse(i.externalId),
+          originId = i.originId,
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
           address = i.address,
           zipCode = i.zipCode,
-          origin = i.origin.getOrElse("IPA"),
+          origin = i.origin,
           institutionType = i.institutionType,
+          products = i.products
+            .map(p => PersistedInstitutionProduct(p.product, p.pricingPlan, getPersistedBilling(p.billing)))
+            .toSet,
           attributes = i.attributes
             .map(a => InstitutionAttribute(origin = a.origin, code = a.code, description = a.description))
             .toSet,
@@ -89,14 +93,19 @@ object utils {
         } yield InstitutionPartyV1(
           id = i.id.toString,
           externalId = i.externalId,
-          originId = Option(i.originId),
+          originId = i.originId,
           description = i.description,
           digitalAddress = i.digitalAddress,
           taxCode = i.taxCode,
           address = i.address,
           zipCode = i.zipCode,
-          origin = Option(i.origin),
+          origin = i.origin,
           institutionType = i.institutionType,
+          products = i.products
+            .map(p =>
+              InstitutionProductV1(product = p.product, billing = getBillingV1(p.billing), pricingPlan = p.pricingPlan)
+            )
+            .toSeq,
           attributes = i.attributes
             .map(a => InstitutionAttributeV1(origin = a.origin, code = a.code, description = a.description))
             .toSeq,
@@ -147,11 +156,12 @@ object utils {
           taxCode = i.taxCode
         )
       ),
-      billing = partyRelationshipV1.billing.map(i =>
-        PersistedBilling(vatNumber = i.vatNumber, recipientCode = i.recipientCode, publicServices = i.publicServices)
-      )
+      billing = partyRelationshipV1.billing.map(getPersistedBilling)
     )
   }
+
+  private def getPersistedBilling(b: BillingV1): PersistedBilling =
+    PersistedBilling(vatNumber = b.vatNumber, recipientCode = b.recipientCode, publicServices = b.publicServices)
 
   def getPartyRelationshipV1(partyRelationship: PersistedPartyRelationship): PartyRelationshipV1 =
     PartyRelationshipV1(
@@ -181,10 +191,11 @@ object utils {
           taxCode = i.taxCode
         )
       ),
-      billing = partyRelationship.billing.map(i =>
-        BillingV1(vatNumber = i.vatNumber, recipientCode = i.recipientCode, publicServices = i.publicServices)
-      )
+      billing = partyRelationship.billing.map(getBillingV1)
     )
+
+  private def getBillingV1(b: PersistedBilling): BillingV1 =
+    BillingV1(vatNumber = b.vatNumber, recipientCode = b.recipientCode, publicServices = b.publicServices)
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {

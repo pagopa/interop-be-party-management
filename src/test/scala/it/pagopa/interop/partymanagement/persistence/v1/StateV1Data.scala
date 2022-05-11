@@ -4,6 +4,7 @@ import it.pagopa.interop.commons.utils.TypeConversions.OffsetDateTimeOps
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionAttributeV1,
   InstitutionPartyV1,
+  InstitutionProductV1,
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
@@ -79,7 +80,7 @@ object StateV1Data {
   val institutionPartyV1: InstitutionPartyV1 = InstitutionPartyV1(
     id = institutionPartyId.toString,
     externalId = externalId2.toString,
-    originId = Option(originId2.toString),
+    originId = originId2.toString,
     description = description,
     digitalAddress = digitalAddress,
     address = address,
@@ -87,8 +88,15 @@ object StateV1Data {
     taxCode = taxCode,
     start = start.asFormattedString.success.value,
     end = None,
-    origin = Option(origin),
+    origin = origin,
     institutionType = Option(institutionType),
+    products = products.toSeq.map(p =>
+      InstitutionProductV1(
+        product = p.product,
+        billing = BillingV1(p.billing.vatNumber, p.billing.recipientCode, p.billing.publicServices),
+        pricingPlan = p.pricingPlan
+      )
+    ),
     attributes = attributes.map(attr =>
       InstitutionAttributeV1(origin = attr.origin, code = attr.code, description = attr.description)
     )

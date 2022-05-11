@@ -472,7 +472,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -525,7 +525,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         address = "address",
         zipCode = "zipCode",
         taxCode = "taxCode",
-        products = Set.empty,
+        products = Option(Map.empty[String, InstitutionProduct]),
         attributes = Seq.empty,
         origin = "IPA",
         institutionType = Option("PA")
@@ -623,7 +623,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -673,7 +673,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -779,7 +779,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -894,7 +894,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1006,7 +1006,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1095,7 +1095,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1197,7 +1197,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1287,7 +1287,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1358,7 +1358,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1461,7 +1461,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -1580,7 +1580,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -2048,7 +2048,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Set.empty,
+          products = Option(Map.empty[String, InstitutionProduct]),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
