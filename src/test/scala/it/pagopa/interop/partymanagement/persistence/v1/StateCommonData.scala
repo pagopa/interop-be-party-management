@@ -96,6 +96,7 @@ object StateCommonData {
       Option("DESCRIPTIONOVERRIDE"),
       Option("MAILOVERRIDE"),
       Option("ADDRESSOVERRIDE"),
+      Option("ZIPCODEOVERRIDE"),
       Option("TAXCODEOVERRIDE")
     )
   )

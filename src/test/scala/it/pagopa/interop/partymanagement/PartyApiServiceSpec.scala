@@ -18,6 +18,7 @@ import it.pagopa.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.interop.partymanagement.api._
 import it.pagopa.interop.partymanagement.api.impl.{PartyApiMarshallerImpl, PartyApiServiceImpl, _}
 import it.pagopa.interop.partymanagement.model._
+import it.pagopa.interop.partymanagement.model.party.Token
 import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
@@ -1701,10 +1702,20 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.Created
     }
 
-    "consume a token" in {
-      (() => uuidSupplier.get).expects().returning(orgId2).once()          // Create institution
-      (() => uuidSupplier.get).expects().returning(relationshipId1).once() // Create relationship1
-      (() => uuidSupplier.get).expects().returning(relationshipId2).once() // Create relationship2
+    def consumeToken(
+      orgId: UUID,
+      institutionSeed: InstitutionSeed,
+      relationSheepIdManager: UUID,
+      relationshipSeedManager: RelationshipSeed,
+      relationSheepIdOperator: UUID,
+      relationshipSeedOperator: RelationshipSeed,
+      token: Token,
+      tokenSeed: TokenSeed,
+      expectedInstitution: Institution
+    ) = {
+      (() => uuidSupplier.get).expects().returning(orgId).once()                   // Create institution
+      (() => uuidSupplier.get).expects().returning(relationSheepIdManager).once()  // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationSheepIdOperator).once() // Create relationship2
 
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
@@ -1714,17 +1725,18 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get)
         .expects()
         .returning(timestampValid)
-        .repeated(tokenSeed1.relationships.items.size)                              // Consume token
+        .repeated(tokenSeed.relationships.items.size)                               // Consume token
 
-      val relationshipResponse = prepareTest(personSeed2, institutionSeed2, relationshipSeed3, relationshipSeed4)
+      val relationshipResponse =
+        prepareTest(personSeed2, institutionSeed, relationshipSeedManager, relationshipSeedOperator)
 
       Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
 
-      val tokenData = Marshal(tokenSeed1).to[MessageEntity].map(_.dataBytes).futureValue
+      val tokenData = Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes).futureValue
 
       createToken(tokenData)
 
-      val tokenText = token1.id.toString
+      val tokenText = token.id.toString
 
       val formData = Multipart.FormData
         .fromFile("doc", MediaTypes.`application/octet-stream`, file = writeToTempFile("hello world"), 100000)
@@ -1742,6 +1754,48 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
           )
           .futureValue
       consumedResponse.status shouldBe StatusCodes.Created
+
+      // check institution updates
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/institutions/${orgId.toString}", method = HttpMethods.GET, headers = authorization)
+          )
+          .futureValue
+
+      val body = Unmarshal(response.entity).to[Institution].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body shouldBe expectedInstitution
+    }
+
+    "consume a token for IPA institution" in {
+      consumeToken(
+        orgId2,
+        institutionSeed2,
+        relationshipId1,
+        relationshipSeed3,
+        relationshipId2,
+        relationshipSeed4,
+        token1,
+        tokenSeed1,
+        expected2
+      )
+    }
+
+    "consume a token for NON IPA institution having products already configured" in {
+      consumeToken(
+        orgId8,
+        institutionSeed8,
+        relationshipId15,
+        relationshipSeed15,
+        relationshipId16,
+        relationshipSeed16,
+        token8,
+        tokenSeed8,
+        expected8
+      )
     }
 
     "invalidate a token" in {

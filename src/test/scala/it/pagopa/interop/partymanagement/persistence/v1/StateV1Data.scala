@@ -41,6 +41,7 @@ object StateV1Data {
       description = i.description,
       digitalAddress = i.digitalAddress,
       address = i.address,
+      zipCode = i.zipCode,
       taxCode = i.taxCode
     )
   )

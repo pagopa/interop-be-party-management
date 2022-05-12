@@ -152,6 +152,7 @@ object utils {
           institutionType = i.institutionType,
           description = i.description,
           digitalAddress = i.digitalAddress,
+          zipCode = i.zipCode,
           address = i.address,
           taxCode = i.taxCode
         )
@@ -188,6 +189,7 @@ object utils {
           description = i.description,
           digitalAddress = i.digitalAddress,
           address = i.address,
+          zipCode = i.zipCode,
           taxCode = i.taxCode
         )
       ),

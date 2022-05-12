@@ -293,6 +293,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("DESCRIPTIONOVERRIDE"),
           Option("MAILOVERRIDE"),
           Option("ADDRESSOVERRIDE"),
+          Option("ZIPCODEOVERRIDE"),
           Option("TAXCODEOVERRIDE")
         )
       )
@@ -338,7 +339,14 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         updatedAt = Some(u),
         pricingPlan = pricingPlan,
         institutionUpdate = institutionUpdate.map(i =>
-          PersistedInstitutionUpdate(i.institutionType, i.description, i.digitalAddress, i.address, i.taxCode)
+          PersistedInstitutionUpdate(
+            i.institutionType,
+            i.description,
+            i.digitalAddress,
+            i.address,
+            i.zipCode,
+            i.taxCode
+          )
         ),
         billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
       )
@@ -369,6 +377,7 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("DESCRIPTIONOVERRIDE"),
           Option("MAILOVERRIDE"),
           Option("ADDRESSOVERRIDE"),
+          Option("ZIPCODEOVERRIDE"),
           Option("TAXCODEOVERRIDE")
         )
       )
@@ -395,7 +404,14 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           updatedAt = Some(u),
           pricingPlan = pricingPlan,
           institutionUpdate = institutionUpdate.map(i =>
-            PersistedInstitutionUpdate(i.institutionType, i.description, i.digitalAddress, i.address, i.taxCode)
+            PersistedInstitutionUpdate(
+              i.institutionType,
+              i.description,
+              i.digitalAddress,
+              i.address,
+              i.zipCode,
+              i.taxCode
+            )
           ),
           billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
         )
