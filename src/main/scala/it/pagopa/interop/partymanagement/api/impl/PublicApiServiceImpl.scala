@@ -222,14 +222,15 @@ class PublicApiServiceImpl(
    ): InstitutionParty = {
     relationship.billing.fold(institutionParty) {
       billing =>
+        val productId = relationship.product.id
         val institutionProduct = institutionParty.products
-          .find(_.product == relationship.product.id).getOrElse(PersistedInstitutionProduct(product=relationship.product.id, pricingPlan = None, billing = null))
+          .find(_.product == productId).getOrElse(PersistedInstitutionProduct(product=productId, pricingPlan = None, billing = null))
           .copy(
             pricingPlan = relationship.pricingPlan,
             billing = billing
           )
         institutionParty.copy(
-          products = institutionParty.products + institutionProduct
+          products = institutionParty.products.filter(_.product != productId) + institutionProduct
         )
     }
   }
