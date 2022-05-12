@@ -189,24 +189,49 @@ class PublicApiServiceImpl(
     institutionParty: InstitutionParty,
     relationship: PersistedPartyRelationship
   ): Future[StatusReply[Party]] = {
-    relationship.institutionUpdate.fold(Future.successful(StatusReply.Success[Party](institutionParty))) {
+    val institutionPartyUpdate = updateWithInstitutionUpdate(institutionParty, relationship)
+    val institutionPartyProduct = updateWithInstitutionProductInfo(institutionPartyUpdate, relationship)
+    Option.when(relationship.institutionUpdate.isDefined || relationship.billing.isDefined){
+      getCommander(institutionPartyProduct.id.toString).ask(ref => UpdateParty(institutionPartyProduct, ref))
+    }.getOrElse(Future.successful(StatusReply.Success[Party](institutionParty)))
+  }
+
+  private def updateWithInstitutionUpdate(
+     institutionParty: InstitutionParty,
+     relationship: PersistedPartyRelationship
+   ): InstitutionParty = {
+    relationship.institutionUpdate.fold(institutionParty) {
       institutionUpdate =>
-        val party: Party =
-          if (institutionParty.origin == ipaOrigin)
-            institutionParty
-              .copy(institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType))
-          else
-            institutionParty.copy(
-              institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
-              address = institutionUpdate.address.getOrElse(institutionParty.address),
-              taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
-              description = institutionUpdate.description.getOrElse(institutionParty.description),
-              digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress)
-            )
-
-        getCommander(party.id.toString).ask(ref => UpdateParty(party, ref))
+        if (institutionParty.origin == ipaOrigin)
+          institutionParty
+            .copy(institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType))
+        else
+          institutionParty.copy(
+            institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
+            address = institutionUpdate.address.getOrElse(institutionParty.address),
+            taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
+            description = institutionUpdate.description.getOrElse(institutionParty.description),
+            digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress)
+          )
     }
+  }
 
+  private def updateWithInstitutionProductInfo(
+     institutionParty: InstitutionParty,
+     relationship: PersistedPartyRelationship
+   ): InstitutionParty = {
+    relationship.billing.fold(institutionParty) {
+      billing =>
+        val institutionProduct = institutionParty.products
+          .find(_.product == relationship.product.id).getOrElse(PersistedInstitutionProduct(product=relationship.product.id, pricingPlan = None, billing = null))
+          .copy(
+            pricingPlan = relationship.pricingPlan,
+            billing = billing
+          )
+        institutionParty.copy(
+          products = institutionParty.products + institutionProduct
+        )
+    }
   }
 
   /** Code: 200, Message: successful operation, DataType: TokenInfo
