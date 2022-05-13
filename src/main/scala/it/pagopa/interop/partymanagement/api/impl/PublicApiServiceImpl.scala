@@ -227,7 +227,9 @@ class PublicApiServiceImpl(
       val institutionProduct = institutionParty.products
         .find(_.product == productId)
         .map(_.copy(pricingPlan = relationship.pricingPlan, billing = billing))
-        .getOrElse(PersistedInstitutionProduct(product = productId, pricingPlan = relationship.pricingPlan, billing = billing))
+        .getOrElse(
+          PersistedInstitutionProduct(product = productId, pricingPlan = relationship.pricingPlan, billing = billing)
+        )
       institutionParty.copy(products = institutionParty.products.filter(_.product != productId) + institutionProduct)
     }
   }

@@ -86,110 +86,110 @@ object Main extends App {
       )
   }
 
-    val actorSystem = ActorSystem[Nothing](
-      Behaviors.setup[Nothing] { context =>
-        import akka.actor.typed.scaladsl.adapter._
-        implicit val classicSystem: classic.ActorSystem = context.system.toClassic
-        implicit val executionContext: ExecutionContext = context.system.executionContext
+  val actorSystem = ActorSystem[Nothing](
+    Behaviors.setup[Nothing] { context =>
+      import akka.actor.typed.scaladsl.adapter._
+      implicit val classicSystem: classic.ActorSystem = context.system.toClassic
+      implicit val executionContext: ExecutionContext = context.system.executionContext
 
-        val cluster = Cluster(context.system)
+      val cluster = Cluster(context.system)
 
-        context.log.info(s"""Started [ ${context.system} ]
-                            |   cluster.selfAddress   = ${cluster.selfMember.address}
-                            |   file manager type     = ${fileManager.getClass.getName}
-                            |   build info            = ${buildinfo.BuildInfo.toString}""".stripMargin)
+      context.log.info(s"""Started [ ${context.system} ]
+                          |   cluster.selfAddress   = ${cluster.selfMember.address}
+                          |   file manager type     = ${fileManager.getClass.getName}
+                          |   build info            = ${buildinfo.BuildInfo.toString}""".stripMargin)
 
-        val uuidSupplier: UUIDSupplier                     = new UUIDSupplierImpl
-        val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplierImp
+      val uuidSupplier: UUIDSupplier                     = new UUIDSupplierImpl
+      val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplierImp
 
-        val sharding: ClusterSharding = ClusterSharding(context.system)
+      val sharding: ClusterSharding = ClusterSharding(context.system)
 
-        val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
-          Entity(PartyPersistentBehavior.TypeKey)(behaviorFactory(offsetDateTimeSupplier))
+      val partyPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
+        Entity(PartyPersistentBehavior.TypeKey)(behaviorFactory(offsetDateTimeSupplier))
 
-        val _ = sharding.init(partyPersistentEntity)
+      val _ = sharding.init(partyPersistentEntity)
 
-        if (projectionsEnabled) {
-          val dbConfig: DatabaseConfig[JdbcProfile] =
-            DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
-          val partyPersistentProjection             = new PartyPersistentProjection(context.system, dbConfig)
+      if (projectionsEnabled) {
+        val dbConfig: DatabaseConfig[JdbcProfile] =
+          DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
+        val partyPersistentProjection             = new PartyPersistentProjection(context.system, dbConfig)
 
-          ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-            name = "party-projections",
-            numberOfInstances = numberOfProjectionTags,
-            behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentProjection.projection(projectionTag(i))),
-            stopMessage = ProjectionBehavior.Stop
-          )
-        }
-
-        val partyApi: PartyApi = new PartyApi(
-          new PartyApiServiceImpl(
-            system = context.system,
-            sharding = sharding,
-            entity = partyPersistentEntity,
-            uuidSupplier = uuidSupplier,
-            offsetDateTimeSupplier = offsetDateTimeSupplier
-          ),
-          PartyApiMarshallerImpl,
-          jwtValidator.OAuth2JWTValidatorAsContexts
+        ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
+          name = "party-projections",
+          numberOfInstances = numberOfProjectionTags,
+          behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentProjection.projection(projectionTag(i))),
+          stopMessage = ProjectionBehavior.Stop
         )
+      }
 
-        val externalApi: ExternalApi = new ExternalApi(
-          new ExternalApiServiceImpl(system = context.system, sharding = sharding, entity = partyPersistentEntity),
-          ExternalApiMarshallerImpl,
-          jwtValidator.OAuth2JWTValidatorAsContexts
-        )
+      val partyApi: PartyApi = new PartyApi(
+        new PartyApiServiceImpl(
+          system = context.system,
+          sharding = sharding,
+          entity = partyPersistentEntity,
+          uuidSupplier = uuidSupplier,
+          offsetDateTimeSupplier = offsetDateTimeSupplier
+        ),
+        PartyApiMarshallerImpl,
+        jwtValidator.OAuth2JWTValidatorAsContexts
+      )
 
-        val publicApi: PublicApi = new PublicApi(
-          new PublicApiServiceImpl(
-            system = context.system,
-            sharding = sharding,
-            entity = partyPersistentEntity,
-            fileManager = fileManager
-          ),
-          PublicApiMarshallerImpl,
-          SecurityDirectives.authenticateBasic("Public", AkkaUtils.PassThroughAuthenticator)
-        )
+      val externalApi: ExternalApi = new ExternalApi(
+        new ExternalApiServiceImpl(system = context.system, sharding = sharding, entity = partyPersistentEntity),
+        ExternalApiMarshallerImpl,
+        jwtValidator.OAuth2JWTValidatorAsContexts
+      )
 
-        val healthApi: HealthApi =
-          new HealthApi(new HealthServiceApiImpl(), HealthApiMarshallerImpl, jwtValidator.OAuth2JWTValidatorAsContexts)
+      val publicApi: PublicApi = new PublicApi(
+        new PublicApiServiceImpl(
+          system = context.system,
+          sharding = sharding,
+          entity = partyPersistentEntity,
+          fileManager = fileManager
+        ),
+        PublicApiMarshallerImpl,
+        SecurityDirectives.authenticateBasic("Public", AkkaUtils.PassThroughAuthenticator)
+      )
 
-        val _ = AkkaManagement.get(classicSystem).start()
+      val healthApi: HealthApi =
+        new HealthApi(new HealthServiceApiImpl(), HealthApiMarshallerImpl, jwtValidator.OAuth2JWTValidatorAsContexts)
 
-        val controller = new Controller(
-          health = healthApi,
-          party = partyApi,
-          external = externalApi,
-          public = publicApi,
-          validationExceptionToRoute = Some(report => {
-            val error =
-              problemOf(
-                StatusCodes.BadRequest,
-                ValidationRequestError(OpenapiUtils.errorFromRequestValidationReport(report))
-              )
-            complete(error.status, error)(HealthApiMarshallerImpl.toEntityMarshallerProblem)
-          })
-        )
+      val _ = AkkaManagement.get(classicSystem).start()
 
-        val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
+      val controller = new Controller(
+        health = healthApi,
+        party = partyApi,
+        external = externalApi,
+        public = publicApi,
+        validationExceptionToRoute = Some(report => {
+          val error =
+            problemOf(
+              StatusCodes.BadRequest,
+              ValidationRequestError(OpenapiUtils.errorFromRequestValidationReport(report))
+            )
+          complete(error.status, error)(HealthApiMarshallerImpl.toEntityMarshallerProblem)
+        })
+      )
 
-        val listener = context.spawn(
-          Behaviors.receive[ClusterEvent.MemberEvent]((ctx, event) => {
-            ctx.log.info("MemberEvent: {}", event)
-            Behaviors.same
-          }),
-          "listener"
-        )
+      val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
 
-        Cluster(context.system).subscriptions ! Subscribe(listener, classOf[ClusterEvent.MemberEvent])
+      val listener = context.spawn(
+        Behaviors.receive[ClusterEvent.MemberEvent]((ctx, event) => {
+          ctx.log.info("MemberEvent: {}", event)
+          Behaviors.same
+        }),
+        "listener"
+      )
 
-        val _ = AkkaManagement(classicSystem).start()
-        ClusterBootstrap.get(classicSystem).start()
-        Behaviors.empty
-      },
-      BuildInfo.name
-    )
-    
-    actorSystem.whenTerminated.onComplete { case _ => Kamon.stop() }(scala.concurrent.ExecutionContext.global)
-  
+      Cluster(context.system).subscriptions ! Subscribe(listener, classOf[ClusterEvent.MemberEvent])
+
+      val _ = AkkaManagement(classicSystem).start()
+      ClusterBootstrap.get(classicSystem).start()
+      Behaviors.empty
+    },
+    BuildInfo.name
+  )
+
+  actorSystem.whenTerminated.onComplete { case _ => Kamon.stop() }(scala.concurrent.ExecutionContext.global)
+
 }
