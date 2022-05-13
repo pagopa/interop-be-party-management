@@ -3,6 +3,7 @@ package it.pagopa.interop.partymanagement.persistence.v1
 import it.pagopa.interop.partymanagement.model.party.{
   InstitutionAttribute,
   PersistedBilling,
+  PersistedInstitutionProduct,
   PersistedInstitutionUpdate
 }
 
@@ -31,6 +32,19 @@ object StateCommonData {
   val attributes      = Seq(
     InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
     InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
+  )
+  val products        = Set(
+    PersistedInstitutionProduct(
+      product = "product1",
+      pricingPlan = Option("pricingPlan"),
+      billing = PersistedBilling(vatNumber = "VATNUMBER", recipientCode = "RECIPIENTCODE", publicServices = None)
+    ),
+    PersistedInstitutionProduct(
+      product = "product1",
+      pricingPlan = Option("pricingPlan"),
+      billing =
+        PersistedBilling(vatNumber = "VATNUMBER", recipientCode = "RECIPIENTCODE", publicServices = Option(true))
+    )
   )
 
   val productId        = "productId"
@@ -82,6 +96,7 @@ object StateCommonData {
       Option("DESCRIPTIONOVERRIDE"),
       Option("MAILOVERRIDE"),
       Option("ADDRESSOVERRIDE"),
+      Option("ZIPCODEOVERRIDE"),
       Option("TAXCODEOVERRIDE")
     )
   )

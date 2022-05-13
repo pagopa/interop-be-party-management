@@ -48,7 +48,8 @@ object Party {
             zipCode = institutionParty.zipCode,
             origin = institutionParty.origin,
             institutionType = institutionParty.institutionType,
-            attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq
+            attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq,
+            products = (institutionParty.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap
           )
         )
     }
@@ -80,7 +81,8 @@ final case class InstitutionParty(
   institutionType: Option[String],
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
-  attributes: Set[InstitutionAttribute]
+  attributes: Set[InstitutionAttribute],
+  products: Set[PersistedInstitutionProduct]
 ) extends Party
 
 object InstitutionParty {
@@ -102,7 +104,10 @@ object InstitutionParty {
       institutionType = institution.institutionType,
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       start = offsetDateTimeSupplier.get,
-      end = None
+      end = None,
+      products = institution.products.fold(Set.empty[PersistedInstitutionProduct])(
+        _.values.map(PersistedInstitutionProduct.fromApi).toSet
+      )
     )
   }
 
@@ -122,7 +127,8 @@ object InstitutionParty {
       institutionType = institution.institutionType,
       start = start,
       end = end,
-      attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet
+      attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
+      products = institution.products.values.map(PersistedInstitutionProduct.fromApi).toSet
     )
 
 }

@@ -39,7 +39,7 @@ final case class PersistedPartyRelationship(
     tokenId = onboardingTokenId,
     pricingPlan = pricingPlan,
     institutionUpdate = institutionUpdate.map(i => i.toInstitutionUpdate),
-    billing = billing.map(b => b.toInstitutionUpdate),
+    billing = billing.map(b => b.toBilling),
     createdAt = createdAt,
     updatedAt = updatedAt
   )

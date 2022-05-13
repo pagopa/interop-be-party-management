@@ -33,7 +33,7 @@ object InstitutionsPartyApiServiceData {
     address = "address1",
     zipCode = "zipCode1",
     taxCode = "taxCode",
-    products = Set.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
     attributes = Seq.empty,
     origin = "IPA",
     institutionType = Option("PA")
@@ -47,7 +47,15 @@ object InstitutionsPartyApiServiceData {
       address = "address2",
       zipCode = "zipCode2",
       taxCode = "taxCode",
-      products = Set.empty,
+      products = Option(
+        Map(
+          "p1" -> InstitutionProduct(
+            product = "p1",
+            pricingPlan = Option("pricingPlan"),
+            billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+          )
+        )
+      ),
       attributes = Seq.empty,
       origin = "IPA",
       institutionType = Option("PA")
@@ -61,7 +69,20 @@ object InstitutionsPartyApiServiceData {
       address = "address3",
       zipCode = "zipCode3",
       taxCode = "taxCode",
-      products = Set.empty,
+      products = Option(
+        Map(
+          "p1" -> InstitutionProduct(
+            product = "p1",
+            pricingPlan = Option("pricingPlan"),
+            billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+          ),
+          "p2" -> InstitutionProduct(
+            product = "p2",
+            pricingPlan = Option("pricingPlan2"),
+            billing = Billing(vatNumber = "vatNumber2", recipientCode = "recipientCode2", publicServices = Option(true))
+          )
+        )
+      ),
       attributes = Seq.empty,
       origin = "IPA",
       institutionType = Option("PA")
@@ -75,7 +96,7 @@ object InstitutionsPartyApiServiceData {
       address = "address4",
       zipCode = "zipCode4",
       taxCode = "taxCode",
-      products = Set.empty,
+      products = Option(Map.empty[String, InstitutionProduct]),
       attributes = Seq.empty,
       origin = "IPA",
       institutionType = Option("PA")
@@ -92,7 +113,8 @@ object InstitutionsPartyApiServiceData {
     id = institutionUuid1,
     attributes = Seq.empty,
     origin = "IPA",
-    institutionType = Option("PA")
+    institutionType = Option("PA"),
+    products = Map.empty
   )
 
   lazy final val expected3 = Institution(
@@ -106,7 +128,19 @@ object InstitutionsPartyApiServiceData {
     id = institutionUuid3,
     attributes = Seq.empty,
     origin = "IPA",
-    institutionType = Option("PA")
+    institutionType = Option("PA"),
+    products = Map(
+      "p1" -> InstitutionProduct(
+        product = "p1",
+        pricingPlan = Option("pricingPlan"),
+        billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+      ),
+      "p2" -> InstitutionProduct(
+        product = "p2",
+        pricingPlan = Option("pricingPlan2"),
+        billing = Billing(vatNumber = "vatNumber2", recipientCode = "recipientCode2", publicServices = Option(true))
+      )
+    )
   )
 
   def prepareTest(
