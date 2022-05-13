@@ -51,7 +51,8 @@ message InstitutionUpdateV1 {
   optional string description = 2;
   optional string digitalAddress = 3;
   optional string address = 4;
-  optional string taxCode = 5;
+  optional string zipCode = 5;
+  optional string taxCode = 6;
 }
 
 message BillingV1 {

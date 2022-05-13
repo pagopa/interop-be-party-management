@@ -3,7 +3,7 @@ package it.pagopa.interop.partymanagement.model.party
 import it.pagopa.interop.partymanagement.model.Billing
 
 final case class PersistedBilling(vatNumber: String, recipientCode: String, publicServices: Option[Boolean]) {
-  def toInstitutionUpdate: Billing =
+  def toBilling: Billing =
     Billing(vatNumber = vatNumber, recipientCode = recipientCode, publicServices = publicServices)
 }
 

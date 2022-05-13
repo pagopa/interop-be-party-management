@@ -7,6 +7,7 @@ final case class PersistedInstitutionUpdate(
   description: Option[String],
   digitalAddress: Option[String],
   address: Option[String],
+  zipCode: Option[String],
   taxCode: Option[String]
 ) {
   def toInstitutionUpdate: InstitutionUpdate = InstitutionUpdate(
@@ -14,6 +15,7 @@ final case class PersistedInstitutionUpdate(
     description = description,
     digitalAddress = digitalAddress,
     address = address,
+    zipCode = zipCode,
     taxCode = taxCode
   )
 }
@@ -25,6 +27,7 @@ object PersistedInstitutionUpdate {
       description = institutionUpdate.description,
       digitalAddress = institutionUpdate.digitalAddress,
       address = institutionUpdate.address,
+      zipCode = institutionUpdate.zipCode,
       taxCode = institutionUpdate.taxCode
     )
 }

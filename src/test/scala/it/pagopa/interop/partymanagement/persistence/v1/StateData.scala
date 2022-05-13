@@ -54,6 +54,7 @@ object StateData {
     end = None,
     origin = origin,
     institutionType = Option(institutionType),
+    products = products,
     attributes = attributes.toSet
   )
 

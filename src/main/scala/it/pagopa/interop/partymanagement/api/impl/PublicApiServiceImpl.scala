@@ -68,10 +68,10 @@ class PublicApiServiceImpl(
       case Success(token)             =>
         getToken200(token)
       case Failure(ex: TokenNotFound) =>
-        logger.error(s"Getting token failed - ${ex.getMessage}")
+        logger.error(s"Getting token failed", ex)
         getToken404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex)                =>
-        logger.error(s"Getting token failed - ${ex.getMessage}")
+        logger.error(s"Getting token failed", ex)
         complete(problemOf(StatusCodes.InternalServerError, GetTokenFatalError(tokenId, ex.getMessage)))
     }
   }
@@ -102,10 +102,10 @@ class PublicApiServiceImpl(
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
       case Success(_)                                                => consumeToken201
       case Failure(ex: TokenNotFound)                                =>
-        logger.error(s"Token not found - ${ex.getMessage}")
+        logger.error(s"Token not found", ex)
         consumeToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
       case Failure(ex)                                               =>
-        logger.error(s"Consuming token failed - ${ex.getMessage}")
+        logger.error(s"Consuming token failed", ex)
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenError(ex.getMessage)))
     }
 
@@ -133,10 +133,10 @@ class PublicApiServiceImpl(
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenBadRequest(errors)))
       case Success(_)                                                => invalidateToken200
       case Failure(ex: TokenNotFound)                                =>
-        logger.error(s"Token not found - ${ex.getMessage}")
+        logger.error(s"Token not found", ex)
         invalidateToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
       case Failure(ex)                                               =>
-        logger.error(s"Invalidating token failed - ${ex.getMessage}")
+        logger.error(s"Invalidating token failed", ex)
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenError(ex.getMessage)))
     }
 
@@ -189,24 +189,47 @@ class PublicApiServiceImpl(
     institutionParty: InstitutionParty,
     relationship: PersistedPartyRelationship
   ): Future[StatusReply[Party]] = {
-    relationship.institutionUpdate.fold(Future.successful(StatusReply.Success[Party](institutionParty))) {
-      institutionUpdate =>
-        val party: Party =
-          if (institutionParty.origin == ipaOrigin)
-            institutionParty
-              .copy(institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType))
-          else
-            institutionParty.copy(
-              institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
-              address = institutionUpdate.address.getOrElse(institutionParty.address),
-              taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
-              description = institutionUpdate.description.getOrElse(institutionParty.description),
-              digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress)
-            )
+    val institutionPartyUpdate  = updateWithInstitutionUpdate(institutionParty, relationship)
+    val institutionPartyProduct = updateWithInstitutionProductInfo(institutionPartyUpdate, relationship)
+    Option
+      .when(relationship.institutionUpdate.isDefined || relationship.billing.isDefined) {
+        getCommander(institutionPartyProduct.id.toString).ask(ref => UpdateParty(institutionPartyProduct, ref))
+      }
+      .getOrElse(Future.successful(StatusReply.Success[Party](institutionParty)))
+  }
 
-        getCommander(party.id.toString).ask(ref => UpdateParty(party, ref))
+  private def updateWithInstitutionUpdate(
+    institutionParty: InstitutionParty,
+    relationship: PersistedPartyRelationship
+  ): InstitutionParty = {
+    relationship.institutionUpdate.fold(institutionParty) { institutionUpdate =>
+      if (institutionParty.origin == ipaOrigin)
+        institutionParty
+          .copy(institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType))
+      else
+        institutionParty.copy(
+          institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
+          address = institutionUpdate.address.getOrElse(institutionParty.address),
+          taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
+          description = institutionUpdate.description.getOrElse(institutionParty.description),
+          digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress),
+          zipCode = institutionUpdate.zipCode.getOrElse(institutionParty.zipCode)
+        )
     }
+  }
 
+  private def updateWithInstitutionProductInfo(
+    institutionParty: InstitutionParty,
+    relationship: PersistedPartyRelationship
+  ): InstitutionParty = {
+    relationship.billing.fold(institutionParty) { billing =>
+      val productId          = relationship.product.id
+      val institutionProduct = institutionParty.products
+        .find(_.product == productId)
+        .map(_.copy(pricingPlan = relationship.pricingPlan, billing = billing))
+        .getOrElse(PersistedInstitutionProduct(product = productId, pricingPlan = relationship.pricingPlan, billing = billing))
+      institutionParty.copy(products = institutionParty.products.filter(_.product != productId) + institutionProduct)
+    }
   }
 
   /** Code: 200, Message: successful operation, DataType: TokenInfo
@@ -241,16 +264,16 @@ class PublicApiServiceImpl(
     onComplete(result) {
       case Success(tokenInfo)                   => verifyToken200(tokenInfo)
       case Failure(ex: TokenNotFound)           =>
-        logger.error(s"Token not found - ${ex.getMessage}")
+        logger.error(s"Token not found", ex)
         verifyToken404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex: TokenAlreadyConsumed)    =>
-        logger.error(s"Token already consumed - ${ex.getMessage}")
+        logger.error(s"Token already consumed", ex)
         verifyToken409(problemOf(StatusCodes.Conflict, ex))
       case Failure(ex: GetRelationshipNotFound) =>
-        logger.error(s"Missing token relationships - ${ex.getMessage}")
+        logger.error(s"Missing token relationships", ex)
         verifyToken400(problemOf(StatusCodes.BadRequest, ex))
       case Failure(ex)                          =>
-        logger.error(s"Verifying token failed - ${ex.getMessage}")
+        logger.error(s"Verifying token failed", ex)
         complete(problemOf(StatusCodes.InternalServerError, TokenVerificationFatalError(tokenId, ex.getMessage)))
     }
   }
