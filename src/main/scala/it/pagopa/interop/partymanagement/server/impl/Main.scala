@@ -54,8 +54,11 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
+import buildinfo.BuildInfo
 
 object Main extends App {
+
+  System.setProperty("kanela.show-banner", "false")
 
   val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
@@ -83,8 +86,7 @@ object Main extends App {
       )
   }
 
-  locally {
-    val _ = ActorSystem[Nothing](
+    val actorSystem = ActorSystem[Nothing](
       Behaviors.setup[Nothing] { context =>
         import akka.actor.typed.scaladsl.adapter._
         implicit val classicSystem: classic.ActorSystem = context.system.toClassic
@@ -185,8 +187,9 @@ object Main extends App {
         ClusterBootstrap.get(classicSystem).start()
         Behaviors.empty
       },
-      "interop-be-party-management"
+      BuildInfo.name
     )
-
-  }
+    
+    actorSystem.whenTerminated.onComplete { case _ => Kamon.stop() }(scala.concurrent.ExecutionContext.global)
+  
 }
