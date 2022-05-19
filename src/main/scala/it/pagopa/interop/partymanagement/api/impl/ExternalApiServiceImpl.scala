@@ -70,7 +70,7 @@ class ExternalApiServiceImpl(
             institution => getInstitutionByExternalId200(institution)
           )
       case Failure(ex: InstitutionNotFound) =>
-        logger.error(s"Institution with external id $externalId not found", ex)
+        logger.info(s"Institution with external id $externalId not found", ex)
         getInstitutionByExternalId404(problemOf(StatusCodes.NotFound, ex))
       case Failure(ex)                      =>
         logger.error(s"Error while getting institution with external id $externalId", ex)
