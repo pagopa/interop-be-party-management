@@ -7,7 +7,6 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.onComplete
 import akka.http.scaladsl.server.Route
-import cats.implicits.toTraverseOps
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.utils.AkkaUtils
@@ -53,7 +52,7 @@ class ExternalApiServiceImpl(
       .toList
 
     val institution: Future[InstitutionParty] = for {
-      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(externalId, ref)))
+      shardOrgs <- Future.traverse(commanders)(_.ask(ref => GetInstitutionByExternalId(externalId, ref)))
       result    <- shardOrgs.flatten.headOption.toFuture(InstitutionNotFound(externalId))
     } yield result
 

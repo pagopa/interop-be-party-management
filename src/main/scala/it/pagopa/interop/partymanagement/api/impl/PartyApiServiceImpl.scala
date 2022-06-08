@@ -84,7 +84,9 @@ class PartyApiServiceImpl(
       .toList
 
     val institution: Future[StatusReply[Party]] = for {
-      shardOrgs <- commanders.traverse(_.ask(ref => GetInstitutionByExternalId(institutionSeed.externalId, ref)))
+      shardOrgs <- Future.traverse(commanders)(
+        _.ask(ref => GetInstitutionByExternalId(institutionSeed.externalId, ref))
+      )
       maybeExistingOrg = shardOrgs.flatten.headOption
       newOrg <- maybeExistingOrg
         .toLeft(InstitutionParty.fromApi(institutionSeed, uuidSupplier, offsetDateTimeSupplier))
@@ -305,8 +307,8 @@ class PartyApiServiceImpl(
         billing = seed.billing,
         institutionUpdate = seed.institutionUpdate
       )
-      currentPartyRelationships <- commanders
-        .traverse(
+      currentPartyRelationships <- Future
+        .traverse(commanders)(
           _.ask(ref =>
             GetPartyRelationshipsByTo(
               to = to.id,
@@ -369,7 +371,7 @@ class PartyApiServiceImpl(
         .toList
 
       for {
-        re <- commanders.traverse(
+        re <- Future.traverse(commanders)(
           _.ask[List[PersistedPartyRelationship]](ref =>
             GetPartyRelationshipsByTo(id, roles, states, product, productRoles, ref)
           )
@@ -631,7 +633,7 @@ class PartyApiServiceImpl(
     val result: Future[Option[Relationship]] =
       for {
         uuid    <- relationshipId.toFutureUUID
-        results <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
+        results <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
         maybePartyRelationship = results.find(_.isDefined).flatten
         partyRelationship      = maybePartyRelationship.map(_.toRelationship)
       } yield partyRelationship
@@ -661,7 +663,7 @@ class PartyApiServiceImpl(
     def getParty(id: UUID): Future[Option[Party]] =
       getCommander(id.toString).ask(ref => GetParty(id, ref))
 
-    val result = bulkPartiesSeed.partyIdentifiers.traverse(getParty)
+    val result = Future.traverse(bulkPartiesSeed.partyIdentifiers)(getParty)
 
     onComplete(result) {
       case Success(replies) =>
@@ -754,7 +756,7 @@ class PartyApiServiceImpl(
     val result: Future[Option[StatusReply[Unit]]] =
       for {
         uuid    <- relationshipId.toFutureUUID
-        results <- commanders.traverse(_.ask(ref => DeletePartyRelationship(uuid, ref)))
+        results <- Future.traverse(commanders)(_.ask(ref => DeletePartyRelationship(uuid, ref)))
         maybeDeletion = results.find(_.isSuccess)
       } yield maybeDeletion
 
