@@ -249,7 +249,7 @@ class PublicApiServiceImpl(
 
     def getRelationship(relationshipId: UUID): Future[PersistedPartyRelationship] = {
       for {
-        results      <- commanders.traverse(_.ask(ref => GetPartyRelationshipById(relationshipId, ref)))
+        results      <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(relationshipId, ref)))
         relationship <- results.find(_.isDefined).flatten.toFuture(GetRelationshipNotFound(relationshipId.toString))
       } yield relationship
     }
@@ -259,7 +259,7 @@ class PublicApiServiceImpl(
         uuid          <- tokenId.toFutureUUID
         found         <- getCommander(tokenId).ask(ref => GetToken(uuid, ref))
         token         <- found.toFuture(TokenNotFound(tokenId))
-        relationships <- token.legals.traverse(r => getRelationship(r.relationshipId))
+        relationships <- Future.traverse(token.legals)(r => getRelationship(r.relationshipId))
         _             <- isTokenNotConsumed(tokenId, relationships)
       } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
 
