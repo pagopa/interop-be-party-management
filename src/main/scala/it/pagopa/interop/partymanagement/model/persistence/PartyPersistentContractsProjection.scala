@@ -17,7 +17,7 @@ import slick.dbio._
 import slick.jdbc.JdbcProfile
 import spray.json.DefaultJsonProtocol._
 
-class PartyPersistentProjection(
+class PartyPersistentContractsProjection(
   system: ActorSystem[_],
   dbConfig: DatabaseConfig[JdbcProfile],
   datalakeContractsPublisher: KafkaPublisher
@@ -30,15 +30,15 @@ class PartyPersistentProjection(
   def projection(tag: String): ExactlyOnceProjection[Offset, EventEnvelope[Event]] = {
     implicit val as: ActorSystem[_] = system
     SlickProjection.exactlyOnce(
-      projectionId = ProjectionId("party-projections", tag),
+      projectionId = ProjectionId("party-contracts-projections", tag),
       sourceProvider = sourceProvider(tag),
-      handler = () => new ProjectionHandler(tag, datalakeContractsPublisher),
+      handler = () => new ProjectionContractsHandler(tag, datalakeContractsPublisher),
       databaseConfig = dbConfig
     )
   }
 }
 
-class ProjectionHandler(tag: String, datalakeContractsPublisher: KafkaPublisher)
+class ProjectionContractsHandler(tag: String, datalakeContractsPublisher: KafkaPublisher)
     extends SlickHandler[EventEnvelope[Event]] {
 
   val logger: Logger = LoggerFactory.getLogger(this.getClass)

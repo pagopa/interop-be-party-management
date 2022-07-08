@@ -49,7 +49,11 @@ import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.
   projectionTag,
   projectionsEnabled
 }
-import it.pagopa.interop.partymanagement.model.persistence.{Command, PartyPersistentBehavior, PartyPersistentProjection}
+import it.pagopa.interop.partymanagement.model.persistence.{
+  Command,
+  PartyPersistentBehavior,
+  PartyPersistentContractsProjection
+}
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 import it.pagopa.interop.partymanagement.service.impl.OffsetDateTimeSupplierImp
@@ -131,13 +135,13 @@ object Main extends App {
           )
         )
 
-        val partyPersistentProjection =
-          new PartyPersistentProjection(context.system, dbConfig, datalakeContractsPublisher)
+        val partyPersistentContractsProjection =
+          new PartyPersistentContractsProjection(context.system, dbConfig, datalakeContractsPublisher)
 
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-          name = "party-projections",
+          name = "party-contracts-projections",
           numberOfInstances = numberOfProjectionTags,
-          behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentProjection.projection(projectionTag(i))),
+          behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentContractsProjection.projection(projectionTag(i))),
           stopMessage = ProjectionBehavior.Stop
         )
       }
