@@ -40,6 +40,11 @@ import it.pagopa.interop.partymanagement.api.impl.{
 import it.pagopa.interop.partymanagement.api.{ExternalApi, HealthApi, PartyApi, PublicApi}
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{
+  kafkaBootstrapServers,
+  kafkaDatalakeContractsSaslJaasConfig,
+  kafkaDatalakeContractsTopic,
+  kafkaSaslMechanism,
+  kafkaSecurityProtocol,
   numberOfProjectionTags,
   projectionTag,
   projectionsEnabled
@@ -55,6 +60,8 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 import buildinfo.BuildInfo
+import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
+import it.pagopa.interop.commons.queue.kafka.impl.KafkaPublisherImpl
 
 object Main extends App {
 
@@ -112,7 +119,20 @@ object Main extends App {
       if (projectionsEnabled) {
         val dbConfig: DatabaseConfig[JdbcProfile] =
           DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
-        val partyPersistentProjection             = new PartyPersistentProjection(context.system, dbConfig)
+
+        val datalakeContractsPublisher: KafkaPublisher = new KafkaPublisherImpl(
+          context.system,
+          kafkaDatalakeContractsTopic,
+          kafkaBootstrapServers,
+          Map(
+            "security.protocol" -> kafkaSecurityProtocol,
+            "sasl.jaas.config"  -> kafkaDatalakeContractsSaslJaasConfig,
+            "sasl.mechanism"    -> kafkaSaslMechanism
+          )
+        )
+
+        val partyPersistentProjection =
+          new PartyPersistentProjection(context.system, dbConfig, datalakeContractsPublisher)
 
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
           name = "party-projections",

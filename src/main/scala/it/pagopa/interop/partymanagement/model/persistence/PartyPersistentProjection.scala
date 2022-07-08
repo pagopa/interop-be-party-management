@@ -9,12 +9,19 @@ import akka.projection.eventsourced.EventEnvelope
 import akka.projection.eventsourced.scaladsl.EventSourcedProvider
 import akka.projection.scaladsl.{ExactlyOnceProjection, SourceProvider}
 import akka.projection.slick.{SlickHandler, SlickProjection}
-import org.slf4j.LoggerFactory
+import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
+import it.pagopa.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
+import org.slf4j.{Logger, LoggerFactory}
 import slick.basic.DatabaseConfig
-import slick.dbio.DBIOAction
+import slick.dbio._
 import slick.jdbc.JdbcProfile
+import spray.json.DefaultJsonProtocol._
 
-class PartyPersistentProjection(system: ActorSystem[_], dbConfig: DatabaseConfig[JdbcProfile]) {
+class PartyPersistentProjection(
+  system: ActorSystem[_],
+  dbConfig: DatabaseConfig[JdbcProfile],
+  datalakeContractsPublisher: KafkaPublisher
+) {
 
   def sourceProvider(tag: String): SourceProvider[Offset, EventEnvelope[Event]] =
     EventSourcedProvider
@@ -25,23 +32,31 @@ class PartyPersistentProjection(system: ActorSystem[_], dbConfig: DatabaseConfig
     SlickProjection.exactlyOnce(
       projectionId = ProjectionId("party-projections", tag),
       sourceProvider = sourceProvider(tag),
-      handler = () => new ProjectionHandler(tag),
+      handler = () => new ProjectionHandler(tag, datalakeContractsPublisher),
       databaseConfig = dbConfig
     )
   }
 }
 
-class ProjectionHandler(tag: String) extends SlickHandler[EventEnvelope[Event]] {
+class ProjectionHandler(tag: String, datalakeContractsPublisher: KafkaPublisher)
+    extends SlickHandler[EventEnvelope[Event]] {
 
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  override def process(envelope: EventEnvelope[Event]) = {
+  override def process(envelope: EventEnvelope[Event]): DBIO[Done] = {
     envelope.event match {
-      case _ =>
+      case event: PartyRelationshipConfirmed =>
+        relationshipConfirmed(event)
+      case _                                 =>
         logger.debug("This is the envelope event payload > {}", envelope.event)
         logger.debug("On tagged projection > {}", tag)
         DBIOAction.successful(Done)
     }
   }
 
+  def relationshipConfirmed(event: PartyRelationshipConfirmed): DBIO[Done] = {
+    logger.debug(s"projecting confirmation of relationship having id ${event.partyRelationshipId}")
+    datalakeContractsPublisher.send(event)(jsonFormat6(PartyRelationshipConfirmed))
+    DBIOAction.successful(Done)
+  }
 }
