@@ -1,22 +1,50 @@
 package it.pagopa.interop.partymanagement.model.persistence
 
+import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.projection.eventsourced.EventEnvelope
+import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
 import it.pagopa.interop.partymanagement.model.party.Token
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.JsonWriter
-
 import java.time.OffsetDateTime
 import java.util.UUID
+import scala.concurrent.Future
 
-class ProjectionContractsHandlerSpec extends MockFactory with AnyWordSpecLike with Matchers with BeforeAndAfterAll {
+object ProjectionContractsHandlerSpec {
+
+  val testData: Config = ConfigFactory.parseString(s"""
+      akka.actor.provider = cluster
+
+      akka.remote.classic.netty.tcp.port = 0
+      akka.remote.artery.canonical.port = 0
+      akka.remote.artery.canonical.hostname = 127.0.0.1
+
+      akka.cluster.jmx.multi-mbeans-in-same-jvm = on
+
+      akka.cluster.sharding.number-of-shards = 10
+
+      akka.coordinated-shutdown.terminate-actor-system = off
+      akka.coordinated-shutdown.run-by-actor-system-terminate = off
+      akka.coordinated-shutdown.run-by-jvm-shutdown-hook = off
+      akka.cluster.run-coordinated-shutdown-when-down = off
+    """)
+
+  val config: Config = ConfigFactory
+    .parseResourcesAnySyntax("application-test")
+    .withFallback(testData)
+    .resolve()
+}
+
+class ProjectionContractsHandlerSpec
+    extends ScalaTestWithActorTestKit(ProjectionContractsHandlerSpec.config)
+    with MockFactory
+    with AnyWordSpecLike {
 
   val datalakeContractsPublisherMock: KafkaPublisher = mock[KafkaPublisher]
   val projectionHandler: ProjectionContractsHandler  =
-    new ProjectionContractsHandler("tag", datalakeContractsPublisherMock)
+    new ProjectionContractsHandler("tag", datalakeContractsPublisherMock)(system.executionContext)
 
   "Projecting PartyRelationshipConfirmed event" should {
     "publish on kafka" in {
@@ -32,6 +60,7 @@ class ProjectionContractsHandlerSpec extends MockFactory with AnyWordSpecLike wi
       (datalakeContractsPublisherMock
         .send(_: PartyRelationshipConfirmed)(_: JsonWriter[PartyRelationshipConfirmed]))
         .expects(event, *)
+        .returning(Future.successful("OK"))
         .once()
 
       projectionHandler.process(new EventEnvelope(null, null, 0, event, 0))

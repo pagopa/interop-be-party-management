@@ -14,14 +14,19 @@ import it.pagopa.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat,
 import org.slf4j.{Logger, LoggerFactory}
 import slick.basic.DatabaseConfig
 import slick.dbio._
+import cats.syntax.all._
 import slick.jdbc.JdbcProfile
 import spray.json.DefaultJsonProtocol._
+
+import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 class PartyPersistentContractsProjection(
   system: ActorSystem[_],
   dbConfig: DatabaseConfig[JdbcProfile],
   datalakeContractsPublisher: KafkaPublisher
 ) {
+  implicit val ec: ExecutionContext = system.executionContext
 
   def sourceProvider(tag: String): SourceProvider[Offset, EventEnvelope[Event]] =
     EventSourcedProvider
@@ -38,7 +43,7 @@ class PartyPersistentContractsProjection(
   }
 }
 
-class ProjectionContractsHandler(tag: String, datalakeContractsPublisher: KafkaPublisher)
+class ProjectionContractsHandler(tag: String, datalakeContractsPublisher: KafkaPublisher)(implicit ec: ExecutionContext)
     extends SlickHandler[EventEnvelope[Event]] {
 
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -54,9 +59,18 @@ class ProjectionContractsHandler(tag: String, datalakeContractsPublisher: KafkaP
     }
   }
 
-  def relationshipConfirmed(event: PartyRelationshipConfirmed): DBIO[Done] = {
+  def relationshipConfirmed(event: PartyRelationshipConfirmed)(implicit ec: ExecutionContext): DBIO[Done] = {
     logger.debug(s"projecting confirmation of relationship having id ${event.partyRelationshipId}")
-    datalakeContractsPublisher.send(event)(jsonFormat6(PartyRelationshipConfirmed))
-    DBIOAction.successful(Done)
+    DBIOAction.from {
+      val future = datalakeContractsPublisher.send(event)(jsonFormat6(PartyRelationshipConfirmed))
+      future.onComplete {
+        case Failure(e) =>
+          logger.error(s"Error projecting confirm of relationship having id ${event.partyRelationshipId} on queue", e)
+          DBIOAction.failed(e)
+        case Success(_) =>
+          DBIOAction.successful(Done)
+      }
+      future.as(Done)
+    }
   }
 }
