@@ -141,7 +141,8 @@ object Main extends App {
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
           name = "party-contracts-projections",
           numberOfInstances = numberOfProjectionTags,
-          behaviorFactory = (i: Int) => ProjectionBehavior(partyPersistentContractsProjection.projection(projectionTag(i))),
+          behaviorFactory =
+            (i: Int) => ProjectionBehavior(partyPersistentContractsProjection.projection(projectionTag(i))),
           stopMessage = ProjectionBehavior.Stop
         )
       }
