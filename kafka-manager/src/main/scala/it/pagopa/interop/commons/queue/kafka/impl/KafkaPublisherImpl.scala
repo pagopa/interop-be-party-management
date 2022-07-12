@@ -31,7 +31,7 @@ class KafkaPublisherImpl(
 
   def send[T](message: T)(implicit messageSerializer: JsonWriter[T]): Future[String] = {
     val messageString  = message.toJson.toString
-    val producerRecord = new ProducerRecord[String, String](topic, null, messageString)
+    val producerRecord = new ProducerRecord[String, String](topic, messageString)
     val result         = sendProducer.send(producerRecord).map { recordMetadata =>
       logger.debug("Published message [{}] to topic/partition {}/{}", messageString, topic, recordMetadata.partition)
       logger.info("Published message to topic/partition {}/{}", topic, recordMetadata.partition)
