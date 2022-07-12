@@ -17,6 +17,7 @@ import slick.dbio._
 import cats.syntax.all._
 import slick.jdbc.JdbcProfile
 import spray.json.DefaultJsonProtocol._
+import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -53,16 +54,19 @@ class ProjectionContractsHandler(tag: String, datalakeContractsPublisher: KafkaP
       case event: PartyRelationshipConfirmed =>
         relationshipConfirmed(event)
       case _                                 =>
-        logger.debug("This is the envelope event payload > {}", envelope.event)
-        logger.debug("On tagged projection > {}", tag)
+        logger.debug("This is the envelope event payload > {} On tagged projection > {}", envelope.event, tag)
         DBIOAction.successful(Done)
     }
   }
 
+  implicit val partyRelationshipConfirmedFormat: RootJsonFormat[PartyRelationshipConfirmed] = jsonFormat6(
+    PartyRelationshipConfirmed
+  )
+
   def relationshipConfirmed(event: PartyRelationshipConfirmed)(implicit ec: ExecutionContext): DBIO[Done] = {
     logger.debug(s"projecting confirmation of relationship having id ${event.partyRelationshipId}")
     DBIOAction.from {
-      val future = datalakeContractsPublisher.send(event)(jsonFormat6(PartyRelationshipConfirmed))
+      val future = datalakeContractsPublisher.send(event)(partyRelationshipConfirmedFormat)
       future.onComplete {
         case Failure(e) =>
           logger.error(s"Error projecting confirm of relationship having id ${event.partyRelationshipId} on queue", e)

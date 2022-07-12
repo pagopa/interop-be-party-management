@@ -105,7 +105,6 @@ lazy val kafkaManager = project
   .in(file("kafka-manager"))
   .settings(
     name := "kafka-manager",
-    scalacOptions       := Seq(),
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.client ++
       Seq(
