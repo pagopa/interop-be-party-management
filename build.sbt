@@ -101,6 +101,18 @@ lazy val client = project
     }
   )
 
+lazy val kafkaManager = project
+  .in(file("kafka-manager"))
+  .settings(
+    name := "kafka-manager",
+    scalafmtOnCompile   := true,
+    libraryDependencies := Dependencies.Jars.client ++
+      Seq(
+        "com.typesafe.akka" %% "akka-stream-kafka" % "2.1.0" % Compile,
+      ),
+  )
+  .setupBuildInfo
+
 lazy val root = (project in file("."))
   .settings(
     name                        := "interop-be-party-management",
@@ -118,6 +130,7 @@ lazy val root = (project in file("."))
   )
   .aggregate(client)
   .dependsOn(generated)
+  .dependsOn(kafkaManager)
   .enablePlugins(JavaAppPackaging, JavaAgent)
   .setupBuildInfo
 
