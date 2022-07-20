@@ -9,6 +9,8 @@ project/project
 project/target
 target
 .idea
+.vscode
+.metals
 .openapi-generator
 generated/target
 generated/src
