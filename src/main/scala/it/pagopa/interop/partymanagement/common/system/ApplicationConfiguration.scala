@@ -19,4 +19,11 @@ object ApplicationConfiguration {
   val numberOfProjectionTags: Int = config.getInt("akka.cluster.sharding.number-of-shards")
   def projectionTag(index: Int)   = s"interop-be-party-management-persistence|$index"
   val projectionsEnabled: Boolean = config.getBoolean("akka.projection.enabled")
+
+  val kafkaBootstrapServers: String                = config.getString("kafka-manager.bootstrap-servers")
+  val kafkaSecurityProtocol: String                = config.getString("kafka-manager.security-protocol")
+  val kafkaSaslMechanism: String                   = config.getString("kafka-manager.sasl-mechanism")
+  val kafkaDatalakeContractsTopic: String          = config.getString("kafka-manager.datalake-contracts-topic")
+  val kafkaDatalakeContractsSaslJaasConfig: String =
+    config.getString("kafka-manager.datalake-contracts-sasl-jaas-config")
 }
