@@ -27,11 +27,11 @@ import com.typesafe.scalalogging.LoggerTakingImplicit
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 
 object ApiInvoker {
-  def apply()(implicit system: ActorSystem): ApiInvoker =
-    apply(DefaultFormats ++ Serializers.all)
-  def apply(serializers: Iterable[Serializer[_]])(implicit system: ActorSystem): ApiInvoker =
-    apply(DefaultFormats ++ Serializers.all ++ serializers)
-  def apply(formats: Formats)(implicit system: ActorSystem): ApiInvoker = new ApiInvoker(formats)
+  def apply(ec: ExecutionContextExecutor)(implicit system: ActorSystem): ApiInvoker =
+    apply(DefaultFormats ++ Serializers.all, ec)
+  def apply(serializers: Iterable[Serializer[_]], ec: ExecutionContextExecutor)(implicit system: ActorSystem): ApiInvoker =
+    apply(DefaultFormats ++ Serializers.all ++ serializers, ec)
+  def apply(formats: Formats, ec: ExecutionContextExecutor)(implicit system: ActorSystem): ApiInvoker = new ApiInvoker(formats, ec)
   /**
     * Allows request execution without calling apiInvoker.execute(request)
     * request.response can be used to get a future of the ApiResponse generated.
@@ -59,10 +59,10 @@ object ApiInvoker {
 }
 trait UnitJSONSupport {
 }
-class ApiInvoker(formats: Formats)(implicit system: ActorSystem) extends CustomContentTypes with Json4sSupport {
+class ApiInvoker(formats: Formats, ec: ExecutionContextExecutor)(implicit system: ActorSystem) extends CustomContentTypes with Json4sSupport {
   import {{{invokerPackage}}}.ApiInvoker._
   import {{{invokerPackage}}}.ParametersMap._
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val iec: ExecutionContextExecutor = ec
   implicit val jsonFormats: Formats = formats
   protected val settings: ApiSettings = ApiSettings(system)
  private implicit val serialization: Serialization = jackson.Serialization
