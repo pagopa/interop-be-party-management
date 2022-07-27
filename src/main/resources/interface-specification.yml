@@ -1126,10 +1126,13 @@ components:
           type: string
           format: uuid
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+        role:
+          $ref: '#/components/schemas/PartyRole'
       additionalProperties: false
       required:
         - partyId
         - relationshipId
+        - role
     OnboardingContractInfo:
       type: object
       properties:
