@@ -7,6 +7,8 @@ ThisBuild / organizationName    := "Pagopa S.p.A."
 ThisBuild / libraryDependencies := Dependencies.Jars.`server`
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
+val AkkaVersion = "2.6.18"
+val KafkaVersion = "3.0.0"
 
 ThisBuild / version := ComputeVersion.version
 
@@ -108,7 +110,8 @@ lazy val kafkaManager = project
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.client ++
       Seq(
-        "com.typesafe.akka" %% "akka-stream-kafka" % "2.1.0" % Compile,
+        "com.typesafe.akka" %% "akka-stream-kafka" % KafkaVersion % Compile,
+        "com.typesafe.akka" %% "akka-stream" % AkkaVersion
       ),
   )
   .setupBuildInfo
