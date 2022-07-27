@@ -58,11 +58,24 @@ class PublicApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     logger.info("Getting token {}", tokenId)
+
+    val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val getRelationship: UUID => Future[PersistedPartyRelationship] = getRelationshipsFunc(commanders)
+
     val result: Future[TokenInfo] = for {
-      tokenIdUUID <- tokenId.toFutureUUID
-      result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
-      token       <- result.toFuture(TokenNotFound(tokenId))
-    } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
+      tokenIdUUID   <- tokenId.toFutureUUID
+      result        <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token         <- result.toFuture(TokenNotFound(tokenId))
+      relationships <- Future.traverse(token.legals)(r => getRelationship(r.relationshipId))
+    } yield TokenInfo(
+      id = token.id,
+      checksum = token.checksum,
+      legals =
+        relationships.map(rl => RelationshipBinding(partyId = rl.from, relationshipId = rl.id, role = rl.role.toApi))
+    )
 
     onComplete(result) {
       case Success(token)             =>
@@ -98,7 +111,7 @@ class PublicApiServiceImpl(
       case Success(statusReplies) if statusReplies.exists(_.isError) =>
         val errors: String =
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
-        logger.error(s"Consuming token failed: ${errors}")
+        logger.error(s"Consuming token failed: $errors")
         consumeToken400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
       case Success(_)                                                => consumeToken201
       case Failure(ex: TokenNotFound)                                =>
@@ -129,7 +142,7 @@ class PublicApiServiceImpl(
       case Success(statusReplies) if statusReplies.exists(_.isError) =>
         val errors: String =
           statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
-        logger.error(s"Invalidating token failed: ${errors}")
+        logger.error(s"Invalidating token failed: $errors")
         invalidateToken400(problemOf(StatusCodes.BadRequest, InvalidateTokenBadRequest(errors)))
       case Success(_)                                                => invalidateToken200
       case Failure(ex: TokenNotFound)                                =>
@@ -243,25 +256,26 @@ class PublicApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val commanders = (0 until settings.numberOfShards)
+
+    val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
       .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
       .toList
 
-    def getRelationship(relationshipId: UUID): Future[PersistedPartyRelationship] = {
-      for {
-        results      <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(relationshipId, ref)))
-        relationship <- results.find(_.isDefined).flatten.toFuture(GetRelationshipNotFound(relationshipId.toString))
-      } yield relationship
-    }
+    val getRelationships: UUID => Future[PersistedPartyRelationship] = getRelationshipsFunc(commanders)
 
     val result: Future[TokenInfo] =
       for {
         uuid          <- tokenId.toFutureUUID
         found         <- getCommander(tokenId).ask(ref => GetToken(uuid, ref))
         token         <- found.toFuture(TokenNotFound(tokenId))
-        relationships <- Future.traverse(token.legals)(r => getRelationship(r.relationshipId))
+        relationships <- Future.traverse(token.legals)(r => getRelationships(r.relationshipId))
         _             <- isTokenNotConsumed(tokenId, relationships)
-      } yield TokenInfo(id = token.id, checksum = token.checksum, legals = token.legals.map(_.toApi))
+      } yield TokenInfo(
+        id = token.id,
+        checksum = token.checksum,
+        legals =
+          relationships.map(rl => RelationshipBinding(partyId = rl.from, relationshipId = rl.id, role = rl.role.toApi))
+      )
 
     onComplete(result) {
       case Success(tokenInfo)                   => verifyToken200(tokenInfo)
@@ -279,6 +293,14 @@ class PublicApiServiceImpl(
         complete(problemOf(StatusCodes.InternalServerError, TokenVerificationFatalError(tokenId, ex.getMessage)))
     }
   }
+
+  private def getRelationshipsFunc(commanders: List[EntityRef[Command]]): UUID => Future[PersistedPartyRelationship] =
+    relationshipId => {
+      for {
+        results      <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(relationshipId, ref)))
+        relationship <- results.find(_.isDefined).flatten.toFuture(GetRelationshipNotFound(relationshipId.toString))
+      } yield relationship
+    }
 
   private def isTokenNotConsumed(tokenId: String, relationships: Seq[PersistedPartyRelationship]): Future[Unit] = {
     val error: Either[Throwable, Unit] = Left(TokenAlreadyConsumed(tokenId))
