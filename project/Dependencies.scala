@@ -62,6 +62,10 @@ object Dependencies {
     lazy val mustache = "com.github.spullara.mustache.java" % "compiler" % mustacheVersion
   }
 
+  private[this] object netty {
+    lazy val tcnative = "io.netty" % "netty-tcnative" % nettyVersion
+  }
+
   private[this] object pagopa {
     lazy val namespace = "it.pagopa"
 
@@ -119,6 +123,7 @@ object Dependencies {
       kamon.prometheus            % Compile,
       logback.classic             % Compile,
       mustache.mustache           % Compile,
+      netty.tcnative              % Compile,
       pagopa.commons              % Compile,
       pagopa.commonsFile          % Compile,
       pagopa.commonsJWT           % Compile,
