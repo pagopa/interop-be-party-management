@@ -131,7 +131,7 @@ lazy val root = (project in file("."))
   )
   .aggregate(client)
   .dependsOn(generated)
-  .dependsOn(kafkaManager)
+//  .dependsOn(kafkaManager)
   .enablePlugins(JavaAppPackaging, JavaAgent)
   .setupBuildInfo
 
