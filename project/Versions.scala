@@ -2,7 +2,7 @@ object Versions {
   lazy val akkaHttpVersion          = "10.2.6"
   lazy val akkaManagementVersion    = "1.1.1"
   lazy val akkaPersistenceS3Version = "1.1.41"
-  lazy val akkaVersion              = "2.6.18"
+  lazy val akkaVersion              = "2.6.17"
   lazy val catsVersion              = "2.8.0"
   lazy val httpJson4sVersion        = "1.38.2"
   lazy val jdbcPersistenceVersion   = "5.0.1"
@@ -16,7 +16,8 @@ object Versions {
   lazy val scalaMockVersion         = "5.2.0"
   lazy val scalatestVersion         = "3.2.12"
   lazy val slickProjectionVersion   = "1.2.2"
-  lazy val kafkaVersion = "3.0.0"
+  lazy val nettyVersion             = "2.0.54.Final"
+  lazy val kafkaVersion = "2.1.1"
 }
 
 object PagopaVersions {
