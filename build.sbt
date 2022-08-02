@@ -1,4 +1,5 @@
 import ProjectSettings.ProjectFrom
+import Versions.{akkaVersion, akkaStreamKafkaVersion}
 import com.typesafe.sbt.packager.docker.Cmd
 
 ThisBuild / scalaVersion        := "2.13.8"
@@ -6,7 +7,6 @@ ThisBuild / organization        := "it.pagopa"
 ThisBuild / organizationName    := "Pagopa S.p.A."
 ThisBuild / libraryDependencies := Dependencies.Jars.`server`
 Global / onChangedBuildSource := ReloadOnSourceChanges
-
 
 ThisBuild / version := ComputeVersion.version
 
@@ -108,7 +108,8 @@ lazy val kafkaManager = project
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.client ++
       Seq(
-        "com.typesafe.akka" %% "akka-stream-kafka" % "2.1.0" % Compile,
+        "com.typesafe.akka" %% "akka-stream-kafka" % akkaStreamKafkaVersion % Compile,
+        "com.typesafe.akka" %% "akka-stream" % akkaVersion
       ),
   )
   .setupBuildInfo
