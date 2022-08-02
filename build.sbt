@@ -108,7 +108,7 @@ lazy val kafkaManager = project
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.client ++
       Seq(
-        "com.typesafe.akka" %% "akka-stream-kafka" % kafkaVersion % Compile,
+        "com.typesafe.akka" %% "akka-stream-kafka" % akkaStreamKafkaVersion % Compile,
         "com.typesafe.akka" %% "akka-stream" % akkaVersion
       ),
   )
