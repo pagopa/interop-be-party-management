@@ -1,5 +1,5 @@
 import ProjectSettings.ProjectFrom
-import Versions.{akkaVersion, kafkaVersion}
+import Versions.{akkaVersion, akkaStreamKafkaVersion}
 import com.typesafe.sbt.packager.docker.Cmd
 
 ThisBuild / scalaVersion        := "2.13.8"
