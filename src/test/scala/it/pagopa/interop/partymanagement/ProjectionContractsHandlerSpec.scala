@@ -8,10 +8,13 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
+import akka.projection.eventsourced.EventEnvelope
 import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.interop.commons.files.service.FileManager
+import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
 import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.AkkaUtils.Authenticator
+import it.pagopa.interop.partymanagement.api._
 import it.pagopa.interop.partymanagement.api.impl.PartyApiMarshallerImpl.sprayJsonMarshaller
 import it.pagopa.interop.partymanagement.api.impl.{
   ExternalApiMarshallerImpl,
@@ -24,20 +27,37 @@ import it.pagopa.interop.partymanagement.api.impl.{
   personSeedFormat,
   relationshipSeedFormat
 }
-import it.pagopa.interop.partymanagement.api._
 import it.pagopa.interop.partymanagement.model._
-import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
+import it.pagopa.interop.partymanagement.model.party.{
+  InstitutionOnboarded,
+  InstitutionOnboardedBilling,
+  InstitutionOnboardedNotification,
+  Token
+}
+import it.pagopa.interop.partymanagement.model.persistence.{
+  PartyPersistentBehavior,
+  PartyRelationshipConfirmed,
+  ProjectionContractsHandler,
+  TokenAdded
+}
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
-import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import it.pagopa.interop.partymanagement.service.impl.{InstitutionServiceImpl, RelationshipServiceImpl}
+import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
+import spray.json.JsonWriter
 
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-object RelationshipServiceSpec {
+object ProjectionContractsHandlerSpec {
+  // setting up file manager properties
+
+  final val timestamp = OffsetDateTime.parse("2021-11-23T13:37:00.277147+01:00")
+
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
 
@@ -59,11 +79,17 @@ object RelationshipServiceSpec {
     .parseResourcesAnySyntax("application-test")
     .withFallback(testData)
     .resolve()
+
+  def fileManagerType: String = config.getString("interop-commons.storage.type")
 }
 
-class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServiceSpec.config) with AnyWordSpecLike {
+class ProjectionContractsHandlerSpec
+    extends ScalaTestWithActorTestKit(ProjectionContractsHandlerSpec.config)
+    with MockFactory
+    with AnyWordSpecLike {
 
-  var relationshipService: RelationshipService = _
+  var datalakeContractsPublisherMock: KafkaPublisher = _
+  var projectionHandler: ProjectionContractsHandler  = _
 
   var controller: Option[Controller]                 = None
   var bindServer: Option[Future[Http.ServerBinding]] = None
@@ -86,11 +112,18 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
 
     sharding.init(persistentEntity)
 
-    relationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
-    val institutionService: InstitutionService = new InstitutionServiceImpl(system, sharding, persistentEntity)
+    val relationshipService: RelationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
+    val institutionService: InstitutionService   = new InstitutionServiceImpl(system, sharding, persistentEntity)
 
     val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
+
+    datalakeContractsPublisherMock = mock[KafkaPublisher]
+    projectionHandler =
+      new ProjectionContractsHandler(system, sharding, persistentEntity, relationshipService, institutionService)(
+        "tag",
+        datalakeContractsPublisherMock
+      )(system.executionContext)
 
     val partyApiService: PartyApiService =
       new PartyApiServiceImpl(
@@ -151,30 +184,17 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
     super.afterAll()
   }
 
-  "Lookup a relationship by UUID" must {
+  "Projecting PartyRelationshipConfirmed event" must {
+    import RelationshipPartyApiServiceData._
 
-    "return empty Option when the relationship does not exist" in {
-      // given a random UUID
-
-      val uuid = UUID.randomUUID()
-
-      // when looking up for the corresponding institution
-      val result = relationshipService.getRelationshipById(uuid).futureValue
-
-      // then
-      result shouldBe None
-    }
-
-    "return the relationship when it exists" in {
-      import RelationshipPartyApiServiceData._
-
-      // given
-
-      val personUuid      = UUID.randomUUID()
-      val institutionUuid = UUID.randomUUID()
-      val relationshipId  = UUID.randomUUID()
-      val externalId      = randomString()
-      val originId        = randomString()
+    def storeRelationship(
+      institutionUuid: UUID,
+      externalId: String,
+      originId: String,
+      relationshipId: UUID,
+      role: PartyRole
+    ) = {
+      val personUuid = UUID.randomUUID()
 
       val personSeed      = PersonSeed(personUuid)
       val institutionSeed =
@@ -186,7 +206,15 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
           address = "address",
           zipCode = "zipCode",
           taxCode = "taxCode",
-          products = Option(Map.empty[String, InstitutionProduct]),
+          products = Option(
+            Map(
+              "p1" -> InstitutionProduct(
+                "p1",
+                Option("pricingPlan"),
+                Billing("VATNUMBER", "RECIPIENTCODE", Option(true))
+              )
+            )
+          ),
           attributes = Seq.empty,
           origin = "IPA",
           institutionType = Option("PA")
@@ -195,7 +223,7 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
         RelationshipSeed(
           from = personUuid,
           to = institutionUuid,
-          role = PartyRole.MANAGER,
+          role = role,
           RelationshipProductSeed(id = "p1", role = "admin")
         )
 
@@ -207,25 +235,95 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
 
       prepareTest(personSeed = personSeed, institutionSeed = institutionSeed, relationshipSeed = rlSeed)
+    }
 
-      // when
-      val result = relationshipService.getRelationshipById(relationshipId).futureValue
+    "publish on kafka if manager" in {
+      val managerConfirmEvent: PartyRelationshipConfirmed = PartyRelationshipConfirmed(
+        UUID.randomUUID(),
+        "filePath",
+        "fileName",
+        "contentType",
+        UUID.randomUUID(),
+        OffsetDateTime.now
+      )
+      val institutionUuid                                 = UUID.randomUUID()
+      val externalId                                      = randomString()
+      val originId                                        = randomString()
 
-      // then
-      result.get shouldBe
-        Relationship(
-          id = relationshipId,
-          from = personUuid,
-          to = institutionUuid,
-          role = rlSeed.role,
-          product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
-          state = RelationshipState.PENDING,
-          filePath = None,
-          fileName = None,
-          contentType = None,
-          createdAt = timestampValid,
-          updatedAt = None
-        )
+      val expectedPayload: InstitutionOnboardedNotification = InstitutionOnboardedNotification(
+        internalIstitutionID = institutionUuid,
+        product = "p1",
+        state = "ACTIVE",
+        filePath = Option("filePath"),
+        fileName = Option("fileName"),
+        contentType = Option("contentType"),
+        onboardingTokenId = Option(managerConfirmEvent.onboardingTokenId),
+        pricingPlan = Option("pricingPlan"),
+        institution = InstitutionOnboarded(
+          institutionType = "PA",
+          description = "Institutions One",
+          digitalAddress = Option("mail1@mail.org"),
+          address = Option("address"),
+          taxCode = "taxCode",
+          origin = "IPA",
+          originId = originId
+        ),
+        billing = Option(InstitutionOnboardedBilling("VATNUMBER", "RECIPIENTCODE", Option(true))),
+        updatedAt = Option(managerConfirmEvent.timestamp)
+      )
+
+      storeRelationship(
+        institutionUuid,
+        externalId,
+        originId,
+        managerConfirmEvent.partyRelationshipId,
+        PartyRole.MANAGER
+      )
+
+      (datalakeContractsPublisherMock
+        .send(_: InstitutionOnboardedNotification)(_: JsonWriter[InstitutionOnboardedNotification]))
+        .expects(expectedPayload, *)
+        .returning(Future.successful("OK"))
+        .once()
+
+      projectionHandler.process(new EventEnvelope(null, null, 0, managerConfirmEvent, 0))
+    }
+
+    "not publish on kafka if not manager" in {
+      val notManagerEvent: PartyRelationshipConfirmed = PartyRelationshipConfirmed(
+        UUID.randomUUID(),
+        "filePath",
+        "fileName",
+        "contentType",
+        UUID.randomUUID(),
+        OffsetDateTime.now
+      )
+      val institutionUuid                             = UUID.randomUUID()
+      val externalId                                  = randomString()
+      val originId                                    = randomString()
+
+      storeRelationship(institutionUuid, externalId, originId, notManagerEvent.partyRelationshipId, PartyRole.DELEGATE)
+
+      (datalakeContractsPublisherMock
+        .send(_: InstitutionOnboardedNotification)(_: JsonWriter[InstitutionOnboardedNotification]))
+        .expects(*, *)
+        .never()
+
+      projectionHandler.process(new EventEnvelope(null, null, 0, notManagerEvent, 0))
+    }
+  }
+
+  "Projecting other events" must {
+    "not publish on kafka" in {
+      val event: TokenAdded = TokenAdded(new Token(UUID.randomUUID(), "checksum", Seq.empty, null, null))
+
+      (datalakeContractsPublisherMock
+        .send(_: Any)(_: JsonWriter[Any]))
+        .expects(*, *)
+        .never()
+
+      projectionHandler.process(new EventEnvelope(null, null, 0, event, 0))
+
     }
   }
 

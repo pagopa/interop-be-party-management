@@ -12,6 +12,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.interop.commons.files.service.FileManager
 import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.AkkaUtils.Authenticator
+import it.pagopa.interop.partymanagement.api._
 import it.pagopa.interop.partymanagement.api.impl.PartyApiMarshallerImpl.sprayJsonMarshaller
 import it.pagopa.interop.partymanagement.api.impl.{
   ExternalApiMarshallerImpl,
@@ -20,24 +21,20 @@ import it.pagopa.interop.partymanagement.api.impl.{
   PartyApiServiceImpl,
   PublicApiMarshallerImpl,
   PublicApiServiceImpl,
-  institutionSeedFormat,
-  personSeedFormat,
-  relationshipSeedFormat
+  institutionSeedFormat
 }
-import it.pagopa.interop.partymanagement.api._
-import it.pagopa.interop.partymanagement.model._
+import it.pagopa.interop.partymanagement.model.party.Party
 import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
-import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import it.pagopa.interop.partymanagement.service.impl.{InstitutionServiceImpl, RelationshipServiceImpl}
+import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-object RelationshipServiceSpec {
+object InstitutionServiceSpec {
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
 
@@ -61,9 +58,9 @@ object RelationshipServiceSpec {
     .resolve()
 }
 
-class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServiceSpec.config) with AnyWordSpecLike {
+class InstitutionServiceSpec extends ScalaTestWithActorTestKit(InstitutionServiceSpec.config) with AnyWordSpecLike {
 
-  var relationshipService: RelationshipService = _
+  var institutionService: InstitutionService = _
 
   var controller: Option[Controller]                 = None
   var bindServer: Option[Future[Http.ServerBinding]] = None
@@ -86,8 +83,8 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
 
     sharding.init(persistentEntity)
 
-    relationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
-    val institutionService: InstitutionService = new InstitutionServiceImpl(system, sharding, persistentEntity)
+    val relationshipService: RelationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
+    institutionService = new InstitutionServiceImpl(system, sharding, persistentEntity)
 
     val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
@@ -151,82 +148,20 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
     super.afterAll()
   }
 
-  "Lookup a relationship by UUID" must {
+  "Working on institutions" must {
+    import InstitutionsPartyApiServiceData._
 
-    "return empty Option when the relationship does not exist" in {
-      // given a random UUID
+    "return the institution if exists" in {
 
-      val uuid = UUID.randomUUID()
+      (() => uuidSupplier.get).expects().returning(institutionUuid3).once()
 
-      // when looking up for the corresponding institution
-      val result = relationshipService.getRelationshipById(uuid).futureValue
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
-      // then
-      result shouldBe None
-    }
+      prepareTest(institutionSeed3)
 
-    "return the relationship when it exists" in {
-      import RelationshipPartyApiServiceData._
+      val response = institutionService.getInstitutionById(institutionUuid3).futureValue
 
-      // given
-
-      val personUuid      = UUID.randomUUID()
-      val institutionUuid = UUID.randomUUID()
-      val relationshipId  = UUID.randomUUID()
-      val externalId      = randomString()
-      val originId        = randomString()
-
-      val personSeed      = PersonSeed(personUuid)
-      val institutionSeed =
-        InstitutionSeed(
-          externalId = externalId,
-          originId = originId,
-          description = "Institutions One",
-          digitalAddress = "mail1@mail.org",
-          address = "address",
-          zipCode = "zipCode",
-          taxCode = "taxCode",
-          products = Option(Map.empty[String, InstitutionProduct]),
-          attributes = Seq.empty,
-          origin = "IPA",
-          institutionType = Option("PA")
-        )
-      val rlSeed          =
-        RelationshipSeed(
-          from = personUuid,
-          to = institutionUuid,
-          role = PartyRole.MANAGER,
-          RelationshipProductSeed(id = "p1", role = "admin")
-        )
-
-      (() => uuidSupplier.get).expects().returning(institutionUuid).once() // Create institution
-      (() => uuidSupplier.get).expects().returning(relationshipId).once()  // Create relationship
-
-      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
-      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create institution
-      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
-
-      prepareTest(personSeed = personSeed, institutionSeed = institutionSeed, relationshipSeed = rlSeed)
-
-      // when
-      val result = relationshipService.getRelationshipById(relationshipId).futureValue
-
-      // then
-      result.get shouldBe
-        Relationship(
-          id = relationshipId,
-          from = personUuid,
-          to = institutionUuid,
-          role = rlSeed.role,
-          product = RelationshipProduct(id = "p1", role = "admin", createdAt = timestampValid),
-          state = RelationshipState.PENDING,
-          filePath = None,
-          fileName = None,
-          contentType = None,
-          createdAt = timestampValid,
-          updatedAt = None
-        )
+      Party.convertToApi(response.get).left.getOrElse(null) shouldBe expected3
     }
   }
-
 }

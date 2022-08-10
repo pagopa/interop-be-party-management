@@ -20,8 +20,8 @@ import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
-import it.pagopa.interop.partymanagement.service.RelationshipService
-import it.pagopa.interop.partymanagement.service.impl.RelationshipServiceImpl
+import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
+import it.pagopa.interop.partymanagement.service.impl.{InstitutionServiceImpl, RelationshipServiceImpl}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.OffsetDateTime
@@ -85,6 +85,7 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
 
     val relationshipService: RelationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
+    val institutionService: InstitutionService   = new InstitutionServiceImpl(system, sharding, persistentEntity)
 
     val PartyApiService: PartyApiService =
       new PartyApiServiceImpl(
@@ -93,7 +94,8 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
         entity = persistentEntity,
         uuidSupplier = uuidSupplier,
         offsetDateTimeSupplier = offsetDateTimeSupplier,
-        relationshipService
+        relationshipService,
+        institutionService
       )
 
     val PartyApi: PartyApi =

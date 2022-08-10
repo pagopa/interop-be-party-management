@@ -55,8 +55,12 @@ import it.pagopa.interop.partymanagement.model.persistence.{
   PartyPersistentContractsProjection
 }
 import it.pagopa.interop.partymanagement.server.Controller
-import it.pagopa.interop.partymanagement.service.{OffsetDateTimeSupplier, RelationshipService}
-import it.pagopa.interop.partymanagement.service.impl.{OffsetDateTimeSupplierImp, RelationshipServiceImpl}
+import it.pagopa.interop.partymanagement.service.{InstitutionService, OffsetDateTimeSupplier, RelationshipService}
+import it.pagopa.interop.partymanagement.service.impl.{
+  InstitutionServiceImpl,
+  OffsetDateTimeSupplierImp,
+  RelationshipServiceImpl
+}
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -120,6 +124,9 @@ object Main extends App {
 
       val _ = sharding.init(partyPersistentEntity)
 
+      val institutionService: InstitutionService =
+        new InstitutionServiceImpl(context.system, sharding, partyPersistentEntity)
+
       val relationshipService: RelationshipService =
         new RelationshipServiceImpl(context.system, sharding, partyPersistentEntity)
 
@@ -139,7 +146,15 @@ object Main extends App {
         )
 
         val partyPersistentContractsProjection =
-          new PartyPersistentContractsProjection(context.system, dbConfig, datalakeContractsPublisher)
+          new PartyPersistentContractsProjection(
+            context.system,
+            sharding,
+            partyPersistentEntity,
+            relationshipService,
+            institutionService,
+            dbConfig,
+            datalakeContractsPublisher
+          )
 
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
           name = "party-contracts-projections",
@@ -157,7 +172,8 @@ object Main extends App {
           entity = partyPersistentEntity,
           uuidSupplier = uuidSupplier,
           offsetDateTimeSupplier = offsetDateTimeSupplier,
-          relationshipService
+          relationshipService,
+          institutionService
         ),
         PartyApiMarshallerImpl,
         jwtValidator.OAuth2JWTValidatorAsContexts
