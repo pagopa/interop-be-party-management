@@ -4,8 +4,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior}
 import akka.cluster.ClusterEvent
 import akka.cluster.sharding.typed.ShardingEnvelope
-//import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityContext, ShardedDaemonProcess}
-import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityContext}
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityContext, ShardedDaemonProcess}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
@@ -14,7 +13,7 @@ import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
-//import akka.projection.ProjectionBehavior
+import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
@@ -40,21 +39,33 @@ import it.pagopa.interop.partymanagement.api.impl.{
 }
 import it.pagopa.interop.partymanagement.api.{ExternalApi, HealthApi, PartyApi, PublicApi}
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
-import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{numberOfProjectionTags, projectionTag}
-import it.pagopa.interop.partymanagement.model.persistence.{Command, PartyPersistentBehavior}
+import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{
+  kafkaBootstrapServers,
+  kafkaDatalakeContractsSaslJaasConfig,
+  kafkaDatalakeContractsTopic,
+  kafkaSaslMechanism,
+  kafkaSecurityProtocol,
+  numberOfProjectionTags,
+  projectionTag,
+  projectionsEnabled
+}
+import it.pagopa.interop.partymanagement.model.persistence.{
+  Command,
+  PartyPersistentBehavior,
+  PartyPersistentContractsProjection
+}
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 import it.pagopa.interop.partymanagement.service.impl.OffsetDateTimeSupplierImp
 import kamon.Kamon
-//import slick.basic.DatabaseConfig
-//import slick.jdbc.JdbcProfile
-
-import buildinfo.BuildInfo
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
-//import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
-//import it.pagopa.interop.commons.queue.kafka.impl.KafkaPublisherImpl
+import buildinfo.BuildInfo
+import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
+import it.pagopa.interop.commons.queue.kafka.impl.KafkaPublisherImpl
 
 object Main extends App {
 
@@ -109,32 +120,32 @@ object Main extends App {
 
       val _ = sharding.init(partyPersistentEntity)
 
-//      if (projectionsEnabled) {
-//        val dbConfig: DatabaseConfig[JdbcProfile] =
-//          DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
-//
-//        val datalakeContractsPublisher: KafkaPublisher = new KafkaPublisherImpl(
-//          context.system,
-//          kafkaDatalakeContractsTopic,
-//          kafkaBootstrapServers,
-//          Map(
-//            "security.protocol" -> kafkaSecurityProtocol,
-//            "sasl.jaas.config"  -> kafkaDatalakeContractsSaslJaasConfig,
-//            "sasl.mechanism"    -> kafkaSaslMechanism
-//          )
-//        )
-//
-//        val partyPersistentContractsProjection =
-//          new PartyPersistentContractsProjection(context.system, dbConfig, datalakeContractsPublisher)
-//
-//        ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-//          name = "party-contracts-projections",
-//          numberOfInstances = numberOfProjectionTags,
-//          behaviorFactory =
-//            (i: Int) => ProjectionBehavior(partyPersistentContractsProjection.projection(projectionTag(i))),
-//          stopMessage = ProjectionBehavior.Stop
-//        )
-//      }
+      if (projectionsEnabled) {
+        val dbConfig: DatabaseConfig[JdbcProfile] =
+          DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
+
+        val datalakeContractsPublisher: KafkaPublisher = new KafkaPublisherImpl(
+          context.system,
+          kafkaDatalakeContractsTopic,
+          kafkaBootstrapServers,
+          Map(
+            "security.protocol" -> kafkaSecurityProtocol,
+            "sasl.jaas.config"  -> kafkaDatalakeContractsSaslJaasConfig,
+            "sasl.mechanism"    -> kafkaSaslMechanism
+          )
+        )
+
+        val partyPersistentContractsProjection =
+          new PartyPersistentContractsProjection(context.system, dbConfig, datalakeContractsPublisher)
+
+        ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
+          name = "party-contracts-projections",
+          numberOfInstances = numberOfProjectionTags,
+          behaviorFactory =
+            (i: Int) => ProjectionBehavior(partyPersistentContractsProjection.projection(projectionTag(i))),
+          stopMessage = ProjectionBehavior.Stop
+        )
+      }
 
       val partyApi: PartyApi = new PartyApi(
         new PartyApiServiceImpl(
