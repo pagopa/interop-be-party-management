@@ -55,8 +55,8 @@ import it.pagopa.interop.partymanagement.model.persistence.{
   PartyPersistentContractsProjection
 }
 import it.pagopa.interop.partymanagement.server.Controller
-import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
-import it.pagopa.interop.partymanagement.service.impl.OffsetDateTimeSupplierImp
+import it.pagopa.interop.partymanagement.service.{OffsetDateTimeSupplier, RelationshipService}
+import it.pagopa.interop.partymanagement.service.impl.{OffsetDateTimeSupplierImp, RelationshipServiceImpl}
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -120,6 +120,9 @@ object Main extends App {
 
       val _ = sharding.init(partyPersistentEntity)
 
+      val relationshipService: RelationshipService =
+        new RelationshipServiceImpl(context.system, sharding, partyPersistentEntity)
+
       if (projectionsEnabled) {
         val dbConfig: DatabaseConfig[JdbcProfile] =
           DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
@@ -153,7 +156,8 @@ object Main extends App {
           sharding = sharding,
           entity = partyPersistentEntity,
           uuidSupplier = uuidSupplier,
-          offsetDateTimeSupplier = offsetDateTimeSupplier
+          offsetDateTimeSupplier = offsetDateTimeSupplier,
+          relationshipService
         ),
         PartyApiMarshallerImpl,
         jwtValidator.OAuth2JWTValidatorAsContexts
