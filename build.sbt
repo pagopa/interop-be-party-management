@@ -139,3 +139,9 @@ javaAgents += "io.kamon" % "kanela-agent" % "1.0.14"
 
 Test / fork := true
 Test / javaOptions += "-Dconfig.file=src/test/resources/application-test.conf"
+
+val runStandalone = inputKey[Unit]("Run the app using standalone configuration")
+runStandalone := {
+  task(System.setProperty("config.file", "src/main/resources/application-standalone.conf")).value
+  (Compile / run).evaluated
+}
