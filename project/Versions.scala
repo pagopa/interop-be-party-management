@@ -17,7 +17,7 @@ object Versions {
   lazy val scalatestVersion         = "3.2.12"
   lazy val slickProjectionVersion   = "1.2.2"
   lazy val nettyVersion             = "2.0.54.Final"
-  lazy val akkaStreamKafkaVersion             = "2.1.1"
+  lazy val akkaStreamKafkaVersion   = "2.1.1"
 }
 
 object PagopaVersions {
