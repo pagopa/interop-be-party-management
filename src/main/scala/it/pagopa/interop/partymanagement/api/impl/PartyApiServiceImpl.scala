@@ -3,7 +3,7 @@ package it.pagopa.interop.partymanagement.api.impl
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.marshalling.{ToEntityMarshaller}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
@@ -774,6 +774,43 @@ class PartyApiServiceImpl(
       case Failure(ex)          =>
         logger.error(s"Error while deleting relationship with id $relationshipId", ex)
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, DeletingRelationshipBadRequest(relationshipId)))
+    }
+  }
+
+  /**
+    * Code: 200, Message: successful operation, DataType: InstitutionId
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  // getRelationshipById
+  override def getInstitutionIdFromRelationshipId(relationshipId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerInstitutionId: ToEntityMarshaller[InstitutionId],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info("Getting institutionId with relation id {}", relationshipId)
+
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[Option[Relationship]] =
+      for {
+        uuid    <- relationshipId.toFutureUUID
+        results <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
+        maybePartyRelationship = results.find(_.isDefined).flatten
+        partyRelationship      = maybePartyRelationship.map(_.toRelationship)
+        // relation = Await.result(Marshal(partyRelationship).to[Relationship].map(_.dataBytes), Duration.Inf)
+      } yield partyRelationship
+
+    onComplete(result) {
+      case Success(Some(relationship)) => getRelationshipById200(relationship) // getInstitutionIdFromRelationshipId200
+      case Success(None)               =>
+        logger.error(s"Error while getting relationship with id $relationshipId - Not found")
+        getInstitutionIdFromRelationshipId404(problemOf(StatusCodes.NotFound, GetRelationshipNotFound(relationshipId)))
+      case Failure(ex)                 =>
+        logger.error(s"Error while getting relationship with id $relationshipId", ex)
+        getInstitutionIdFromRelationshipId400(problemOf(StatusCodes.BadRequest, GetRelationshipError))
     }
   }
 }
