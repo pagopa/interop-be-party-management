@@ -555,9 +555,9 @@ paths:
       description: 'Activate Relationship by ID'
   /relationships/{relationshipId}/institution:
     get:
-      security: []
+      security: [ ]
       tags:
-        - party
+        - public
       summary: Retrieve the institutionid for the given relationshipId
       description: Return institutionid
       operationId: getInstitutionIdFromRelationshipId
@@ -947,8 +947,13 @@ components:
           type: string
           format: uuid
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+        to:
+          type: string
+          format: uuid
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
       required:
         - id
+        - to
       additionalProperties: false
     BulkInstitutions:
       type: object
