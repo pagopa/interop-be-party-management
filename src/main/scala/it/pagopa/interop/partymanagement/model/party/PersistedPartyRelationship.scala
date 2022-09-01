@@ -2,7 +2,13 @@ package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState.{Active, Pending}
-import it.pagopa.interop.partymanagement.model.{Relationship, RelationshipProductSeed, InstitutionUpdate, Billing}
+import it.pagopa.interop.partymanagement.model.{
+  Billing,
+  InstitutionId,
+  InstitutionUpdate,
+  Relationship,
+  RelationshipProductSeed
+}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
@@ -44,6 +50,7 @@ final case class PersistedPartyRelationship(
     updatedAt = updatedAt
   )
 
+  def toInstitutionId: InstitutionId = InstitutionId(id = id, to = to)
 }
 
 object PersistedPartyRelationship {

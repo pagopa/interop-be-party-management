@@ -553,6 +553,41 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: activatePartyRelationshipById
       description: 'Activate Relationship by ID'
+  /relationships/{relationshipId}/institution:
+    get:
+      security: [ ]
+      tags:
+        - public
+      summary: Retrieve the institutionid for the given relationshipId
+      description: Return institutionid
+      operationId: getInstitutionIdFromRelationshipId
+      parameters:
+        - name: relationshipId
+          in: path
+          description: The ID of the Relationship to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionId'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /tokens:
     post:
       tags:
@@ -904,6 +939,21 @@ components:
         - attributes
         - origin
         - products
+      additionalProperties: false
+    InstitutionId:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+        to:
+          type: string
+          format: uuid
+          example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+      required:
+        - id
+        - to
       additionalProperties: false
     BulkInstitutions:
       type: object
