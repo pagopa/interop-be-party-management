@@ -310,4 +310,39 @@ class PublicApiServiceImpl(
 
   }
 
+  /**
+    * Code: 200, Message: successful operation, DataType: InstitutionId
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def getInstitutionIdFromRelationshipId(relationshipId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerInstitutionId: ToEntityMarshaller[InstitutionId],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info("Getting institutionId with relation id {}", relationshipId)
+
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[Option[InstitutionId]] =
+      for {
+        uuid    <- relationshipId.toFutureUUID
+        results <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
+        maybePartyRelationship = results.find(_.isDefined).flatten
+        partyInstitutionId     = maybePartyRelationship.map(_.toInstitutionId)
+      } yield partyInstitutionId
+
+    onComplete(result) {
+      case Success(Some(institutionId)) => getInstitutionIdFromRelationshipId200(institutionId)
+      case Success(None)                =>
+        logger.error(s"Error while getting relationship with id $relationshipId - Not found")
+        getInstitutionIdFromRelationshipId404(problemOf(StatusCodes.NotFound, GetRelationshipNotFound(relationshipId)))
+      case Failure(ex)                  =>
+        logger.error(s"Error while getting relationship with id $relationshipId", ex)
+        getInstitutionIdFromRelationshipId400(problemOf(StatusCodes.BadRequest, GetRelationshipError))
+    }
+  }
+
 }
