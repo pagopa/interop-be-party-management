@@ -951,9 +951,13 @@ components:
           type: string
           format: uuid
           example: 97c0f418-bcb3-48d4-825a-fe8b29ae68e5
+        product:
+          type: string
+          description: product ID
       required:
         - id
         - to
+        - product
       additionalProperties: false
     BulkInstitutions:
       type: object
