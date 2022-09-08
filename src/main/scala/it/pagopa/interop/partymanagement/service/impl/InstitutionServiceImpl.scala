@@ -18,10 +18,7 @@ class InstitutionServiceImpl(
   entity: Entity[Command, ShardingEnvelope[Command]]
 ) extends InstitutionService {
 
-  private val settings: ClusterShardingSettings = entity.settings match {
-    case None    => ClusterShardingSettings(system)
-    case Some(s) => s
-  }
+  private val settings: ClusterShardingSettings = entity.settings.getOrElse(ClusterShardingSettings(system))
 
   def getCommander(entityId: String): EntityRef[Command] =
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))

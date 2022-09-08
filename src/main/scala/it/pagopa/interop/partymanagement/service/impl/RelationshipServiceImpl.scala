@@ -18,10 +18,7 @@ class RelationshipServiceImpl(
 )(implicit ec: ExecutionContext)
     extends RelationshipService {
 
-  private val settings: ClusterShardingSettings = entity.settings match {
-    case None    => ClusterShardingSettings(system)
-    case Some(s) => s
-  }
+  private val settings: ClusterShardingSettings = entity.setting.getOrElse(ClusterShardingSettings(system))
 
   override def getRelationshipById(relationshipId: UUID)(implicit timeout: Timeout): Future[Option[Relationship]] = {
     val commanders = (0 until settings.numberOfShards)
