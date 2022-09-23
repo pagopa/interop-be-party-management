@@ -954,10 +954,15 @@ components:
         product:
           type: string
           description: product ID
+        digitalAddress:
+          example: email@pec.mail.org
+          format: email
+          type: string
       required:
         - id
         - to
         - product
+        - digitalAddress
       additionalProperties: false
     BulkInstitutions:
       type: object
