@@ -22,7 +22,7 @@ import it.pagopa.interop.partymanagement.error.PartyManagementErrors._
 import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence._
-import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
+import it.pagopa.interop.partymanagement.service.{InstitutionService, OffsetDateTimeSupplier, RelationshipService}
 import org.slf4j.LoggerFactory
 
 import java.util.UUID
@@ -34,7 +34,9 @@ class PartyApiServiceImpl(
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
   uuidSupplier: UUIDSupplier,
-  offsetDateTimeSupplier: OffsetDateTimeSupplier
+  offsetDateTimeSupplier: OffsetDateTimeSupplier,
+  relationshipService: RelationshipService,
+  institutionService: InstitutionService
 )(implicit ec: ExecutionContext)
     extends PartyApiService {
 
@@ -573,7 +575,7 @@ class PartyApiServiceImpl(
 
     val institutions = for {
       institutionUUID <- id.toFutureUUID
-      results         <- getCommander(id).ask(ref => GetParty(institutionUUID, ref))
+      results         <- institutionService.getInstitutionById(institutionUUID)
     } yield results
 
     onComplete(institutions) {
@@ -626,17 +628,10 @@ class PartyApiServiceImpl(
   ): Route = {
     logger.info("Getting relationship with id {}", relationshipId)
 
-    val commanders = (0 until settings.numberOfShards)
-      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-      .toList
-
-    val result: Future[Option[Relationship]] =
-      for {
-        uuid    <- relationshipId.toFutureUUID
-        results <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(uuid, ref)))
-        maybePartyRelationship = results.find(_.isDefined).flatten
-        partyRelationship      = maybePartyRelationship.map(_.toRelationship)
-      } yield partyRelationship
+    val result = for {
+      relationshipUUID <- relationshipId.toFutureUUID
+      results          <- relationshipService.getRelationshipById(relationshipUUID)
+    } yield results
 
     onComplete(result) {
       case Success(Some(relationship)) => getRelationshipById200(relationship)

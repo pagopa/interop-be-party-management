@@ -7,32 +7,34 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import it.pagopa.interop.commons.files.service.FileManager
 import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.AkkaUtils.Authenticator
 import it.pagopa.interop.partymanagement.api._
-import it.pagopa.interop.partymanagement.api.impl.{ExternalApiMarshallerImpl, ExternalApiServiceImpl, _}
-import it.pagopa.interop.partymanagement.model._
+import it.pagopa.interop.partymanagement.api.impl.PartyApiMarshallerImpl.sprayJsonMarshaller
+import it.pagopa.interop.partymanagement.api.impl.{
+  ExternalApiMarshallerImpl,
+  ExternalApiServiceImpl,
+  PartyApiMarshallerImpl,
+  PartyApiServiceImpl,
+  PublicApiMarshallerImpl,
+  PublicApiServiceImpl,
+  institutionSeedFormat
+}
+import it.pagopa.interop.partymanagement.model.party.Party
 import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
-import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import it.pagopa.interop.partymanagement.service.impl.{InstitutionServiceImpl, RelationshipServiceImpl}
+import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.time.OffsetDateTime
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-object ExternalApiServiceSpec {
-  // setting up file manager properties
-
-  final val timestamp = OffsetDateTime.parse("2021-11-23T13:37:00.277147+01:00")
-
+object InstitutionServiceSpec {
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
 
@@ -54,11 +56,11 @@ object ExternalApiServiceSpec {
     .parseResourcesAnySyntax("application-test")
     .withFallback(testData)
     .resolve()
-
-  def fileManagerType: String = config.getString("interop-commons.storage.type")
 }
 
-class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServiceSpec.config) with AnyWordSpecLike {
+class InstitutionServiceSpec extends ScalaTestWithActorTestKit(InstitutionServiceSpec.config) with AnyWordSpecLike {
+
+  var institutionService: InstitutionService = _
 
   var controller: Option[Controller]                 = None
   var bindServer: Option[Future[Http.ServerBinding]] = None
@@ -71,7 +73,7 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
   implicit val executionContext: ExecutionContextExecutor = httpSystem.executionContext
   implicit val classicSystem: actor.ActorSystem           = httpSystem.classicSystem
 
-  val fileManager: FileManager = FileManager.getConcreteImplementation(ExternalApiServiceSpec.fileManagerType).get
+  val fileManager: FileManager = FileManager.getConcreteImplementation(PartyApiServiceSpec.fileManagerType).get
 
   override def beforeAll(): Unit = {
 
@@ -81,13 +83,13 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
 
     sharding.init(persistentEntity)
 
+    val relationshipService: RelationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
+    institutionService = new InstitutionServiceImpl(system, sharding, persistentEntity)
+
     val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
 
-    val relationshipService: RelationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
-    val institutionService: InstitutionService   = new InstitutionServiceImpl(system, sharding, persistentEntity)
-
-    val PartyApiService: PartyApiService =
+    val partyApiService: PartyApiService =
       new PartyApiServiceImpl(
         system = system,
         sharding = sharding,
@@ -98,8 +100,8 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
         institutionService
       )
 
-    val PartyApi: PartyApi =
-      new PartyApi(PartyApiService, PartyApiMarshallerImpl, wrappingDirective)
+    val partyApi: PartyApi =
+      new PartyApi(partyApiService, PartyApiMarshallerImpl, wrappingDirective)
 
     val externalApiService: ExternalApiService =
       new ExternalApiServiceImpl(system = system, sharding = sharding, entity = persistentEntity)
@@ -125,7 +127,7 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
     val healthApi: HealthApi = mock[HealthApi]
 
     controller = Some(
-      new Controller(health = healthApi, party = PartyApi, external = externalApi, public = publicApi)(classicSystem)
+      new Controller(health = healthApi, party = partyApi, external = externalApi, public = publicApi)(classicSystem)
     )
 
     controller foreach { controller =>
@@ -147,46 +149,19 @@ class ExternalApiServiceSpec extends ScalaTestWithActorTestKit(ExternalApiServic
   }
 
   "Working on institutions" must {
-    import InstitutionsExternalApiServiceData._
-
-    "return 404 if the institution does not exist" in {
-
-      val nonExistingExternalId = "DUMMY"
-
-      val response =
-        Http()
-          .singleRequest(
-            HttpRequest(
-              uri = s"$url/external/institutions/$nonExistingExternalId",
-              method = HttpMethods.GET,
-              headers = authorization
-            )
-          )
-          .futureValue
-
-      response.status shouldBe StatusCodes.NotFound
-    }
+    import InstitutionsPartyApiServiceData._
 
     "return the institution if exists" in {
-      prepareTest()
 
-      val response =
-        Http()
-          .singleRequest(
-            HttpRequest(
-              uri = s"$url/external/institutions/$externalId1",
-              method = HttpMethods.GET,
-              headers = authorization
-            )
-          )
-          .futureValue
+      (() => uuidSupplier.get).expects().returning(institutionUuid3).once()
 
-      response.status shouldBe StatusCodes.OK
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
 
-      val body = Unmarshal(response.entity).to[Institution].futureValue
+      prepareTest(institutionSeed3)
 
-      body shouldBe institution1
+      val response = institutionService.getInstitutionById(institutionUuid3).futureValue
+
+      Party.convertToApi(response.get).left.getOrElse(null) shouldBe expected3
     }
   }
-
 }

@@ -22,6 +22,8 @@ import it.pagopa.interop.partymanagement.model.party.Token
 import it.pagopa.interop.partymanagement.model.persistence.PartyPersistentBehavior
 import it.pagopa.interop.partymanagement.server.Controller
 import it.pagopa.interop.partymanagement.server.impl.Main.behaviorFactory
+import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
+import it.pagopa.interop.partymanagement.service.impl.{InstitutionServiceImpl, RelationshipServiceImpl}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.OffsetDateTime
@@ -82,6 +84,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     sharding.init(persistentEntity)
 
+    val relationshipService: RelationshipService = new RelationshipServiceImpl(system, sharding, persistentEntity)
+    val institutionService: InstitutionService   = new InstitutionServiceImpl(system, sharding, persistentEntity)
+
     val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
       SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
 
@@ -91,7 +96,9 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         sharding = sharding,
         entity = persistentEntity,
         uuidSupplier = uuidSupplier,
-        offsetDateTimeSupplier = offsetDateTimeSupplier
+        offsetDateTimeSupplier = offsetDateTimeSupplier,
+        relationshipService,
+        institutionService
       )
 
     val partyApi: PartyApi =
