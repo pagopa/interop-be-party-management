@@ -50,7 +50,12 @@ final case class PersistedPartyRelationship(
     updatedAt = updatedAt
   )
 
-  def toInstitutionId: InstitutionId = InstitutionId(id = id, to = to, product = product.toRelationshipProduct.id)
+  def toInstitutionId: InstitutionId = InstitutionId(
+    id = id,
+    to = to,
+    product = product.toRelationshipProduct.id,
+    digitalAddress = institutionUpdate.map(_.toInstitutionUpdate.digitalAddress).getOrElse("")
+  )
 }
 
 object PersistedPartyRelationship {
