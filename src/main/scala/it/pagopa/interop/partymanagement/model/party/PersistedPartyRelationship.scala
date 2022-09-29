@@ -54,7 +54,7 @@ final case class PersistedPartyRelationship(
     id = id,
     to = to,
     product = product.toRelationshipProduct.id,
-    digitalAddress = institutionUpdate.map(_.toInstitutionUpdate.digitalAddress.getOrElse("")).get
+    digitalAddress = institutionUpdate.flatMap(_.toInstitutionUpdate.digitalAddress).getOrElse("")
   )
 }
 
