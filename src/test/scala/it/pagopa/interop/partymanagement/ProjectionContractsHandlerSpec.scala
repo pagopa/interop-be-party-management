@@ -251,6 +251,7 @@ class ProjectionContractsHandlerSpec
       val originId                                        = randomString()
 
       val expectedPayload: InstitutionOnboardedNotification = InstitutionOnboardedNotification(
+        id = Option(managerConfirmEvent.onboardingTokenId),
         internalIstitutionID = institutionUuid,
         product = "p1",
         state = "ACTIVE",

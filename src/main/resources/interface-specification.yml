@@ -1008,6 +1008,7 @@ components:
         - SUSPENDED
         - DELETED
         - REJECTED
+        - TOBEVALIDATED
     Attributes:
       type: array
       items:

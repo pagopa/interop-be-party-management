@@ -6,6 +6,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 final case class InstitutionOnboardedNotification(
+  id: Option[UUID],
   internalIstitutionID: UUID,
   product: String,
   state: String,
@@ -41,6 +42,7 @@ object InstitutionOnboardedNotificationObj {
       .find(p => productId == p.product)
 
     InstitutionOnboardedNotification(
+      id = Option(managerRelationshipConfirm.onboardingTokenId),
       internalIstitutionID = institution.id,
       product = productId,
       state = "ACTIVE",
