@@ -244,7 +244,7 @@ class ProjectionContractsHandlerSpec
         "fileName",
         "contentType",
         UUID.randomUUID(),
-        OffsetDateTime.now.toInstant.atZone(ZoneId.of("Z")).toOffsetDateTime
+        OffsetDateTime.now(ZoneOffset.UTC)
       )
       val institutionUuid                                 = UUID.randomUUID()
       val externalId                                      = randomString()
