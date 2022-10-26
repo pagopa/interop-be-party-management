@@ -1009,6 +1009,7 @@ components:
         - DELETED
         - REJECTED
         - TOBEVALIDATED
+        - NONE
     Attributes:
       type: array
       items:

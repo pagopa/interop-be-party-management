@@ -10,6 +10,7 @@ sealed trait PersistedPartyRelationshipState {
     case PersistedPartyRelationshipState.Deleted       => RelationshipState.DELETED
     case PersistedPartyRelationshipState.Rejected      => RelationshipState.REJECTED
     case PersistedPartyRelationshipState.ToBeValidated => RelationshipState.TOBEVALIDATED
+    case PersistedPartyRelationshipState.None          => RelationshipState.NONE
   }
 }
 
@@ -21,6 +22,7 @@ object PersistedPartyRelationshipState {
   case object Deleted       extends PersistedPartyRelationshipState
   case object Rejected      extends PersistedPartyRelationshipState
   case object ToBeValidated extends PersistedPartyRelationshipState
+  case object None          extends PersistedPartyRelationshipState
 
   def fromApi(status: RelationshipState): PersistedPartyRelationshipState = status match {
     case RelationshipState.PENDING       => Pending
@@ -29,5 +31,6 @@ object PersistedPartyRelationshipState {
     case RelationshipState.DELETED       => Deleted
     case RelationshipState.REJECTED      => Rejected
     case RelationshipState.TOBEVALIDATED => ToBeValidated
+    case RelationshipState.NONE          => None
   }
 }
