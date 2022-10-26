@@ -48,7 +48,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.JsonWriter
 
-import java.time.OffsetDateTime
+import java.time.{OffsetDateTime, ZoneId}
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -244,7 +244,7 @@ class ProjectionContractsHandlerSpec
         "fileName",
         "contentType",
         UUID.randomUUID(),
-        OffsetDateTime.now
+        OffsetDateTime.now.toInstant.atZone(ZoneId.of("Z")).toOffsetDateTime
       )
       val institutionUuid                                 = UUID.randomUUID()
       val externalId                                      = randomString()
