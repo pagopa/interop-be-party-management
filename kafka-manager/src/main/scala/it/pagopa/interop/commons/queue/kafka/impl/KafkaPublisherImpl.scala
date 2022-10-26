@@ -9,8 +9,9 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.{Logger, LoggerFactory}
 import spray.json._
-
+import cats.implicits._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 class KafkaPublisherImpl(
   system: ActorSystem[_],
@@ -29,14 +30,17 @@ class KafkaPublisherImpl(
 
   private val sendProducer = SendProducer(producerSettings)(system.toClassic)
 
-  def send[T](message: T)(implicit messageSerializer: JsonWriter[T]): Future[String] = {
+  def send[T](message: T)(implicit messageSerializer: JsonWriter[T]): Future[Unit] = {
     val messageString  = message.toJson.compactPrint
     val producerRecord = new ProducerRecord[String, String](topic, messageString)
-    val result         = sendProducer.send(producerRecord).map { recordMetadata =>
-      logger.debug("Published message [{}] to topic/partition {}/{}", messageString, topic, recordMetadata.partition)
-      logger.info("Published message to topic/partition {}/{}", topic, recordMetadata.partition)
-      "OK"
+    val result         = sendProducer.send(producerRecord)
+
+    result.onComplete {
+      case Failure(exception) => logger.error(s"Error on sending $messageString on kafka - ${exception.getMessage}")
+      case Success(recordMetadata) =>
+        logger.debug("Published message [{}] to topic/partition {}/{}", messageString, topic, recordMetadata.partition)
+        logger.info("Published message to topic/partition {}/{}", topic, recordMetadata.partition)
     }
-    result
+    result.void
   }
 }

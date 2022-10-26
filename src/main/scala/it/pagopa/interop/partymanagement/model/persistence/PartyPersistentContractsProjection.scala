@@ -11,12 +11,12 @@ import akka.projection.eventsourced.EventEnvelope
 import akka.projection.eventsourced.scaladsl.EventSourcedProvider
 import akka.projection.scaladsl.{ExactlyOnceProjection, SourceProvider}
 import akka.projection.slick.{SlickHandler, SlickProjection}
-import cats.syntax.all._
 import it.pagopa.interop.commons.queue.kafka.KafkaPublisher
 import it.pagopa.interop.commons.utils.AkkaUtils
+import it.pagopa.interop.commons.utils.TypeConversions.OptionOps
 import it.pagopa.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
 import it.pagopa.interop.partymanagement.common.system._
-import it.pagopa.interop.partymanagement.error.PartyManagementErrors.GetInstitutionError
+import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{GetInstitutionError, GetRelationshipNotFound}
 import it.pagopa.interop.partymanagement.model.PartyRole
 import it.pagopa.interop.partymanagement.model.party.{
   InstitutionOnboarded,
@@ -98,36 +98,35 @@ class ProjectionContractsHandler(
   }
 
   private def checkRelationshipConfirmed(event: PartyRelationshipConfirmed): DBIO[Done] = {
-    logger.debug(s"projecting confirmation of relationship having id ${event.partyRelationshipId}")
-    DBIOAction.from {
-      val future = relationshipService
-        .getRelationshipById(event.partyRelationshipId)
-        .map(optRel => {
-          optRel
-            .filter(r => PartyRole.MANAGER == r.role)
-            .map(r => notifyInstitutionOnboarded(r.to, r.product.id, event))
-            .getOrElse(DBIOAction.successful(Done))
-        })
-      future.onComplete {
-        case Failure(e) =>
-          logger.error(
-            s"Error projecting confirmation of relationshing having id ${event.partyRelationshipId} on queue",
-            e
-          )
-          DBIOAction.failed(e)
-        case Success(_) =>
-          DBIOAction.successful(Done)
-      }
-      future.as(Done)
+    logger.info(s"projecting confirmation of relationship having id ${event.partyRelationshipId}") // apz debug
+    val result = for {
+      found             <- relationshipService.getRelationshipById(event.partyRelationshipId)
+      partyRelationship <- found.toFuture(GetRelationshipNotFound(event.partyRelationshipId.toString))
+      _                 <-
+        if (partyRelationship.role == PartyRole.MANAGER)
+          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, event)
+        else Future.unit
+    } yield Done
+
+    result.onComplete {
+      case Failure(e) =>
+        logger.info( // apz debug
+          s"Error projecting confirmation of relationshing having id ${event.partyRelationshipId} on queue",
+          e
+        )
+      case Success(_) =>
+        logger.info(s"Message has been sent on queue") // apz debug
     }
+
+    DBIOAction.from(result)
   }
 
   def notifyInstitutionOnboarded(
     institutionId: UUID,
     productId: String,
     managerRelationshipConfirm: PartyRelationshipConfirmed
-  )(implicit ec: ExecutionContext): Future[Any] = {
-    logger.debug(s"confirming institution having id $institutionId")
+  )(implicit ec: ExecutionContext): Future[Unit] = {
+    logger.info(s"confirming institution having id $institutionId") // apz debug
     for {
       institutionOpt <- institutionService.getInstitutionById(institutionId)
       institution    <- unpackInstitutionParty(institutionOpt)
@@ -136,14 +135,14 @@ class ProjectionContractsHandler(
         productId,
         managerRelationshipConfirm
       )
-      sendResult <- datalakeContractsPublisher.send(notification)
-    } yield sendResult
+      _ <- datalakeContractsPublisher.send(notification)
+    } yield ()
   }
 
   private def unpackInstitutionParty(institutionOpt: Option[Party]): Future[InstitutionParty] = {
-    institutionOpt.orNull match {
-      case institutionParty: InstitutionParty => Future.successful(institutionParty)
-      case _                                  => Future.failed(GetInstitutionError)
+    institutionOpt match {
+      case Some(institutionParty: InstitutionParty) => Future.successful(institutionParty)
+      case _                                        => Future.failed(GetInstitutionError)
     }
   }
 
