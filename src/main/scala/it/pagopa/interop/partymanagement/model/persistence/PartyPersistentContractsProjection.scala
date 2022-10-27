@@ -37,6 +37,8 @@ import spray.json.RootJsonFormat
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import akka.projection.HandlerRecoveryStrategy
+import scala.concurrent.duration._
 
 class PartyPersistentContractsProjection(
   system: ActorSystem[_],
@@ -55,16 +57,18 @@ class PartyPersistentContractsProjection(
 
   def projection(tag: String): ExactlyOnceProjection[Offset, EventEnvelope[Event]] = {
     implicit val as: ActorSystem[_] = system
-    SlickProjection.exactlyOnce(
-      projectionId = ProjectionId("party-contracts-projections", tag),
-      sourceProvider = sourceProvider(tag),
-      handler = () =>
-        new ProjectionContractsHandler(system, sharding, entity, relationshipService, institutionService)(
-          tag,
-          datalakeContractsPublisher
-        ),
-      databaseConfig = dbConfig
-    )
+    SlickProjection
+      .exactlyOnce(
+        projectionId = ProjectionId("party-contracts-projections", tag),
+        sourceProvider = sourceProvider(tag),
+        handler = () =>
+          new ProjectionContractsHandler(system, sharding, entity, relationshipService, institutionService)(
+            tag,
+            datalakeContractsPublisher
+          ),
+        databaseConfig = dbConfig
+      )
+      .withRecoveryStrategy(HandlerRecoveryStrategy.retryAndFail(6, 10.second))
   }
 }
 
