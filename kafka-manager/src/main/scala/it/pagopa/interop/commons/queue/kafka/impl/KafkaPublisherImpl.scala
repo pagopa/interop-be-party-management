@@ -28,19 +28,20 @@ class KafkaPublisherImpl(
       .withBootstrapServers(bootstrapServers)
       .withProperties(properties)
 
-  private val sendProducer = SendProducer(producerSettings)(system.toClassic)
+  private val sendProducer: SendProducer[String, String] = SendProducer(producerSettings)(system.toClassic)
 
   def send[T](message: T)(implicit messageSerializer: JsonWriter[T]): Future[String] = {
     val messageString  = message.toJson.compactPrint
     val producerRecord = new ProducerRecord[String, String](topic, messageString)
-    val result         = sendProducer.send(producerRecord)
 
-    result.onComplete {
-      case Failure(exception) => logger.error(s"Error on sending $messageString on kafka - ${exception.getMessage}")
+    sendProducer.send(producerRecord).transformWith {
+      case Failure(exception)      =>
+        logger.error(s"Error on sending $messageString on kafka - ${exception.getMessage}")
+        Future.failed(exception)
       case Success(recordMetadata) =>
         logger.debug("Published message [{}] to topic/partition {}/{}", messageString, topic, recordMetadata.partition)
         logger.info("Published message to topic/partition {}/{}", topic, recordMetadata.partition)
+        Future.successful("OK")
     }
-    Future.successful("OK")
   }
 }
