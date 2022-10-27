@@ -48,7 +48,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.JsonWriter
 
-import java.time.OffsetDateTime
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -244,7 +244,7 @@ class ProjectionContractsHandlerSpec
         "fileName",
         "contentType",
         UUID.randomUUID(),
-        OffsetDateTime.now
+        OffsetDateTime.now(ZoneOffset.UTC)
       )
       val institutionUuid                                 = UUID.randomUUID()
       val externalId                                      = randomString()
@@ -285,7 +285,7 @@ class ProjectionContractsHandlerSpec
         .send(_: InstitutionOnboardedNotification)(_: JsonWriter[InstitutionOnboardedNotification]))
         .expects(expectedPayload, *)
         .returning(Future.successful("OK"))
-        .once()
+        .never()
 
       projectionHandler.process(new EventEnvelope(null, null, 0, managerConfirmEvent, 0))
     }
@@ -327,5 +327,4 @@ class ProjectionContractsHandlerSpec
 
     }
   }
-
 }

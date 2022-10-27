@@ -277,7 +277,6 @@ object utils {
       case PartyRelationshipStateV1.SUSPENDED           => Right(Suspended)
       case PartyRelationshipStateV1.DELETED             => Right(Deleted)
       case PartyRelationshipStateV1.REJECTED            => Right(Rejected)
-      case PartyRelationshipStateV1.TOBEVALIDATED       => Right(ToBeValidated)
       case PartyRelationshipStateV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party relationship state value $value"))
     }
@@ -292,12 +291,11 @@ object utils {
 
   def relationshipStateToProtobuf(state: PersistedPartyRelationshipState): PartyRelationshipStateV1 =
     state match {
-      case Pending       => PartyRelationshipStateV1.PENDING
-      case Active        => PartyRelationshipStateV1.ACTIVE
-      case Suspended     => PartyRelationshipStateV1.SUSPENDED
-      case Deleted       => PartyRelationshipStateV1.DELETED
-      case Rejected      => PartyRelationshipStateV1.REJECTED
-      case ToBeValidated => PartyRelationshipStateV1.TOBEVALIDATED
+      case Pending   => PartyRelationshipStateV1.PENDING
+      case Active    => PartyRelationshipStateV1.ACTIVE
+      case Suspended => PartyRelationshipStateV1.SUSPENDED
+      case Deleted   => PartyRelationshipStateV1.DELETED
+      case Rejected  => PartyRelationshipStateV1.REJECTED
     }
 
 }
