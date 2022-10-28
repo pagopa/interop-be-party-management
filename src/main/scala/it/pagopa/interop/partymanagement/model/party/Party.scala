@@ -82,7 +82,9 @@ final case class InstitutionParty(
   start: OffsetDateTime,
   end: Option[OffsetDateTime],
   attributes: Set[InstitutionAttribute],
-  products: Set[PersistedInstitutionProduct]
+  products: Set[PersistedInstitutionProduct],
+  paymentServiceProvider: Option[PersistedPaymentServiceProvider],
+  dataProtectionOfficer: Option[PersistedDataProtectionOfficer]
 ) extends Party
 
 object InstitutionParty {
@@ -107,7 +109,9 @@ object InstitutionParty {
       end = None,
       products = institution.products.fold(Set.empty[PersistedInstitutionProduct])(
         _.values.map(PersistedInstitutionProduct.fromApi).toSet
-      )
+      ),
+      paymentServiceProvider = institution.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
+      dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi)
     )
   }
 
@@ -128,7 +132,9 @@ object InstitutionParty {
       start = start,
       end = end,
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
-      products = institution.products.values.map(PersistedInstitutionProduct.fromApi).toSet
+      products = institution.products.values.map(PersistedInstitutionProduct.fromApi).toSet,
+      paymentServiceProvider = institution.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
+      dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi)
     )
 
 }

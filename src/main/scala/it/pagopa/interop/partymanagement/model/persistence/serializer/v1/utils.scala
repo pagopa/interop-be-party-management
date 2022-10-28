@@ -7,10 +7,12 @@ import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipS
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
+  DataProtectionOfficerV1,
   InstitutionAttributeV1,
   InstitutionPartyV1,
   InstitutionProductV1,
   PartyV1,
+  PaymentServiceProviderV1,
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
@@ -71,7 +73,19 @@ object utils {
             .map(a => InstitutionAttribute(origin = a.origin, code = a.code, description = a.description))
             .toSet,
           start = start,
-          end = end
+          end = end,
+          paymentServiceProvider = i.paymentServiceProvider
+            .map(p =>
+              PersistedPaymentServiceProvider(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+          dataProtectionOfficer = i.dataProtectionOfficer
+            .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec))
         )
       }.toEither
     case Empty                 => Left(new RuntimeException("Deserialization from protobuf failed"))
@@ -109,6 +123,18 @@ object utils {
           attributes = i.attributes
             .map(a => InstitutionAttributeV1(origin = a.origin, code = a.code, description = a.description))
             .toSeq,
+          paymentServiceProvider = i.paymentServiceProvider
+            .map(p =>
+              PaymentServiceProviderV1(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+          dataProtectionOfficer = i.dataProtectionOfficer
+            .map(a => DataProtectionOfficerV1(address = a.address, email = a.email, pec = a.pec)),
           start = start,
           end = end
         )
