@@ -55,7 +55,23 @@ object StateData {
     origin = origin,
     institutionType = Option(institutionType),
     products = products,
-    attributes = attributes.toSet
+    attributes = attributes.toSet,
+    paymentServiceProvider = Option(
+      PersistedPaymentServiceProvider(
+        abiCode = paymentServiceProvider.abiCode,
+        businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+        legalRegisterName = paymentServiceProvider.legalRegisterName,
+        legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+        vatNumberGroup = paymentServiceProvider.vatNumberGroup
+      )
+    ),
+    dataProtectionOfficer = Option(
+      PersistedDataProtectionOfficer(
+        address = dataProtectionOfficer.address,
+        email = dataProtectionOfficer.email,
+        pec = dataProtectionOfficer.pec
+      )
+    )
   )
 
   val relationship: PersistedPartyRelationship =

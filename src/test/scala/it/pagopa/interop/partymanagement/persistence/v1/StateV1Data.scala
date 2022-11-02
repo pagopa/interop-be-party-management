@@ -2,9 +2,11 @@ package it.pagopa.interop.partymanagement.persistence.v1
 
 import it.pagopa.interop.commons.utils.TypeConversions.OffsetDateTimeOps
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
+  DataProtectionOfficerV1,
   InstitutionAttributeV1,
   InstitutionPartyV1,
   InstitutionProductV1,
+  PaymentServiceProviderV1,
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
@@ -100,6 +102,22 @@ object StateV1Data {
     ),
     attributes = attributes.map(attr =>
       InstitutionAttributeV1(origin = attr.origin, code = attr.code, description = attr.description)
+    ),
+    paymentServiceProvider = Option(
+      PaymentServiceProviderV1(
+        abiCode = paymentServiceProvider.abiCode,
+        businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+        legalRegisterName = paymentServiceProvider.legalRegisterName,
+        legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+        vatNumberGroup = paymentServiceProvider.vatNumberGroup
+      )
+    ),
+    dataProtectionOfficer = Option(
+      DataProtectionOfficerV1(
+        address = dataProtectionOfficer.address,
+        email = dataProtectionOfficer.email,
+        pec = dataProtectionOfficer.pec
+      )
     )
   )
 
