@@ -7,8 +7,10 @@ import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.interop.commons.utils.OpenapiUtils._
+import it.pagopa.interop.partymanagement.model.party.PersistedDataProtectionOfficer.toApi
+import it.pagopa.interop.partymanagement.model.party.PersistedPaymentServiceProvider.toAPi
 import it.pagopa.interop.partymanagement.model.party._
-import it.pagopa.interop.partymanagement.model.{PartyRole, RelationshipState, TokenText}
+import it.pagopa.interop.partymanagement.model.{Institution, PartyRole, RelationshipState, TokenText}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
@@ -94,6 +96,30 @@ object PartyPersistentBehavior {
         party.foreach(p => logger.debug("Found institution {}", p.id.toString))
         replyTo ! party
 
+        Effect.none
+
+      case GetInstitutionsByProductId(productId, replyTo) =>
+        val parties: List[Institution] =
+          state.parties.values.collect {
+            case o: InstitutionParty if o.products.filter(_.product == productId).size > 0 =>
+              Institution(
+                id = o.id,
+                externalId = o.externalId,
+                originId = o.originId,
+                description = o.description,
+                digitalAddress = o.digitalAddress,
+                address = o.address,
+                zipCode = o.zipCode,
+                taxCode = o.taxCode,
+                origin = o.origin,
+                institutionType = o.institutionType,
+                products = (o.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap,
+                attributes = o.attributes.map(InstitutionAttribute.toApi).toSeq,
+                paymentServiceProvider = o.paymentServiceProvider.map(toAPi(_)),
+                dataProtectionOfficer = o.dataProtectionOfficer.map(toApi(_))
+              )
+          }.toList
+        replyTo ! parties
         Effect.none
 
       case AddAttributes(institutionId, attributes, replyTo) =>

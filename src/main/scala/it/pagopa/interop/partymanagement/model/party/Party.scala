@@ -7,6 +7,8 @@ import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
   NoAttributeForPartyPerson,
   UpdateInstitutionNotFound
 }
+import it.pagopa.interop.partymanagement.model.party.PersistedDataProtectionOfficer.toApi
+import it.pagopa.interop.partymanagement.model.party.PersistedPaymentServiceProvider.toAPi
 import it.pagopa.interop.partymanagement.model.{Attribute, Institution, InstitutionSeed, Person, PersonSeed}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
@@ -49,7 +51,9 @@ object Party {
             origin = institutionParty.origin,
             institutionType = institutionParty.institutionType,
             attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq,
-            products = (institutionParty.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap
+            products = (institutionParty.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap,
+            paymentServiceProvider = institutionParty.paymentServiceProvider.map(toAPi(_)),
+            dataProtectionOfficer = institutionParty.dataProtectionOfficer.map(toApi(_))
           )
         )
     }

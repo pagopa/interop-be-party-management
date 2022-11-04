@@ -31,7 +31,6 @@ message PartyRelationshipV1 {
     DELETED = 4;
     REJECTED = 5;
     TOBEVALIDATED = 6;
-    NONE = 7;
   }
 
   enum PartyRoleV1 {

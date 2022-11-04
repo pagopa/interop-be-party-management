@@ -304,7 +304,6 @@ object utils {
       case PartyRelationshipStateV1.DELETED             => Right(Deleted)
       case PartyRelationshipStateV1.REJECTED            => Right(Rejected)
       case PartyRelationshipStateV1.TOBEVALIDATED       => Right(ToBeValidated)
-      case PartyRelationshipStateV1.NONE                => Right(None)
       case PartyRelationshipStateV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party relationship state value $value"))
     }
@@ -325,7 +324,6 @@ object utils {
       case Deleted       => PartyRelationshipStateV1.DELETED
       case Rejected      => PartyRelationshipStateV1.REJECTED
       case ToBeValidated => PartyRelationshipStateV1.TOBEVALIDATED
-      case None          => PartyRelationshipStateV1.NONE
     }
 
 }

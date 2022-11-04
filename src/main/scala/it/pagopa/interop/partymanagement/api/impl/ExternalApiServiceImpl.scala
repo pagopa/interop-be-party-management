@@ -40,10 +40,15 @@ class ExternalApiServiceImpl(
   def getCommander(entityId: String): EntityRef[Command] =
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
 
+  /**
+    * Code: 200, Message: Institution, DataType: Institution
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Institution not found, DataType: Problem
+    */
   override def getInstitutionByExternalId(externalId: String)(implicit
     toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    contexts: Seq[(String, String)]
+    contexts: scala.Seq[(String, String)]
   ): Route = {
     logger.info("Getting institution with external id {}", externalId)
 
@@ -75,7 +80,38 @@ class ExternalApiServiceImpl(
         logger.error(s"Error while getting institution with external id $externalId", ex)
         getInstitutionByExternalId400(problemOf(StatusCodes.BadRequest, InstitutionBadRequest))
     }
-
   }
 
+  /**
+    * Code: 200, Message: Institutions, DataType: Institutions
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationships not found, DataType: Problem
+    */
+  override def getInstitutionsByProductId(productId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerInstitutions: ToEntityMarshaller[Institutions],
+    contexts: scala.Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Getting institution with product id $productId")
+
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val institutions: Future[List[Institution]] = for {
+      shardOrgs <- Future.traverse(commanders)(_.ask(ref => GetInstitutionsByProductId(productId, ref)))
+    } yield shardOrgs.flatMap(_.toList)
+
+    onComplete(institutions) {
+      case Success(institutions)            =>
+        logger.info(s"Institution with product id $productId not found")
+        getInstitutionsByProductId200(Institutions(institutions))
+      case Failure(ex: InstitutionNotFound) =>
+        logger.info(s"Institution with product id $productId not found", ex)
+        getInstitutionsByProductId404(problemOf(StatusCodes.NotFound, ex))
+      case Failure(ex)                      =>
+        logger.error(s"Error while getting institution with product id $productId", ex)
+        getInstitutionsByProductId400(problemOf(StatusCodes.BadRequest, InstitutionBadRequest))
+    }
+  }
 }

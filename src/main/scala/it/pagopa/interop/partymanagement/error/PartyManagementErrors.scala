@@ -112,4 +112,6 @@ object PartyManagementErrors {
   final case object NoAttributeForPartyPerson
       extends ComponentError("0049", s"Attributes do not exist for person party")
 
+  final case class InstitutionsWithProductNotFound(productId: String)
+      extends ComponentError("0050", s"Institutions with product ID $productId not found")
 }

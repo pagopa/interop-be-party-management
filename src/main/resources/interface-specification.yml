@@ -344,6 +344,39 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: getInstitutionByExternalId
       description: 'returns the identified institution, if any.'
+  /external/institutions/product/{productId}:
+    parameters:
+      - schema:
+          type: string
+        name: productId
+        in: path
+        required: true
+        description: Retrieve Institutions by product ID
+    get:
+      summary: Retrieves Institutions by product ID
+      tags:
+        - external
+      responses:
+        '200':
+          description: Institutions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institutions'
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Relationships not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: getInstitutionsByProductId
+      description: 'returns the identified institution, if any.'
   /relationships:
     post:
       tags:
@@ -1017,7 +1050,6 @@ components:
         - DELETED
         - REJECTED
         - TOBEVALIDATED
-        - NONE
     Attributes:
       type: array
       items:
@@ -1146,6 +1178,16 @@ components:
         - product
         - state
         - createdAt
+    Institutions:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Institution'
+      additionalProperties: false
+      required:
+        - items
     Relationships:
       type: object
       properties:
