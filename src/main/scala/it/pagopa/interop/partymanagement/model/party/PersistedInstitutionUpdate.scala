@@ -1,6 +1,8 @@
 package it.pagopa.interop.partymanagement.model.party
 
-import it.pagopa.interop.partymanagement.model.InstitutionUpdate
+import it.pagopa.interop.partymanagement.model.party.PersistedDataProtectionOfficer.toApi
+import it.pagopa.interop.partymanagement.model.party.PersistedPaymentServiceProvider.toAPi
+import it.pagopa.interop.partymanagement.model.{InstitutionUpdate}
 
 final case class PersistedInstitutionUpdate(
   institutionType: Option[String],
@@ -8,7 +10,9 @@ final case class PersistedInstitutionUpdate(
   digitalAddress: Option[String],
   address: Option[String],
   zipCode: Option[String],
-  taxCode: Option[String]
+  taxCode: Option[String],
+  paymentServiceProvider: Option[PersistedPaymentServiceProvider],
+  dataProtectionOfficer: Option[PersistedDataProtectionOfficer]
 ) {
   def toInstitutionUpdate: InstitutionUpdate = InstitutionUpdate(
     institutionType = institutionType,
@@ -16,7 +20,9 @@ final case class PersistedInstitutionUpdate(
     digitalAddress = digitalAddress,
     address = address,
     zipCode = zipCode,
-    taxCode = taxCode
+    taxCode = taxCode,
+    paymentServiceProvider = paymentServiceProvider.map(toAPi(_)),
+    dataProtectionOfficer = dataProtectionOfficer.map(toApi(_))
   )
 }
 
@@ -28,6 +34,8 @@ object PersistedInstitutionUpdate {
       digitalAddress = institutionUpdate.digitalAddress,
       address = institutionUpdate.address,
       zipCode = institutionUpdate.zipCode,
-      taxCode = institutionUpdate.taxCode
+      taxCode = institutionUpdate.taxCode,
+      paymentServiceProvider = institutionUpdate.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
+      dataProtectionOfficer = institutionUpdate.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi)
     )
 }

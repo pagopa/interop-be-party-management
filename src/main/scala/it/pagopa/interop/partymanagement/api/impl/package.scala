@@ -9,22 +9,23 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val institutionUpdateFormat: RootJsonFormat[InstitutionUpdate]           = jsonFormat6(InstitutionUpdate)
+  implicit val dataProtectionOfficerFormat: RootJsonFormat[DataProtectionOfficer]   = jsonFormat3(DataProtectionOfficer)
+  implicit val paymentServiceProviderFormat: RootJsonFormat[PaymentServiceProvider] = jsonFormat5(
+    PaymentServiceProvider
+  )
+  implicit val institutionUpdateFormat: RootJsonFormat[InstitutionUpdate]           = jsonFormat8(InstitutionUpdate)
   implicit val billingFormat: RootJsonFormat[Billing]                               = jsonFormat3(Billing)
   implicit val institutionProductFormat: RootJsonFormat[InstitutionProduct]         = jsonFormat3(InstitutionProduct)
   implicit val attributeFormat: RootJsonFormat[Attribute]                           = jsonFormat3(Attribute)
   implicit val personSeedFormat: RootJsonFormat[PersonSeed]                         = jsonFormat1(PersonSeed)
   implicit val personFormat: RootJsonFormat[Person]                                 = jsonFormat1(Person)
-  implicit val dpoFormat: RootJsonFormat[DataProtectionOfficer]                     = jsonFormat3(DataProtectionOfficer)
-  implicit val paymentServiceProviderFormat: RootJsonFormat[PaymentServiceProvider] = jsonFormat5(
-    PaymentServiceProvider
-  )
-  implicit val institutionSeedFormat: RootJsonFormat[InstitutionSeed]               = jsonFormat13(InstitutionSeed)
-  implicit val institutionFormat: RootJsonFormat[Institution]                       = jsonFormat14(Institution)
-  implicit val institutionIdFormat: RootJsonFormat[InstitutionId]                   = jsonFormat4(InstitutionId)
-  implicit val institutionsFormat: RootJsonFormat[Institutions]                     = jsonFormat1(Institutions)
-  implicit val relationshipProductFormat: RootJsonFormat[RelationshipProduct]       = jsonFormat3(RelationshipProduct)
-  implicit val relationshipFormat: RootJsonFormat[Relationship]                     = jsonFormat15(Relationship)
+
+  implicit val institutionSeedFormat: RootJsonFormat[InstitutionSeed]                 = jsonFormat13(InstitutionSeed)
+  implicit val institutionFormat: RootJsonFormat[Institution]                         = jsonFormat14(Institution)
+  implicit val institutionIdFormat: RootJsonFormat[InstitutionId]                     = jsonFormat4(InstitutionId)
+  implicit val institutionsFormat: RootJsonFormat[Institutions]                       = jsonFormat1(Institutions)
+  implicit val relationshipProductFormat: RootJsonFormat[RelationshipProduct]         = jsonFormat3(RelationshipProduct)
+  implicit val relationshipFormat: RootJsonFormat[Relationship]                       = jsonFormat15(Relationship)
   implicit val relationshipProductSeedFormat: RootJsonFormat[RelationshipProductSeed] = jsonFormat2(
     RelationshipProductSeed
   )

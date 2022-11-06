@@ -1359,6 +1359,10 @@ components:
         taxCode:
           description: institution tax code
           type: string
+        paymentServiceProvider:
+          $ref: '#/components/schemas/PaymentServiceProvider'
+        dataProtectionOfficer:
+          $ref: '#/components/schemas/DataProtectionOfficer'
     Billing:
       type: object
       properties:

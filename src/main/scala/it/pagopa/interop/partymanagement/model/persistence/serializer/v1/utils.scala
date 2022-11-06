@@ -7,12 +7,10 @@ import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipS
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
-  DataProtectionOfficerV1,
   InstitutionAttributeV1,
   InstitutionPartyV1,
   InstitutionProductV1,
   PartyV1,
-  PaymentServiceProviderV1,
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.PartyRelationshipV1.{
@@ -21,9 +19,11 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
+  DataProtectionOfficerV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
-  PartyRelationshipV1
+  PartyRelationshipV1,
+  PaymentServiceProviderV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -180,7 +180,19 @@ object utils {
           digitalAddress = i.digitalAddress,
           zipCode = i.zipCode,
           address = i.address,
-          taxCode = i.taxCode
+          taxCode = i.taxCode,
+          paymentServiceProvider = i.paymentServiceProvider.map(p =>
+            PersistedPaymentServiceProvider(
+              abiCode = p.abiCode,
+              businessRegisterNumber = p.businessRegisterNumber,
+              legalRegisterName = p.legalRegisterName,
+              legalRegisterNumber = p.legalRegisterNumber,
+              vatNumberGroup = p.vatNumberGroup
+            )
+          ),
+          dataProtectionOfficer = i.dataProtectionOfficer.map(d =>
+            PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
+          )
         )
       ),
       billing = partyRelationshipV1.billing.map(getPersistedBilling)
@@ -216,7 +228,19 @@ object utils {
           digitalAddress = i.digitalAddress,
           address = i.address,
           zipCode = i.zipCode,
-          taxCode = i.taxCode
+          taxCode = i.taxCode,
+          paymentServiceProvider = i.paymentServiceProvider
+            .map(p =>
+              PaymentServiceProviderV1(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+          dataProtectionOfficer = i.dataProtectionOfficer
+            .map(d => DataProtectionOfficerV1(address = d.address, email = d.email, pec = d.pec))
         )
       ),
       billing = partyRelationship.billing.map(getBillingV1)

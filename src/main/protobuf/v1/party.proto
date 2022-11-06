@@ -52,17 +52,3 @@ message InstitutionProductV1 {
   required BillingV1 billing = 2;
   optional string pricingPlan = 3;
 }
-
-message PaymentServiceProviderV1 {
-  optional string abiCode = 1;
-  optional string businessRegisterNumber = 2;
-  optional string legalRegisterName = 3;
-  optional string legalRegisterNumber = 4;
-  optional bool vatNumberGroup = 5;
-}
-
-message DataProtectionOfficerV1 {
-  optional string address = 1;
-  optional string email = 2;
-  optional string pec = 3;
-}

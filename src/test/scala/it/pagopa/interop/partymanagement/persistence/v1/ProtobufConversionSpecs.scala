@@ -31,19 +31,19 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events.
   TokenAddedV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
-  DataProtectionOfficerV1,
   InstitutionAttributeV1,
   InstitutionPartyV1,
   InstitutionProductV1,
   PartyV1,
-  PaymentServiceProviderV1,
   PersonPartyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
+  DataProtectionOfficerV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
-  PartyRelationshipV1
+  PartyRelationshipV1,
+  PaymentServiceProviderV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.token.{
   OnboardingContractInfoV1,
@@ -331,7 +331,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("MAILOVERRIDE"),
           Option("ADDRESSOVERRIDE"),
           Option("ZIPCODEOVERRIDE"),
-          Option("TAXCODEOVERRIDE")
+          Option("TAXCODEOVERRIDE"),
+          paymentServiceProvider = None,
+          dataProtectionOfficer = None
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -382,7 +384,18 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
             i.digitalAddress,
             i.address,
             i.zipCode,
-            i.taxCode
+            i.taxCode,
+            i.paymentServiceProvider.map(p =>
+              PersistedPaymentServiceProvider(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+            i.dataProtectionOfficer
+              .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec))
           )
         ),
         billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
@@ -415,7 +428,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("MAILOVERRIDE"),
           Option("ADDRESSOVERRIDE"),
           Option("ZIPCODEOVERRIDE"),
-          Option("TAXCODEOVERRIDE")
+          Option("TAXCODEOVERRIDE"),
+          paymentServiceProvider = None,
+          dataProtectionOfficer = None
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -447,7 +462,19 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               i.digitalAddress,
               i.address,
               i.zipCode,
-              i.taxCode
+              i.taxCode,
+              i.paymentServiceProvider.map(p =>
+                PersistedPaymentServiceProvider(
+                  abiCode = p.abiCode,
+                  businessRegisterNumber = p.businessRegisterNumber,
+                  legalRegisterName = p.legalRegisterName,
+                  legalRegisterNumber = p.legalRegisterNumber,
+                  vatNumberGroup = p.vatNumberGroup
+                )
+              ),
+              i.dataProtectionOfficer.map(d =>
+                PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
+              )
             )
           ),
           billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))

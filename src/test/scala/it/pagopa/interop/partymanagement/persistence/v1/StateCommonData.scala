@@ -4,8 +4,10 @@ import it.pagopa.interop.partymanagement.model.{DataProtectionOfficer, PaymentSe
 import it.pagopa.interop.partymanagement.model.party.{
   InstitutionAttribute,
   PersistedBilling,
+  PersistedDataProtectionOfficer,
   PersistedInstitutionProduct,
-  PersistedInstitutionUpdate
+  PersistedInstitutionUpdate,
+  PersistedPaymentServiceProvider
 }
 
 import java.time.OffsetDateTime
@@ -107,7 +109,23 @@ object StateCommonData {
       Option("MAILOVERRIDE"),
       Option("ADDRESSOVERRIDE"),
       Option("ZIPCODEOVERRIDE"),
-      Option("TAXCODEOVERRIDE")
+      Option("TAXCODEOVERRIDE"),
+      paymentServiceProvider = Option(
+        PersistedPaymentServiceProvider(
+          abiCode = paymentServiceProvider.abiCode,
+          businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+          legalRegisterName = paymentServiceProvider.legalRegisterName,
+          legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+          vatNumberGroup = paymentServiceProvider.vatNumberGroup
+        )
+      ),
+      dataProtectionOfficer = Option(
+        PersistedDataProtectionOfficer(
+          address = dataProtectionOfficer.address,
+          email = dataProtectionOfficer.email,
+          pec = dataProtectionOfficer.pec
+        )
+      )
     )
   )
 
