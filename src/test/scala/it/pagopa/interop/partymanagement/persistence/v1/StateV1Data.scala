@@ -9,9 +9,11 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
+  DataProtectionOfficerV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
-  PartyRelationshipV1
+  PartyRelationshipV1,
+  PaymentServiceProviderV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -42,7 +44,23 @@ object StateV1Data {
       digitalAddress = i.digitalAddress,
       address = i.address,
       zipCode = i.zipCode,
-      taxCode = i.taxCode
+      taxCode = i.taxCode,
+      paymentServiceProvider = Option(
+        PaymentServiceProviderV1(
+          abiCode = paymentServiceProvider.abiCode,
+          businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+          legalRegisterName = paymentServiceProvider.legalRegisterName,
+          legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+          vatNumberGroup = paymentServiceProvider.vatNumberGroup
+        )
+      ),
+      dataProtectionOfficer = Option(
+        DataProtectionOfficerV1(
+          address = dataProtectionOfficer.address,
+          email = dataProtectionOfficer.email,
+          pec = dataProtectionOfficer.pec
+        )
+      )
     )
   )
 
@@ -100,6 +118,22 @@ object StateV1Data {
     ),
     attributes = attributes.map(attr =>
       InstitutionAttributeV1(origin = attr.origin, code = attr.code, description = attr.description)
+    ),
+    paymentServiceProvider = Option(
+      PaymentServiceProviderV1(
+        abiCode = paymentServiceProvider.abiCode,
+        businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+        legalRegisterName = paymentServiceProvider.legalRegisterName,
+        legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+        vatNumberGroup = paymentServiceProvider.vatNumberGroup
+      )
+    ),
+    dataProtectionOfficer = Option(
+      DataProtectionOfficerV1(
+        address = dataProtectionOfficer.address,
+        email = dataProtectionOfficer.email,
+        pec = dataProtectionOfficer.pec
+      )
     )
   )
 

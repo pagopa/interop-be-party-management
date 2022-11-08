@@ -1,10 +1,13 @@
 package it.pagopa.interop.partymanagement.persistence.v1
 
+import it.pagopa.interop.partymanagement.model.{DataProtectionOfficer, PaymentServiceProvider}
 import it.pagopa.interop.partymanagement.model.party.{
   InstitutionAttribute,
   PersistedBilling,
+  PersistedDataProtectionOfficer,
   PersistedInstitutionProduct,
-  PersistedInstitutionUpdate
+  PersistedInstitutionUpdate,
+  PersistedPaymentServiceProvider
 }
 
 import java.time.OffsetDateTime
@@ -20,20 +23,20 @@ object StateCommonData {
   val personPartyId      = UUID.randomUUID()
   val institutionPartyId = UUID.randomUUID()
 
-  val externalId2     = UUID.randomUUID()
-  val originId2       = UUID.randomUUID()
-  val description     = "description"
-  val digitalAddress  = "digitalAddress"
-  val address         = "address"
-  val zipCode         = "zipCode"
-  val taxCode         = "taxCode"
-  val origin          = "IPA"
-  val institutionType = "PA"
-  val attributes      = Seq(
+  val externalId2            = UUID.randomUUID()
+  val originId2              = UUID.randomUUID()
+  val description            = "description"
+  val digitalAddress         = "digitalAddress"
+  val address                = "address"
+  val zipCode                = "zipCode"
+  val taxCode                = "taxCode"
+  val origin                 = "IPA"
+  val institutionType        = "PA"
+  val attributes             = Seq(
     InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
     InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
   )
-  val products        = Set(
+  val products               = Set(
     PersistedInstitutionProduct(
       product = "product1",
       pricingPlan = Option("pricingPlan"),
@@ -46,6 +49,15 @@ object StateCommonData {
         PersistedBilling(vatNumber = "VATNUMBER", recipientCode = "RECIPIENTCODE", publicServices = Option(true))
     )
   )
+  val paymentServiceProvider = PaymentServiceProvider(
+    abiCode = Some("12345"),
+    businessRegisterNumber = Some("123456"),
+    legalRegisterName = Some("Register Name"),
+    legalRegisterNumber = Some("1234567"),
+    vatNumberGroup = Some(false)
+  )
+  val dataProtectionOfficer  =
+    DataProtectionOfficer(address = Some("via Roma 1"), email = Some("ciao@ciao.it"), pec = Some("pec@pec.it"))
 
   val productId        = "productId"
   val productRole      = "productRole"
@@ -97,7 +109,23 @@ object StateCommonData {
       Option("MAILOVERRIDE"),
       Option("ADDRESSOVERRIDE"),
       Option("ZIPCODEOVERRIDE"),
-      Option("TAXCODEOVERRIDE")
+      Option("TAXCODEOVERRIDE"),
+      paymentServiceProvider = Option(
+        PersistedPaymentServiceProvider(
+          abiCode = paymentServiceProvider.abiCode,
+          businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+          legalRegisterName = paymentServiceProvider.legalRegisterName,
+          legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+          vatNumberGroup = paymentServiceProvider.vatNumberGroup
+        )
+      ),
+      dataProtectionOfficer = Option(
+        PersistedDataProtectionOfficer(
+          address = dataProtectionOfficer.address,
+          email = dataProtectionOfficer.email,
+          pec = dataProtectionOfficer.pec
+        )
+      )
     )
   )
 

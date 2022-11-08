@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationship
 import it.pagopa.interop.partymanagement.model.party._
-import it.pagopa.interop.partymanagement.model.{Attribute, PartyRole, RelationshipState, TokenText}
+import it.pagopa.interop.partymanagement.model.{Attribute, Institution, PartyRole, RelationshipState, TokenText}
 
 import java.util.UUID
 
@@ -27,6 +27,8 @@ final case class GetPartyAttributes(partyId: UUID, replyTo: ActorRef[StatusReply
 final case class AddAttributes(institutionId: UUID, attributes: Seq[Attribute], replyTo: ActorRef[StatusReply[Party]])
     extends PartyCommand
 final case class GetInstitutionByExternalId(externalId: String, replyTo: ActorRef[Option[InstitutionParty]])
+    extends PartyCommand
+final case class GetInstitutionsByProductId(productId: String, replyTo: ActorRef[List[Institution]])
     extends PartyCommand
 
 /* PartyRelationship Command */

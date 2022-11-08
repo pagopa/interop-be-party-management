@@ -1,7 +1,7 @@
 package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
-import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState.{Active, Pending}
+import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState.{Active, Pending, ToBeValidated}
 import it.pagopa.interop.partymanagement.model.{
   Billing,
   InstitutionId,
@@ -67,7 +67,8 @@ object PersistedPartyRelationship {
     product: RelationshipProductSeed,
     pricingPlan: Option[String],
     institutionUpdate: Option[InstitutionUpdate],
-    billing: Option[Billing]
+    billing: Option[Billing],
+    partyState: PersistedPartyRelationshipState = PersistedPartyRelationshipState.Pending
   ): PersistedPartyRelationship = {
     val timestamp = offsetDateTimeSupplier.get
     PersistedPartyRelationship(
@@ -78,9 +79,13 @@ object PersistedPartyRelationship {
       product = PersistedProduct.fromRelationshipProduct(product, timestamp),
       createdAt = timestamp,
       updatedAt = None,
-      state = role match {
-        case PersistedPartyRole.SubDelegate | PersistedPartyRole.Operator => Active
-        case PersistedPartyRole.Manager | PersistedPartyRole.Delegate     => Pending
+      state = partyState match {
+        case PersistedPartyRelationshipState.ToBeValidated => ToBeValidated
+        case _                                             =>
+          role match {
+            case PersistedPartyRole.SubDelegate | PersistedPartyRole.Operator => Active
+            case PersistedPartyRole.Manager | PersistedPartyRole.Delegate     => Pending
+          }
       },
       filePath = None,
       fileName = None,

@@ -39,9 +39,11 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
+  DataProtectionOfficerV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
-  PartyRelationshipV1
+  PartyRelationshipV1,
+  PaymentServiceProviderV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.token.{
   OnboardingContractInfoV1,
@@ -82,23 +84,23 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
     }
 
     "convert a PartyV1 (InstitutionPartyV1) to Party (InstitutionParty)" in {
-      val id              = UUID.randomUUID()
-      val externalId      = "externalId"
-      val originId        = "originId"
-      val description     = "description"
-      val digitalAddress  = "digitalAddress"
-      val address         = "address"
-      val zipCode         = "zipCode"
-      val taxCode         = "taxCode"
-      val start           = OffsetDateTime.now()
-      val end             = OffsetDateTime.now().plusDays(10L)
-      val origin          = "IPA"
-      val institutionType = "PA"
-      val attributes      = Set(
+      val id                     = UUID.randomUUID()
+      val externalId             = "externalId"
+      val originId               = "originId"
+      val description            = "description"
+      val digitalAddress         = "digitalAddress"
+      val address                = "address"
+      val zipCode                = "zipCode"
+      val taxCode                = "taxCode"
+      val start                  = OffsetDateTime.now()
+      val end                    = OffsetDateTime.now().plusDays(10L)
+      val origin                 = "IPA"
+      val institutionType        = "PA"
+      val attributes             = Set(
         InstitutionAttribute(origin = "origin", code = "a", description = "description_a"),
         InstitutionAttribute(origin = "origin", code = "b", description = "description_b")
       )
-      val products        = Set(
+      val products               = Set(
         PersistedInstitutionProduct(
           product = "product1",
           pricingPlan = Option("pricingPlan"),
@@ -111,6 +113,19 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
             PersistedBilling(vatNumber = "VATNUMBER", recipientCode = "RECIPIENTCODE", publicServices = Option(true))
         )
       )
+      val paymentServiceProvider = PersistedPaymentServiceProvider(
+        abiCode = Some("12345"),
+        businessRegisterNumber = Some("123456"),
+        legalRegisterName = Some("Register Name"),
+        legalRegisterNumber = Some("1234567"),
+        vatNumberGroup = Some(false)
+      )
+      val dataProtectionOfficer  =
+        PersistedDataProtectionOfficer(
+          address = Some("via Roma 1"),
+          email = Some("ciao@ciao.it"),
+          pec = Some("pec@pec.it")
+        )
 
       val partyV1: Try[InstitutionPartyV1] =
         for {
@@ -142,6 +157,22 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               code = attribute.code,
               description = attribute.description
             )
+          ),
+          paymentServiceProvider = Option(
+            PaymentServiceProviderV1(
+              abiCode = paymentServiceProvider.abiCode,
+              businessRegisterNumber = paymentServiceProvider.businessRegisterNumber,
+              legalRegisterName = paymentServiceProvider.legalRegisterName,
+              legalRegisterNumber = paymentServiceProvider.legalRegisterNumber,
+              vatNumberGroup = paymentServiceProvider.vatNumberGroup
+            )
+          ),
+          dataProtectionOfficer = Option(
+            DataProtectionOfficerV1(
+              address = dataProtectionOfficer.address,
+              email = dataProtectionOfficer.email,
+              pec = dataProtectionOfficer.pec
+            )
           )
         )
 
@@ -161,7 +192,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         origin = origin,
         institutionType = Option(institutionType),
         products = products,
-        attributes = attributes
+        attributes = attributes,
+        paymentServiceProvider = Option(paymentServiceProvider),
+        dataProtectionOfficer = Option(dataProtectionOfficer)
       )
 
       party.value shouldBe expected
@@ -241,7 +274,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           .toSet,
         attributes = attributes
           .map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code, description = attr.description))
-          .toSet
+          .toSet,
+        paymentServiceProvider = None,
+        dataProtectionOfficer = None
       )
 
       val partyV1: Either[Throwable, PartyV1] = getPartyV1(party)
@@ -264,7 +299,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           origin = origin,
           institutionType = Option(institutionType),
           products = products,
-          attributes = attributes
+          attributes = attributes,
+          paymentServiceProvider = None,
+          dataProtectionOfficer = None
         )
 
       partyV1.value shouldBe expected.success.value
@@ -294,7 +331,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("MAILOVERRIDE"),
           Option("ADDRESSOVERRIDE"),
           Option("ZIPCODEOVERRIDE"),
-          Option("TAXCODEOVERRIDE")
+          Option("TAXCODEOVERRIDE"),
+          paymentServiceProvider = None,
+          dataProtectionOfficer = None
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -345,7 +384,18 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
             i.digitalAddress,
             i.address,
             i.zipCode,
-            i.taxCode
+            i.taxCode,
+            i.paymentServiceProvider.map(p =>
+              PersistedPaymentServiceProvider(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+            i.dataProtectionOfficer
+              .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec))
           )
         ),
         billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
@@ -378,7 +428,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("MAILOVERRIDE"),
           Option("ADDRESSOVERRIDE"),
           Option("ZIPCODEOVERRIDE"),
-          Option("TAXCODEOVERRIDE")
+          Option("TAXCODEOVERRIDE"),
+          paymentServiceProvider = None,
+          dataProtectionOfficer = None
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -410,7 +462,19 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               i.digitalAddress,
               i.address,
               i.zipCode,
-              i.taxCode
+              i.taxCode,
+              i.paymentServiceProvider.map(p =>
+                PersistedPaymentServiceProvider(
+                  abiCode = p.abiCode,
+                  businessRegisterNumber = p.businessRegisterNumber,
+                  legalRegisterName = p.legalRegisterName,
+                  legalRegisterNumber = p.legalRegisterNumber,
+                  vatNumberGroup = p.vatNumberGroup
+                )
+              ),
+              i.dataProtectionOfficer.map(d =>
+                PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
+              )
             )
           ),
           billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))

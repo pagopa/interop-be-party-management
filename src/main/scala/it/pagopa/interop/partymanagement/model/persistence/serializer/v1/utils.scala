@@ -19,9 +19,11 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
+  DataProtectionOfficerV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
-  PartyRelationshipV1
+  PartyRelationshipV1,
+  PaymentServiceProviderV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -71,7 +73,19 @@ object utils {
             .map(a => InstitutionAttribute(origin = a.origin, code = a.code, description = a.description))
             .toSet,
           start = start,
-          end = end
+          end = end,
+          paymentServiceProvider = i.paymentServiceProvider
+            .map(p =>
+              PersistedPaymentServiceProvider(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+          dataProtectionOfficer = i.dataProtectionOfficer
+            .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec))
         )
       }.toEither
     case Empty                 => Left(new RuntimeException("Deserialization from protobuf failed"))
@@ -109,6 +123,18 @@ object utils {
           attributes = i.attributes
             .map(a => InstitutionAttributeV1(origin = a.origin, code = a.code, description = a.description))
             .toSeq,
+          paymentServiceProvider = i.paymentServiceProvider
+            .map(p =>
+              PaymentServiceProviderV1(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+          dataProtectionOfficer = i.dataProtectionOfficer
+            .map(a => DataProtectionOfficerV1(address = a.address, email = a.email, pec = a.pec)),
           start = start,
           end = end
         )
@@ -154,7 +180,19 @@ object utils {
           digitalAddress = i.digitalAddress,
           zipCode = i.zipCode,
           address = i.address,
-          taxCode = i.taxCode
+          taxCode = i.taxCode,
+          paymentServiceProvider = i.paymentServiceProvider.map(p =>
+            PersistedPaymentServiceProvider(
+              abiCode = p.abiCode,
+              businessRegisterNumber = p.businessRegisterNumber,
+              legalRegisterName = p.legalRegisterName,
+              legalRegisterNumber = p.legalRegisterNumber,
+              vatNumberGroup = p.vatNumberGroup
+            )
+          ),
+          dataProtectionOfficer = i.dataProtectionOfficer.map(d =>
+            PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
+          )
         )
       ),
       billing = partyRelationshipV1.billing.map(getPersistedBilling)
@@ -190,7 +228,19 @@ object utils {
           digitalAddress = i.digitalAddress,
           address = i.address,
           zipCode = i.zipCode,
-          taxCode = i.taxCode
+          taxCode = i.taxCode,
+          paymentServiceProvider = i.paymentServiceProvider
+            .map(p =>
+              PaymentServiceProviderV1(
+                abiCode = p.abiCode,
+                businessRegisterNumber = p.businessRegisterNumber,
+                legalRegisterName = p.legalRegisterName,
+                legalRegisterNumber = p.legalRegisterNumber,
+                vatNumberGroup = p.vatNumberGroup
+              )
+            ),
+          dataProtectionOfficer = i.dataProtectionOfficer
+            .map(d => DataProtectionOfficerV1(address = d.address, email = d.email, pec = d.pec))
         )
       ),
       billing = partyRelationship.billing.map(getBillingV1)
@@ -277,6 +327,7 @@ object utils {
       case PartyRelationshipStateV1.SUSPENDED           => Right(Suspended)
       case PartyRelationshipStateV1.DELETED             => Right(Deleted)
       case PartyRelationshipStateV1.REJECTED            => Right(Rejected)
+      case PartyRelationshipStateV1.TOBEVALIDATED       => Right(ToBeValidated)
       case PartyRelationshipStateV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize party relationship state value $value"))
     }
@@ -291,11 +342,12 @@ object utils {
 
   def relationshipStateToProtobuf(state: PersistedPartyRelationshipState): PartyRelationshipStateV1 =
     state match {
-      case Pending   => PartyRelationshipStateV1.PENDING
-      case Active    => PartyRelationshipStateV1.ACTIVE
-      case Suspended => PartyRelationshipStateV1.SUSPENDED
-      case Deleted   => PartyRelationshipStateV1.DELETED
-      case Rejected  => PartyRelationshipStateV1.REJECTED
+      case Pending       => PartyRelationshipStateV1.PENDING
+      case Active        => PartyRelationshipStateV1.ACTIVE
+      case Suspended     => PartyRelationshipStateV1.SUSPENDED
+      case Deleted       => PartyRelationshipStateV1.DELETED
+      case Rejected      => PartyRelationshipStateV1.REJECTED
+      case ToBeValidated => PartyRelationshipStateV1.TOBEVALIDATED
     }
 
 }

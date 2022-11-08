@@ -14,4 +14,6 @@ object ExternalApiMarshallerImpl extends ExternalApiMarshaller with SprayJsonSup
   override implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] =
     sprayJsonMarshaller[Problem]
 
+  override implicit def toEntityMarshallerInstitutions: ToEntityMarshaller[Institutions] =
+    sprayJsonMarshaller[Institutions]
 }

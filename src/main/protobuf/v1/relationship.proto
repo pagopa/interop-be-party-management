@@ -30,6 +30,7 @@ message PartyRelationshipV1 {
     SUSPENDED = 3;
     DELETED = 4;
     REJECTED = 5;
+    TOBEVALIDATED = 6;
   }
 
   enum PartyRoleV1 {
@@ -53,10 +54,26 @@ message InstitutionUpdateV1 {
   optional string address = 4;
   optional string zipCode = 5;
   optional string taxCode = 6;
+  optional PaymentServiceProviderV1 paymentServiceProvider = 7;
+  optional DataProtectionOfficerV1 dataProtectionOfficer = 8;
 }
 
 message BillingV1 {
   required string vatNumber = 1;
   required string recipientCode = 2;
   optional bool publicServices = 3;
+}
+
+message PaymentServiceProviderV1 {
+  optional string abiCode = 1;
+  optional string businessRegisterNumber = 2;
+  optional string legalRegisterName = 3;
+  optional string legalRegisterNumber = 4;
+  optional bool vatNumberGroup = 5;
+}
+
+message DataProtectionOfficerV1 {
+  optional string address = 1;
+  optional string email = 2;
+  optional string pec = 3;
 }

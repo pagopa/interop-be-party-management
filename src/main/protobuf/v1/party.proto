@@ -37,6 +37,8 @@ message InstitutionPartyV1 {
   optional string institutionType = 12;
   required string originId = 13;
   repeated InstitutionProductV1 products = 14;
+  optional PaymentServiceProviderV1 paymentServiceProvider = 15;
+  optional DataProtectionOfficerV1 dataProtectionOfficer = 16;
 }
 
 message InstitutionAttributeV1 {
