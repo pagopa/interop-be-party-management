@@ -101,7 +101,7 @@ object PartyPersistentBehavior {
       case GetInstitutionsByProductId(productId, replyTo) =>
         val parties: List[Institution] =
           state.parties.values.collect {
-            case o: InstitutionParty if o.products.filter(_.product == productId).size > 0 =>
+            case o: InstitutionParty if o.products.exists(_.product == productId) =>
               Institution(
                 id = o.id,
                 externalId = o.externalId,
