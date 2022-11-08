@@ -48,7 +48,7 @@ class ExternalApiServiceImpl(
   override def getInstitutionByExternalId(externalId: String)(implicit
     toEntityMarshallerInstitution: ToEntityMarshaller[Institution],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    contexts: scala.Seq[(String, String)]
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info("Getting institution with external id {}", externalId)
 
