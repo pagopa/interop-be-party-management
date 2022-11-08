@@ -90,7 +90,7 @@ class ExternalApiServiceImpl(
   override def getInstitutionsByProductId(productId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerInstitutions: ToEntityMarshaller[Institutions],
-    contexts: scala.Seq[(String, String)]
+    contexts: Seq[(String, String)]
   ): Route = {
     logger.info(s"Getting institution with product id $productId")
 
