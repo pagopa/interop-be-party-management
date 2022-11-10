@@ -307,7 +307,11 @@ class PartyApiServiceImpl(
         seed.product,
         pricingPlan = seed.pricingPlan,
         billing = seed.billing,
-        institutionUpdate = seed.institutionUpdate
+        institutionUpdate = seed.institutionUpdate,
+        relationshipState = seed.state.getOrElse(RelationshipState.PENDING) match {
+          case RelationshipState.TOBEVALIDATED => PersistedPartyRelationshipState.ToBeValidated
+          case _                               => PersistedPartyRelationshipState.Pending
+        }
       )
       currentPartyRelationships <- Future
         .traverse(commanders)(
@@ -323,8 +327,8 @@ class PartyApiServiceImpl(
           )
         )
         .map(_.flatten)
-      verified                  <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
-      partyRelationship         <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
+      verified          <- isRelationshipAllowed(currentPartyRelationships, partyRelationship)
+      partyRelationship <- getCommander(from.id.toString).ask(ref => AddPartyRelationship(verified, ref))
     } yield partyRelationship
 
     onComplete(result) {

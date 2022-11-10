@@ -1103,6 +1103,8 @@ components:
           $ref: '#/components/schemas/InstitutionUpdate'
         billing:
           $ref: '#/components/schemas/Billing'
+        state:
+          $ref: '#/components/schemas/RelationshipState'
       additionalProperties: false
       required:
         - from
