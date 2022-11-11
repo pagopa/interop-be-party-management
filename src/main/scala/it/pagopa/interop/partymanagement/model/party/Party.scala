@@ -28,6 +28,30 @@ sealed trait Party {
       Right(institutionParty.copy(attributes = updated))
   }
 
+  def addPaymentServiceProvider(): Either[Throwable, Party] = this match {
+    case _: PersonParty                     => Left(NoAttributeForPartyPerson)
+    case institutionParty: InstitutionParty =>
+      val updated: Option[PersistedPaymentServiceProvider] = institutionParty.paymentServiceProvider.map(p =>
+        PersistedPaymentServiceProvider(
+          abiCode = p.abiCode,
+          businessRegisterNumber = p.businessRegisterNumber,
+          legalRegisterName = p.legalRegisterName,
+          legalRegisterNumber = p.legalRegisterNumber,
+          vatNumberGroup = p.vatNumberGroup
+        )
+      )
+      Right(institutionParty.copy(paymentServiceProvider = updated))
+  }
+
+  def addDataProtectionOfficer(): Either[Throwable, Party] = this match {
+    case _: PersonParty                     => Left(NoAttributeForPartyPerson)
+    case institutionParty: InstitutionParty =>
+      val updated: Option[PersistedDataProtectionOfficer] = institutionParty.dataProtectionOfficer.map(d =>
+        PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.email)
+      )
+      Right(institutionParty.copy(dataProtectionOfficer = updated))
+  }
+
 }
 
 object Party {

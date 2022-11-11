@@ -301,6 +301,8 @@ object PartyPersistentBehavior {
       case PartyUpdated(party)                       => state.updateParty(party)
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
+      case PaymentServiceProviderAdded(party)        => state.updateParty(party)
+      case DataProtectionOfficerAdded(party)         => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType, tokenId, timestamp) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType, tokenId, timestamp)

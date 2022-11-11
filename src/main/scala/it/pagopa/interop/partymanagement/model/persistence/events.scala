@@ -12,10 +12,12 @@ sealed trait PartyRelationshipEvent extends Event
 sealed trait TokenEvent             extends Event
 
 /* Party Event */
-final case class PartyAdded(party: Party)      extends PartyEvent
-final case class PartyUpdated(party: Party)    extends PartyEvent
-final case class PartyDeleted(party: Party)    extends PartyEvent
-final case class AttributesAdded(party: Party) extends PartyEvent
+final case class PartyAdded(party: Party)                  extends PartyEvent
+final case class PartyUpdated(party: Party)                extends PartyEvent
+final case class PartyDeleted(party: Party)                extends PartyEvent
+final case class AttributesAdded(party: Party)             extends PartyEvent
+final case class PaymentServiceProviderAdded(party: Party) extends PartyEvent
+final case class DataProtectionOfficerAdded(party: Party)  extends PartyEvent
 
 /* PartyRelationship Event */
 final case class PartyRelationshipAdded(partyRelationship: PersistedPartyRelationship) extends PartyRelationshipEvent
