@@ -155,6 +155,20 @@ package object v1 {
         PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
+  implicit def partyRelationshipEnabledV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipEnabledV1, PartyRelationshipEnabled] = event =>
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipEnabled(uuid, timestamp)
+
+  implicit def partyRelationshipEnabledV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipEnabled, PartyRelationshipEnabledV1] =
+    event =>
+      Right[Throwable, PartyRelationshipEnabledV1](
+        PartyRelationshipEnabledV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
+      )
+
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)
 

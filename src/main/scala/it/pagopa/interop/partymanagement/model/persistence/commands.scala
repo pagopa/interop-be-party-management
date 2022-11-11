@@ -54,6 +54,9 @@ final case class SuspendPartyRelationship(relationshipId: UUID, replyTo: ActorRe
 final case class ActivatePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
+final case class EnablePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
+    extends PartyRelationshipCommand
+
 final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 

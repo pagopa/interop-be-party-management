@@ -710,6 +710,35 @@ class PartyApiServiceImpl(
     }
   }
 
+  /**
+    * Code: 204, Message: Relationship activated
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def enablePartyRelationshipById(
+    relationshipId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    logger.info("Enabling relationship with id {}", relationshipId)
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result = for {
+      uuid              <- relationshipId.toFutureUUID
+      resultsCollection <- Future.traverse(commanders)(
+        _.ask(ref => EnablePartyRelationship(uuid, ref)).transform(Success(_))
+      )
+      _                 <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+    } yield ()
+
+    onComplete(result) {
+      case Success(_)  =>
+        enablePartyRelationshipById204
+      case Failure(ex) =>
+        logger.error(s"Error while activating relationship with id $relationshipId", ex)
+        enablePartyRelationshipById404(problemOf(StatusCodes.NotFound, EnableRelationshipError(relationshipId)))
+    }
+  }
+
   /** Code: 204, Message: Relationship suspended
     * Code: 400, Message: Bad Request, DataType: Problem
     * Code: 404, Message: Relationship not found, DataType: Problem

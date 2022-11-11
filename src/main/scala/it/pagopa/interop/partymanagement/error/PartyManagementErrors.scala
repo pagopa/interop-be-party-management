@@ -114,4 +114,8 @@ object PartyManagementErrors {
 
   final case class InstitutionsWithProductNotFound(productId: String)
       extends ComponentError("0050", s"Institutions with product ID $productId not found")
+
+  final case class EnableRelationshipError(id: String)
+      extends ComponentError("0051", s"Error while enabling relationship with id $id")
+
 }

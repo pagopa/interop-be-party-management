@@ -234,6 +234,19 @@ object PartyPersistentBehavior {
             Effect.none
         }
 
+      case EnablePartyRelationship(partyRelationshipId, replyTo) =>
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipEnabled(rel.id, offsetDateTimeSupplier.get))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None      =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case GetPartyRelationshipById(uuid, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(uuid)
         replyTo ! relationship
@@ -310,6 +323,8 @@ object PartyPersistentBehavior {
       case PartyRelationshipDeleted(relationshipId, timestamp)   => state.deleteRelationship(relationshipId, timestamp)
       case PartyRelationshipSuspended(relationshipId, timestamp) => state.suspendRelationship(relationshipId, timestamp)
       case PartyRelationshipActivated(relationshipId, timestamp) =>
+        state.activateRelationship(relationshipId, timestamp)
+      case PartyRelationshipEnabled(relationshipId, timestamp)   =>
         state.activateRelationship(relationshipId, timestamp)
       case TokenAdded(token)                                     => state.addToken(token)
     }

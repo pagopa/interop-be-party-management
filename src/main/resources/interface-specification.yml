@@ -586,6 +586,30 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: activatePartyRelationshipById
       description: 'Activate Relationship by ID'
+  '/relationships/{relationshipId}/enable':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+    post:
+      summary: Enable Relationship by plaftorm ID from ToBeValidated to Pending
+      tags:
+        - party
+      responses:
+        '204':
+          description: Relationship activated
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: enablePartyRelationshipById
+      description: 'Activate Relationship by ID'
   /relationships/{relationshipId}/institution:
     get:
       security: [ ]

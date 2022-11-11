@@ -60,6 +60,9 @@ final case class State(
   def activateRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
     updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Active, timestamp)
 
+  def enableRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
+    updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Pending, timestamp)
+
   def deleteRelationship(relationshipId: UUID, timestamp: OffsetDateTime): State =
     updateRelationshipStatus(relationshipId, PersistedPartyRelationshipState.Deleted, timestamp)
 
