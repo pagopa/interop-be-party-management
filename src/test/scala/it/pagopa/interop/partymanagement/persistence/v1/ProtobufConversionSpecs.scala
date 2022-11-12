@@ -15,7 +15,8 @@ import it.pagopa.interop.partymanagement.model.persistence.{
   PartyRelationshipRejected,
   PartyRelationshipSuspended,
   PartyUpdated,
-  TokenAdded
+  TokenAdded,
+  TokenUpdated
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events.{
@@ -30,7 +31,8 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events.
   PartyRelationshipRejectedV1,
   PartyRelationshipSuspendedV1,
   PartyUpdatedV1,
-  TokenAddedV1
+  TokenAddedV1,
+  TokenUpdatedV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionAttributeV1,
@@ -951,6 +953,23 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         PersistEventSerializer.to(TokenAdded(StateData.token))
 
       result.value shouldBe TokenAddedV1(StateV1Data.tokenV1)
+    }
+
+    "deserialize TokenUpdatedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(TokenUpdatedV1(StateV1Data.tokenV1))
+
+      result.value shouldBe TokenUpdated(StateData.token)
+
+    }
+
+    "serialize TokenUpdated" in {
+
+      val result =
+        PersistEventSerializer.to(TokenUpdated(StateData.token))
+
+      result.value shouldBe TokenUpdatedV1(StateV1Data.tokenV1)
     }
 
   }

@@ -452,6 +452,46 @@ class PartyApiServiceImpl(
 
   }
 
+  /**
+    * Code: 200, Message: successful operation, DataType: TokenText
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    * Code: 404, Message: Token not found, DataType: Problem
+    * Code: 409, Message: Token already consumed, DataType: Problem
+    */
+  override def updateTokenDigest(tokenId: String, digest: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerTokenText: ToEntityMarshaller[TokenText],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info(s"Updating token $tokenId")
+
+    val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[TokenText] = for {
+      tokenIdUUID <- tokenId.toFutureUUID
+      result      <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- result.toFuture(TokenNotFound(tokenId))
+
+      resultsCollection <- Future.traverse(commanders)(
+        _.ask(ref => UpdateToken(token.copy(checksum = digest, validity = token.validity), ref)).transform(Success(_))
+      )
+      _                 <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+    } yield TokenText(token = token.id.toString)
+
+    onComplete(result) {
+      case Success(token)             =>
+        updateTokenDigest200(token)
+      case Failure(ex: TokenNotFound) =>
+        logger.error(s"Getting token failed", ex)
+        updateTokenDigest404(problemOf(StatusCodes.NotFound, ex))
+      case Failure(ex)                =>
+        logger.error(s"Getting token failed", ex)
+        complete(problemOf(StatusCodes.InternalServerError, GetTokenFatalError(tokenId, ex.getMessage)))
+    }
+  }
+
   private def getParty(id: UUID)(implicit ec: ExecutionContext, timeout: Timeout): Future[Party] = for {
     found <- getCommander(id.toString).ask(ref => GetParty(id, ref))
     party <- found.toFuture(PartyNotFound(id.toString))

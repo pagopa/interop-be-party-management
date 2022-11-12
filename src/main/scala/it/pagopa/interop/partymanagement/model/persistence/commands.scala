@@ -91,5 +91,6 @@ final case class GetPartyRelationshipByAttributes(
 ) extends PartyRelationshipCommand
 
 /* Token Command */
-final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])         extends TokenCommand
-final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
+final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])            extends TokenCommand
+final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]])    extends TokenCommand
+final case class UpdateToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand

@@ -817,6 +817,56 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /tokens/{tokenId}/digest/{digest}:
+    post:
+      security: [{}]
+      tags:
+        - party
+      summary: Update the token digest
+      description: Return ok
+      operationId: updateTokenDigest
+      parameters:
+        - name: tokenId
+          in: path
+          description: The token id to verify
+          required: true
+          schema:
+            description: to be defined
+            type: string
+            format: uuid
+        - name: digest
+          in: path
+          description: The Digest value to insert
+          required: true
+          schema:
+            description: to be defined
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenText'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Token already consumed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   '/bulk/institutions':
     post:
       summary: Retrieves a collection of institutions

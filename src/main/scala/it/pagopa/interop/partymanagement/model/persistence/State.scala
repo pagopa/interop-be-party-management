@@ -97,6 +97,13 @@ final case class State(
 
   def addToken(token: Token): State = copy(tokens = tokens + (token.id -> token))
 
+  def updateToken(token: Token): State =
+    tokens.get(token.id) match {
+      case Some(t) =>
+        copy(tokens = tokens + (t.id -> token))
+      case None    =>
+        this
+    }
 }
 
 object State {

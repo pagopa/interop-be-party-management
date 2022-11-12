@@ -67,6 +67,10 @@ message TokenAddedV1 {
   required TokenV1 token = 1;
 }
 
+message TokenUpdatedV1 {
+  required TokenV1 token = 1;
+}
+
 message PaymentServiceProviderAddedV1 {
   required PartyV1 party = 1;
 }

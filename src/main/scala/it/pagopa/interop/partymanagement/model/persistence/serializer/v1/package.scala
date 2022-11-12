@@ -175,6 +175,12 @@ package object v1 {
   implicit def tokenAddedV1PersistEventSerializer: PersistEventSerializer[TokenAdded, TokenAddedV1] =
     event => getTokenV1(event.token).map(TokenAddedV1.of)
 
+  implicit def tokenUpdatedV1PersistEventDeserializer: PersistEventDeserializer[TokenUpdatedV1, TokenUpdated] = event =>
+    getToken(event.token).map(TokenUpdated)
+
+  implicit def tokenUpdatedV1PersistEventSerializer: PersistEventSerializer[TokenUpdated, TokenUpdatedV1] =
+    event => getTokenV1(event.token).map(TokenUpdatedV1.of)
+
   implicit def paymentServiceProviderAddedV1PersistEventDeserializer
     : PersistEventDeserializer[PaymentServiceProviderAddedV1, PaymentServiceProviderAdded] =
     event => getParty(event.party).map(PaymentServiceProviderAdded)

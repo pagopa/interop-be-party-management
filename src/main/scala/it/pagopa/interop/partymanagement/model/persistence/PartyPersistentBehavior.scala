@@ -271,6 +271,19 @@ object PartyPersistentBehavior {
         replyTo ! token
         Effect.none
 
+      case UpdateToken(updatedToken, replyTo) =>
+        val token: Option[Token] = state.tokens.get(updatedToken.id)
+
+        token match {
+          case Some(t) =>
+            Effect
+              .persist(TokenUpdated(t))
+              .thenRun(_ => replyTo ! StatusReply.Success(TokenText(t.id.toString)))
+          case None    =>
+            replyTo ! StatusReply.Error(s"Token ${updatedToken.id.toString} not found")
+            Effect.none
+        }
+
       case AddToken(token, replyTo) =>
         val itCanBeInsert: Boolean =
           state.tokens.get(token.id).exists(t => t.isValid) || !state.tokens.contains(token.id)
@@ -327,6 +340,7 @@ object PartyPersistentBehavior {
       case PartyRelationshipEnabled(relationshipId, timestamp)   =>
         state.enableRelationship(relationshipId, timestamp)
       case TokenAdded(token)                                     => state.addToken(token)
+      case TokenUpdated(token)                                   => state.updateToken(token)
     }
 
   val TypeKey: EntityTypeKey[Command] =
