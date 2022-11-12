@@ -325,7 +325,7 @@ object PartyPersistentBehavior {
       case PartyRelationshipActivated(relationshipId, timestamp) =>
         state.activateRelationship(relationshipId, timestamp)
       case PartyRelationshipEnabled(relationshipId, timestamp)   =>
-        state.activateRelationship(relationshipId, timestamp)
+        state.enableRelationship(relationshipId, timestamp)
       case TokenAdded(token)                                     => state.addToken(token)
     }
 
