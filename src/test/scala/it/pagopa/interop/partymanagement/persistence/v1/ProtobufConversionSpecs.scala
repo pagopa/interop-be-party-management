@@ -11,6 +11,7 @@ import it.pagopa.interop.partymanagement.model.persistence.{
   PartyRelationshipAdded,
   PartyRelationshipConfirmed,
   PartyRelationshipDeleted,
+  PartyRelationshipEnabled,
   PartyRelationshipRejected,
   PartyRelationshipSuspended,
   PartyUpdated,
@@ -25,6 +26,7 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events.
   PartyRelationshipAddedV1,
   PartyRelationshipConfirmedV1,
   PartyRelationshipDeletedV1,
+  PartyRelationshipEnabledV1,
   PartyRelationshipRejectedV1,
   PartyRelationshipSuspendedV1,
   PartyUpdatedV1,
@@ -897,6 +899,38 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       )
 
       result.value shouldBe PartyRelationshipActivatedV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        timestamp = StateCommonData.timestamp.toMillis
+      )
+    }
+
+    "deserialize PartyRelationshipEnabledV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipEnabledV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            timestamp = StateCommonData.timestamp.toMillis
+          )
+        )
+
+      result.value shouldBe PartyRelationshipEnabled(
+        partyRelationshipId = StateCommonData.relationshipId,
+        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+      )
+
+    }
+
+    "serialize PartyRelationshipEnabled" in {
+
+      val result = PersistEventSerializer.to(
+        PartyRelationshipEnabled(
+          partyRelationshipId = StateCommonData.relationshipId,
+          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+        )
+      )
+
+      result.value shouldBe PartyRelationshipEnabledV1(
         partyRelationshipId = StateCommonData.relationshipId.toString,
         timestamp = StateCommonData.timestamp.toMillis
       )
