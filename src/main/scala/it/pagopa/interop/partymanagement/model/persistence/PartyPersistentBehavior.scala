@@ -271,16 +271,16 @@ object PartyPersistentBehavior {
         replyTo ! token
         Effect.none
 
-      case UpdateToken(updatedToken, replyTo) =>
-        val token: Option[Token] = state.tokens.get(updatedToken.id)
+      case UpdateToken(tokenId, digest, replyTo) =>
+        val token: Option[Token] = state.tokens.get(tokenId)
 
         token match {
           case Some(t) =>
             Effect
-              .persist(TokenUpdated(t))
+              .persist(TokenUpdated(t.copy(checksum = digest, validity = offsetDateTimeSupplier.get)))
               .thenRun(_ => replyTo ! StatusReply.Success(TokenText(t.id.toString)))
           case None    =>
-            replyTo ! StatusReply.Error(s"Token ${updatedToken.id.toString} not found")
+            replyTo ! StatusReply.Error(s"Token ${tokenId.toString} not found")
             Effect.none
         }
 

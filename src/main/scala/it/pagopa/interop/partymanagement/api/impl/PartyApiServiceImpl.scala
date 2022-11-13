@@ -475,7 +475,7 @@ class PartyApiServiceImpl(
       token       <- result.toFuture(TokenNotFound(tokenId))
 
       resultsCollection <- Future.traverse(commanders)(
-        _.ask(ref => UpdateToken(token.copy(checksum = digest, validity = offsetDateTimeSupplier.get), ref))
+        _.ask(ref => UpdateToken(tokenIdUUID, digest, ref))
           .transform(Success(_))
       )
       _                 <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
