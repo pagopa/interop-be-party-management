@@ -2172,6 +2172,46 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.BadRequest
     }
 
+    "update a token" in {
+
+      (() => uuidSupplier.get).expects().returning(orgId9).once()           // Create organization
+      (() => uuidSupplier.get).expects().returning(relationshipId17).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId18).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+
+      val relationshipResponse = prepareTest(personSeed8, institutionSeed9, relationshipSeed17, relationshipSeed18)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed9).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText      = token9.id.toString
+      val digest         = UUID.randomUUID()
+      val updateResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/$tokenText/digest/$digest",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      updateResponse.status shouldBe StatusCodes.OK
+
+      val body = Unmarshal(updateResponse.entity).to[TokenText].futureValue
+
+      body.token shouldBe tokenText
+
+    }
   }
 
   "Lookup a relationship by UUID" must {
