@@ -3,11 +3,11 @@ package it.pagopa.interop.partymanagement.model.party
 import it.pagopa.interop.partymanagement.model.PaymentServiceProvider
 
 final case class PersistedPaymentServiceProvider(
-  abiCode: Option[String] = None,
-  businessRegisterNumber: Option[String] = None,
-  legalRegisterName: Option[String] = None,
-  legalRegisterNumber: Option[String] = None,
-  vatNumberGroup: Option[Boolean] = None
+  abiCode: Option[String],
+  businessRegisterNumber: Option[String],
+  legalRegisterName: Option[String],
+  legalRegisterNumber: Option[String],
+  vatNumberGroup: Option[Boolean]
 )
 
 object PersistedPaymentServiceProvider {

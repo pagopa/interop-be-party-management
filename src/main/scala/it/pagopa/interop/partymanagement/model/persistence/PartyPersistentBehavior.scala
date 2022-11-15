@@ -234,6 +234,19 @@ object PartyPersistentBehavior {
             Effect.none
         }
 
+      case EnablePartyRelationship(partyRelationshipId, replyTo) =>
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipEnabled(rel.id, offsetDateTimeSupplier.get))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None      =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case GetPartyRelationshipById(uuid, replyTo) =>
         val relationship: Option[PersistedPartyRelationship] = state.relationships.get(uuid)
         replyTo ! relationship
@@ -257,6 +270,19 @@ object PartyPersistentBehavior {
         val token: Option[Token] = state.tokens.get(tokenId)
         replyTo ! token
         Effect.none
+
+      case UpdateToken(tokenId, digest, replyTo) =>
+        val token: Option[Token] = state.tokens.get(tokenId)
+
+        token match {
+          case Some(t) =>
+            Effect
+              .persist(TokenUpdated(t.copy(checksum = digest, validity = offsetDateTimeSupplier.get)))
+              .thenRun(_ => replyTo ! StatusReply.Success(TokenText(t.id.toString)))
+          case None    =>
+            replyTo ! StatusReply.Error(s"Token ${tokenId.toString} not found")
+            Effect.none
+        }
 
       case AddToken(token, replyTo) =>
         val itCanBeInsert: Boolean =
@@ -301,6 +327,8 @@ object PartyPersistentBehavior {
       case PartyUpdated(party)                       => state.updateParty(party)
       case PartyDeleted(party)                       => state.deleteParty(party)
       case AttributesAdded(party)                    => state.updateParty(party)
+      case PaymentServiceProviderAdded(party)        => state.updateParty(party)
+      case DataProtectionOfficerAdded(party)         => state.updateParty(party)
       case PartyRelationshipAdded(partyRelationship) => state.addPartyRelationship(partyRelationship)
       case PartyRelationshipConfirmed(relationshipId, filePath, fileName, contentType, tokenId, timestamp) =>
         state.confirmPartyRelationship(relationshipId, filePath, fileName, contentType, tokenId, timestamp)
@@ -309,7 +337,10 @@ object PartyPersistentBehavior {
       case PartyRelationshipSuspended(relationshipId, timestamp) => state.suspendRelationship(relationshipId, timestamp)
       case PartyRelationshipActivated(relationshipId, timestamp) =>
         state.activateRelationship(relationshipId, timestamp)
+      case PartyRelationshipEnabled(relationshipId, timestamp)   =>
+        state.enableRelationship(relationshipId, timestamp)
       case TokenAdded(token)                                     => state.addToken(token)
+      case TokenUpdated(token)                                   => state.updateToken(token)
     }
 
   val TypeKey: EntityTypeKey[Command] =

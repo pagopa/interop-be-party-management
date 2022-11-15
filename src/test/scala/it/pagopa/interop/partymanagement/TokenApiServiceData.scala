@@ -31,6 +31,7 @@ object TokenApiServiceData {
   lazy final val tokenId6 = UUID.randomUUID()
   lazy final val tokenId7 = UUID.randomUUID()
   lazy final val tokenId8 = UUID.randomUUID()
+  lazy final val tokenId9 = UUID.randomUUID()
 
   lazy final val personId1 = UUID.randomUUID()
   lazy final val personId2 = UUID.randomUUID()
@@ -39,6 +40,8 @@ object TokenApiServiceData {
   lazy final val personId5 = UUID.randomUUID()
   lazy final val personId6 = UUID.randomUUID()
   lazy final val personId7 = UUID.randomUUID()
+  lazy final val personId8 = UUID.randomUUID()
+  lazy final val personId9 = UUID.randomUUID()
 
   lazy final val orgId1 = UUID.randomUUID()
   lazy final val orgId2 = UUID.randomUUID()
@@ -48,6 +51,7 @@ object TokenApiServiceData {
   lazy final val orgId6 = UUID.randomUUID()
   lazy final val orgId7 = UUID.randomUUID()
   lazy final val orgId8 = UUID.randomUUID()
+  lazy final val orgId9 = UUID.randomUUID()
 
   lazy final val personSeed1 = PersonSeed(id = personId1)
   lazy final val personSeed2 = PersonSeed(id = personId2)
@@ -56,6 +60,7 @@ object TokenApiServiceData {
   lazy final val personSeed5 = PersonSeed(id = personId5)
   lazy final val personSeed6 = PersonSeed(id = personId6)
   lazy final val personSeed7 = PersonSeed(id = personId7)
+  lazy final val personSeed8 = PersonSeed(id = personId8)
 
   lazy final val externalId1 = "ext_id9"
   lazy final val originId1   = "origin_id9"
@@ -73,6 +78,8 @@ object TokenApiServiceData {
   lazy final val originId7   = "origin_id17"
   lazy final val externalId8 = "ext_id18"
   lazy final val originId8   = "origin_id18"
+  lazy final val externalId9 = "ext_id19"
+  lazy final val originId9   = "origin_id19"
 
   lazy final val institutionSeed1 = InstitutionSeed(
     externalId = externalId1,
@@ -191,6 +198,19 @@ object TokenApiServiceData {
     origin = "DUMMY",
     institutionType = None
   )
+  lazy final val institutionSeed9 = InstitutionSeed(
+    externalId = externalId9,
+    originId = originId9,
+    description = "Institutions Eleven",
+    digitalAddress = "mail11@mail.org",
+    address = "address3",
+    zipCode = "zipCode3",
+    taxCode = "taxCode",
+    attributes = Seq.empty,
+    products = Option(Map.empty[String, InstitutionProduct]),
+    origin = "SELC",
+    institutionType = Option("PA")
+  )
 
   // format: off
   lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
@@ -213,6 +233,8 @@ object TokenApiServiceData {
     institutionUpdate = Option(InstitutionUpdate(institutionType=Option("OVERRIDE_institutionType"),description=Option("OVERRIDE_description"), digitalAddress=Option("OVERRIDE_digitalAddress"), address=Option("OVERRIDE_address"), zipCode=Option("OVERRIDE_zipCode"), taxCode=Option("OVERRIDE_taxCode"))),
     pricingPlan = Option("OVERRIDE_pricingPlan"), billing = Option(Billing(vatNumber="OVERRIDE_vatNumber", recipientCode="OVERRIDE_recipientCode", publicServices=Option(true))))
   lazy final val relationshipSeed16 = RelationshipSeed(from = personId2, to = orgId8, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
+  lazy final val relationshipSeed17 = RelationshipSeed(from = personId8, to = orgId9, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))
+  lazy final val relationshipSeed18 = RelationshipSeed(from = personId8, to = orgId9, role = PartyRole.DELEGATE,  product = RelationshipProductSeed(id = "p1", role ="admin"))
 
   lazy final val relationship1 = Relationship(id = UUID.randomUUID(), from = personId2, to = orgId2, role = PartyRole.MANAGER,  product = RelationshipProduct(id = "p1", role ="admin", createdAt = OffsetDateTime.now()), fileName = None, contentType = None, state = RelationshipState.PENDING, createdAt = OffsetDateTime.now(), updatedAt = None)
   lazy final val relationship2 = Relationship(id = UUID.randomUUID(), from = personId2, to = orgId2, role = PartyRole.DELEGATE, product = RelationshipProduct(id = "p1", role ="admin", createdAt = OffsetDateTime.now()), fileName = None, contentType = None, state = RelationshipState.PENDING, createdAt = OffsetDateTime.now(), updatedAt = None)
@@ -233,7 +255,7 @@ object TokenApiServiceData {
   lazy final val relationshipId2 = UUID.randomUUID()
   lazy final val relationshipId3 = UUID.randomUUID()
   lazy final val relationshipId4 = UUID.randomUUID()
-  lazy final val relationshipId5 =UUID.randomUUID()
+  lazy final val relationshipId5 = UUID.randomUUID()
   lazy final val relationshipId6 = UUID.randomUUID()
   lazy final val relationshipId7 = UUID.randomUUID()
   lazy final val relationshipId8 = UUID.randomUUID()
@@ -243,6 +265,8 @@ object TokenApiServiceData {
   lazy final val relationshipId12 = UUID.randomUUID()
   lazy final val relationshipId15 = UUID.randomUUID()
   lazy final val relationshipId16 = UUID.randomUUID()
+  lazy final val relationshipId17 = UUID.randomUUID()
+  lazy final val relationshipId18 = UUID.randomUUID()
 
   lazy final val partyRelationship1 = PersistedPartyRelationship(id = relationshipId1, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId2, to = orgId2, role = PersistedPartyRole.Manager,  product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
   lazy final val partyRelationship2 = PersistedPartyRelationship(id = relationshipId2, createdAt = OffsetDateTime.now(), updatedAt = None, state = Pending, from = personId2, to = orgId2, role = PersistedPartyRole.Delegate, product = PersistedProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now() ), filePath = None, fileName = None, contentType = None, onboardingTokenId = None, pricingPlan = None, institutionUpdate = None, billing = None)
@@ -266,6 +290,7 @@ object TokenApiServiceData {
   lazy val tokenSeed5: TokenSeed = TokenSeed(id = tokenId6.toString, relationships = Relationships(Seq(relationship9, relationship10)), "checksum", OnboardingContractInfo("test", "test"))
   lazy val tokenSeed6: TokenSeed = TokenSeed(id = tokenId7.toString, relationships = Relationships(Seq(relationship11, relationship12)), "checksum", OnboardingContractInfo("test", "test"))
   lazy val tokenSeed8: TokenSeed = TokenSeed(id = tokenId8.toString, relationships = Relationships(Seq(relationship15, relationship16)), "checksum", OnboardingContractInfo("test", "test"))
+  lazy val tokenSeed9: TokenSeed = TokenSeed(id = tokenId9.toString, relationships = Relationships(Seq(relationship15, relationship16)), "checksum", OnboardingContractInfo("test", "test"))
 
   lazy val token1: Token = Token.generate(tokenSeed1, Seq(partyRelationship1, partyRelationship2),timestampValid).toOption.get
   lazy val token2: Token = Token.generate(tokenSeed2, Seq(partyRelationship3, partyRelationship4),timestampValid).toOption.get
@@ -274,6 +299,7 @@ object TokenApiServiceData {
   lazy val token5: Token = Token.generate(tokenSeed5, Seq(partyRelationship9, partyRelationship10),timestampValid).toOption.get
   lazy val token6: Token = Token.generate(tokenSeed6, Seq(partyRelationship11, partyRelationship12),timestampValid).toOption.get
   lazy val token8: Token = Token.generate(tokenSeed8, Seq(partyRelationship15, partyRelationship16),timestampValid).toOption.get
+  lazy val token9: Token = Token.generate(tokenSeed9, Seq(partyRelationship15, partyRelationship16),timestampValid).toOption.get
 
   // format: on
 

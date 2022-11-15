@@ -68,7 +68,7 @@ object PersistedPartyRelationship {
     pricingPlan: Option[String],
     institutionUpdate: Option[InstitutionUpdate],
     billing: Option[Billing],
-    partyState: PersistedPartyRelationshipState = PersistedPartyRelationshipState.Pending
+    relationshipState: PersistedPartyRelationshipState = PersistedPartyRelationshipState.Pending
   ): PersistedPartyRelationship = {
     val timestamp = offsetDateTimeSupplier.get
     PersistedPartyRelationship(
@@ -79,7 +79,7 @@ object PersistedPartyRelationship {
       product = PersistedProduct.fromRelationshipProduct(product, timestamp),
       createdAt = timestamp,
       updatedAt = None,
-      state = partyState match {
+      state = relationshipState match {
         case PersistedPartyRelationshipState.ToBeValidated => ToBeValidated
         case _                                             =>
           role match {

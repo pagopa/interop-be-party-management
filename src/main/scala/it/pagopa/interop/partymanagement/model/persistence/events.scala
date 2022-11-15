@@ -12,10 +12,12 @@ sealed trait PartyRelationshipEvent extends Event
 sealed trait TokenEvent             extends Event
 
 /* Party Event */
-final case class PartyAdded(party: Party)      extends PartyEvent
-final case class PartyUpdated(party: Party)    extends PartyEvent
-final case class PartyDeleted(party: Party)    extends PartyEvent
-final case class AttributesAdded(party: Party) extends PartyEvent
+final case class PartyAdded(party: Party)                  extends PartyEvent
+final case class PartyUpdated(party: Party)                extends PartyEvent
+final case class PartyDeleted(party: Party)                extends PartyEvent
+final case class AttributesAdded(party: Party)             extends PartyEvent
+final case class PaymentServiceProviderAdded(party: Party) extends PartyEvent
+final case class DataProtectionOfficerAdded(party: Party)  extends PartyEvent
 
 /* PartyRelationship Event */
 final case class PartyRelationshipAdded(partyRelationship: PersistedPartyRelationship) extends PartyRelationshipEvent
@@ -34,6 +36,8 @@ final case class PartyRelationshipSuspended(partyRelationshipId: UUID, timestamp
     extends PartyRelationshipEvent
 final case class PartyRelationshipActivated(partyRelationshipId: UUID, timestamp: OffsetDateTime)
     extends PartyRelationshipEvent
-
+final case class PartyRelationshipEnabled(partyRelationshipId: UUID, timestamp: OffsetDateTime)
+    extends PartyRelationshipEvent
 /* Token Event */
-final case class TokenAdded(token: Token) extends TokenEvent
+final case class TokenAdded(token: Token)                                              extends TokenEvent
+final case class TokenUpdated(token: Token)                                            extends TokenEvent

@@ -2,11 +2,7 @@ package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.partymanagement.model.DataProtectionOfficer
 
-final case class PersistedDataProtectionOfficer(
-  address: Option[String] = None,
-  email: Option[String] = None,
-  pec: Option[String] = None
-)
+final case class PersistedDataProtectionOfficer(address: Option[String], email: Option[String], pec: Option[String])
 
 object PersistedDataProtectionOfficer {
   def toApi(dataProtectionOfficer: PersistedDataProtectionOfficer): DataProtectionOfficer =

@@ -7,8 +7,6 @@ import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
   NoAttributeForPartyPerson,
   UpdateInstitutionNotFound
 }
-import it.pagopa.interop.partymanagement.model.party.PersistedDataProtectionOfficer.toApi
-import it.pagopa.interop.partymanagement.model.party.PersistedPaymentServiceProvider.toAPi
 import it.pagopa.interop.partymanagement.model.{Attribute, Institution, InstitutionSeed, Person, PersonSeed}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
@@ -28,6 +26,30 @@ sealed trait Party {
         InstitutionAttribute(origin = attribute.origin, code = attribute.code, description = attribute.description)
       )
       Right(institutionParty.copy(attributes = updated))
+  }
+
+  def addPaymentServiceProvider(): Either[Throwable, Party] = this match {
+    case _: PersonParty                     => Left(NoAttributeForPartyPerson)
+    case institutionParty: InstitutionParty =>
+      val updated: Option[PersistedPaymentServiceProvider] = institutionParty.paymentServiceProvider.map(p =>
+        PersistedPaymentServiceProvider(
+          abiCode = p.abiCode,
+          businessRegisterNumber = p.businessRegisterNumber,
+          legalRegisterName = p.legalRegisterName,
+          legalRegisterNumber = p.legalRegisterNumber,
+          vatNumberGroup = p.vatNumberGroup
+        )
+      )
+      Right(institutionParty.copy(paymentServiceProvider = updated))
+  }
+
+  def addDataProtectionOfficer(): Either[Throwable, Party] = this match {
+    case _: PersonParty                     => Left(NoAttributeForPartyPerson)
+    case institutionParty: InstitutionParty =>
+      val updated: Option[PersistedDataProtectionOfficer] = institutionParty.dataProtectionOfficer.map(d =>
+        PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.email)
+      )
+      Right(institutionParty.copy(dataProtectionOfficer = updated))
   }
 
 }
@@ -52,8 +74,10 @@ object Party {
             institutionType = institutionParty.institutionType,
             attributes = institutionParty.attributes.map(InstitutionAttribute.toApi).toSeq,
             products = (institutionParty.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap,
-            paymentServiceProvider = institutionParty.paymentServiceProvider.map(toAPi(_)),
-            dataProtectionOfficer = institutionParty.dataProtectionOfficer.map(toApi(_))
+            paymentServiceProvider =
+              institutionParty.paymentServiceProvider.map(p => PersistedPaymentServiceProvider.toAPi(p)),
+            dataProtectionOfficer =
+              institutionParty.dataProtectionOfficer.map(d => PersistedDataProtectionOfficer.toApi(d))
           )
         )
     }
