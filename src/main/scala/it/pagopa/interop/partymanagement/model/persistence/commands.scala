@@ -54,6 +54,9 @@ final case class SuspendPartyRelationship(relationshipId: UUID, replyTo: ActorRe
 final case class ActivatePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
+final case class EnablePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
+    extends PartyRelationshipCommand
+
 final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
 
@@ -90,3 +93,5 @@ final case class GetPartyRelationshipByAttributes(
 /* Token Command */
 final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])         extends TokenCommand
 final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
+final case class UpdateToken(tokenId: UUID, digest: String, replyTo: ActorRef[StatusReply[TokenText]])
+    extends TokenCommand

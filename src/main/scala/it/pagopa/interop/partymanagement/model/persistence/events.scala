@@ -36,6 +36,8 @@ final case class PartyRelationshipSuspended(partyRelationshipId: UUID, timestamp
     extends PartyRelationshipEvent
 final case class PartyRelationshipActivated(partyRelationshipId: UUID, timestamp: OffsetDateTime)
     extends PartyRelationshipEvent
-
+final case class PartyRelationshipEnabled(partyRelationshipId: UUID, timestamp: OffsetDateTime)
+    extends PartyRelationshipEvent
 /* Token Event */
-final case class TokenAdded(token: Token) extends TokenEvent
+final case class TokenAdded(token: Token)                                              extends TokenEvent
+final case class TokenUpdated(token: Token)                                            extends TokenEvent

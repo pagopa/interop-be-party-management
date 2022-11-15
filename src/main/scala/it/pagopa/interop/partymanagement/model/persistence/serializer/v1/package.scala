@@ -155,11 +155,31 @@ package object v1 {
         PartyRelationshipActivatedV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
       )
 
+  implicit def partyRelationshipEnabledV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipEnabledV1, PartyRelationshipEnabled] = event =>
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipEnabled(uuid, timestamp)
+
+  implicit def partyRelationshipEnabledV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipEnabled, PartyRelationshipEnabledV1] =
+    event =>
+      Right[Throwable, PartyRelationshipEnabledV1](
+        PartyRelationshipEnabledV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
+      )
+
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)
 
   implicit def tokenAddedV1PersistEventSerializer: PersistEventSerializer[TokenAdded, TokenAddedV1] =
     event => getTokenV1(event.token).map(TokenAddedV1.of)
+
+  implicit def tokenUpdatedV1PersistEventDeserializer: PersistEventDeserializer[TokenUpdatedV1, TokenUpdated] = event =>
+    getToken(event.token).map(TokenUpdated)
+
+  implicit def tokenUpdatedV1PersistEventSerializer: PersistEventSerializer[TokenUpdated, TokenUpdatedV1] =
+    event => getTokenV1(event.token).map(TokenUpdatedV1.of)
 
   implicit def paymentServiceProviderAddedV1PersistEventDeserializer
     : PersistEventDeserializer[PaymentServiceProviderAddedV1, PaymentServiceProviderAdded] =

@@ -11,10 +11,12 @@ import it.pagopa.interop.partymanagement.model.persistence.{
   PartyRelationshipAdded,
   PartyRelationshipConfirmed,
   PartyRelationshipDeleted,
+  PartyRelationshipEnabled,
   PartyRelationshipRejected,
   PartyRelationshipSuspended,
   PartyUpdated,
-  TokenAdded
+  TokenAdded,
+  TokenUpdated
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events.{
@@ -25,10 +27,12 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events.
   PartyRelationshipAddedV1,
   PartyRelationshipConfirmedV1,
   PartyRelationshipDeletedV1,
+  PartyRelationshipEnabledV1,
   PartyRelationshipRejectedV1,
   PartyRelationshipSuspendedV1,
   PartyUpdatedV1,
-  TokenAddedV1
+  TokenAddedV1,
+  TokenUpdatedV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionAttributeV1,
@@ -902,6 +906,38 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
       )
     }
 
+    "deserialize PartyRelationshipEnabledV1" in {
+
+      val result =
+        PersistEventDeserializer.from(
+          PartyRelationshipEnabledV1(
+            partyRelationshipId = StateCommonData.relationshipId.toString,
+            timestamp = StateCommonData.timestamp.toMillis
+          )
+        )
+
+      result.value shouldBe PartyRelationshipEnabled(
+        partyRelationshipId = StateCommonData.relationshipId,
+        timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+      )
+
+    }
+
+    "serialize PartyRelationshipEnabled" in {
+
+      val result = PersistEventSerializer.to(
+        PartyRelationshipEnabled(
+          partyRelationshipId = StateCommonData.relationshipId,
+          timestamp = StateCommonData.timestamp.toMillis.toOffsetDateTime.success.value
+        )
+      )
+
+      result.value shouldBe PartyRelationshipEnabledV1(
+        partyRelationshipId = StateCommonData.relationshipId.toString,
+        timestamp = StateCommonData.timestamp.toMillis
+      )
+    }
+
     "deserialize TokenAddedV1" in {
 
       val result =
@@ -917,6 +953,23 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         PersistEventSerializer.to(TokenAdded(StateData.token))
 
       result.value shouldBe TokenAddedV1(StateV1Data.tokenV1)
+    }
+
+    "deserialize TokenUpdatedV1" in {
+
+      val result =
+        PersistEventDeserializer.from(TokenUpdatedV1(StateV1Data.tokenV1))
+
+      result.value shouldBe TokenUpdated(StateData.token)
+
+    }
+
+    "serialize TokenUpdated" in {
+
+      val result =
+        PersistEventSerializer.to(TokenUpdated(StateData.token))
+
+      result.value shouldBe TokenUpdatedV1(StateV1Data.tokenV1)
     }
 
   }

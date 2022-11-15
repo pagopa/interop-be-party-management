@@ -1570,6 +1570,126 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
   }
 
+  "Enabling relationship" must {
+    import RelationshipPartyApiServiceData._
+
+    "succeed" in {
+      val personUuid       = UUID.randomUUID()
+      val institutionUuid  = UUID.randomUUID()
+      val externalId       = randomString()
+      val originId         = randomString()
+      val personSeed       = PersonSeed(id = personUuid)
+      val institutionSeed  =
+        InstitutionSeed(
+          externalId = externalId,
+          originId = originId,
+          description = "Institutions One",
+          digitalAddress = "mail1@mail.org",
+          address = "address",
+          zipCode = "zipCode",
+          taxCode = "taxCode",
+          products = Option(Map.empty[String, InstitutionProduct]),
+          attributes = Seq.empty,
+          origin = "SELC",
+          institutionType = Option("PA")
+        )
+      val relationshipSeed =
+        RelationshipSeed(
+          from = personUuid,
+          to = institutionUuid,
+          role = PartyRole.MANAGER,
+          RelationshipProductSeed(id = "p1", role = "admin"),
+          state = Option(RelationshipState.TOBEVALIDATED)
+        )
+      val relationship     =
+        Relationship(
+          id = UUID.randomUUID(),
+          from = personUuid,
+          to = institutionUuid,
+          role = PartyRole.MANAGER,
+          product = RelationshipProduct(id = "p1", role = "admin", createdAt = OffsetDateTime.now()),
+          state = RelationshipState.TOBEVALIDATED,
+          createdAt = OffsetDateTime.now()
+        )
+      val relationshipId   = UUID.randomUUID()
+
+      (() => uuidSupplier.get).expects().returning(institutionUuid).once() // Create institution
+      (() => uuidSupplier.get).expects().returning(relationshipId).once()  // Create relationship
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create institution
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Confirm relationship
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Enable relationship updated At
+      // (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Activate relationship updated At
+
+      val _ =
+        prepareTest(personSeed = personSeed, institutionSeed = institutionSeed, relationshipSeed = relationshipSeed)
+
+      confirmRelationshipWithToken(relationship)
+
+      /* // First suspend the relationship
+      val suspensionResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}/suspend",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      suspensionResponse.status shouldBe StatusCodes.NoContent*/
+
+      // Then enable the relationship
+      val enableResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}/enable",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      enableResponse.status shouldBe StatusCodes.NoContent
+
+      val relationshipResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/${relationshipId.toString}",
+              method = HttpMethods.GET,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      relationshipResponse.status shouldBe StatusCodes.OK
+      val updatedRelationship = Unmarshal(relationshipResponse.entity).to[Relationship].futureValue
+      updatedRelationship.state shouldBe RelationshipState.PENDING
+
+    }
+
+    "fail if relationship does not exist" in {
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/relationships/non-existing-relationship/enable",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+  }
+
   "Deleting relationship" must {
     import RelationshipPartyApiServiceData._
 
@@ -2052,6 +2172,46 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.BadRequest
     }
 
+    "update a token" in {
+
+      (() => uuidSupplier.get).expects().returning(orgId9).once()           // Create organization
+      (() => uuidSupplier.get).expects().returning(relationshipId17).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId18).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create organization
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+
+      val relationshipResponse = prepareTest(personSeed8, institutionSeed9, relationshipSeed17, relationshipSeed18)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed9).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText      = token9.id.toString
+      val digest         = UUID.randomUUID()
+      val updateResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/$tokenText/digest/$digest",
+              method = HttpMethods.POST,
+              headers = authorization
+            )
+          )
+          .futureValue
+
+      updateResponse.status shouldBe StatusCodes.OK
+
+      val body = Unmarshal(updateResponse.entity).to[TokenText].futureValue
+
+      body.token shouldBe tokenText
+
+    }
   }
 
   "Lookup a relationship by UUID" must {

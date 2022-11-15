@@ -586,6 +586,30 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: activatePartyRelationshipById
       description: 'Activate Relationship by ID'
+  '/relationships/{relationshipId}/enable':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+    post:
+      summary: Enable Relationship by plaftorm ID from ToBeValidated to Pending
+      tags:
+        - party
+      responses:
+        '204':
+          description: Relationship activated
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: enablePartyRelationshipById
+      description: 'Activate Relationship by ID'
   /relationships/{relationshipId}/institution:
     get:
       security: [ ]
@@ -775,6 +799,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenInfo'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Token already consumed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /tokens/{tokenId}/digest/{digest}:
+    post:
+      security: [{}]
+      tags:
+        - party
+      summary: Update the token digest
+      description: Return ok
+      operationId: updateTokenDigest
+      parameters:
+        - name: tokenId
+          in: path
+          description: The token id to verify
+          required: true
+          schema:
+            description: to be defined
+            type: string
+            format: uuid
+        - name: digest
+          in: path
+          description: The Digest value to insert
+          required: true
+          schema:
+            description: to be defined
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenText'
         '400':
           description: Invalid ID supplied
           content:
