@@ -19,7 +19,7 @@ import it.pagopa.interop.partymanagement.api.PublicApiService
 import it.pagopa.interop.partymanagement.common.system.{ApplicationConfiguration, _}
 import it.pagopa.interop.partymanagement.error.PartyManagementErrors._
 import it.pagopa.interop.partymanagement.model._
-import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState.Pending
+import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState.{Pending, ToBeValidated}
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence._
 import org.slf4j.LoggerFactory
@@ -305,9 +305,11 @@ class PublicApiServiceImpl(
   private def isTokenNotConsumed(tokenId: String, relationships: Seq[PersistedPartyRelationship]): Future[Unit] = {
     val error: Either[Throwable, Unit] = Left(TokenAlreadyConsumed(tokenId))
     error
-      .unlessA(relationships.nonEmpty && relationships.forall(_.state == Pending))
+      .unlessA(
+        relationships.nonEmpty &&
+          (relationships.forall(_.state == Pending) || relationships.forall(_.state == ToBeValidated))
+      )
       .toFuture
-
   }
 
   /**
