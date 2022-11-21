@@ -307,7 +307,7 @@ class PublicApiServiceImpl(
     error
       .unlessA(
         relationships.nonEmpty &&
-          (relationships.forall(_.state == Pending) || relationships.forall(_.state == ToBeValidated))
+          (relationships.forall(s => s.state == Pending || s.state == ToBeValidated)
       )
       .toFuture
   }
