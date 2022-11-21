@@ -2073,6 +2073,40 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.OK
     }
 
+    "verify a token tobedefined" in {
+
+      (() => uuidSupplier.get).expects().returning(orgId10).once()          // Create institution
+      (() => uuidSupplier.get).expects().returning(relationshipId17).once() // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationshipId18).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create institution
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestampValid)
+        .repeated(tokenSeed10.relationships.items.size)                             // Consume token
+
+      val relationshipResponse = prepareTest(personSeed10, institutionSeed10, relationshipSeed19, relationshipSeed20)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed10).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText = token10.id.toString
+
+      val response =
+        Http()
+          .singleRequest(HttpRequest(uri = s"$url/tokens/$tokenText/verify", method = HttpMethods.POST))
+          .futureValue
+
+      response.status shouldBe StatusCodes.OK
+    }
+
     "return 404 trying to verify a non-existent token " in {
 
       val response =
