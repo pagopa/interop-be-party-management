@@ -1621,26 +1621,11 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Confirm relationship
       (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Enable relationship updated At
-      // (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Activate relationship updated At
 
       val _ =
         prepareTest(personSeed = personSeed, institutionSeed = institutionSeed, relationshipSeed = relationshipSeed)
 
       confirmRelationshipWithToken(relationship)
-
-      /* // First suspend the relationship
-      val suspensionResponse =
-        Http()
-          .singleRequest(
-            HttpRequest(
-              uri = s"$url/relationships/${relationshipId.toString}/suspend",
-              method = HttpMethods.POST,
-              headers = authorization
-            )
-          )
-          .futureValue
-
-      suspensionResponse.status shouldBe StatusCodes.NoContent*/
 
       // Then enable the relationship
       val enableResponse =
@@ -2227,14 +2212,16 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       createToken(tokenData)
 
       val tokenText      = token9.id.toString
-      val digest         = UUID.randomUUID()
+      val digest         = DigestSeed(UUID.randomUUID().toString)
+      val data           = Marshal(digest).to[MessageEntity].map(_.dataBytes).futureValue
       val updateResponse =
         Http()
           .singleRequest(
             HttpRequest(
-              uri = s"$url/tokens/$tokenText/digest/$digest",
+              uri = s"$url/tokens/$tokenText/digest",
               method = HttpMethods.POST,
-              headers = authorization
+              headers = authorization,
+              entity = HttpEntity(ContentTypes.`application/json`, data)
             )
           )
           .futureValue

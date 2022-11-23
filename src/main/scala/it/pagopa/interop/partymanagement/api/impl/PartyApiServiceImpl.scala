@@ -458,7 +458,7 @@ class PartyApiServiceImpl(
     * Code: 404, Message: Token not found, DataType: Problem
     * Code: 409, Message: Token already consumed, DataType: Problem
     */
-  override def updateTokenDigest(tokenId: String, digest: String)(implicit
+  override def updateTokenDigest(tokenId: String, digestSeed: DigestSeed)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerTokenText: ToEntityMarshaller[TokenText],
     contexts: Seq[(String, String)]
@@ -475,7 +475,7 @@ class PartyApiServiceImpl(
       token       <- result.toFuture(TokenNotFound(tokenId))
 
       resultsCollection <- Future.traverse(commanders)(
-        _.ask(ref => UpdateToken(tokenIdUUID, digest, ref))
+        _.ask(ref => UpdateToken(tokenIdUUID, digestSeed.checksum, ref))
           .transform(Success(_))
       )
       _                 <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture

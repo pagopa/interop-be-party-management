@@ -817,7 +817,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /tokens/{tokenId}/digest/{digest}:
+  /tokens/{tokenId}/digest:
     post:
       security: [{}]
       tags:
@@ -834,13 +834,12 @@ paths:
             description: to be defined
             type: string
             format: uuid
-        - name: digest
-          in: path
-          description: The Digest value to insert
-          required: true
-          schema:
-            description: to be defined
-            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigestSeed'
       responses:
         '200':
           description: successful operation
@@ -1283,6 +1282,14 @@ components:
       additionalProperties: false
       required:
         - items
+    DigestSeed:
+      type: object
+      properties:
+        checksum:
+          type: string
+      additionalProperties: false
+      required:
+        - checksum
     TokenSeed:
       type: object
       properties:
