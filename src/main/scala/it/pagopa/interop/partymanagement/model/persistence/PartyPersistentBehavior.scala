@@ -7,6 +7,7 @@ import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.interop.commons.utils.OpenapiUtils._
+import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.partymanagement.model.party.PersistedDataProtectionOfficer.toApi
 import it.pagopa.interop.partymanagement.model.party.PersistedPaymentServiceProvider.toAPi
 import it.pagopa.interop.partymanagement.model.party._
@@ -277,7 +278,14 @@ object PartyPersistentBehavior {
         token match {
           case Some(t) =>
             Effect
-              .persist(TokenUpdated(t.copy(checksum = digest, validity = offsetDateTimeSupplier.get)))
+              .persist(
+                TokenUpdated(
+                  t.copy(
+                    checksum = digest,
+                    validity = offsetDateTimeSupplier.get.plusHours(ApplicationConfiguration.tokenValidityHours)
+                  )
+                )
+              )
               .thenRun(_ => replyTo ! StatusReply.Success(TokenText(t.id.toString)))
           case None    =>
             replyTo ! StatusReply.Error(s"Token ${tokenId.toString} not found")
