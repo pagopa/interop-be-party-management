@@ -39,6 +39,7 @@ message InstitutionPartyV1 {
   repeated InstitutionProductV1 products = 14;
   optional PaymentServiceProviderV1 paymentServiceProvider = 15;
   optional DataProtectionOfficerV1 dataProtectionOfficer = 16;
+  repeated GeographicTaxonomyV1 geographicTaxonomies = 17;
 }
 
 message InstitutionAttributeV1 {

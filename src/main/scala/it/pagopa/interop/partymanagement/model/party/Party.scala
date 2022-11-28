@@ -7,7 +7,7 @@ import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
   NoAttributeForPartyPerson,
   UpdateInstitutionNotFound
 }
-import it.pagopa.interop.partymanagement.model.{Attribute, Institution, InstitutionSeed, Person, PersonSeed}
+import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 
 import java.time.OffsetDateTime
@@ -77,7 +77,8 @@ object Party {
             paymentServiceProvider =
               institutionParty.paymentServiceProvider.map(p => PersistedPaymentServiceProvider.toAPi(p)),
             dataProtectionOfficer =
-              institutionParty.dataProtectionOfficer.map(d => PersistedDataProtectionOfficer.toApi(d))
+              institutionParty.dataProtectionOfficer.map(d => PersistedDataProtectionOfficer.toApi(d)),
+            geographicTaxonomies = institutionParty.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi)
           )
         )
     }
@@ -112,7 +113,8 @@ final case class InstitutionParty(
   attributes: Set[InstitutionAttribute],
   products: Set[PersistedInstitutionProduct],
   paymentServiceProvider: Option[PersistedPaymentServiceProvider],
-  dataProtectionOfficer: Option[PersistedDataProtectionOfficer]
+  dataProtectionOfficer: Option[PersistedDataProtectionOfficer],
+  geographicTaxonomies: Seq[PersistedGeographicTaxonomy]
 ) extends Party
 
 object InstitutionParty {
@@ -139,7 +141,10 @@ object InstitutionParty {
         _.values.map(PersistedInstitutionProduct.fromApi).toSet
       ),
       paymentServiceProvider = institution.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
-      dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi)
+      dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi),
+      geographicTaxonomies = institution.geographicTaxonomies.fold(Seq.empty[PersistedGeographicTaxonomy])(
+        _.map(PersistedGeographicTaxonomy.fromApi)
+      )
     )
   }
 
@@ -162,7 +167,8 @@ object InstitutionParty {
       attributes = institution.attributes.map(InstitutionAttribute.fromApi).toSet,
       products = institution.products.values.map(PersistedInstitutionProduct.fromApi).toSet,
       paymentServiceProvider = institution.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
-      dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi)
+      dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi),
+      geographicTaxonomies = institution.geographicTaxonomies.map(PersistedGeographicTaxonomy.fromApi)
     )
 
 }

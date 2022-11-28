@@ -8,8 +8,6 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
 import it.pagopa.interop.commons.utils.OpenapiUtils._
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
-import it.pagopa.interop.partymanagement.model.party.PersistedDataProtectionOfficer.toApi
-import it.pagopa.interop.partymanagement.model.party.PersistedPaymentServiceProvider.toAPi
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.{Institution, PartyRole, RelationshipState, TokenText}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
@@ -116,8 +114,9 @@ object PartyPersistentBehavior {
                 institutionType = o.institutionType,
                 products = (o.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap,
                 attributes = o.attributes.map(InstitutionAttribute.toApi).toSeq,
-                paymentServiceProvider = o.paymentServiceProvider.map(toAPi(_)),
-                dataProtectionOfficer = o.dataProtectionOfficer.map(toApi(_))
+                paymentServiceProvider = o.paymentServiceProvider.map(PersistedPaymentServiceProvider.toAPi),
+                dataProtectionOfficer = o.dataProtectionOfficer.map(PersistedDataProtectionOfficer.toApi),
+                geographicTaxonomies = o.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi)
               )
           }.toList
         replyTo ! parties

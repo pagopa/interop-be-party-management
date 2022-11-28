@@ -979,6 +979,10 @@ components:
           $ref: '#/components/schemas/PaymentServiceProvider'
         dataProtectionOfficer:
           $ref: '#/components/schemas/DataProtectionOfficer'
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicTaxonomy'
       required:
         - externalId
         - originId
@@ -1040,6 +1044,10 @@ components:
           $ref: '#/components/schemas/PaymentServiceProvider'
         dataProtectionOfficer:
           $ref: '#/components/schemas/DataProtectionOfficer'
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicTaxonomy'
       required:
         - id
         - externalId
@@ -1052,6 +1060,7 @@ components:
         - attributes
         - origin
         - products
+        - geographicTaxonomies
       additionalProperties: false
     InstitutionId:
       type: object
@@ -1420,6 +1429,8 @@ components:
         - detail
     InstitutionUpdate:
       type: object
+      required:
+        - geographicTaxonomies
       properties:
         institutionType:
           type: string
@@ -1445,6 +1456,10 @@ components:
           $ref: '#/components/schemas/PaymentServiceProvider'
         dataProtectionOfficer:
           $ref: '#/components/schemas/DataProtectionOfficer'
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicTaxonomy'
     Billing:
       type: object
       properties:
@@ -1507,6 +1522,19 @@ components:
         pec:
           type: string
           description: 'Data protection officer digital address'
+    GeographicTaxonomy:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - desc
+      properties:
+        code:
+          type: string
+          description: 'Code of the geographic taxonomy'
+        desc:
+          type: string
+          description: 'Description of the geographic taxonomy code'
   securitySchemes:
     bearerAuth:
       type: http
