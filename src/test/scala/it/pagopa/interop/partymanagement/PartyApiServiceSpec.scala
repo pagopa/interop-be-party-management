@@ -281,6 +281,22 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
     }
 
+    "create a new institution with geographic taxonomies" in {
+
+      (() => uuidSupplier.get).expects().returning(institutionUuid5).once()
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
+
+      val response = prepareTest(institutionSeed5)
+
+      val body = Unmarshal(response.entity).to[Institution].futureValue
+
+      response.status shouldBe StatusCodes.Created
+
+      body shouldBe expected5
+
+    }
+
     "return 200 if the institution exists" in {
 
       (() => uuidSupplier.get).expects().returning(institutionUuid2).once()
@@ -499,7 +515,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
               Option("DESCRIPTIONOVERRIDE"),
               Option("MAILOVERRIDE"),
               Option("ADDRESSOVERRIDE"),
-              Option("TAXCODEOVERRIDE")
+              Option("TAXCODEOVERRIDE"),
+              geographicTaxonomies = Seq(GeographicTaxonomy(code = "OVERRIDE_GEOCODE", desc = "OVERRIDE_GEODESC"))
             )
           )
         )
@@ -552,7 +569,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
               Option("DESCRIPTIONOVERRIDE"),
               Option("MAILOVERRIDE"),
               Option("ADDRESSOVERRIDE"),
-              Option("TAXCODEOVERRIDE")
+              Option("TAXCODEOVERRIDE"),
+              geographicTaxonomies = Seq(GeographicTaxonomy(code = "OVERRIDE_GEOCODE", desc = "OVERRIDE_GEODESC"))
             )
           )
         )
@@ -579,7 +597,8 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
                 Option("DESCRIPTIONOVERRIDE"),
                 Option("MAILOVERRIDE"),
                 Option("ADDRESSOVERRIDE"),
-                Option("TAXCODEOVERRIDE")
+                Option("TAXCODEOVERRIDE"),
+                geographicTaxonomies = Seq(GeographicTaxonomy(code = "OVERRIDE_GEOCODE", desc = "OVERRIDE_GEODESC"))
               )
             )
           )
@@ -1882,7 +1901,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       body shouldBe expectedInstitution
     }
 
-    "consume a token for IPA institution" in {
+    "consume a token for IPA institution and overriding with geographic taxonomies" in {
       consumeToken(
         orgId2,
         institutionSeed2,
@@ -1896,7 +1915,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       )
     }
 
-    "consume a token for NON IPA institution having products already configured" in {
+    "consume a token for NON IPA institution having products already configured and overriding with no geographic taxonomies" in {
       consumeToken(
         orgId8,
         institutionSeed8,

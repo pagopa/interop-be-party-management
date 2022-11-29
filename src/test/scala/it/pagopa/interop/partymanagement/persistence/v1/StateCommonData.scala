@@ -5,6 +5,7 @@ import it.pagopa.interop.partymanagement.model.party.{
   InstitutionAttribute,
   PersistedBilling,
   PersistedDataProtectionOfficer,
+  PersistedGeographicTaxonomy,
   PersistedInstitutionProduct,
   PersistedInstitutionUpdate,
   PersistedPaymentServiceProvider
@@ -58,6 +59,10 @@ object StateCommonData {
   )
   val dataProtectionOfficer  =
     DataProtectionOfficer(address = Some("via Roma 1"), email = Some("ciao@ciao.it"), pec = Some("pec@pec.it"))
+  val geographicTaxonomies   = Seq(
+    PersistedGeographicTaxonomy(code = "GEOCODE1", desc = "GEODESC1"),
+    PersistedGeographicTaxonomy(code = "GEOCODE2", desc = "GEODESC2")
+  )
 
   val productId        = "productId"
   val productRole      = "productRole"
@@ -125,7 +130,8 @@ object StateCommonData {
           email = dataProtectionOfficer.email,
           pec = dataProtectionOfficer.pec
         )
-      )
+      ),
+      geographicTaxonomies = geographicTaxonomies
     )
   )
 

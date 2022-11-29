@@ -15,6 +15,7 @@ object InstitutionsPartyApiServiceData {
   lazy final val institutionUuid2 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9211")
   lazy final val institutionUuid3 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9212")
   lazy final val institutionUuid4 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9213")
+  lazy final val institutionUuid5 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9214")
 
   lazy final val externalId1 = "ext_id1"
   lazy final val originId1   = "origin_id1"
@@ -24,6 +25,8 @@ object InstitutionsPartyApiServiceData {
   lazy final val originId3   = "origin_id3"
   lazy final val externalId4 = "ext_id4"
   lazy final val originId4   = "origin_id4"
+  lazy final val externalId5 = "ext_id5"
+  lazy final val originId5   = "origin_id5"
 
   lazy final val institutionSeed1 = InstitutionSeed(
     externalId = externalId1,
@@ -85,7 +88,8 @@ object InstitutionsPartyApiServiceData {
       ),
       attributes = Seq.empty,
       origin = "IPA",
-      institutionType = Option("PA")
+      institutionType = Option("PA"),
+      geographicTaxonomies = Option(Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC")))
     )
   lazy final val institutionSeed4 =
     InstitutionSeed(
@@ -101,6 +105,34 @@ object InstitutionsPartyApiServiceData {
       origin = "IPA",
       institutionType = Option("PA")
     )
+  lazy final val institutionSeed5 =
+    InstitutionSeed(
+      externalId = externalId5,
+      originId = originId5,
+      description = "Institutions Five",
+      digitalAddress = "mail3@mail.org",
+      address = "address5",
+      zipCode = "zipCode5",
+      taxCode = "taxCode",
+      products = Option(
+        Map(
+          "p1" -> InstitutionProduct(
+            product = "p1",
+            pricingPlan = Option("pricingPlan"),
+            billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+          ),
+          "p2" -> InstitutionProduct(
+            product = "p2",
+            pricingPlan = Option("pricingPlan2"),
+            billing = Billing(vatNumber = "vatNumber2", recipientCode = "recipientCode2", publicServices = Option(true))
+          )
+        )
+      ),
+      attributes = Seq.empty,
+      origin = "IPA",
+      institutionType = Option("PA"),
+      geographicTaxonomies = Option(Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC")))
+    )
 
   lazy final val expected1 = Institution(
     externalId = externalId1,
@@ -114,7 +146,8 @@ object InstitutionsPartyApiServiceData {
     attributes = Seq.empty,
     origin = "IPA",
     institutionType = Option("PA"),
-    products = Map.empty
+    products = Map.empty,
+    geographicTaxonomies = Seq.empty
   )
 
   lazy final val expected3 = Institution(
@@ -140,7 +173,35 @@ object InstitutionsPartyApiServiceData {
         pricingPlan = Option("pricingPlan2"),
         billing = Billing(vatNumber = "vatNumber2", recipientCode = "recipientCode2", publicServices = Option(true))
       )
-    )
+    ),
+    geographicTaxonomies = Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC"))
+  )
+
+  lazy final val expected5 = Institution(
+    externalId = externalId5,
+    originId = originId5,
+    description = "Institutions Five",
+    digitalAddress = "mail3@mail.org",
+    address = "address5",
+    zipCode = "zipCode5",
+    taxCode = "taxCode",
+    id = institutionUuid5,
+    attributes = Seq.empty,
+    origin = "IPA",
+    institutionType = Option("PA"),
+    products = Map(
+      "p1" -> InstitutionProduct(
+        product = "p1",
+        pricingPlan = Option("pricingPlan"),
+        billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+      ),
+      "p2" -> InstitutionProduct(
+        product = "p2",
+        pricingPlan = Option("pricingPlan2"),
+        billing = Billing(vatNumber = "vatNumber2", recipientCode = "recipientCode2", publicServices = Option(true))
+      )
+    ),
+    geographicTaxonomies = Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC"))
   )
 
   def prepareTest(

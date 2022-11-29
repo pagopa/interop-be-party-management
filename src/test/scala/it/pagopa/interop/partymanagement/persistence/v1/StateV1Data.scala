@@ -7,14 +7,7 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
   InstitutionProductV1,
   PersonPartyV1
 }
-import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
-  BillingV1,
-  DataProtectionOfficerV1,
-  InstitutionUpdateV1,
-  PartyRelationshipProductV1,
-  PartyRelationshipV1,
-  PaymentServiceProviderV1
-}
+import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
   RelationshipEntryV1,
@@ -60,7 +53,8 @@ object StateV1Data {
           email = dataProtectionOfficer.email,
           pec = dataProtectionOfficer.pec
         )
-      )
+      ),
+      geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
     )
   )
 
@@ -134,7 +128,8 @@ object StateV1Data {
         email = dataProtectionOfficer.email,
         pec = dataProtectionOfficer.pec
       )
-    )
+    ),
+    geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
   )
 
   val relationshipV1: PartyRelationshipV1 =

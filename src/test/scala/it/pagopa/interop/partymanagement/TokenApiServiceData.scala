@@ -202,7 +202,8 @@ object TokenApiServiceData {
       )
     ),
     origin = "DUMMY",
-    institutionType = None
+    institutionType = None,
+    geographicTaxonomies = Some(Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC")))
   )
   lazy final val institutionSeed9  = InstitutionSeed(
     externalId = externalId9,
@@ -248,7 +249,7 @@ object TokenApiServiceData {
   lazy final val relationshipSeed2 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed1 = RelationshipSeed(from = personId1, to = orgId1, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed3 = RelationshipSeed(from = personId2, to = orgId2, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"),
-    institutionUpdate = Option(InstitutionUpdate(institutionType=Option("OVERRIDE_institutionType"),description=Option("OVERRIDE_description"), digitalAddress=Option("OVERRIDE_digitalAddress"), address=Option("OVERRIDE_address"), zipCode=Option("OVERRIDE_zipCode"), taxCode=Option("OVERRIDE_taxCode"))),
+    institutionUpdate = Option(InstitutionUpdate(institutionType=Option("OVERRIDE_institutionType"),description=Option("OVERRIDE_description"), digitalAddress=Option("OVERRIDE_digitalAddress"), address=Option("OVERRIDE_address"), zipCode=Option("OVERRIDE_zipCode"), taxCode=Option("OVERRIDE_taxCode"), geographicTaxonomies = Seq(GeographicTaxonomy(code = "OVERRIDE_GEOCODE", desc = "OVERRIDE_GEODESC")))),
     pricingPlan = Option("OVERRIDE_pricingPlan"), billing = Option(Billing(vatNumber="OVERRIDE_vatNumber", recipientCode="OVERRIDE_recipientCode", publicServices=Option(true))))
   lazy final val relationshipSeed4 = RelationshipSeed(from = personId2, to = orgId2, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed5 = RelationshipSeed(from = personId3, to = orgId3, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))
@@ -262,7 +263,7 @@ object TokenApiServiceData {
   lazy final val relationshipSeed13 = RelationshipSeed(from = personId7, to = orgId7, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed14 = RelationshipSeed(from = personId7, to = orgId7, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed15 = RelationshipSeed(from = personId2, to = orgId8, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"),
-    institutionUpdate = Option(InstitutionUpdate(institutionType=Option("OVERRIDE_institutionType"),description=Option("OVERRIDE_description"), digitalAddress=Option("OVERRIDE_digitalAddress"), address=Option("OVERRIDE_address"), zipCode=Option("OVERRIDE_zipCode"), taxCode=Option("OVERRIDE_taxCode"))),
+    institutionUpdate = Option(InstitutionUpdate(institutionType=Option("OVERRIDE_institutionType"),description=Option("OVERRIDE_description"), digitalAddress=Option("OVERRIDE_digitalAddress"), address=Option("OVERRIDE_address"), zipCode=Option("OVERRIDE_zipCode"), taxCode=Option("OVERRIDE_taxCode"), geographicTaxonomies = Seq.empty)),
     pricingPlan = Option("OVERRIDE_pricingPlan"), billing = Option(Billing(vatNumber="OVERRIDE_vatNumber", recipientCode="OVERRIDE_recipientCode", publicServices=Option(true))))
   lazy final val relationshipSeed16 = RelationshipSeed(from = personId2, to = orgId8, role = PartyRole.DELEGATE, product = RelationshipProductSeed(id = "p1", role ="admin"))
   lazy final val relationshipSeed17 = RelationshipSeed(from = personId8, to = orgId9, role = PartyRole.MANAGER,  product = RelationshipProductSeed(id = "p1", role ="admin"))
@@ -407,7 +408,8 @@ object TokenApiServiceData {
           publicServices = Option(true)
         )
       )
-    )
+    ),
+    geographicTaxonomies = Seq(GeographicTaxonomy(code = "OVERRIDE_GEOCODE", desc = "OVERRIDE_GEODESC"))
   )
 
   lazy final val expected8 = Institution(
@@ -439,6 +441,7 @@ object TokenApiServiceData {
         pricingPlan = Option("pricingPlan2"),
         billing = Billing(vatNumber = "vatNumber2", recipientCode = "recipientCode2", publicServices = Option(false))
       )
-    )
+    ),
+    geographicTaxonomies = Seq.empty
   )
 }
