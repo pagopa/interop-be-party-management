@@ -1,6 +1,7 @@
 package it.pagopa.interop.partymanagement.error
 
 import it.pagopa.interop.commons.utils.errors.ComponentError
+import it.pagopa.interop.partymanagement.model.CollectionSearchMode
 
 import java.util.UUID
 
@@ -117,5 +118,23 @@ object PartyManagementErrors {
 
   final case class EnableRelationshipError(id: String)
       extends ComponentError("0051", s"Error while enabling relationship with id $id")
+
+  final case class CollectionSearchModeNotValid(searchMode: Option[String])
+      extends ComponentError("0052", s"Invalid CollectionSearchMode $searchMode")
+
+  final case class FindByGeoTaxonomiesError(geoTaxonomies: String, searchMode: Option[String])
+      extends ComponentError(
+        "0053",
+        s"Error while searching institutions related to $geoTaxonomies and searchMode $searchMode"
+      )
+
+  final case class FindByGeoTaxonomiesInvalid(
+    desc: String,
+    geoTaxonomies: Set[String],
+    searchMode: CollectionSearchMode
+  ) extends ComponentError(
+        "0054",
+        s"Invalid search configuration while searching institutions related to $geoTaxonomies and searchMode $searchMode: $desc"
+      )
 
 }
