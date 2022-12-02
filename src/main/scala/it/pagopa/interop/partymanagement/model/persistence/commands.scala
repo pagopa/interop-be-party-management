@@ -38,7 +38,7 @@ final case class GetInstitutionByExternalId(externalId: String, replyTo: ActorRe
 final case class GetInstitutionsByProductId(productId: String, replyTo: ActorRef[List[Institution]])
     extends PartyCommand
 final case class GetInstitutionsByGeoTaxonomies(
-  geoTaxononies: Set[String],
+  geoTaxonomies: Set[String],
   searchMode: CollectionSearchMode,
   replyTo: ActorRef[List[Institution]]
 ) extends PartyCommand

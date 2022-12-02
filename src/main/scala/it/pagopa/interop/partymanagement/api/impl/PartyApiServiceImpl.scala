@@ -850,20 +850,6 @@ class PartyApiServiceImpl(
     }
   }
 
-  def validateSearchByGeoTaxonomySearch(geoTaxonomiesSet: Set[String], searchModeEnum: CollectionSearchMode) = {
-    if (geoTaxonomiesSet.isEmpty && !(searchModeEnum equals CollectionSearchMode.exact)) {
-      Future.failed(
-        FindByGeoTaxonomiesInvalid(
-          "Empty geographic taxonomies filter is valid only when searchMode is exact",
-          geoTaxonomiesSet,
-          searchModeEnum
-        )
-      )
-    } else {
-      Future.successful(())
-    }
-  }
-
   /**
     * Code: 200, Message: collection of institutions, DataType: Seq[Institution]
     * Code: 400, Message: Bad Request, DataType: Problem
@@ -912,6 +898,20 @@ class PartyApiServiceImpl(
         val errorResponse: Problem =
           problemOf(StatusCodes.InternalServerError, FindByGeoTaxonomiesError(geoTaxonomies, searchMode))
         complete(StatusCodes.InternalServerError, errorResponse)
+    }
+  }
+
+  def validateSearchByGeoTaxonomySearch(geoTaxonomiesSet: Set[String], searchModeEnum: CollectionSearchMode) = {
+    if (geoTaxonomiesSet.isEmpty && !(searchModeEnum equals CollectionSearchMode.exact)) {
+      Future.failed(
+        FindByGeoTaxonomiesInvalid(
+          "Empty geographic taxonomies filter is valid only when searchMode is exact",
+          geoTaxonomiesSet,
+          searchModeEnum
+        )
+      )
+    } else {
+      Future.successful(())
     }
   }
 }

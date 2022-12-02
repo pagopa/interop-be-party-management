@@ -16,6 +16,7 @@ object InstitutionsPartyApiServiceData {
   lazy final val institutionUuid3 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9212")
   lazy final val institutionUuid4 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9213")
   lazy final val institutionUuid5 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9214")
+  lazy final val institutionUuid6 = UUID.fromString("27f8dce0-0a5b-476b-9fdd-a7a658eb9219")
 
   lazy final val externalId1 = "ext_id1"
   lazy final val originId1   = "origin_id1"
@@ -27,6 +28,8 @@ object InstitutionsPartyApiServiceData {
   lazy final val originId4   = "origin_id4"
   lazy final val externalId5 = "ext_id5"
   lazy final val originId5   = "origin_id5"
+  lazy final val externalId6 = "ext_id6"
+  lazy final val originId6   = "origin_id6"
 
   lazy final val institutionSeed1 = InstitutionSeed(
     externalId = externalId1,
@@ -133,6 +136,35 @@ object InstitutionsPartyApiServiceData {
       institutionType = Option("PA"),
       geographicTaxonomies = Option(Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC")))
     )
+  lazy final val institutionSeed6 =
+    InstitutionSeed(
+      externalId = externalId6,
+      originId = originId6,
+      description = "Institutions Six",
+      digitalAddress = "mail6@mail.org",
+      address = "address6",
+      zipCode = "zipCode6",
+      taxCode = "taxCode",
+      products = Option(
+        Map(
+          "p1" -> InstitutionProduct(
+            product = "p1",
+            pricingPlan = Option("pricingPlan"),
+            billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+          )
+        )
+      ),
+      attributes = Seq.empty,
+      origin = "IPA",
+      institutionType = Option("PA"),
+      geographicTaxonomies = Option(
+        Seq(
+          GeographicTaxonomy(code = "GEOCODEX", desc = "GEODESCX"),
+          GeographicTaxonomy(code = "GEOCODEY", desc = "GEODESCY"),
+          GeographicTaxonomy(code = "GEOCODEZ", desc = "GEODESCZ")
+        )
+      )
+    )
 
   lazy final val expected1 = Institution(
     externalId = externalId1,
@@ -202,6 +234,32 @@ object InstitutionsPartyApiServiceData {
       )
     ),
     geographicTaxonomies = Seq(GeographicTaxonomy(code = "GEOCODE", desc = "GEODESC"))
+  )
+
+  lazy final val expected6 = Institution(
+    externalId = externalId6,
+    originId = originId6,
+    description = "Institutions Six",
+    digitalAddress = "mail6@mail.org",
+    address = "address6",
+    zipCode = "zipCode6",
+    taxCode = "taxCode",
+    id = institutionUuid6,
+    attributes = Seq.empty,
+    origin = "IPA",
+    institutionType = Option("PA"),
+    products = Map(
+      "p1" -> InstitutionProduct(
+        product = "p1",
+        pricingPlan = Option("pricingPlan"),
+        billing = Billing(vatNumber = "vatNumber", recipientCode = "recipientCode", publicServices = Option(false))
+      )
+    ),
+    geographicTaxonomies = Seq(
+      GeographicTaxonomy(code = "GEOCODEX", desc = "GEODESCX"),
+      GeographicTaxonomy(code = "GEOCODEY", desc = "GEODESCY"),
+      GeographicTaxonomy(code = "GEOCODEZ", desc = "GEODESCZ")
+    )
   )
 
   def prepareTest(

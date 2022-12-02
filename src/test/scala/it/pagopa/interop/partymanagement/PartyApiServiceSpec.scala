@@ -2362,4 +2362,136 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         )
     }
   }
+
+  "Search By Taxonomies" must {
+    import InstitutionsPartyApiServiceData._
+
+    def prepareTestData(): Unit = {
+      (() => uuidSupplier.get).expects().returning(institutionUuid6).once()
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
+
+      prepareTest(institutionSeed6)
+
+      ()
+    }
+
+    def invokeApi(geoTaxonomies: String, searchMode: Option[String]): HttpResponse = {
+      Http()
+        .singleRequest(
+          HttpRequest(
+            uri = s"$url/institutions/bygeotaxonomies?" +
+              s"geoTaxonomies=$geoTaxonomies" +
+              s"${searchMode.map(s => s"&searchMode=$s").getOrElse("")}",
+            method = HttpMethods.GET,
+            headers = authorization
+          )
+        )
+        .futureValue
+    }
+
+    def invokeSuccessfullyApi(geoTaxonomies: String, searchMode: Option[String]): Institutions = {
+      val response = invokeApi(geoTaxonomies, searchMode)
+
+      val body = Unmarshal(response.entity).to[Institutions].futureValue
+
+      response.status shouldBe StatusCodes.OK
+
+      body
+    }
+
+    "return 400 when not valid searchMode" in {
+      prepareTestData()
+
+      val response = invokeApi("GEOCODE_NEVER_SEEN", Some("INVALID_SEARCH_MODE"))
+
+      response.status shouldBe StatusCodes.BadRequest
+    }
+
+    "return 400 when empty geoTaxonomies and searchMode not exact" in {
+      prepareTestData()
+
+      val response = invokeApi("[]", Some("all"))
+
+      response.status shouldBe StatusCodes.BadRequest
+    }
+
+    "return successfully when empty geoTaxonomies and searchMode is exact" in {
+      prepareTestData()
+
+      invokeSuccessfullyApi("[]", Some("exact"))
+    }
+
+    // region default searchMode
+    "return empty list when none match on default searchMode" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODE_NEVER_SEEN", None)
+
+      body shouldBe Institutions(Seq.empty)
+    }
+
+    "return successfully when match on default searchMode" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODEX", None)
+
+      body shouldBe Institutions(Seq(expected6))
+    }
+    // endregion
+
+    // region searchMode any
+    "return empty list when none match on searchMode 'any'" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODE_NEVER_SEEN", Some("any"))
+
+      body shouldBe Institutions(Seq.empty)
+    }
+
+    "return successfully when match on searchMode 'any'" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODEX", Some("any"))
+
+      body shouldBe Institutions(Seq(expected6))
+    }
+    // endregion
+
+    // region searchMode any
+    "return empty list when none match on searchMode 'all'" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODEX,GEOCODE_NEVER_SEEN", Some("all"))
+
+      body shouldBe Institutions(Seq.empty)
+    }
+
+    "return successfully when match on searchMode 'all'" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODEX,GEOCODEY", Some("all"))
+
+      body shouldBe Institutions(Seq(expected6))
+    }
+    // endregion
+
+    // region searchMode any
+    "return empty list when none match on searchMode 'exact'" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODEX,GEOCODEY", Some("exact"))
+
+      body shouldBe Institutions(Seq.empty)
+    }
+
+    "return successfully when match on searchMode 'exact'" in {
+      prepareTestData()
+
+      val body = invokeSuccessfullyApi("GEOCODEX,GEOCODEY,GEOCODEZ", Some("exact"))
+
+      body shouldBe Institutions(Seq(expected6))
+    }
+    // endregion
+  }
 }
