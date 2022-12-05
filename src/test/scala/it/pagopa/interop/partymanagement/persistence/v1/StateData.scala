@@ -71,7 +71,8 @@ object StateData {
         email = dataProtectionOfficer.email,
         pec = dataProtectionOfficer.pec
       )
-    )
+    ),
+    geographicTaxonomies = geographicTaxonomies
   )
 
   val relationship: PersistedPartyRelationship =

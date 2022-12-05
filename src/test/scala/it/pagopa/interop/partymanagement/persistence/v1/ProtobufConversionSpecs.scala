@@ -44,6 +44,7 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.{
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
   DataProtectionOfficerV1,
+  GeographicTaxonomyV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
   PartyRelationshipV1,
@@ -131,6 +132,11 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           pec = Some("pec@pec.it")
         )
 
+      val geographicTaxonomies = Seq(
+        PersistedGeographicTaxonomy(code = "GEOCODE", desc = "GEODESC"),
+        PersistedGeographicTaxonomy(code = "GEOCODE2", desc = "GEODESC2")
+      )
+
       val partyV1: Try[InstitutionPartyV1] =
         for {
           start <- start.asFormattedString
@@ -177,7 +183,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               email = dataProtectionOfficer.email,
               pec = dataProtectionOfficer.pec
             )
-          )
+          ),
+          geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
         )
 
       val party: Either[Throwable, Party] = partyV1.toEither.flatMap(getParty)
@@ -198,7 +205,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         products = products,
         attributes = attributes,
         paymentServiceProvider = Option(paymentServiceProvider),
-        dataProtectionOfficer = Option(dataProtectionOfficer)
+        dataProtectionOfficer = Option(dataProtectionOfficer),
+        geographicTaxonomies = geographicTaxonomies
       )
 
       party.value shouldBe expected
@@ -224,24 +232,24 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
     }
 
     "convert a Party (InstitutionParty) to PartyV1 (InstitutionPartyV1)" in {
-      val id              = UUID.randomUUID()
-      val externalId      = "externalId"
-      val originId        = "originId"
-      val description     = "description"
-      val digitalAddress  = "digitalAddress"
-      val address         = "address"
-      val zipCode         = "zipCode"
-      val taxCode         = "taxCode"
-      val start           = OffsetDateTime.now()
-      val end             = OffsetDateTime.now().plusDays(10L)
-      val origin          = "IPA"
-      val institutionType = "PA"
-      val attributes      =
+      val id                   = UUID.randomUUID()
+      val externalId           = "externalId"
+      val originId             = "originId"
+      val description          = "description"
+      val digitalAddress       = "digitalAddress"
+      val address              = "address"
+      val zipCode              = "zipCode"
+      val taxCode              = "taxCode"
+      val start                = OffsetDateTime.now()
+      val end                  = OffsetDateTime.now().plusDays(10L)
+      val origin               = "IPA"
+      val institutionType      = "PA"
+      val attributes           =
         Seq(
           InstitutionAttributeV1(origin = "origin", code = "a", description = "description_a"),
           InstitutionAttributeV1(origin = "origin", code = "b", description = "description_b")
         )
-      val products        = Seq(
+      val products             = Seq(
         InstitutionProductV1(
           product = "product1",
           pricingPlan = Option("pricingPlan"),
@@ -252,6 +260,10 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           pricingPlan = Option("pricingPlan"),
           billing = BillingV1(vatNumber = "VATNUMBER", recipientCode = "RECIPIENTCODE", publicServices = Option(true))
         )
+      )
+      val geographicTaxonomies = Seq(
+        PersistedGeographicTaxonomy(code = "GEOCODE", desc = "GEODESC"),
+        PersistedGeographicTaxonomy(code = "GEOCODE2", desc = "GEODESC2")
       )
 
       val party: InstitutionParty = InstitutionParty(
@@ -280,7 +292,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           .map(attr => InstitutionAttribute(origin = attr.origin, code = attr.code, description = attr.description))
           .toSet,
         paymentServiceProvider = None,
-        dataProtectionOfficer = None
+        dataProtectionOfficer = None,
+        geographicTaxonomies = geographicTaxonomies
       )
 
       val partyV1: Either[Throwable, PartyV1] = getPartyV1(party)
@@ -305,7 +318,8 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           products = products,
           attributes = attributes,
           paymentServiceProvider = None,
-          dataProtectionOfficer = None
+          dataProtectionOfficer = None,
+          geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
         )
 
       partyV1.value shouldBe expected.success.value
@@ -337,7 +351,11 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("ZIPCODEOVERRIDE"),
           Option("TAXCODEOVERRIDE"),
           paymentServiceProvider = None,
-          dataProtectionOfficer = None
+          dataProtectionOfficer = None,
+          geographicTaxonomies = Seq(
+            GeographicTaxonomyV1(code = "GEOCODE", desc = "GEODESC"),
+            GeographicTaxonomyV1(code = "GEOCODE2", desc = "GEODESC2")
+          )
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -399,7 +417,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               )
             ),
             i.dataProtectionOfficer
-              .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec))
+              .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)),
+            institutionUpdate.get.geographicTaxonomies
+              .map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc))
           )
         ),
         billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
@@ -434,7 +454,11 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           Option("ZIPCODEOVERRIDE"),
           Option("TAXCODEOVERRIDE"),
           paymentServiceProvider = None,
-          dataProtectionOfficer = None
+          dataProtectionOfficer = None,
+          geographicTaxonomies = Seq(
+            GeographicTaxonomyV1(code = "GEOCODE", desc = "GEODESC"),
+            GeographicTaxonomyV1(code = "GEOCODE2", desc = "GEODESC2")
+          )
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -478,6 +502,9 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               ),
               i.dataProtectionOfficer.map(d =>
                 PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
+              ),
+              institutionUpdate.get.geographicTaxonomies.map(x =>
+                PersistedGeographicTaxonomy(code = x.code, desc = x.desc)
               )
             )
           ),

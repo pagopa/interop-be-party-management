@@ -218,7 +218,10 @@ class PublicApiServiceImpl(
     relationship.institutionUpdate.fold(institutionParty) { institutionUpdate =>
       if (institutionParty.origin == ipaOrigin)
         institutionParty
-          .copy(institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType))
+          .copy(
+            institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
+            geographicTaxonomies = institutionUpdate.geographicTaxonomies
+          )
       else
         institutionParty.copy(
           institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
@@ -226,7 +229,8 @@ class PublicApiServiceImpl(
           taxCode = institutionUpdate.taxCode.getOrElse(institutionParty.taxCode),
           description = institutionUpdate.description.getOrElse(institutionParty.description),
           digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress),
-          zipCode = institutionUpdate.zipCode.getOrElse(institutionParty.zipCode)
+          zipCode = institutionUpdate.zipCode.getOrElse(institutionParty.zipCode),
+          geographicTaxonomies = institutionUpdate.geographicTaxonomies
         )
     }
   }

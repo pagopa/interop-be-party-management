@@ -56,6 +56,7 @@ message InstitutionUpdateV1 {
   optional string taxCode = 6;
   optional PaymentServiceProviderV1 paymentServiceProvider = 7;
   optional DataProtectionOfficerV1 dataProtectionOfficer = 8;
+  repeated GeographicTaxonomyV1 geographicTaxonomies = 9;
 }
 
 message BillingV1 {
@@ -76,4 +77,9 @@ message DataProtectionOfficerV1 {
   optional string address = 1;
   optional string email = 2;
   optional string pec = 3;
+}
+
+message GeographicTaxonomyV1 {
+  required string code = 1;
+  required string desc = 2;
 }

@@ -23,7 +23,8 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
   PartyRelationshipV1,
-  PaymentServiceProviderV1
+  PaymentServiceProviderV1,
+  GeographicTaxonomyV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -85,7 +86,9 @@ object utils {
               )
             ),
           dataProtectionOfficer = i.dataProtectionOfficer
-            .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec))
+            .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)),
+          geographicTaxonomies =
+            i.geographicTaxonomies.map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc))
         )
       }.toEither
     case Empty                 => Left(new RuntimeException("Deserialization from protobuf failed"))
@@ -136,7 +139,8 @@ object utils {
           dataProtectionOfficer = i.dataProtectionOfficer
             .map(a => DataProtectionOfficerV1(address = a.address, email = a.email, pec = a.pec)),
           start = start,
-          end = end
+          end = end,
+          geographicTaxonomies = i.geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
         )
       }.toEither
   }
@@ -192,7 +196,9 @@ object utils {
           ),
           dataProtectionOfficer = i.dataProtectionOfficer.map(d =>
             PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
-          )
+          ),
+          geographicTaxonomies =
+            i.geographicTaxonomies.map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc))
         )
       ),
       billing = partyRelationshipV1.billing.map(getPersistedBilling)
@@ -240,7 +246,8 @@ object utils {
               )
             ),
           dataProtectionOfficer = i.dataProtectionOfficer
-            .map(d => DataProtectionOfficerV1(address = d.address, email = d.email, pec = d.pec))
+            .map(d => DataProtectionOfficerV1(address = d.address, email = d.email, pec = d.pec)),
+          geographicTaxonomies = i.geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
         )
       ),
       billing = partyRelationship.billing.map(getBillingV1)

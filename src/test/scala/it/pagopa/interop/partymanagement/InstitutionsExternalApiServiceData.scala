@@ -28,7 +28,8 @@ object InstitutionsExternalApiServiceData {
     attributes = Seq.empty,
     origin = "IPA",
     institutionType = Option("PA"),
-    products = Map.empty
+    products = Map.empty,
+    geographicTaxonomies = Seq.empty
   )
 
   def prepareTest()(implicit
