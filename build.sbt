@@ -74,8 +74,6 @@ cleanFiles += baseDirectory.value / "client" / "src"
 
 cleanFiles += baseDirectory.value / "client" / "target"
 
-ThisBuild / credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
-
 lazy val generated = project
   .in(file("generated"))
   .settings(scalacOptions := Seq(), scalafmtOnCompile := true)
@@ -91,7 +89,7 @@ lazy val client = project
     updateOptions       := updateOptions.value.withGigahorse(false),
     Docker / publish    := {}
   )
- 
+
 lazy val kafkaManager = project
   .in(file("kafka-manager"))
   .settings(
