@@ -144,9 +144,9 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io/pagopa
-          username: ${{ secrets.PAT_USR }}
-          password: ${{ secrets.PAT_PSW }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build, tag, and push image to Github Packages
         env:
