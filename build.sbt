@@ -6,12 +6,11 @@ ThisBuild / scalaVersion        := "2.13.8"
 ThisBuild / organization        := "it.pagopa"
 ThisBuild / organizationName    := "Pagopa S.p.A."
 ThisBuild / libraryDependencies := Dependencies.Jars.`server`
-Global / onChangedBuildSource := ReloadOnSourceChanges
-
-ThisBuild / version := ComputeVersion.version
-
-ThisBuild / resolvers += "Pagopa Nexus Snapshots" at s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/maven-snapshots/"
-ThisBuild / resolvers += "Pagopa Nexus Releases" at s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/maven-releases/"
+Global / onChangedBuildSource   := ReloadOnSourceChanges
+ThisBuild / githubOwner         := "pagopa"
+ThisBuild / githubRepository    := "interop-be-party-management"
+ThisBuild / resolvers += Resolver.githubPackages("pagopa")
+ThisBuild / version             := ComputeVersion.version
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -32,7 +31,7 @@ generateCode := {
   import sys.process._
 
   val openApiCommand: String = {
-    if(System.getProperty("os.name").toLowerCase.contains("win")) {
+    if (System.getProperty("os.name").toLowerCase.contains("win")) {
       "openapi-generator-cli-win.bat"
     } else {
       "openapi-generator-cli"
@@ -90,27 +89,19 @@ lazy val client = project
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.client,
     updateOptions       := updateOptions.value.withGigahorse(false),
-    Docker / publish    := {},
-    publishTo           := {
-      val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
-
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "maven-snapshots/")
-      else
-        Some("releases" at nexus + "maven-releases/")
-    }
+    Docker / publish    := {}
   )
 
 lazy val kafkaManager = project
   .in(file("kafka-manager"))
   .settings(
-    name := "kafka-manager",
+    name                := "kafka-manager",
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.client ++
       Seq(
         "com.typesafe.akka" %% "akka-stream-kafka" % akkaStreamKafkaVersion % Compile,
-        "com.typesafe.akka" %% "akka-stream" % akkaVersion
-      ),
+        "com.typesafe.akka" %% "akka-stream"       % akkaVersion
+      )
   )
   .setupBuildInfo
 
