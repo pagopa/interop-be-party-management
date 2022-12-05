@@ -91,7 +91,7 @@ lazy val client = project
     updateOptions       := updateOptions.value.withGigahorse(false),
     Docker / publish    := {}
   )
-
+ 
 lazy val kafkaManager = project
   .in(file("kafka-manager"))
   .settings(
