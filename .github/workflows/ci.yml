@@ -145,8 +145,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io/pagopa
-          username: ${{ secrets.GITHUB_PAT_USR }}
-          password: ${{ secrets.GITHUB_PAT_PSW }}
+          username: ${{ secrets.PAT_USR }}
+          password: ${{ secrets.PAT_PSW }}
 
       - name: Build, tag, and push image to Github Packages
         env:
