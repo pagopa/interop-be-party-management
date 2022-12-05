@@ -139,7 +139,7 @@ jobs:
         run: sbt ++${{ matrix.scala }} generateCode
 
       - name: Publish project
-        run: sbt ++${{ matrix.scala }} docker:publish "project client" publish
+        run: sbt ++${{ matrix.scala }} "project client" publish
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
