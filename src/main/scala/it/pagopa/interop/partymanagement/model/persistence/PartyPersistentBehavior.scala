@@ -9,7 +9,13 @@ import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionC
 import it.pagopa.interop.commons.utils.OpenapiUtils._
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.partymanagement.model.party._
-import it.pagopa.interop.partymanagement.model.{Institution, PartyRole, RelationshipState, TokenText}
+import it.pagopa.interop.partymanagement.model.{
+  CollectionSearchMode,
+  Institution,
+  PartyRole,
+  RelationshipState,
+  TokenText
+}
 import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
@@ -101,6 +107,36 @@ object PartyPersistentBehavior {
         val parties: List[Institution] =
           state.parties.values.collect {
             case o: InstitutionParty if o.products.exists(_.product == productId) =>
+              Institution(
+                id = o.id,
+                externalId = o.externalId,
+                originId = o.originId,
+                description = o.description,
+                digitalAddress = o.digitalAddress,
+                address = o.address,
+                zipCode = o.zipCode,
+                taxCode = o.taxCode,
+                origin = o.origin,
+                institutionType = o.institutionType,
+                products = (o.products map { p => p.product -> PersistedInstitutionProduct.toApi(p) }).toMap,
+                attributes = o.attributes.map(InstitutionAttribute.toApi).toSeq,
+                paymentServiceProvider = o.paymentServiceProvider.map(PersistedPaymentServiceProvider.toAPi),
+                dataProtectionOfficer = o.dataProtectionOfficer.map(PersistedDataProtectionOfficer.toApi),
+                geographicTaxonomies = o.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi)
+              )
+          }.toList
+        replyTo ! parties
+        Effect.none
+
+      case GetInstitutionsByGeoTaxonomies(geoTaxonomies, searchMode, replyTo) =>
+        val parties: List[Institution] =
+          state.parties.values.collect {
+            case o: InstitutionParty if (searchMode match {
+                  case CollectionSearchMode.all   => geoTaxonomies subsetOf o.geographicTaxonomies.map(_.code).toSet
+                  case CollectionSearchMode.any   =>
+                    geoTaxonomies.exists(o.geographicTaxonomies.map(_.code).toSet.contains)
+                  case CollectionSearchMode.exact => geoTaxonomies equals o.geographicTaxonomies.map(_.code).toSet
+                }) =>
               Institution(
                 id = o.id,
                 externalId = o.externalId,

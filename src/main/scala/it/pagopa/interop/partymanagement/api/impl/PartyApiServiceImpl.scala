@@ -3,7 +3,7 @@ package it.pagopa.interop.partymanagement.api.impl
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
-import akka.http.scaladsl.marshalling.{ToEntityMarshaller}
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
@@ -50,6 +50,12 @@ class PartyApiServiceImpl(
 
   def getCommander(entityId: String): EntityRef[Command] =
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
+
+  def getCommanders = {
+    (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+  }
 
   /** Code: 200, Message: successful operation
     * Code: 404, Message: Institution not found
@@ -818,9 +824,7 @@ class PartyApiServiceImpl(
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
     logger.info("Deleting relationship with id {}", relationshipId)
 
-    val commanders = (0 until settings.numberOfShards)
-      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-      .toList
+    val commanders = getCommanders
 
     val result: Future[Option[StatusReply[Unit]]] =
       for {
@@ -843,6 +847,71 @@ class PartyApiServiceImpl(
       case Failure(ex)          =>
         logger.error(s"Error while deleting relationship with id $relationshipId", ex)
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, DeletingRelationshipBadRequest(relationshipId)))
+    }
+  }
+
+  /**
+    * Code: 200, Message: collection of institutions, DataType: Seq[Institution]
+    * Code: 400, Message: Bad Request, DataType: Problem
+    */
+  override def findByGeoTaxonomies(geoTaxonomies: String, searchMode: Option[String])(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerInstitutions: ToEntityMarshaller[Institutions],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info("Getting parties related to geographic taxonomies {} and searchMode {}", geoTaxonomies, searchMode)
+
+    val commanders = getCommanders
+
+    val institutions: Future[Seq[Institution]] = for {
+      searchModeEnum <- searchMode
+        .map(CollectionSearchMode.fromValue)
+        .getOrElse(Right(CollectionSearchMode.any))
+        .toFuture
+      geoTaxonomiesSet = parseArrayParameters(geoTaxonomies).toSet
+      _                 <- validateSearchByGeoTaxonomySearch(geoTaxonomiesSet, searchModeEnum)
+      resultsFromShards <- Future.traverse(commanders)(
+        _.ask(ref => GetInstitutionsByGeoTaxonomies(geoTaxonomiesSet, searchModeEnum, ref))
+      )
+      results = resultsFromShards.flatten
+    } yield results
+
+    onComplete(institutions) {
+      case Success(result) => findByGeoTaxonomies200(Institutions(result))
+      case Failure(ex: RuntimeException) if ex.getMessage.startsWith("Unable to decode value") =>
+        logger.error(
+          s"Invalid searchMode provided while searching parties related to geographic taxonomies $geoTaxonomies: $searchMode",
+          ex
+        )
+        findByGeoTaxonomies400(problemOf(StatusCodes.BadRequest, CollectionSearchModeNotValid(searchMode)))
+      case Failure(ex: FindByGeoTaxonomiesInvalid)                                             =>
+        logger.error(
+          s"Invalid request while searching parties related to geographic taxonomies $geoTaxonomies: $searchMode",
+          ex
+        )
+        findByGeoTaxonomies400(problemOf(StatusCodes.BadRequest, ex))
+      case Failure(ex)                                                                         =>
+        logger.error(
+          s"Error while getting parties related to geographic taxonomies $geoTaxonomies and searchMode $searchMode",
+          ex
+        )
+        val errorResponse: Problem =
+          problemOf(StatusCodes.InternalServerError, FindByGeoTaxonomiesError(geoTaxonomies, searchMode))
+        complete(StatusCodes.InternalServerError, errorResponse)
+    }
+  }
+
+  def validateSearchByGeoTaxonomySearch(geoTaxonomiesSet: Set[String], searchModeEnum: CollectionSearchMode) = {
+    if (geoTaxonomiesSet.isEmpty && !(searchModeEnum equals CollectionSearchMode.exact)) {
+      Future.failed(
+        FindByGeoTaxonomiesInvalid(
+          "Empty geographic taxonomies filter is valid only when searchMode is exact",
+          geoTaxonomiesSet,
+          searchModeEnum
+        )
+      )
+    } else {
+      Future.successful(())
     }
   }
 }

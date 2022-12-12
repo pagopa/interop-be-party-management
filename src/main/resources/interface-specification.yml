@@ -911,6 +911,38 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  '/institutions/bygeotaxonomies':
+    get:
+      summary: Retrieves a collection of institutions having one or more geographic taxonomies
+      tags:
+        - party
+      parameters:
+        - name: geoTaxonomies
+          description: Comma separated list of the geographic taxonomies to search
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: searchMode
+          description: "The search mode to perform, as default 'any'"
+          in: query
+          schema:
+            $ref: '#/components/schemas/CollectionSearchMode'
+      responses:
+        '200':
+          description: collection of institutions
+          content:
+            application/json:
+              schema:
+                type: Institutions
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: findByGeoTaxonomies
+      description: 'returns a collection of all the parties satisfying a geographic taxonomy based search.'
 components:
   schemas:
     PersonSeed:
@@ -1535,6 +1567,12 @@ components:
         desc:
           type: string
           description: 'Description of the geographic taxonomy code'
+    CollectionSearchMode:
+      type: string
+      enum:
+        - exact
+        - any
+        - all
   securitySchemes:
     bearerAuth:
       type: http
