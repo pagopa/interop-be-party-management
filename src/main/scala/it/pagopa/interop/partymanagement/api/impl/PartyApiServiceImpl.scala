@@ -591,7 +591,9 @@ class PartyApiServiceImpl(
           ref
         )
       )
-      result            <- maybeRelationship.toFuture(RelationshipNotFound)
+      result            <- maybeRelationship
+        .filterNot(_.state == PersistedPartyRelationshipState.Deleted)
+        .toFuture(RelationshipNotFound)
     } yield result
 
   }
