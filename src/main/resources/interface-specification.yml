@@ -934,7 +934,7 @@ paths:
           content:
             application/json:
               schema:
-                type: Institutions
+                $ref: '#/components/schemas/Institutions'
         '400':
           description: Bad Request
           content:
@@ -1065,6 +1065,23 @@ components:
           type: string
           description: institution type
           example: PA
+        rea:
+          description: The institution REA
+          type: string
+        shareCapital:
+          type: string
+          description: The institution share capital value
+          example: 10000
+        businessRegisterPlace:
+          type: string
+          description: The business register place
+          example: Rome
+        supportEmail:
+          type: string
+          description: The support email contact
+        imported:
+          type: boolean
+          description: True if institution is stored from batch api
         products:
           type: object
           additionalProperties:
