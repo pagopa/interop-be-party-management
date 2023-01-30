@@ -131,7 +131,13 @@ object StateCommonData {
           pec = dataProtectionOfficer.pec
         )
       ),
-      geographicTaxonomies = geographicTaxonomies
+      geographicTaxonomies = geographicTaxonomies,
+      rea = None,
+      shareCapital = None,
+      businessRegisterPlace = None,
+      supportEmail = None,
+      supportPhone = None,
+      imported = None
     )
   )
 

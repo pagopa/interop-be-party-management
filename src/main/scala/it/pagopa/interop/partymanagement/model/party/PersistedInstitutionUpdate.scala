@@ -13,7 +13,13 @@ final case class PersistedInstitutionUpdate(
   taxCode: Option[String],
   paymentServiceProvider: Option[PersistedPaymentServiceProvider],
   dataProtectionOfficer: Option[PersistedDataProtectionOfficer],
-  geographicTaxonomies: Seq[PersistedGeographicTaxonomy]
+  geographicTaxonomies: Seq[PersistedGeographicTaxonomy],
+  rea: Option[String],
+  shareCapital: Option[String],
+  businessRegisterPlace: Option[String],
+  supportEmail: Option[String],
+  supportPhone: Option[String],
+  imported: Option[Boolean]
 ) {
   def toInstitutionUpdate: InstitutionUpdate = InstitutionUpdate(
     institutionType = institutionType,
@@ -24,7 +30,13 @@ final case class PersistedInstitutionUpdate(
     taxCode = taxCode,
     paymentServiceProvider = paymentServiceProvider.map(toAPi),
     dataProtectionOfficer = dataProtectionOfficer.map(toApi),
-    geographicTaxonomies = geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi)
+    geographicTaxonomies = geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi),
+    rea = rea,
+    shareCapital = shareCapital,
+    businessRegisterPlace = businessRegisterPlace,
+    supportEmail = supportEmail,
+    supportPhone = supportPhone,
+    imported = imported
   )
 }
 
@@ -39,6 +51,12 @@ object PersistedInstitutionUpdate {
       taxCode = institutionUpdate.taxCode,
       paymentServiceProvider = institutionUpdate.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
       dataProtectionOfficer = institutionUpdate.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi),
-      geographicTaxonomies = institutionUpdate.geographicTaxonomies.map(PersistedGeographicTaxonomy.fromApi)
+      geographicTaxonomies = institutionUpdate.geographicTaxonomies.map(PersistedGeographicTaxonomy.fromApi),
+      rea = institutionUpdate.rea,
+      shareCapital = institutionUpdate.shareCapital,
+      businessRegisterPlace = institutionUpdate.businessRegisterPlace,
+      supportEmail = institutionUpdate.supportEmail,
+      supportPhone = institutionUpdate.supportPhone,
+      imported = institutionUpdate.imported
     )
 }
