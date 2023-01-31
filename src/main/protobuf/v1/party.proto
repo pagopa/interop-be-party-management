@@ -40,6 +40,12 @@ message InstitutionPartyV1 {
   optional PaymentServiceProviderV1 paymentServiceProvider = 15;
   optional DataProtectionOfficerV1 dataProtectionOfficer = 16;
   repeated GeographicTaxonomyV1 geographicTaxonomies = 17;
+  optional string rea = 18;
+  optional string shareCapital = 19;
+  optional string businessRegisterPlace = 20;
+  optional string supportEmail = 21;
+  optional string supportPhone = 22;
+  optional bool imported = 23;
 }
 
 message InstitutionAttributeV1 {

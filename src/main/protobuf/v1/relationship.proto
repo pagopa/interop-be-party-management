@@ -57,6 +57,12 @@ message InstitutionUpdateV1 {
   optional PaymentServiceProviderV1 paymentServiceProvider = 7;
   optional DataProtectionOfficerV1 dataProtectionOfficer = 8;
   repeated GeographicTaxonomyV1 geographicTaxonomies = 9;
+  optional string rea = 10;
+  optional string shareCapital = 11;
+  optional string businessRegisterPlace = 12;
+  optional string supportEmail = 13;
+  optional string supportPhone = 14;
+  optional bool imported = 15;
 }
 
 message BillingV1 {

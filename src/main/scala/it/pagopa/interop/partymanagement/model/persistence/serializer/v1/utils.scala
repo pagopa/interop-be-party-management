@@ -88,7 +88,13 @@ object utils {
           dataProtectionOfficer = i.dataProtectionOfficer
             .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)),
           geographicTaxonomies =
-            i.geographicTaxonomies.map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc))
+            i.geographicTaxonomies.map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc)),
+          rea = i.rea,
+          shareCapital = i.shareCapital,
+          businessRegisterPlace = i.businessRegisterPlace,
+          supportEmail = i.supportEmail,
+          supportPhone = i.supportPhone,
+          imported = i.imported
         )
       }.toEither
     case Empty                 => Left(new RuntimeException("Deserialization from protobuf failed"))
@@ -140,7 +146,13 @@ object utils {
             .map(a => DataProtectionOfficerV1(address = a.address, email = a.email, pec = a.pec)),
           start = start,
           end = end,
-          geographicTaxonomies = i.geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
+          geographicTaxonomies = i.geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc)),
+          rea = i.rea,
+          shareCapital = i.shareCapital,
+          businessRegisterPlace = i.businessRegisterPlace,
+          supportEmail = i.supportEmail,
+          supportPhone = i.supportPhone,
+          imported = i.imported
         )
       }.toEither
   }
@@ -198,7 +210,13 @@ object utils {
             PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)
           ),
           geographicTaxonomies =
-            i.geographicTaxonomies.map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc))
+            i.geographicTaxonomies.map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc)),
+          rea = i.rea,
+          shareCapital = i.shareCapital,
+          businessRegisterPlace = i.businessRegisterPlace,
+          supportEmail = i.supportEmail,
+          supportPhone = i.supportPhone,
+          imported = i.imported
         )
       ),
       billing = partyRelationshipV1.billing.map(getPersistedBilling)
@@ -247,7 +265,13 @@ object utils {
             ),
           dataProtectionOfficer = i.dataProtectionOfficer
             .map(d => DataProtectionOfficerV1(address = d.address, email = d.email, pec = d.pec)),
-          geographicTaxonomies = i.geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
+          geographicTaxonomies = i.geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc)),
+          rea = i.rea,
+          shareCapital = i.shareCapital,
+          businessRegisterPlace = i.businessRegisterPlace,
+          supportEmail = i.supportEmail,
+          supportPhone = i.supportPhone,
+          imported = i.imported
         )
       ),
       billing = partyRelationship.billing.map(getBillingV1)

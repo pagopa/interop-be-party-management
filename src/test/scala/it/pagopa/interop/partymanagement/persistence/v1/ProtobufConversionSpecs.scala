@@ -184,7 +184,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               pec = dataProtectionOfficer.pec
             )
           ),
-          geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
+          geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc)),
+          rea = None,
+          shareCapital = None,
+          businessRegisterPlace = None,
+          supportEmail = None,
+          supportPhone = None,
+          imported = None
         )
 
       val party: Either[Throwable, Party] = partyV1.toEither.flatMap(getParty)
@@ -206,7 +212,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
         attributes = attributes,
         paymentServiceProvider = Option(paymentServiceProvider),
         dataProtectionOfficer = Option(dataProtectionOfficer),
-        geographicTaxonomies = geographicTaxonomies
+        geographicTaxonomies = geographicTaxonomies,
+        rea = None,
+        shareCapital = None,
+        businessRegisterPlace = None,
+        supportEmail = None,
+        supportPhone = None,
+        imported = None
       )
 
       party.value shouldBe expected
@@ -293,7 +305,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           .toSet,
         paymentServiceProvider = None,
         dataProtectionOfficer = None,
-        geographicTaxonomies = geographicTaxonomies
+        geographicTaxonomies = geographicTaxonomies,
+        rea = None,
+        shareCapital = None,
+        businessRegisterPlace = None,
+        supportEmail = None,
+        supportPhone = None,
+        imported = None
       )
 
       val partyV1: Either[Throwable, PartyV1] = getPartyV1(party)
@@ -319,7 +337,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           attributes = attributes,
           paymentServiceProvider = None,
           dataProtectionOfficer = None,
-          geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
+          geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc)),
+          rea = None,
+          shareCapital = None,
+          businessRegisterPlace = None,
+          supportEmail = None,
+          supportPhone = None,
+          imported = None
         )
 
       partyV1.value shouldBe expected.success.value
@@ -355,7 +379,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           geographicTaxonomies = Seq(
             GeographicTaxonomyV1(code = "GEOCODE", desc = "GEODESC"),
             GeographicTaxonomyV1(code = "GEOCODE2", desc = "GEODESC2")
-          )
+          ),
+          rea = None,
+          shareCapital = None,
+          businessRegisterPlace = None,
+          supportEmail = None,
+          supportPhone = None,
+          imported = None
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -419,7 +449,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
             i.dataProtectionOfficer
               .map(d => PersistedDataProtectionOfficer(address = d.address, email = d.email, pec = d.pec)),
             institutionUpdate.get.geographicTaxonomies
-              .map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc))
+              .map(x => PersistedGeographicTaxonomy(code = x.code, desc = x.desc)),
+            i.rea,
+            i.shareCapital,
+            i.businessRegisterPlace,
+            i.supportEmail,
+            i.supportPhone,
+            i.imported
           )
         ),
         billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))
@@ -458,7 +494,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
           geographicTaxonomies = Seq(
             GeographicTaxonomyV1(code = "GEOCODE", desc = "GEODESC"),
             GeographicTaxonomyV1(code = "GEOCODE2", desc = "GEODESC2")
-          )
+          ),
+          rea = None,
+          shareCapital = None,
+          businessRegisterPlace = None,
+          supportEmail = None,
+          supportPhone = None,
+          imported = None
         )
       )
       val createdAt         = OffsetDateTime.now()
@@ -505,7 +547,13 @@ class ProtobufConversionSpecs extends AnyWordSpecLike with Matchers {
               ),
               institutionUpdate.get.geographicTaxonomies.map(x =>
                 PersistedGeographicTaxonomy(code = x.code, desc = x.desc)
-              )
+              ),
+              rea = None,
+              shareCapital = None,
+              businessRegisterPlace = None,
+              supportEmail = None,
+              supportPhone = None,
+              imported = None
             )
           ),
           billing = billing.map(b => PersistedBilling(b.vatNumber, b.recipientCode, b.publicServices))

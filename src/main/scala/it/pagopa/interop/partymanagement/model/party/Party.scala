@@ -78,7 +78,13 @@ object Party {
               institutionParty.paymentServiceProvider.map(p => PersistedPaymentServiceProvider.toAPi(p)),
             dataProtectionOfficer =
               institutionParty.dataProtectionOfficer.map(d => PersistedDataProtectionOfficer.toApi(d)),
-            geographicTaxonomies = institutionParty.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi)
+            geographicTaxonomies = institutionParty.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi),
+            rea = institutionParty.rea,
+            shareCapital = institutionParty.shareCapital,
+            businessRegisterPlace = institutionParty.businessRegisterPlace,
+            supportEmail = institutionParty.supportEmail,
+            supportPhone = institutionParty.supportPhone,
+            imported = institutionParty.imported
           )
         )
     }
@@ -114,7 +120,13 @@ final case class InstitutionParty(
   products: Set[PersistedInstitutionProduct],
   paymentServiceProvider: Option[PersistedPaymentServiceProvider],
   dataProtectionOfficer: Option[PersistedDataProtectionOfficer],
-  geographicTaxonomies: Seq[PersistedGeographicTaxonomy]
+  geographicTaxonomies: Seq[PersistedGeographicTaxonomy],
+  rea: Option[String],
+  shareCapital: Option[String],
+  businessRegisterPlace: Option[String],
+  supportEmail: Option[String],
+  supportPhone: Option[String],
+  imported: Option[Boolean]
 ) extends Party
 
 object InstitutionParty {
@@ -144,7 +156,13 @@ object InstitutionParty {
       dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi),
       geographicTaxonomies = institution.geographicTaxonomies.fold(Seq.empty[PersistedGeographicTaxonomy])(
         _.map(PersistedGeographicTaxonomy.fromApi)
-      )
+      ),
+      rea = institution.rea,
+      shareCapital = institution.shareCapital,
+      businessRegisterPlace = institution.businessRegisterPlace,
+      supportEmail = institution.supportEmail,
+      supportPhone = institution.supportPhone,
+      imported = institution.imported
     )
   }
 
@@ -168,7 +186,13 @@ object InstitutionParty {
       products = institution.products.values.map(PersistedInstitutionProduct.fromApi).toSet,
       paymentServiceProvider = institution.paymentServiceProvider.map(PersistedPaymentServiceProvider.fromApi),
       dataProtectionOfficer = institution.dataProtectionOfficer.map(PersistedDataProtectionOfficer.fromApi),
-      geographicTaxonomies = institution.geographicTaxonomies.map(PersistedGeographicTaxonomy.fromApi)
+      geographicTaxonomies = institution.geographicTaxonomies.map(PersistedGeographicTaxonomy.fromApi),
+      rea = institution.rea,
+      shareCapital = institution.shareCapital,
+      businessRegisterPlace = institution.businessRegisterPlace,
+      supportEmail = institution.supportEmail,
+      supportPhone = institution.supportPhone,
+      imported = institution.imported
     )
 
 }

@@ -54,7 +54,13 @@ object StateV1Data {
           pec = dataProtectionOfficer.pec
         )
       ),
-      geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
+      geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc)),
+      rea = None,
+      shareCapital = None,
+      businessRegisterPlace = None,
+      supportEmail = None,
+      supportPhone = None,
+      imported = None
     )
   )
 
@@ -129,7 +135,13 @@ object StateV1Data {
         pec = dataProtectionOfficer.pec
       )
     ),
-    geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc))
+    geographicTaxonomies = geographicTaxonomies.map(x => GeographicTaxonomyV1(code = x.code, desc = x.desc)),
+    rea = None,
+    shareCapital = None,
+    businessRegisterPlace = None,
+    supportEmail = None,
+    supportPhone = None,
+    imported = None
   )
 
   val relationshipV1: PartyRelationshipV1 =
