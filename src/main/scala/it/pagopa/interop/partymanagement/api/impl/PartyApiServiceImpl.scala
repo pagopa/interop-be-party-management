@@ -593,6 +593,8 @@ class PartyApiServiceImpl(
       )
       result            <- maybeRelationship
         .filterNot(_.state == PersistedPartyRelationshipState.Deleted)
+        .filterNot(_.state == PersistedPartyRelationshipState.Pending)
+        .filterNot(_.state == PersistedPartyRelationshipState.ToBeValidated)
         .toFuture(RelationshipNotFound)
     } yield result
 
