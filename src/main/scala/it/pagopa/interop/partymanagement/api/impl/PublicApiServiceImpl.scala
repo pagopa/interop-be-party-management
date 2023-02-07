@@ -124,19 +124,22 @@ class PublicApiServiceImpl(
 
   }
 
-  /** Code: 201, Message: successful operation
+  /**
+    * Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    * Code: 404, Message: Token not found, DataType: Problem
     */
-  override def consumeTokenWithoutContract(
-    tokenId: String
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+  override def consumeTokenWithoutContract(tokenId: String, onboardingContract: OnboardingContract)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
     logger.info("Consuming token {}", tokenId)
     val results: Future[Seq[StatusReply[Unit]]] = for {
       tokenIdUUID <- tokenId.toFutureUUID
       found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
       token       <- found.toFuture(TokenNotFound(tokenId))
       results     <-
-        if (token.isValid) confirmRelationshipsWithoutContract(token)
+        if (token.isValid) confirmRelationshipsWithoutContract(token, onboardingContract)
         else
           processRelationships(token, RejectPartyRelationship).flatMap(_ => Future.failed(TokenExpired(tokenId)))
     } yield results
@@ -217,14 +220,21 @@ class PublicApiServiceImpl(
     } yield results
   }
 
-  private def confirmRelationshipsWithoutContract(token: Token): Future[Seq[StatusReply[Unit]]] = {
+  private def confirmRelationshipsWithoutContract(
+    token: Token,
+    onboardingContract: OnboardingContract
+  ): Future[Seq[StatusReply[Unit]]] = {
     for {
       results <- Future.traverse(token.legals) { partyRelationshipBinding =>
         getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
           ConfirmPartyRelationship(
             partyRelationshipBinding.relationshipId,
             "",
-            FileInfo("", "", ContentType.WithFixedCharset(MediaTypes.`application/json`)),
+            FileInfo(
+              onboardingContract.filePath,
+              onboardingContract.fileName,
+              ContentType.WithFixedCharset(MediaTypes.`application/json`)
+            ),
             token.id,
             ref
           )

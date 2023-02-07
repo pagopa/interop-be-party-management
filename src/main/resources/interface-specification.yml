@@ -792,6 +792,12 @@ paths:
             description: to be defined
             type: string
             format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingContract'
       responses:
         '201':
           description: successful operation
@@ -1452,6 +1458,16 @@ components:
       required:
         - version
         - path
+    OnboardingContract:
+      properties:
+        fileName:
+          type: string
+        filePath:
+          type: string
+      additionalProperties: false
+      required:
+        - fileName
+        - filePath
     TokenInfo:
       type: object
       properties:
