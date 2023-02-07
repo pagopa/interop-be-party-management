@@ -775,6 +775,38 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /tokens/{tokenId}/complete:
+    post:
+      security: [ ]
+      tags:
+        - public
+      summary: Consume a token
+      description: Return ok
+      operationId: consumeTokenWithoutContract
+      parameters:
+        - name: tokenId
+          in: path
+          description: The token id to consume
+          required: true
+          schema:
+            description: to be defined
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /tokens/{tokenId}/verify:
     post:
       security: [ ]

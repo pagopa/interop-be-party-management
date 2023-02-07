@@ -4,7 +4,7 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentType, MediaTypes, StatusCodes}
 import akka.http.scaladsl.server.Directives.{complete, onComplete}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -127,6 +127,40 @@ class PublicApiServiceImpl(
   /** Code: 201, Message: successful operation
     * Code: 400, Message: Invalid ID supplied, DataType: Problem
     */
+  override def consumeTokenWithoutContract(
+    tokenId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    logger.info("Consuming token {}", tokenId)
+    val results: Future[Seq[StatusReply[Unit]]] = for {
+      tokenIdUUID <- tokenId.toFutureUUID
+      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- found.toFuture(TokenNotFound(tokenId))
+      results     <-
+        if (token.isValid) confirmRelationshipsWithoutContract(token)
+        else
+          processRelationships(token, RejectPartyRelationship).flatMap(_ => Future.failed(TokenExpired(tokenId)))
+    } yield results
+
+    onComplete(results) {
+      case Success(statusReplies) if statusReplies.exists(_.isError) =>
+        val errors: String =
+          statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
+        logger.error(s"Consuming token failed: $errors")
+        consumeTokenWithoutContract400(problemOf(StatusCodes.BadRequest, ConsumeTokenBadRequest(errors)))
+      case Success(_)                                                => consumeToken201
+      case Failure(ex: TokenNotFound)                                =>
+        logger.error(s"Token not found", ex)
+        consumeTokenWithoutContract404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
+      case Failure(ex)                                               =>
+        logger.error(s"Consuming token failed", ex)
+        consumeTokenWithoutContract400(problemOf(StatusCodes.BadRequest, ConsumeTokenError(ex.getMessage)))
+    }
+
+  }
+
+  /** Code: 201, Message: successful operation
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    */
   override def invalidateToken(
     tokenId: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
@@ -180,6 +214,23 @@ class PublicApiServiceImpl(
         )
       } // TODO atomic?
       _        <- updateInstitutionOnConfirmation(token)
+    } yield results
+  }
+
+  private def confirmRelationshipsWithoutContract(token: Token): Future[Seq[StatusReply[Unit]]] = {
+    for {
+      results <- Future.traverse(token.legals) { partyRelationshipBinding =>
+        getCommander(partyRelationshipBinding.partyId.toString).ask((ref: ActorRef[StatusReply[Unit]]) =>
+          ConfirmPartyRelationship(
+            partyRelationshipBinding.relationshipId,
+            "",
+            FileInfo("", "", ContentType.WithFixedCharset(MediaTypes.`application/json`)),
+            token.id,
+            ref
+          )
+        )
+      } // TODO atomic?
+      _       <- updateInstitutionOnConfirmation(token)
     } yield results
   }
 
