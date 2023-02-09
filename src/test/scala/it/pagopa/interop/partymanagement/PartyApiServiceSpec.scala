@@ -1929,6 +1929,83 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       )
     }
 
+    def consumeTokenWithoutContract(
+      orgId: UUID,
+      institutionSeed: InstitutionSeed,
+      relationSheepIdManager: UUID,
+      relationshipSeedManager: RelationshipSeed,
+      relationSheepIdOperator: UUID,
+      relationshipSeedOperator: RelationshipSeed,
+      token: Token,
+      tokenSeed: TokenSeed,
+      expectedInstitution: Institution
+    ) = {
+      (() => uuidSupplier.get).expects().returning(orgId).once()                   // Create institution
+      (() => uuidSupplier.get).expects().returning(relationSheepIdManager).once()  // Create relationship1
+      (() => uuidSupplier.get).expects().returning(relationSheepIdOperator).once() // Create relationship2
+
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create person2
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create institution
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship1
+      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once() // Create relationship2
+      (() => offsetDateTimeSupplier.get)
+        .expects()
+        .returning(timestampValid)
+        .repeated(tokenSeed.relationships.items.size)                               // Consume token
+
+      val relationshipResponse =
+        prepareTest(personSeed11, institutionSeed, relationshipSeedManager, relationshipSeedOperator)
+
+      Unmarshal(relationshipResponse.entity).to[Relationships].futureValue
+
+      val tokenData = Marshal(tokenSeed).to[MessageEntity].map(_.dataBytes).futureValue
+
+      createToken(tokenData)
+
+      val tokenText = token.id.toString
+
+      val contract = OnboardingContract(fileName = "fileName", filePath = "filePath")
+
+      val data = Marshal(contract).to[MessageEntity].map(_.dataBytes).futureValue
+
+      val consumedResponse =
+        Http()
+          .singleRequest(
+            HttpRequest(
+              uri = s"$url/tokens/$tokenText/complete",
+              method = HttpMethods.POST,
+              entity = HttpEntity(ContentTypes.`application/json`, data)
+            )
+          )
+          .futureValue
+      consumedResponse.status shouldBe StatusCodes.Created
+
+      // check institution updates
+      val response =
+        Http()
+          .singleRequest(
+            HttpRequest(uri = s"$url/institutions/${orgId.toString}", method = HttpMethods.GET, headers = authorization)
+          )
+          .futureValue
+
+      response.status shouldBe StatusCodes.OK
+    }
+
+    "consume a token for IPA institution and overriding with geographic taxonomies WithoutContract" in {
+      consumeTokenWithoutContract(
+        orgId11,
+        institutionSeed11,
+        relationshipId19,
+        relationshipSeed21,
+        relationshipId20,
+        relationshipSeed22,
+        token11,
+        tokenSeed11,
+        expected11
+      )
+    }
+
     "invalidate a token" in {
 
       (() => uuidSupplier.get).expects().returning(orgId3).once()          // Create organization
