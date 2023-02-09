@@ -1937,8 +1937,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       relationSheepIdOperator: UUID,
       relationshipSeedOperator: RelationshipSeed,
       token: Token,
-      tokenSeed: TokenSeed,
-      expectedInstitution: Institution
+      tokenSeed: TokenSeed
     ) = {
       (() => uuidSupplier.get).expects().returning(orgId).once()                   // Create institution
       (() => uuidSupplier.get).expects().returning(relationSheepIdManager).once()  // Create relationship1
@@ -2001,8 +2000,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
         relationshipId20,
         relationshipSeed22,
         token11,
-        tokenSeed11,
-        expected11
+        tokenSeed11
       )
     }
 
