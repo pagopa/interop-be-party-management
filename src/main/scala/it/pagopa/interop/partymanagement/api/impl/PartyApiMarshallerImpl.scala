@@ -57,5 +57,4 @@ object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport w
 
   override implicit def toEntityMarshallerInstitutions: ToEntityMarshaller[Institutions] =
     sprayJsonMarshaller[Institutions]
-
 }
