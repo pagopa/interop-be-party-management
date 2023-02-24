@@ -90,7 +90,7 @@ object Main extends App {
   val (fileManager, jwtValidator) =
     dependenciesLoaded.get // THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
 
-  Kamon.init()
+//  Kamon.init() TODO restore me
 
   def behaviorFactory(offsetDateTimeSupplier: OffsetDateTimeSupplier): EntityContext[Command] => Behavior[Command] = {
     entityContext =>

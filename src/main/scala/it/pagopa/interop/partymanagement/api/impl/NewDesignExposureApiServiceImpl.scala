@@ -63,10 +63,7 @@ class NewDesignExposureApiServiceImpl(
       case Success(result) =>
         findNewDesignUsers200(result)
       case Failure(ex)     =>
-        logger.error(
-          s"Exporting users using new design userIds=$userIds, page=$page, size=$size return an error",
-          ex
-        )
+        logger.error(s"Exporting users using new design userIds=$userIds, page=$page, size=$size return an error", ex)
         val errorResponse: Problem = problemOf(StatusCodes.InternalServerError, FindNewDesignUserError(ex.getMessage))
         findNewDesignUsers500(errorResponse)
     }
@@ -110,7 +107,7 @@ class NewDesignExposureApiServiceImpl(
                 val firstCreatedProductRole = productId2Rels._2.minBy(_.createdAt)
                 val lastUpdatedProductRole  = getLastUpdatedRelationship(productId2Rels._2)
 
-                val productRoles          = retrieveLastProductRoles(
+                val productRoles                                = retrieveLastProductRoles(
                   productId2Rels._2,
                   List(
                     RelationshipState.ACTIVE,
@@ -121,13 +118,18 @@ class NewDesignExposureApiServiceImpl(
                     RelationshipState.DELETED
                   )
                 )
-                val lastRelHavingContract = getLastUpdatedRelationship(productId2Rels._2.filter(_.filePath.nonEmpty))
+                val relsHavingContract                          = productId2Rels._2.filter(_.filePath.nonEmpty)
+                val lastRelHavingContract: Option[Relationship] = if (relsHavingContract.nonEmpty) {
+                  Some(getLastUpdatedRelationship(relsHavingContract))
+                } else {
+                  Option.empty
+                }
 
                 NewDesignUserInstitutionProduct(
                   productId = productId2Rels._1,
                   status = productRoles.head.state,
-                  contract =
-                    lastRelHavingContract.filePath.flatMap(path => lastRelHavingContract.fileName.map(path + "/" + _)),
+                  contract = lastRelHavingContract
+                    .flatMap(_.filePath.flatMap(path => lastRelHavingContract.get.fileName.map(path + "/" + _))),
                   role = lastUpdatedProductRole.role,
                   productRoles = productRoles.map(_.product.role),
                   env = "ROOT",
