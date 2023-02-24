@@ -14,7 +14,10 @@ import it.pagopa.interop.commons.utils.OpenapiUtils.parseArrayParameters
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.partymanagement.api.NewDesignExposureApiService
 import it.pagopa.interop.partymanagement.common.system._
-import it.pagopa.interop.partymanagement.error.PartyManagementErrors.FindNewDesignUserError
+import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
+  FindNewDesignInstitutionError,
+  FindNewDesignUserError
+}
 import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.partymanagement.model.persistence._
 import it.pagopa.interop.partymanagement.service.RelationshipService
@@ -63,7 +66,10 @@ class NewDesignExposureApiServiceImpl(
       case Success(result) =>
         findNewDesignUsers200(result)
       case Failure(ex)     =>
-        logger.error(s"Exporting users using new design userIds=$userIds, page=$page, size=$size return an error", ex)
+        logger.error(
+          s"Exporting institutions using new design userIds=$userIds, page=$page, size=$size return an error",
+          ex
+        )
         val errorResponse: Problem = problemOf(StatusCodes.InternalServerError, FindNewDesignUserError(ex.getMessage))
         findNewDesignUsers500(errorResponse)
     }
@@ -107,7 +113,7 @@ class NewDesignExposureApiServiceImpl(
                 val firstCreatedProductRole = productId2Rels._2.minBy(_.createdAt)
                 val lastUpdatedProductRole  = getLastUpdatedRelationship(productId2Rels._2)
 
-                val productRoles                                = retrieveLastProductRoles(
+                val productRoles = retrieveLastProductRoles(
                   productId2Rels._2,
                   List(
                     RelationshipState.ACTIVE,
@@ -118,8 +124,11 @@ class NewDesignExposureApiServiceImpl(
                     RelationshipState.DELETED
                   )
                 )
+
                 val relsHavingContract    = productId2Rels._2.filter(_.filePath.nonEmpty)
-                val lastRelHavingContract = if (relsHavingContract.nonEmpty) Some(getLastUpdatedRelationship(relsHavingContract)) else Option.empty
+                val lastRelHavingContract =
+                  if (relsHavingContract.nonEmpty) Some(getLastUpdatedRelationship(relsHavingContract))
+                  else Option.empty
 
                 NewDesignUserInstitutionProduct(
                   productId = productId2Rels._1,
@@ -148,4 +157,34 @@ class NewDesignExposureApiServiceImpl(
         retrieveLastProductRoles(productRels, stateOrder.slice(1, stateOrder.size))
       }
     }
+
+  /**
+    * Code: 200, Message: collection of institutions modelled as new design, DataType: Seq[NewDesignInstitution]
+    * Code: 500, Message: Error, DataType: Problem
+    */
+  override def findNewDesignInstitutions(institutionIds: Option[String], page: Int, size: Int)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerNewDesignInstitutionarray: ToEntityMarshaller[Seq[NewDesignInstitution]],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val institutions: Future[Seq[NewDesignInstitution]] = for {
+      institutions <- institutionIds
+        .map(s => retrieveUser2RelationShips(parseArrayParameters(s))) // TODO
+        .getOrElse(retrieveUser2RelationShips(page, size)) // TODO
+
+    } yield null
+
+    onComplete(institutions) {
+      case Success(result) =>
+        findNewDesignInstitutions200(result)
+      case Failure(ex)     =>
+        logger.error(
+          s"Exporting institutions using new design userIds=$institutionIds, page=$page, size=$size return an error",
+          ex
+        )
+        val errorResponse: Problem =
+          problemOf(StatusCodes.InternalServerError, FindNewDesignInstitutionError(ex.getMessage))
+        findNewDesignInstitutions500(errorResponse)
+    }
+  }
 }

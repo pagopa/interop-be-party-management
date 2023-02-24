@@ -1888,8 +1888,9 @@ components:
           type: string
         taxCode:
           type: string
-        billing:
-          $ref: '#/components/schemas/Billing'
+# cannot handle more than 22 fields!
+#        billing:
+#          $ref: '#/components/schemas/Billing'
         geographicTaxonomies:
           type: array
           items:
@@ -1902,10 +1903,6 @@ components:
           $ref: '#/components/schemas/PaymentServiceProvider'
         dataProtectionOfficer:
           $ref: '#/components/schemas/DataProtectionOfficer'
-        onboarding:
-          type: array
-          items:
-            $ref: '#/components/schemas/NewDesignInstitutionOnboarding'
         rea:
           type: string
         shareCapital:
@@ -1918,12 +1915,17 @@ components:
           type: string
         imported:
           type: boolean
+        onboarding:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignInstitutionOnboarding'
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+# cannot handle more than 22 fields!
+#        updatedAt:
+#          type: string
+#          format: date-time
     NewDesignInstitutionOnboarding:
       type: object
       additionalProperties: false
@@ -1931,6 +1933,7 @@ components:
         - productId
         - status
         - billing
+        - subProducts
         - createdAt
       properties:
         productId:
@@ -1946,7 +1949,7 @@ components:
         subProducts:
           type: array
           items:
-            $ref: '#components/schemas/NewDesignInstitutionOnboardingSubProduct'
+            $ref: '#/components/schemas/NewDesignInstitutionOnboardingSubProduct'
         createdAt:
           type: string
           format: date-time

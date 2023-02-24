@@ -23,7 +23,7 @@ object PartyManagementErrors {
 
   final case object CreateRelationshipConflict extends ComponentError("0010", "Conflict while creating relationship")
   final case class RelationshipAlreadyExists(relationshipId: UUID)
-      extends ComponentError("0011", s"Relationship ${relationshipId} already exists")
+      extends ComponentError("0011", s"Relationship $relationshipId already exists")
   final case class CreateRelationshipError(message: String)
       extends ComponentError("0012", "Error while creating relationship")
 
@@ -138,5 +138,8 @@ object PartyManagementErrors {
       )
 
   final case class FindNewDesignUserError(desc: String)
-      extends ComponentError("0055", "Error while returning users mapping them into new design: $dec")
+      extends ComponentError("0055", s"Error while returning users mapping them into new design: $desc")
+
+  final case class FindNewDesignInstitutionError(desc: String)
+      extends ComponentError("0056", s"Error while returning institutions mapping them into new design: $desc")
 }
