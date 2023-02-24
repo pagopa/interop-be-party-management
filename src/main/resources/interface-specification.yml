@@ -1021,13 +1021,61 @@ paths:
             default: 10
       responses:
         '200':
-          description: collection of institutions
+          description: collection of users modelled as new design
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/NewDesignUser'
+        '500':
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  '/newdesign/institutions':
+    get:
+      operationId: findNewDesignInstitutions
+      description: Retrieves a collection of institutions modelled as the new design
+      tags:
+        - newDesignExposure
+      parameters:
+        - name: institutionIds
+          description: Comma separated list of institutionIds to extract. if none provided, it will return all data
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to access (0 indexed, defaults to 0)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page (defaults to 20, max 2000)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: collection of institutions modelled as new design
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewDesignInstitution'
         '500':
           description: Error
           content:
@@ -1795,6 +1843,134 @@ components:
           items:
             type: string
         env:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignInstitution:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - externalId
+        - origin
+        - originId
+        - description
+        - digitalAddress
+        - taxCode
+        - address
+        - zipCode
+        - institutionType
+        - attributes
+        - geographicTaxonomies
+        - createdAt
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+        origin:
+          type: string
+        originId:
+          type: string
+        description:
+          type: string
+        institutionType:
+          type: string
+        digitalAddress:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        taxCode:
+          type: string
+        billing:
+          $ref: '#/components/schemas/Billing'
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicTaxonomy'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+        paymentServiceProvider:
+          $ref: '#/components/schemas/PaymentServiceProvider'
+        dataProtectionOfficer:
+          $ref: '#/components/schemas/DataProtectionOfficer'
+        onboarding:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignInstitutionOnboarding'
+        rea:
+          type: string
+        shareCapital:
+          type: string
+        businessRegisterPlace:
+          type: string
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+        imported:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignInstitutionOnboarding:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - status
+        - billing
+        - createdAt
+      properties:
+        productId:
+          type: string
+        status:
+          type: RelationshipState
+        contract:
+          type: string
+        pricingPlan:
+          type: string
+        billing:
+          $ref: '#/components/schemas/Billing'
+        subProducts:
+          type: array
+          items:
+            $ref: '#components/schemas/NewDesignInstitutionOnboardingSubProduct'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignInstitutionOnboardingSubProduct:
+      type: object
+      additionalProperties: false
+      required:
+        - parentId
+        - productId
+        - status
+        - createdAt
+      properties:
+        parentId:
+          type: string
+        productId:
+          type: string
+        status:
+          type: RelationshipState
+        contract:
+          type: string
+        pricingPlan:
           type: string
         createdAt:
           type: string

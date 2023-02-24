@@ -118,18 +118,13 @@ class NewDesignExposureApiServiceImpl(
                     RelationshipState.DELETED
                   )
                 )
-                val relsHavingContract                          = productId2Rels._2.filter(_.filePath.nonEmpty)
-                val lastRelHavingContract: Option[Relationship] = if (relsHavingContract.nonEmpty) {
-                  Some(getLastUpdatedRelationship(relsHavingContract))
-                } else {
-                  Option.empty
-                }
+                val relsHavingContract    = productId2Rels._2.filter(_.filePath.nonEmpty)
+                val lastRelHavingContract = if (relsHavingContract.nonEmpty) Some(getLastUpdatedRelationship(relsHavingContract)) else Option.empty
 
                 NewDesignUserInstitutionProduct(
                   productId = productId2Rels._1,
                   status = productRoles.head.state,
-                  contract = lastRelHavingContract
-                    .flatMap(_.filePath.flatMap(path => lastRelHavingContract.get.fileName.map(path + "/" + _))),
+                  contract = lastRelHavingContract.flatMap(_.filePath),
                   role = lastUpdatedProductRole.role,
                   productRoles = productRoles.map(_.product.role),
                   env = "ROOT",
