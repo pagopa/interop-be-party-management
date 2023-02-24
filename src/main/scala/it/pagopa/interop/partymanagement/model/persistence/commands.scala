@@ -75,6 +75,17 @@ final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef
 final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PersistedPartyRelationship]])
     extends PartyRelationshipCommand
 
+final case class GetPartyRelationshipsByUserIds(
+  userIds: List[UUID],
+  states: List[RelationshipState],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
+
+final case class GetPartyRelationships(
+  states: List[RelationshipState],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
+
 final case class GetPartyRelationshipsByFrom(
   from: UUID,
   roles: List[PartyRole],

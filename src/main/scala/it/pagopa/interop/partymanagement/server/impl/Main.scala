@@ -31,13 +31,15 @@ import it.pagopa.interop.partymanagement.api.impl.{
   ExternalApiServiceImpl,
   HealthApiMarshallerImpl,
   HealthServiceApiImpl,
+  NewDesignExposureApiMarshallerImpl,
+  NewDesignExposureApiServiceImpl,
   PartyApiMarshallerImpl,
   PartyApiServiceImpl,
   PublicApiMarshallerImpl,
   PublicApiServiceImpl,
   problemOf
 }
-import it.pagopa.interop.partymanagement.api.{ExternalApi, HealthApi, PartyApi, PublicApi}
+import it.pagopa.interop.partymanagement.api.{ExternalApi, HealthApi, NewDesignExposureApi, PartyApi, PublicApi}
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration.{
   kafkaBootstrapServers,
@@ -196,6 +198,17 @@ object Main extends App {
         SecurityDirectives.authenticateBasic("Public", AkkaUtils.PassThroughAuthenticator)
       )
 
+      val newDesignExposureApi: NewDesignExposureApi = new NewDesignExposureApi(
+        new NewDesignExposureApiServiceImpl(
+          system = context.system,
+          sharding = sharding,
+          entity = partyPersistentEntity,
+          relationshipService
+        ),
+        NewDesignExposureApiMarshallerImpl,
+        jwtValidator.OAuth2JWTValidatorAsContexts
+      )
+
       val healthApi: HealthApi =
         new HealthApi(new HealthServiceApiImpl(), HealthApiMarshallerImpl, jwtValidator.OAuth2JWTValidatorAsContexts)
 
@@ -206,6 +219,7 @@ object Main extends App {
         party = partyApi,
         external = externalApi,
         public = publicApi,
+        newDesignExposure = newDesignExposureApi,
         validationExceptionToRoute = Some(report => {
           val error =
             problemOf(

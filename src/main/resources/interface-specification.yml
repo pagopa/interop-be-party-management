@@ -34,6 +34,11 @@ tags:
     externalDocs:
       description: Find out more
       url: 'http://swagger.io'
+  - name: newDesignExposure
+    description: To expose data modelling them as the new design
+    externalDocs:
+      description: Find out more
+      url: 'http://swagger.io'
 security:
   - bearerAuth: [ ]
 paths:
@@ -981,6 +986,54 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: findByGeoTaxonomies
       description: 'returns a collection of all the parties satisfying a geographic taxonomy based search.'
+  '/newdesign/users':
+    get:
+      operationId: findNewDesignUsers
+      description: Retrieves a collection of users modelled as the new design
+      tags:
+        - newDesignExposure
+      parameters:
+        - name: userIds
+          description: Comma separated list of userId to extract. if none provided, it will return all data
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to access (0 indexed, defaults to 0)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page (defaults to 20, max 2000)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: collection of institutions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewDesignUser'
+        '500':
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     PersonSeed:
@@ -1681,6 +1734,74 @@ components:
         - exact
         - any
         - all
+    NewDesignUser:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - bindings
+        - createdAt
+      properties:
+        id:
+          type: string
+        bindings:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignUserInstitution'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignUserInstitution:
+      type: object
+      additionalProperties: false
+      required:
+        - institutionId
+        - products
+        - createdAt
+      properties:
+        institutionId:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignUserInstitutionProduct'
+        createdAt:
+          type: string
+          format: date-time
+    NewDesignUserInstitutionProduct:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - status
+        - role
+        - productRoles
+        - env
+        - createdAt
+      properties:
+        productId:
+          type: string
+        status:
+          type: RelationshipState
+        contract:
+          type: string
+        role:
+          type: PartyRole
+        productRoles:
+          type: array
+          items:
+            type: string
+        env:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
   securitySchemes:
     bearerAuth:
       type: http

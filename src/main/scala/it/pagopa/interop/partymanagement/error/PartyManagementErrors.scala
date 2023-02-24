@@ -137,4 +137,6 @@ object PartyManagementErrors {
         s"Invalid search configuration while searching institutions related to $geoTaxonomies and searchMode $searchMode: $desc"
       )
 
+  final case class FindNewDesignUserError(desc: String)
+      extends ComponentError("0055", "Error while returning users mapping them into new design: $dec")
 }
