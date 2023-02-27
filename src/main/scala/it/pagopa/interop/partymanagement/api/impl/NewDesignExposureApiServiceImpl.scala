@@ -4,8 +4,8 @@ import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.server.Directives.onComplete
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives.onComplete
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
@@ -14,15 +14,14 @@ import it.pagopa.interop.commons.utils.OpenapiUtils.parseArrayParameters
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.partymanagement.api.NewDesignExposureApiService
 import it.pagopa.interop.partymanagement.common.system._
-import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
-  FindNewDesignInstitutionError,
-  FindNewDesignUserError
-}
+import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{FindNewDesignInstitutionError, FindNewDesignUserError}
 import it.pagopa.interop.partymanagement.model._
+import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence._
-import it.pagopa.interop.partymanagement.service.RelationshipService
+import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import org.slf4j.LoggerFactory
 
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -31,7 +30,8 @@ class NewDesignExposureApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
-  relationshipService: RelationshipService
+  relationshipService: RelationshipService,
+  institutionService: InstitutionService
 )(implicit ec: ExecutionContext)
     extends NewDesignExposureApiService {
 
@@ -169,10 +169,10 @@ class NewDesignExposureApiServiceImpl(
   ): Route = {
     val institutions: Future[Seq[NewDesignInstitution]] = for {
       institutions <- institutionIds
-        .map(s => retrieveUser2RelationShips(parseArrayParameters(s))) // TODO
-        .getOrElse(retrieveUser2RelationShips(page, size)) // TODO
-
-    } yield null
+        .map(s => institutionService.getInstitutionsByIds(parseArrayParameters(s)))
+        .getOrElse(retrieveInstitutions(page, size))
+      newDesignInstitutions = institutions.map(institutionParty2NewDesignInstitution)
+    } yield newDesignInstitutions
 
     onComplete(institutions) {
       case Success(result) =>
@@ -187,4 +187,39 @@ class NewDesignExposureApiServiceImpl(
         findNewDesignInstitutions500(errorResponse)
     }
   }
+
+  def retrieveInstitutions(page: Int, size: Int): Future[Seq[InstitutionParty]] =
+    institutionService
+      .getInstitutions()
+      .map(institutions => {
+        institutions
+          .sortBy(_.id)
+          .slice(page * size, page * size + size)
+      })
+
+  private def institutionParty2NewDesignInstitution: InstitutionParty => NewDesignInstitution = party =>
+    NewDesignInstitution(
+      id = party.id.toString,
+      externalId = party.externalId,
+      origin = party.origin,
+      originId = party.originId,
+      description = party.description,
+      institutionType = party.institutionType,
+      digitalAddress = party.digitalAddress,
+      address = party.address,
+      zipCode = party.zipCode,
+      taxCode = party.taxCode,
+      geographicTaxonomies = party.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi),
+      attributes = party.attributes.map(InstitutionAttribute.toApi).toSeq,
+      paymentServiceProvider = party.paymentServiceProvider.map(PersistedPaymentServiceProvider.toAPi),
+      dataProtectionOfficer = party.dataProtectionOfficer.map(PersistedDataProtectionOfficer.toApi),
+      rea = party.rea,
+      shareCapital = party.shareCapital,
+      businessRegisterPlace = party.businessRegisterPlace,
+      supportEmail = party.supportEmail,
+      supportPhone = party.supportPhone,
+      imported = party.imported,
+      onboarding = Seq.empty, //party.products, // TODO search also in relationships to find pending onboardings, if they should be stored here!!
+      createdAt = OffsetDateTime.now() //party.createdAt // TODO first relationship's createDate
+    )
 }

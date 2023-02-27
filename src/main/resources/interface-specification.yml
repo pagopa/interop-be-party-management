@@ -1863,9 +1863,9 @@ components:
         - taxCode
         - address
         - zipCode
-        - institutionType
         - attributes
         - geographicTaxonomies
+        - onboarding
         - createdAt
       properties:
         id:

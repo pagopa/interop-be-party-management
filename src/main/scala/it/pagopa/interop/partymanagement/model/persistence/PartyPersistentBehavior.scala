@@ -80,6 +80,16 @@ object PartyPersistentBehavior {
 
         Effect.none
 
+      case GetInstitutionParties(replyTo) =>
+        val parties: List[InstitutionParty] = state.parties.values.flatMap {
+          case i: InstitutionParty => Some(i)
+          case _ => None
+        }
+          .toList
+        replyTo ! parties
+
+        Effect.none
+
       case GetPartyAttributes(uuid, replyTo) =>
         val statusReply: StatusReply[Seq[InstitutionAttribute]] = state.parties
           .get(uuid)
