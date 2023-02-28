@@ -14,14 +14,16 @@ import it.pagopa.interop.commons.utils.OpenapiUtils.parseArrayParameters
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.partymanagement.api.NewDesignExposureApiService
 import it.pagopa.interop.partymanagement.common.system._
-import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{FindNewDesignInstitutionError, FindNewDesignUserError}
+import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
+  FindNewDesignInstitutionError,
+  FindNewDesignUserError
+}
 import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence._
 import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import org.slf4j.LoggerFactory
 
-import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -42,6 +44,15 @@ class NewDesignExposureApiServiceImpl(
     case None    => ClusterShardingSettings(system)
     case Some(s) => s
   }
+
+  val orderedRelationshipStatuses = List(
+    RelationshipState.ACTIVE,
+    RelationshipState.SUSPENDED,
+    RelationshipState.TOBEVALIDATED,
+    RelationshipState.PENDING,
+    RelationshipState.REJECTED,
+    RelationshipState.DELETED
+  )
 
   def getCommander(entityId: String): EntityRef[Command] =
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
@@ -113,17 +124,7 @@ class NewDesignExposureApiServiceImpl(
                 val firstCreatedProductRole = productId2Rels._2.minBy(_.createdAt)
                 val lastUpdatedProductRole  = getLastUpdatedRelationship(productId2Rels._2)
 
-                val productRoles = retrieveLastProductRoles(
-                  productId2Rels._2,
-                  List(
-                    RelationshipState.ACTIVE,
-                    RelationshipState.SUSPENDED,
-                    RelationshipState.TOBEVALIDATED,
-                    RelationshipState.PENDING,
-                    RelationshipState.REJECTED,
-                    RelationshipState.DELETED
-                  )
-                )
+                val productRoles = retrieveLastRelationships(productId2Rels._2)
 
                 val relsHavingContract    = productId2Rels._2.filter(_.filePath.nonEmpty)
                 val lastRelHavingContract =
@@ -147,14 +148,21 @@ class NewDesignExposureApiServiceImpl(
         .toSeq
     )
 
-  def retrieveLastProductRoles: (Seq[Relationship], List[RelationshipState]) => Seq[Relationship] =
-    (productRels, stateOrder) => {
-      val relsHavingHeadState = productRels.filter(_.state == stateOrder.head)
+  def retrieveLastRelationships: Seq[Relationship] => Seq[Relationship] = rels =>
+    retrieveRelationshipsHavingFirstState(rels, orderedRelationshipStatuses)
 
-      if (relsHavingHeadState.nonEmpty) {
-        relsHavingHeadState
+  def retrieveRelationshipsHavingFirstState: (Seq[Relationship], List[RelationshipState]) => Seq[Relationship] =
+    (productRels, stateOrder) => {
+      if (stateOrder.isEmpty) {
+        Seq.empty
       } else {
-        retrieveLastProductRoles(productRels, stateOrder.slice(1, stateOrder.size))
+        val relsHavingHeadState = productRels.filter(_.state == stateOrder.head)
+
+        if (relsHavingHeadState.nonEmpty) {
+          relsHavingHeadState
+        } else {
+          retrieveRelationshipsHavingFirstState(productRels, stateOrder.slice(1, stateOrder.size))
+        }
       }
     }
 
@@ -168,10 +176,10 @@ class NewDesignExposureApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     val institutions: Future[Seq[NewDesignInstitution]] = for {
-      institutions <- institutionIds
+      institutions          <- institutionIds
         .map(s => institutionService.getInstitutionsByIds(parseArrayParameters(s)))
         .getOrElse(retrieveInstitutions(page, size))
-      newDesignInstitutions = institutions.map(institutionParty2NewDesignInstitution)
+      newDesignInstitutions <- Future.traverse(institutions)(institutionParty2NewDesignInstitution)
     } yield newDesignInstitutions
 
     onComplete(institutions) {
@@ -197,29 +205,96 @@ class NewDesignExposureApiServiceImpl(
           .slice(page * size, page * size + size)
       })
 
-  private def institutionParty2NewDesignInstitution: InstitutionParty => NewDesignInstitution = party =>
-    NewDesignInstitution(
-      id = party.id.toString,
-      externalId = party.externalId,
-      origin = party.origin,
-      originId = party.originId,
-      description = party.description,
-      institutionType = party.institutionType,
-      digitalAddress = party.digitalAddress,
-      address = party.address,
-      zipCode = party.zipCode,
-      taxCode = party.taxCode,
-      geographicTaxonomies = party.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi),
-      attributes = party.attributes.map(InstitutionAttribute.toApi).toSeq,
-      paymentServiceProvider = party.paymentServiceProvider.map(PersistedPaymentServiceProvider.toAPi),
-      dataProtectionOfficer = party.dataProtectionOfficer.map(PersistedDataProtectionOfficer.toApi),
-      rea = party.rea,
-      shareCapital = party.shareCapital,
-      businessRegisterPlace = party.businessRegisterPlace,
-      supportEmail = party.supportEmail,
-      supportPhone = party.supportPhone,
-      imported = party.imported,
-      onboarding = Seq.empty, //party.products, // TODO search also in relationships to find pending onboardings, if they should be stored here!!
-      createdAt = OffsetDateTime.now() //party.createdAt // TODO first relationship's createDate
-    )
+  private def institutionParty2NewDesignInstitution: InstitutionParty => Future[NewDesignInstitution] = party => {
+
+    def buildPremiumSubProduct(product2managers: Map[String, List[Relationship]], lastManager: Relationship) = {
+      if (lastManager.product.id != "prod-io" || !product2managers.contains("prod-io-premium")) List.empty
+      else {
+        val subProductManagers    = product2managers("prod-io-premium")
+        val subProductLastManager =
+          retrieveLastRelationships(subProductManagers).head
+
+        List(
+          NewDesignInstitutionOnboardingSubProduct(
+            parentId = "prod-io",
+            productId = "prod-io-premium",
+            status = subProductLastManager.state,
+            contract = subProductLastManager.filePath,
+            pricingPlan = subProductLastManager.pricingPlan,
+            createdAt = subProductManagers.map(_.createdAt).min,
+            updatedAt = subProductLastManager.updatedAt
+          )
+        )
+      }
+    }
+
+    for {
+      product2managers <- relationshipService
+        .retrieveRelationshipsByTo(party.id, List(PartyRole.MANAGER), List.empty, List.empty, List.empty)
+        .map(_.groupBy(_.product.id))
+
+      onboardedProducts = party.products
+        .filter(p => p.product != "prod-io-premium")
+        .map(p => {
+          val productManagers = product2managers(p.product)
+          val lastManager     = retrieveLastRelationships(productManagers.filter(_.filePath.nonEmpty)).head
+
+          NewDesignInstitutionOnboarding(
+            productId = p.product,
+            status = lastManager.state,
+            contract = lastManager.filePath,
+            pricingPlan = p.pricingPlan,
+            billing = p.billing.toBilling,
+            subProducts = buildPremiumSubProduct(product2managers, lastManager),
+            createdAt = productManagers.map(_.createdAt).min,
+            updatedAt = lastManager.updatedAt
+          )
+        })
+
+      onboardedProductIds = onboardedProducts.map(_.productId)
+
+      pendingProducts = product2managers
+        .filter(p2rels => !onboardedProductIds.contains(p2rels._1) && "prod-io-premium" != p2rels._1)
+        .map(p2managers => {
+          val productManagers = p2managers._2
+          val lastManager     = retrieveLastRelationships(productManagers).head
+
+          NewDesignInstitutionOnboarding(
+            productId = lastManager.product.id,
+            status = lastManager.state,
+            contract = lastManager.filePath,
+            pricingPlan = lastManager.pricingPlan,
+            billing = lastManager.billing.get,
+            subProducts = buildPremiumSubProduct(product2managers, lastManager),
+            createdAt = productManagers.map(_.createdAt).min,
+            updatedAt = lastManager.updatedAt
+          )
+        })
+
+      newDesignInstitution = NewDesignInstitution(
+        id = party.id.toString,
+        externalId = party.externalId,
+        origin = party.origin,
+        originId = party.originId,
+        description = party.description,
+        institutionType = party.institutionType,
+        digitalAddress = party.digitalAddress,
+        address = party.address,
+        zipCode = party.zipCode,
+        taxCode = party.taxCode,
+        geographicTaxonomies = party.geographicTaxonomies.map(PersistedGeographicTaxonomy.toApi),
+        attributes = party.attributes.map(InstitutionAttribute.toApi).toSeq,
+        paymentServiceProvider = party.paymentServiceProvider.map(PersistedPaymentServiceProvider.toAPi),
+        dataProtectionOfficer = party.dataProtectionOfficer.map(PersistedDataProtectionOfficer.toApi),
+        rea = party.rea,
+        shareCapital = party.shareCapital,
+        businessRegisterPlace = party.businessRegisterPlace,
+        supportEmail = party.supportEmail,
+        supportPhone = party.supportPhone,
+        imported = party.imported,
+        onboarding = onboardedProducts.concat(pendingProducts).toSeq,
+        createdAt = party.start
+      )
+    } yield newDesignInstitution
+  }
 }

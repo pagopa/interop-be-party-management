@@ -203,7 +203,8 @@ object Main extends App {
           system = context.system,
           sharding = sharding,
           entity = partyPersistentEntity,
-          relationshipService
+          relationshipService,
+          institutionService
         ),
         NewDesignExposureApiMarshallerImpl,
         jwtValidator.OAuth2JWTValidatorAsContexts
