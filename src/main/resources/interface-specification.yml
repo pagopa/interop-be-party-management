@@ -1082,6 +1082,54 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  '/newdesign/tokens':
+    get:
+      operationId: findNewDesignTokens
+      description: Retrieves a collection of tokens modelled as the new design
+      tags:
+        - newDesignExposure
+      parameters:
+        - name: tokenIds
+          description: Comma separated list of tokenIds to extract. if none provided, it will return all data
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to access (0 indexed, defaults to 0)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page (defaults to 20, max 2000)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: collection of tokens modelled as new design
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewDesignToken'
+        '500':
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     PersonSeed:
@@ -1975,6 +2023,52 @@ components:
           type: string
         pricingPlan:
           type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignToken:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - institutionId
+        - productId
+        - expiringDate
+        - checksum
+        - contractTemplate
+        - contractVersion
+        - users
+        - createdAt
+      properties:
+        id:
+          type: string
+        status:
+          type: RelationshipState
+        institutionId:
+          type: string
+        productId:
+          type: string
+        expiringDate:
+          type: string
+          format: date-time
+        checksum:
+          type: string
+        contractTemplate:
+          type: string
+        contractVersion:
+          type: string
+        contractSigned:
+          type: string
+        users:
+          type: array
+          items:
+            type: string
+        institutionUpdate:
+          $ref: '#/components/schemas/InstitutionUpdate'
         createdAt:
           type: string
           format: date-time

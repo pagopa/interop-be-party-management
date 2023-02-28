@@ -331,6 +331,11 @@ object PartyPersistentBehavior {
         replyTo ! token
         Effect.none
 
+      case GetTokens(replyTo) =>
+        val tokens: List[Token] = state.tokens.values.toList
+        replyTo ! tokens
+        Effect.none
+
       case UpdateToken(tokenId, digest, replyTo) =>
         val token: Option[Token] = state.tokens.get(tokenId)
 

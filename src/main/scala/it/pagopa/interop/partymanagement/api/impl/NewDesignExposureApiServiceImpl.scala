@@ -16,6 +16,7 @@ import it.pagopa.interop.partymanagement.api.NewDesignExposureApiService
 import it.pagopa.interop.partymanagement.common.system._
 import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{
   FindNewDesignInstitutionError,
+  FindNewDesignTokenError,
   FindNewDesignUserError
 }
 import it.pagopa.interop.partymanagement.model._
@@ -53,6 +54,13 @@ class NewDesignExposureApiServiceImpl(
     RelationshipState.REJECTED,
     RelationshipState.DELETED
   )
+
+  def getAllCommanders: List[EntityRef[Command]] = {
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+    commanders
+  }
 
   def getCommander(entityId: String): EntityRef[Command] =
     sharding.entityRefFor(PartyPersistentBehavior.TypeKey, AkkaUtils.getShard(entityId, settings.numberOfShards))
@@ -187,7 +195,7 @@ class NewDesignExposureApiServiceImpl(
         findNewDesignInstitutions200(result)
       case Failure(ex)     =>
         logger.error(
-          s"Exporting institutions using new design userIds=$institutionIds, page=$page, size=$size return an error",
+          s"Exporting institutions using new design institutionIds=$institutionIds, page=$page, size=$size return an error",
           ex
         )
         val errorResponse: Problem =
@@ -212,7 +220,7 @@ class NewDesignExposureApiServiceImpl(
       else {
         val subProductManagers    = product2managers("prod-io-premium")
         val subProductLastManager =
-          retrieveLastRelationships(subProductManagers).head
+          retrieveLastRelationships(subProductManagers.filter(_.filePath.nonEmpty)).head
 
         List(
           NewDesignInstitutionOnboardingSubProduct(
@@ -257,7 +265,7 @@ class NewDesignExposureApiServiceImpl(
         .filter(p2rels => !onboardedProductIds.contains(p2rels._1) && "prod-io-premium" != p2rels._1)
         .map(p2managers => {
           val productManagers = p2managers._2
-          val lastManager     = retrieveLastRelationships(productManagers).head
+          val lastManager     = retrieveLastRelationships(productManagers.filter(_.filePath.nonEmpty)).head
 
           NewDesignInstitutionOnboarding(
             productId = lastManager.product.id,
@@ -296,5 +304,87 @@ class NewDesignExposureApiServiceImpl(
         createdAt = party.start
       )
     } yield newDesignInstitution
+  }
+
+  /**
+    * Code: 200, Message: collection of tokens modelled as new design, DataType: Seq[NewDesignToken]
+    * Code: 500, Message: Error, DataType: Problem
+    */
+  override def findNewDesignTokens(tokenIds: Option[String], page: Int, size: Int)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerNewDesignInstitutionarray: ToEntityMarshaller[Seq[NewDesignToken]],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val newDesignTokens: Future[Seq[NewDesignToken]] = for {
+      tokens          <- tokenIds
+        .map(s => retrieveTokens(parseArrayParameters(s)))
+        .getOrElse(retrieveTokens(page, size))
+      newDesignTokens <- Future.traverse(tokens)(token2NewDesignToken).map(_.flatten)
+    } yield newDesignTokens
+
+    onComplete(newDesignTokens) {
+      case Success(result) =>
+        findNewDesignTokens200(result)
+      case Failure(ex)     =>
+        logger.error(
+          s"Exporting tokens using new design tokenIds=$tokenIds, page=$page, size=$size return an error",
+          ex
+        )
+        val errorResponse: Problem =
+          problemOf(StatusCodes.InternalServerError, FindNewDesignTokenError(ex.getMessage))
+        findNewDesignTokens500(errorResponse)
+    }
+  }
+
+  def retrieveTokens(tokenIds: List[String]): Future[Seq[Token]] =
+    Future
+      .traverse(tokenIds.map(_.toUUID).filter(_.isSuccess).map(_.get))(tokenIdUUID =>
+        getCommander(tokenIdUUID.toString).ask(ref => GetToken(tokenIdUUID, ref))
+      )
+      .map(_.flatten)
+
+  def retrieveTokens(page: Int, size: Int): Future[Seq[Token]] = {
+    val commanders: List[EntityRef[Command]] = getAllCommanders
+
+    for {
+      results <- Future.traverse(commanders)(_.ask(ref => GetTokens(ref)))
+      resultsFlatten = results.flatten
+        .sortBy(_.id)
+        .slice(page * size, page * size + size)
+    } yield resultsFlatten
+  }
+
+  private def token2NewDesignToken(
+    token: Token
+  )(implicit contexts: Seq[(String, String)]): Future[Option[NewDesignToken]] = {
+    for {
+      legals <- Future
+        .traverse(token.legals.map(_.relationshipId))(relationshipService.getRelationshipById(_))
+        .map(_.flatten)
+      manager = legals.find(_.role == PartyRole.MANAGER)
+
+      newDesignToken =
+        if (manager.isEmpty) {
+          logger.error(s"Found token without MANAGER: ${token.id}")
+          None
+        } else
+          Some(
+            NewDesignToken(
+              id = token.id.toString,
+              status = manager.get.state,
+              institutionId = token.legals.head.partyId.toString,
+              productId = manager.get.product.id,
+              expiringDate = token.validity,
+              checksum = token.checksum,
+              contractTemplate = token.contractInfo.path,
+              contractVersion = token.contractInfo.version,
+              contractSigned = manager.get.filePath,
+              users = legals.map(_.from.toString),
+              institutionUpdate = manager.get.institutionUpdate,
+              createdAt = manager.get.createdAt,
+              updatedAt = manager.get.updatedAt
+            )
+          )
+    } yield newDesignToken
   }
 }

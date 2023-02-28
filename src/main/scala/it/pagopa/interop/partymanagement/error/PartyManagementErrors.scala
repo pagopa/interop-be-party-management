@@ -142,4 +142,7 @@ object PartyManagementErrors {
 
   final case class FindNewDesignInstitutionError(desc: String)
       extends ComponentError("0056", s"Error while returning institutions mapping them into new design: $desc")
+
+  final case class FindNewDesignTokenError(desc: String)
+      extends ComponentError("0057", s"Error while returning tokens mapping them into new design: $desc")
 }

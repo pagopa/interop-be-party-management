@@ -62,6 +62,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   )
   implicit val newDesignInstitutionFormat: RootJsonFormat[NewDesignInstitution] = jsonFormat22(NewDesignInstitution)
 
+  implicit val newDesignTokenFormat: RootJsonFormat[NewDesignToken] = jsonFormat13(NewDesignToken)
+
   final val serviceErrorCodePrefix: String = "001"
   final val defaultProblemType: String     = "about:blank"
 
