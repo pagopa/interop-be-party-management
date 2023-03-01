@@ -2015,6 +2015,7 @@ components:
         - parentId
         - productId
         - status
+        - billing
         - createdAt
       properties:
         parentId:
@@ -2029,6 +2030,8 @@ components:
           type: string
         pricingPlan:
           type: string
+        billing:
+          $ref: '#/components/schemas/Billing'
         createdAt:
           type: string
           format: date-time

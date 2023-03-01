@@ -233,6 +233,7 @@ class NewDesignExposureApiServiceImpl(
             tokenId = subProductLastManager.tokenId.map(_.toString),
             contract = subProductLastManager.filePath,
             pricingPlan = subProductLastManager.pricingPlan,
+            billing = subProductLastManager.billing.get,
             createdAt = subProductManagers.map(_.createdAt).min,
             updatedAt = subProductLastManager.updatedAt
           )
@@ -241,8 +242,8 @@ class NewDesignExposureApiServiceImpl(
     }
 
     def warnIfNoContract(lastManager: Relationship): Unit = {
-      if (lastManager.filePath.isEmpty && lastManager.state != RelationshipState.TOBEVALIDATED) {
-        logger.warn(
+      if (lastManager.filePath.isEmpty && lastManager.state == RelationshipState.ACTIVE) {
+        logger.error(
           s"Found manager without a signed contract: ${lastManager.from} having status ${lastManager.state} on institutionId ${lastManager.to} and relationshipId ${lastManager.id}"
         )
       }
