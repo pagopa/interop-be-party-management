@@ -213,14 +213,16 @@ class NewDesignExposureApiServiceImpl(
           .slice(page * size, page * size + size)
       })
 
-  private def institutionParty2NewDesignInstitution: InstitutionParty => Future[NewDesignInstitution] = party => {
+  private def institutionParty2NewDesignInstitution(
+    party: InstitutionParty
+  )(implicit contexts: Seq[(String, String)]): Future[NewDesignInstitution] = {
 
     def buildPremiumSubProduct(product2managers: Map[String, List[Relationship]], lastManager: Relationship) = {
       if (lastManager.product.id != "prod-io" || !product2managers.contains("prod-io-premium")) List.empty
       else {
         val subProductManagers    = product2managers("prod-io-premium")
         val subProductLastManager =
-          retrieveLastRelationships(subProductManagers.filter(_.filePath.nonEmpty)).head
+          retrieveLastRelationships(subProductManagers).head
 
         List(
           NewDesignInstitutionOnboardingSubProduct(
@@ -236,6 +238,14 @@ class NewDesignExposureApiServiceImpl(
       }
     }
 
+    def warnIfNoContract(lastManager: Relationship): Unit = {
+      if (lastManager.filePath.isEmpty && lastManager.state != RelationshipState.TOBEVALIDATED) {
+        logger.warn(
+          s"Found manager without a signed contract: ${lastManager.from} having status ${lastManager.state} on institutionId ${lastManager.to} and relationshipId ${lastManager.id}"
+        )
+      }
+    }
+
     for {
       product2managers <- relationshipService
         .retrieveRelationshipsByTo(party.id, List(PartyRole.MANAGER), List.empty, List.empty, List.empty)
@@ -245,7 +255,9 @@ class NewDesignExposureApiServiceImpl(
         .filter(p => p.product != "prod-io-premium")
         .map(p => {
           val productManagers = product2managers(p.product)
-          val lastManager     = retrieveLastRelationships(productManagers.filter(_.filePath.nonEmpty)).head
+          val lastManager     = retrieveLastRelationships(productManagers).head
+
+          warnIfNoContract(lastManager)
 
           NewDesignInstitutionOnboarding(
             productId = p.product,
@@ -265,7 +277,9 @@ class NewDesignExposureApiServiceImpl(
         .filter(p2rels => !onboardedProductIds.contains(p2rels._1) && "prod-io-premium" != p2rels._1)
         .map(p2managers => {
           val productManagers = p2managers._2
-          val lastManager     = retrieveLastRelationships(productManagers.filter(_.filePath.nonEmpty)).head
+          val lastManager     = retrieveLastRelationships(productManagers).head
+
+          warnIfNoContract(lastManager)
 
           NewDesignInstitutionOnboarding(
             productId = lastManager.product.id,
@@ -357,34 +371,44 @@ class NewDesignExposureApiServiceImpl(
   private def token2NewDesignToken(
     token: Token
   )(implicit contexts: Seq[(String, String)]): Future[Option[NewDesignToken]] = {
+    val relationships = token.legals.map(_.relationshipId)
+
     for {
       legals <- Future
-        .traverse(token.legals.map(_.relationshipId))(relationshipService.getRelationshipById(_))
+        .traverse(relationships)(relationshipService.getRelationshipById(_))
         .map(_.flatten)
-      manager = legals.find(_.role == PartyRole.MANAGER)
+      managers = legals.filter(t => t.role == PartyRole.MANAGER)
+      manager  = managers.find(t => t.tokenId.isEmpty || t.tokenId.get == token.id)
 
       newDesignToken =
-        if (manager.isEmpty) {
-          logger.error(s"Found token without MANAGER: ${token.id}")
+        if (managers.isEmpty) {
+          logger.error(
+            s"Found token without MANAGER: ${token.id} on users ${token.legals.map(_.partyId)} and relationshipIds $relationships"
+          )
           None
-        } else
+        } else {
+          val managerNoTokenRelConfirmed = managers.head
+
           Some(
             NewDesignToken(
               id = token.id.toString,
-              status = manager.get.state,
-              institutionId = token.legals.head.partyId.toString,
-              productId = manager.get.product.id,
+              status = manager.map(_.state).getOrElse(RelationshipState.PENDING),
+              institutionId = managerNoTokenRelConfirmed.to.toString,
+              productId = managerNoTokenRelConfirmed.product.id,
               expiringDate = token.validity,
               checksum = token.checksum,
               contractTemplate = token.contractInfo.path,
               contractVersion = token.contractInfo.version,
-              contractSigned = manager.get.filePath,
-              users = legals.map(_.from.toString),
-              institutionUpdate = manager.get.institutionUpdate,
-              createdAt = manager.get.createdAt,
-              updatedAt = manager.get.updatedAt
+              contractSigned = manager.flatMap(_.filePath),
+              users = legals.map(u =>
+                NewDesignTokenUser(userId = u.from.toString, relationshipId = u.id.toString, role = u.role)
+              ),
+              institutionUpdate = managerNoTokenRelConfirmed.institutionUpdate,
+              createdAt = managerNoTokenRelConfirmed.createdAt,
+              updatedAt = managerNoTokenRelConfirmed.updatedAt
             )
           )
+        }
     } yield newDesignToken
   }
 }

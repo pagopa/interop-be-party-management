@@ -2066,7 +2066,7 @@ components:
         users:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/NewDesignTokenUser'
         institutionUpdate:
           $ref: '#/components/schemas/InstitutionUpdate'
         createdAt:
@@ -2075,6 +2075,20 @@ components:
         updatedAt:
           type: string
           format: date-time
+    NewDesignTokenUser:
+      type: object
+      additionalProperties: false
+      required:
+        - userId
+        - relationshipId
+        - role
+      properties:
+        userId:
+          type: string
+        relationshipId:
+          type: string
+        role:
+          type: PartyRole
   securitySchemes:
     bearerAuth:
       type: http

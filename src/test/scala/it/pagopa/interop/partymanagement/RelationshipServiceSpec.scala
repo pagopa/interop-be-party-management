@@ -134,7 +134,8 @@ class RelationshipServiceSpec extends ScalaTestWithActorTestKit(RelationshipServ
         system = system,
         sharding = sharding,
         entity = persistentEntity,
-        relationshipService
+        relationshipService,
+        institutionService
       )
 
     val newDesignExposureApi: NewDesignExposureApi =

@@ -167,7 +167,8 @@ class ProjectionContractsHandlerSpec
         system = system,
         sharding = sharding,
         entity = persistentEntity,
-        relationshipService
+        relationshipService,
+        institutionService
       )
 
     val newDesignExposureApi: NewDesignExposureApi =
