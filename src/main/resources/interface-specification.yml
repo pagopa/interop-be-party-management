@@ -1882,6 +1882,8 @@ components:
           type: string
         status:
           type: RelationshipState
+        tokenId:
+          type: string
         contract:
           type: string
         role:
@@ -1988,6 +1990,8 @@ components:
           type: string
         status:
           type: RelationshipState
+        tokenId:
+          type: string
         contract:
           type: string
         pricingPlan:
@@ -2019,6 +2023,8 @@ components:
           type: string
         status:
           type: RelationshipState
+        tokenId:
+          type: string
         contract:
           type: string
         pricingPlan:

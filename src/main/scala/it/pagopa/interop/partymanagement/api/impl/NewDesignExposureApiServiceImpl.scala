@@ -142,6 +142,7 @@ class NewDesignExposureApiServiceImpl(
                 NewDesignUserInstitutionProduct(
                   productId = productId2Rels._1,
                   status = productRoles.head.state,
+                  tokenId = lastRelHavingContract.flatMap(_.tokenId.map(_.toString)),
                   contract = lastRelHavingContract.flatMap(_.filePath),
                   role = lastUpdatedProductRole.role,
                   productRoles = productRoles.map(_.product.role),
@@ -229,6 +230,7 @@ class NewDesignExposureApiServiceImpl(
             parentId = "prod-io",
             productId = "prod-io-premium",
             status = subProductLastManager.state,
+            tokenId = subProductLastManager.tokenId.map(_.toString),
             contract = subProductLastManager.filePath,
             pricingPlan = subProductLastManager.pricingPlan,
             createdAt = subProductManagers.map(_.createdAt).min,
@@ -262,6 +264,7 @@ class NewDesignExposureApiServiceImpl(
           NewDesignInstitutionOnboarding(
             productId = p.product,
             status = lastManager.state,
+            tokenId = lastManager.tokenId.map(_.toString),
             contract = lastManager.filePath,
             pricingPlan = p.pricingPlan,
             billing = p.billing.toBilling,
@@ -284,6 +287,7 @@ class NewDesignExposureApiServiceImpl(
           NewDesignInstitutionOnboarding(
             productId = lastManager.product.id,
             status = lastManager.state,
+            tokenId = lastManager.tokenId.map(_.toString),
             contract = lastManager.filePath,
             pricingPlan = lastManager.pricingPlan,
             billing = lastManager.billing.get,
