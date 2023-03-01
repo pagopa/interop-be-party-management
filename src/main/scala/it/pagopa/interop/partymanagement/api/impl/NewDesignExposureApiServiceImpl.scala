@@ -26,7 +26,8 @@ import it.pagopa.interop.partymanagement.service.{InstitutionService, Relationsh
 import org.slf4j.LoggerFactory
 
 import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class NewDesignExposureApiServiceImpl(
@@ -115,7 +116,42 @@ class NewDesignExposureApiServiceImpl(
   private def getLastUpdatedRelationship: Seq[Relationship] => Relationship = rels =>
     rels.maxBy(r => r.updatedAt.getOrElse(r.createdAt))
 
-  private def userRelationships2NewDesignUser: (UUID, Seq[Relationship]) => NewDesignUser = (uid, rels) =>
+  private def retrieveTokenId(lastSignedRole: Option[Relationship], rels: Seq[Relationship])(implicit
+    contexts: Seq[(String, String)]
+  ): Option[String] = {
+    lastSignedRole
+      .flatMap(_.tokenId.map(_.toString))
+      .orElse {
+        rels
+          .filter(r => r.role == PartyRole.MANAGER || r.role == PartyRole.DELEGATE)
+          .flatMap(retrieveTokenIdByRelationship)
+          .headOption
+      }
+  }
+
+  private def retrieveTokenIdByRelationship(
+    relationship: Relationship
+  )(implicit contexts: Seq[(String, String)]): Option[String] = {
+    val commanders: List[EntityRef[Command]] = getAllCommanders
+
+    val resultFuture = for {
+      tokens <- Future.traverse(commanders)(_.ask(ref => GetTokensByRelationshipUUID(relationship.id, ref)))
+      tokensFlatten = tokens.flatten
+      tokenId       = tokensFlatten.maxByOption(_.validity).map(_.id.toString)
+    } yield tokenId
+
+    val result = Await.result(resultFuture, Duration.Inf)
+    if (result.isEmpty) {
+      logger.warn(
+        s"Found signed relationship ${relationship.role} having status ${relationship.state} without related token on institution ${relationship.to} and product ${relationship.product.id} relationshipId ${relationship.id} created at ${relationship.createdAt}"
+      )
+    }
+    result
+  }
+
+  private def userRelationships2NewDesignUser(uid: UUID, rels: Seq[Relationship])(implicit
+    contexts: Seq[(String, String)]
+  ): NewDesignUser =
     NewDesignUser(
       id = uid.toString,
       createdAt = rels.map(_.createdAt).min,
@@ -139,13 +175,22 @@ class NewDesignExposureApiServiceImpl(
                   if (relsHavingContract.nonEmpty) Some(getLastUpdatedRelationship(relsHavingContract))
                   else Option.empty
 
+                val tokenId = retrieveTokenId(lastRelHavingContract, productRoles)
+
                 NewDesignUserInstitutionProduct(
                   productId = productId2Rels._1,
-                  status = productRoles.head.state,
-                  tokenId = lastRelHavingContract.flatMap(_.tokenId.map(_.toString)),
+                  tokenId = tokenId,
                   contract = lastRelHavingContract.flatMap(_.filePath),
                   role = lastUpdatedProductRole.role,
-                  productRoles = productRoles.map(_.product.role),
+                  productRoles = productRoles.map(r =>
+                    NewDesignUserInstitutionProductRole(
+                      relationshipId = r.id.toString,
+                      productRole = r.product.role,
+                      status = r.state,
+                      createdAt = r.createdAt,
+                      updatedAt = r.updatedAt
+                    )
+                  ),
                   env = "ROOT",
                   createdAt = firstCreatedProductRole.createdAt,
                   updatedAt = lastUpdatedProductRole.updatedAt
@@ -225,12 +270,14 @@ class NewDesignExposureApiServiceImpl(
         val subProductLastManager =
           retrieveLastRelationships(subProductManagers).head
 
+        val tokenId = retrieveTokenId(Some(subProductLastManager), subProductManagers)
+
         List(
           NewDesignInstitutionOnboardingSubProduct(
             parentId = "prod-io",
             productId = "prod-io-premium",
             status = subProductLastManager.state,
-            tokenId = subProductLastManager.tokenId.map(_.toString),
+            tokenId = tokenId,
             contract = subProductLastManager.filePath,
             pricingPlan = subProductLastManager.pricingPlan,
             billing = subProductLastManager.billing.get,
@@ -244,7 +291,7 @@ class NewDesignExposureApiServiceImpl(
     def warnIfNoContract(lastManager: Relationship): Unit = {
       if (lastManager.filePath.isEmpty && lastManager.state == RelationshipState.ACTIVE) {
         logger.error(
-          s"Found manager without a signed contract: ${lastManager.from} having status ${lastManager.state} on institutionId ${lastManager.to} and relationshipId ${lastManager.id}"
+          s"Found ACTIVE manager without a signed contract: userId ${lastManager.from} having status ${lastManager.state} on institutionId ${lastManager.to} and product ${lastManager.product.id} and relationshipId ${lastManager.id} created at ${lastManager.createdAt}"
         )
       }
     }
@@ -262,10 +309,12 @@ class NewDesignExposureApiServiceImpl(
 
           warnIfNoContract(lastManager)
 
+          val tokenId = retrieveTokenId(Some(lastManager), productManagers)
+
           NewDesignInstitutionOnboarding(
             productId = p.product,
             status = lastManager.state,
-            tokenId = lastManager.tokenId.map(_.toString),
+            tokenId = tokenId,
             contract = lastManager.filePath,
             pricingPlan = p.pricingPlan,
             billing = p.billing.toBilling,
@@ -285,10 +334,12 @@ class NewDesignExposureApiServiceImpl(
 
           warnIfNoContract(lastManager)
 
+          val tokenId = retrieveTokenId(Some(lastManager), productManagers)
+
           NewDesignInstitutionOnboarding(
             productId = lastManager.product.id,
             status = lastManager.state,
-            tokenId = lastManager.tokenId.map(_.toString),
+            tokenId = tokenId,
             contract = lastManager.filePath,
             pricingPlan = lastManager.pricingPlan,
             billing = lastManager.billing.get,
@@ -387,9 +438,8 @@ class NewDesignExposureApiServiceImpl(
 
       newDesignToken =
         if (managers.isEmpty) {
-          logger.error(
-            s"Found token without MANAGER: ${token.id} on users ${token.legals.map(_.partyId)} and relationshipIds $relationships"
-          )
+          logger.error(s"Found token without MANAGER: ${token.id} on users ${token.legals
+              .map(_.partyId)} and relationshipIds $relationships valid until ${token.validity}")
           None
         } else {
           val managerNoTokenRelConfirmed = managers.head

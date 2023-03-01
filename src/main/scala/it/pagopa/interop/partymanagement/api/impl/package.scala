@@ -47,7 +47,9 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val bulkInstitutionsFormat: RootJsonFormat[BulkInstitutions]               = jsonFormat2(BulkInstitutions)
   implicit val digestSeedFormat: RootJsonFormat[DigestSeed]                           = jsonFormat1(DigestSeed)
 
-  implicit val newDesignUserInstitutionProductFormat: RootJsonFormat[NewDesignUserInstitutionProduct] = jsonFormat9(
+  implicit val newDesignUserInstitutionProductRoleFormat: RootJsonFormat[NewDesignUserInstitutionProductRole] =
+    jsonFormat5(NewDesignUserInstitutionProductRole)
+  implicit val newDesignUserInstitutionProductFormat: RootJsonFormat[NewDesignUserInstitutionProduct] = jsonFormat8(
     NewDesignUserInstitutionProduct
   )
   implicit val newDesignUserInstitutionFormat: RootJsonFormat[NewDesignUserInstitution]               = jsonFormat3(

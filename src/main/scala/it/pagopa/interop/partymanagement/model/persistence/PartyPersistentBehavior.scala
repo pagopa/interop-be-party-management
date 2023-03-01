@@ -336,6 +336,12 @@ object PartyPersistentBehavior {
         replyTo ! tokens
         Effect.none
 
+      case GetTokensByRelationshipUUID(relationshipId, replyTo) =>
+        val tokens: List[Token] =
+          state.tokens.values.filter(_.legals.map(_.relationshipId).contains(relationshipId)).toList
+        replyTo ! tokens
+        Effect.none
+
       case UpdateToken(tokenId, digest, replyTo) =>
         val token: Option[Token] = state.tokens.get(tokenId)
 

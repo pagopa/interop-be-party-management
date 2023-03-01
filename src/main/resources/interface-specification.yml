@@ -1880,8 +1880,6 @@ components:
       properties:
         productId:
           type: string
-        status:
-          type: RelationshipState
         tokenId:
           type: string
         contract:
@@ -1891,9 +1889,30 @@ components:
         productRoles:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/NewDesignUserInstitutionProductRole'
         env:
           type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignUserInstitutionProductRole:
+      type: object
+      additionalProperties: false
+      required:
+        - relationshipId
+        - productRole
+        - status
+        - createdAt
+      properties:
+        relationshipId:
+          type: string
+        productRole:
+          type: string
+        status:
+          type: RelationshipState
         createdAt:
           type: string
           format: date-time
