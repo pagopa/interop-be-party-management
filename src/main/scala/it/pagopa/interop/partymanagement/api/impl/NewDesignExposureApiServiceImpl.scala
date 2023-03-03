@@ -113,9 +113,6 @@ class NewDesignExposureApiServiceImpl(
   private def groupRelationshipsByUserId: Seq[Relationship] => Map[UUID, Seq[Relationship]] =
     _.groupBy(_.from)
 
-  private def getLastUpdatedRelationship: Seq[Relationship] => Relationship = rels =>
-    rels.maxBy(r => r.updatedAt.getOrElse(r.createdAt))
-
   private def retrieveTokenId(lastSignedRole: Option[Relationship], rels: Seq[Relationship])(implicit
     contexts: Seq[(String, String)]
   ): Option[String] = {
@@ -163,40 +160,22 @@ class NewDesignExposureApiServiceImpl(
             institutionId = institutionUid2Rels._1.toString,
             createdAt = institutionUid2Rels._2.map(_.createdAt).min,
             products = institutionUid2Rels._2
-              .groupBy(_.product.id)
-              .map(productId2Rels => {
-                val firstCreatedProductRole = productId2Rels._2.minBy(_.createdAt)
-                val lastUpdatedProductRole  = getLastUpdatedRelationship(productId2Rels._2)
-
-                val productRoles = retrieveLastRelationships(productId2Rels._2)
-
-                val relsHavingContract    = productId2Rels._2.filter(_.filePath.nonEmpty)
-                val lastRelHavingContract =
-                  if (relsHavingContract.nonEmpty) Some(getLastUpdatedRelationship(relsHavingContract))
-                  else Option.empty
-
-                val tokenId = retrieveTokenId(lastRelHavingContract, productRoles)
+              .map(rel => {
+                val tokenId = retrieveTokenIdByRelationship(rel)
 
                 NewDesignUserInstitutionProduct(
-                  productId = productId2Rels._1,
-                  tokenId = tokenId,
-                  contract = lastRelHavingContract.flatMap(_.filePath),
-                  role = lastUpdatedProductRole.role,
-                  productRoles = productRoles.map(r =>
-                    NewDesignUserInstitutionProductRole(
-                      relationshipId = r.id.toString,
-                      productRole = r.product.role,
-                      status = r.state,
-                      createdAt = r.createdAt,
-                      updatedAt = r.updatedAt
-                    )
-                  ),
+                  productId = rel.product.id,
                   env = "ROOT",
-                  createdAt = firstCreatedProductRole.createdAt,
-                  updatedAt = lastUpdatedProductRole.updatedAt
+                  relationshipId = rel.id.toString,
+                  role = rel.role,
+                  productRole = rel.product.role,
+                  status = rel.state,
+                  tokenId = tokenId,
+                  contract = rel.filePath,
+                  createdAt = rel.createdAt,
+                  updatedAt = rel.updatedAt
                 )
               })
-              .toSeq
           )
         )
         .toSeq
@@ -263,31 +242,6 @@ class NewDesignExposureApiServiceImpl(
     party: InstitutionParty
   )(implicit contexts: Seq[(String, String)]): Future[NewDesignInstitution] = {
 
-    def buildPremiumSubProduct(product2managers: Map[String, List[Relationship]], lastManager: Relationship) = {
-      if (lastManager.product.id != "prod-io" || !product2managers.contains("prod-io-premium")) List.empty
-      else {
-        val subProductManagers    = product2managers("prod-io-premium")
-        val subProductLastManager =
-          retrieveLastRelationships(subProductManagers).head
-
-        val tokenId = retrieveTokenId(Some(subProductLastManager), subProductManagers)
-
-        List(
-          NewDesignInstitutionOnboardingSubProduct(
-            parentId = "prod-io",
-            productId = "prod-io-premium",
-            status = subProductLastManager.state,
-            tokenId = tokenId,
-            contract = subProductLastManager.filePath,
-            pricingPlan = subProductLastManager.pricingPlan,
-            billing = subProductLastManager.billing.get,
-            createdAt = subProductManagers.map(_.createdAt).min,
-            updatedAt = subProductLastManager.updatedAt
-          )
-        )
-      }
-    }
-
     def warnIfNoContract(lastManager: Relationship): Unit = {
       if (lastManager.filePath.isEmpty && lastManager.state == RelationshipState.ACTIVE) {
         logger.error(
@@ -302,7 +256,6 @@ class NewDesignExposureApiServiceImpl(
         .map(_.groupBy(_.product.id))
 
       onboardedProducts = party.products
-        .filter(p => p.product != "prod-io-premium")
         .map(p => {
           val productManagers = product2managers(p.product)
           val lastManager     = retrieveLastRelationships(productManagers).head
@@ -318,7 +271,6 @@ class NewDesignExposureApiServiceImpl(
             contract = lastManager.filePath,
             pricingPlan = p.pricingPlan,
             billing = p.billing.toBilling,
-            subProducts = buildPremiumSubProduct(product2managers, lastManager),
             createdAt = productManagers.map(_.createdAt).min,
             updatedAt = lastManager.updatedAt
           )
@@ -327,7 +279,7 @@ class NewDesignExposureApiServiceImpl(
       onboardedProductIds = onboardedProducts.map(_.productId)
 
       pendingProducts = product2managers
-        .filter(p2rels => !onboardedProductIds.contains(p2rels._1) && "prod-io-premium" != p2rels._1)
+        .filter(p2rels => !onboardedProductIds.contains(p2rels._1))
         .map(p2managers => {
           val productManagers = p2managers._2
           val lastManager     = retrieveLastRelationships(productManagers).head
@@ -343,7 +295,6 @@ class NewDesignExposureApiServiceImpl(
             contract = lastManager.filePath,
             pricingPlan = lastManager.pricingPlan,
             billing = lastManager.billing.get,
-            subProducts = buildPremiumSubProduct(product2managers, lastManager),
             createdAt = productManagers.map(_.createdAt).min,
             updatedAt = lastManager.updatedAt
           )
@@ -455,9 +406,7 @@ class NewDesignExposureApiServiceImpl(
               contractTemplate = token.contractInfo.path,
               contractVersion = token.contractInfo.version,
               contractSigned = manager.flatMap(_.filePath),
-              users = legals.map(u =>
-                NewDesignTokenUser(userId = u.from.toString, relationshipId = u.id.toString, role = u.role)
-              ),
+              users = legals.map(u => NewDesignTokenUser(userId = u.from.toString, role = u.role)),
               institutionUpdate = managerNoTokenRelConfirmed.institutionUpdate,
               createdAt = managerNoTokenRelConfirmed.createdAt,
               updatedAt = managerNoTokenRelConfirmed.updatedAt

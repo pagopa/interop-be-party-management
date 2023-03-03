@@ -1872,47 +1872,29 @@ components:
       additionalProperties: false
       required:
         - productId
-        - status
-        - role
-        - productRoles
         - env
-        - createdAt
-      properties:
-        productId:
-          type: string
-        tokenId:
-          type: string
-        contract:
-          type: string
-        role:
-          type: PartyRole
-        productRoles:
-          type: array
-          items:
-            $ref: '#/components/schemas/NewDesignUserInstitutionProductRole'
-        env:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    NewDesignUserInstitutionProductRole:
-      type: object
-      additionalProperties: false
-      required:
         - relationshipId
+        - role
         - productRole
         - status
         - createdAt
       properties:
+        productId:
+          type: string
+        env:
+          type: string
         relationshipId:
           type: string
+        role:
+          type: PartyRole
         productRole:
           type: string
         status:
           type: RelationshipState
+        tokenId:
+          type: string
+        contract:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -2002,43 +1984,8 @@ components:
         - productId
         - status
         - billing
-        - subProducts
         - createdAt
       properties:
-        productId:
-          type: string
-        status:
-          type: RelationshipState
-        tokenId:
-          type: string
-        contract:
-          type: string
-        pricingPlan:
-          type: string
-        billing:
-          $ref: '#/components/schemas/Billing'
-        subProducts:
-          type: array
-          items:
-            $ref: '#/components/schemas/NewDesignInstitutionOnboardingSubProduct'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    NewDesignInstitutionOnboardingSubProduct:
-      type: object
-      additionalProperties: false
-      required:
-        - parentId
-        - productId
-        - status
-        - billing
-        - createdAt
-      properties:
-        parentId:
-          type: string
         productId:
           type: string
         status:
@@ -2108,12 +2055,9 @@ components:
       additionalProperties: false
       required:
         - userId
-        - relationshipId
         - role
       properties:
         userId:
-          type: string
-        relationshipId:
           type: string
         role:
           type: PartyRole

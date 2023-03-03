@@ -47,9 +47,7 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val bulkInstitutionsFormat: RootJsonFormat[BulkInstitutions]               = jsonFormat2(BulkInstitutions)
   implicit val digestSeedFormat: RootJsonFormat[DigestSeed]                           = jsonFormat1(DigestSeed)
 
-  implicit val newDesignUserInstitutionProductRoleFormat: RootJsonFormat[NewDesignUserInstitutionProductRole] =
-    jsonFormat5(NewDesignUserInstitutionProductRole)
-  implicit val newDesignUserInstitutionProductFormat: RootJsonFormat[NewDesignUserInstitutionProduct] = jsonFormat8(
+  implicit val newDesignUserInstitutionProductFormat: RootJsonFormat[NewDesignUserInstitutionProduct] = jsonFormat10(
     NewDesignUserInstitutionProduct
   )
   implicit val newDesignUserInstitutionFormat: RootJsonFormat[NewDesignUserInstitution]               = jsonFormat3(
@@ -57,14 +55,12 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   )
   implicit val newDesignUserFormat: RootJsonFormat[NewDesignUser] = jsonFormat4(NewDesignUser)
 
-  implicit val newDesignInstitutionOnboardingSubProductFormat
-    : RootJsonFormat[NewDesignInstitutionOnboardingSubProduct] = jsonFormat9(NewDesignInstitutionOnboardingSubProduct)
-  implicit val newDesignInstitutionOnboardingFormat: RootJsonFormat[NewDesignInstitutionOnboarding] = jsonFormat9(
+  implicit val newDesignInstitutionOnboardingFormat: RootJsonFormat[NewDesignInstitutionOnboarding] = jsonFormat8(
     NewDesignInstitutionOnboarding
   )
   implicit val newDesignInstitutionFormat: RootJsonFormat[NewDesignInstitution] = jsonFormat22(NewDesignInstitution)
 
-  implicit val newDesignTokenUserFormat: RootJsonFormat[NewDesignTokenUser] = jsonFormat3(NewDesignTokenUser)
+  implicit val newDesignTokenUserFormat: RootJsonFormat[NewDesignTokenUser] = jsonFormat2(NewDesignTokenUser)
   implicit val newDesignTokenFormat: RootJsonFormat[NewDesignToken]         = jsonFormat13(NewDesignToken)
 
   final val serviceErrorCodePrefix: String = "001"
