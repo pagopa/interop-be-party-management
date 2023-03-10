@@ -936,17 +936,23 @@ class PartyApiServiceImpl(
     val result: Future[StatusReply[Unit]] =
       for {
 
-        relationshipUUID <- relationshipId.toFutureUUID
-        relationships    <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(relationshipUUID, ref)))
-        manager          <- relationships
+        relationshipUUID  <- relationshipId.toFutureUUID
+        // manager.billing = Some(PersistedBilling.fromBilling(billing))
+        resultsCollection <- Future.traverse(commanders)(
+          _.ask(ref => UpdateBilling(relationshipUUID, billing, ref))
+            .transform(Success(_))
+        )
+        result            <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+
+        relationships <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(relationshipUUID, ref)))
+        manager       <- relationships
           .find(_.exists(_.role == PersistedPartyRole.Manager))
           .flatten
           .toFuture(BillingRelationshipNotFound(relationshipId))
-        manager.billing = Some(PersistedBilling.fromBilling(billing))
 
         party            <- getCommander(manager.to.toString).ask(ref => GetParty(manager.to, ref))
         institutionParty <- Party.extractInstitutionParty(partyId = manager.to.toString, party = party)
-        _                <- updateInstitutionWithRelationship(institutionParty, manager)
+        _                <- updateInstitutionWithRelationship(institutionParty, manager, billing)
 
         // val relationship: Option[PersistedPartyRelationship] = state.relationships.get(relationshipId)
         // "it.pagopa.interop.partymanagement.model.persistence.PartyRelationshipUpdateBilling" = party-relationship-update-billing
@@ -954,11 +960,6 @@ class PartyApiServiceImpl(
 //        maybePartyRelationship = results.find(_.isDefined).flatten
 //        partyRelationship = maybePartyRelationship.map(_.toRelationship)
 
-        resultsCollection <- Future.traverse(commanders)(
-          _.ask(ref => UpdateBilling(relationshipUUID, billing, ref))
-            .transform(Success(_))
-        )
-        result            <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
       } yield result
 
     onComplete(result) {
@@ -978,9 +979,10 @@ class PartyApiServiceImpl(
 
   private def updateInstitutionWithRelationship(
     institutionParty: InstitutionParty,
-    relationship: PersistedPartyRelationship
+    relationship: PersistedPartyRelationship,
+    billing: Billing
   ): Future[StatusReply[Party]] = {
-    val institutionPartyProduct = updateWithInstitutionProductInfo(institutionParty, relationship)
+    val institutionPartyProduct = updateWithInstitutionProductInfo(institutionParty, relationship, billing)
     Option
       .when(relationship.institutionUpdate.isDefined || relationship.billing.isDefined) {
         getCommander(institutionPartyProduct.id.toString).ask(ref => UpdateParty(institutionPartyProduct, ref))
@@ -990,7 +992,8 @@ class PartyApiServiceImpl(
 
   private def updateWithInstitutionProductInfo(
     institutionParty: InstitutionParty,
-    relationship: PersistedPartyRelationship
+    relationship: PersistedPartyRelationship,
+    billing: Billing
   ): InstitutionParty = {
     relationship.billing.fold(institutionParty) { billing =>
       val productId          = relationship.product.id
