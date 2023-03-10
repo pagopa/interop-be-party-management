@@ -963,15 +963,15 @@ class PartyApiServiceImpl(
       } yield result
 
     onComplete(result) {
-      case Success(reply) =>
+      case Success(_)  =>
         updateBillingRelationshipById204
-        if (reply.isSuccess) {
+      /*if (reply.isSuccess) {
           updateBillingRelationshipById204
         } else {
           logger.error(s"Error while updating billing data for relationship id $relationshipId - Not found")
           updateBillingRelationshipById404(problemOf(StatusCodes.NotFound, BillingRelationshipError(relationshipId)))
-        }
-      case Failure(ex)    =>
+        }*/
+      case Failure(ex) =>
         logger.error(s"Error while updating billing data for relationship id $relationshipId", ex)
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, BillingRelationshipBadRequest(relationshipId)))
     }
@@ -993,13 +993,13 @@ class PartyApiServiceImpl(
   private def updateWithInstitutionProductInfo(
     institutionParty: InstitutionParty,
     relationship: PersistedPartyRelationship,
-    billing: Billing
+    updateBilling: Billing
   ): InstitutionParty = {
     relationship.billing.fold(institutionParty) { billing =>
       val productId          = relationship.product.id
       val institutionProduct = institutionParty.products
         .find(_.product == productId)
-        .map(_.copy(pricingPlan = relationship.pricingPlan, billing = billing))
+        .map(_.copy(pricingPlan = relationship.pricingPlan, billing = PersistedBilling.fromBilling(updateBilling)))
         .getOrElse(
           PersistedInstitutionProduct(product = productId, pricingPlan = relationship.pricingPlan, billing = billing)
         )
