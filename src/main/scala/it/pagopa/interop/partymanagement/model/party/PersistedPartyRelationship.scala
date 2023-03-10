@@ -68,9 +68,10 @@ object PersistedPartyRelationship {
     pricingPlan: Option[String],
     institutionUpdate: Option[InstitutionUpdate],
     billing: Option[Billing],
-    relationshipState: PersistedPartyRelationshipState = PersistedPartyRelationshipState.Pending
+    relationshipState: PersistedPartyRelationshipState = PersistedPartyRelationshipState.Pending,
+    createdAt: Option[OffsetDateTime]
   ): PersistedPartyRelationship = {
-    val timestamp = offsetDateTimeSupplier.get
+    val timestamp = createdAt.getOrElse(offsetDateTimeSupplier.get)
     PersistedPartyRelationship(
       id = uuidSupplier.get,
       from = from,

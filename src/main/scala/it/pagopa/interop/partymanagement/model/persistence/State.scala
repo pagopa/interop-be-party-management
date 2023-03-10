@@ -1,5 +1,6 @@
 package it.pagopa.interop.partymanagement.model.persistence
 
+import it.pagopa.interop.partymanagement.model.Billing
 import it.pagopa.interop.partymanagement.model.party._
 import org.slf4j.LoggerFactory
 
@@ -104,6 +105,25 @@ final case class State(
       case None    =>
         this
     }
+
+  def updateBilling(partyRelationshipId: UUID, billing: Billing, timestamp: OffsetDateTime): State = {
+    relationships.get(partyRelationshipId) match {
+      case Some(relationship) =>
+        val updatedRelationship = relationship.copy(
+          billing = Some(
+            PersistedBilling(
+              vatNumber = billing.vatNumber,
+              recipientCode = billing.recipientCode,
+              publicServices = billing.publicServices
+            )
+          ),
+          updatedAt = Some(timestamp)
+        )
+        copy(relationships = relationships + (relationship.id -> updatedRelationship))
+      case None               =>
+        this
+    }
+  }
 }
 
 object State {

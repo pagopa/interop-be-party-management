@@ -317,7 +317,8 @@ class PartyApiServiceImpl(
         relationshipState = seed.state.getOrElse(RelationshipState.PENDING) match {
           case RelationshipState.TOBEVALIDATED => PersistedPartyRelationshipState.ToBeValidated
           case _                               => PersistedPartyRelationshipState.Pending
-        }
+        },
+        createdAt = seed.createdAt
       )
       currentPartyRelationships <- Future
         .traverse(commanders)(
@@ -914,6 +915,92 @@ class PartyApiServiceImpl(
       )
     } else {
       Future.successful(())
+    }
+  }
+
+  /**
+    * Code: 204, Message: Relationship updated
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def updateBillingRelationshipById(relationshipId: String, billing: Billing)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info("Updating relationship with id {}", relationshipId)
+
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[StatusReply[Unit]] =
+      for {
+
+        relationshipUUID <- relationshipId.toFutureUUID
+        relationships    <- Future.traverse(commanders)(_.ask(ref => GetPartyRelationshipById(relationshipUUID, ref)))
+        manager          <- relationships
+          .find(_.exists(_.role == PersistedPartyRole.Manager))
+          .flatten
+          .toFuture(BillingRelationshipNotFound(relationshipId))
+        manager.billing = Some(PersistedBilling.fromBilling(billing))
+
+        party            <- getCommander(manager.to.toString).ask(ref => GetParty(manager.to, ref))
+        institutionParty <- Party.extractInstitutionParty(partyId = manager.to.toString, party = party)
+        _                <- updateInstitutionWithRelationship(institutionParty, manager)
+
+        // val relationship: Option[PersistedPartyRelationship] = state.relationships.get(relationshipId)
+        // "it.pagopa.interop.partymanagement.model.persistence.PartyRelationshipUpdateBilling" = party-relationship-update-billing
+        // institutionParty <- Party.extractInstitutionParty(partyId = manager.to.toString, party = party)
+//        maybePartyRelationship = results.find(_.isDefined).flatten
+//        partyRelationship = maybePartyRelationship.map(_.toRelationship)
+
+        resultsCollection <- Future.traverse(commanders)(
+          _.ask(ref => UpdateBilling(relationshipUUID, billing, ref))
+            .transform(Success(_))
+        )
+        result            <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+      } yield result
+
+    onComplete(result) {
+      case Success(reply) =>
+        updateBillingRelationshipById204
+        if (reply.isSuccess) {
+          updateBillingRelationshipById204
+        } else {
+          logger.error(s"Error while updating billing data for relationship id $relationshipId - Not found")
+          updateBillingRelationshipById404(problemOf(StatusCodes.NotFound, BillingRelationshipError(relationshipId)))
+        }
+      case Failure(ex)    =>
+        logger.error(s"Error while updating billing data for relationship id $relationshipId", ex)
+        deleteRelationshipById400(problemOf(StatusCodes.BadRequest, BillingRelationshipBadRequest(relationshipId)))
+    }
+  }
+
+  private def updateInstitutionWithRelationship(
+    institutionParty: InstitutionParty,
+    relationship: PersistedPartyRelationship
+  ): Future[StatusReply[Party]] = {
+    val institutionPartyProduct = updateWithInstitutionProductInfo(institutionParty, relationship)
+    Option
+      .when(relationship.institutionUpdate.isDefined || relationship.billing.isDefined) {
+        getCommander(institutionPartyProduct.id.toString).ask(ref => UpdateParty(institutionPartyProduct, ref))
+      }
+      .getOrElse(Future.successful(StatusReply.Success[Party](institutionParty)))
+  }
+
+  private def updateWithInstitutionProductInfo(
+    institutionParty: InstitutionParty,
+    relationship: PersistedPartyRelationship
+  ): InstitutionParty = {
+    relationship.billing.fold(institutionParty) { billing =>
+      val productId          = relationship.product.id
+      val institutionProduct = institutionParty.products
+        .find(_.product == productId)
+        .map(_.copy(pricingPlan = relationship.pricingPlan, billing = billing))
+        .getOrElse(
+          PersistedInstitutionProduct(product = productId, pricingPlan = relationship.pricingPlan, billing = billing)
+        )
+      institutionParty.copy(products = institutionParty.products.filter(_.product != productId) + institutionProduct)
     }
   }
 }

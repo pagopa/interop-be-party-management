@@ -192,6 +192,39 @@ class PublicApiServiceImpl(
 
   }
 
+  /**
+    * Code: 201, Message: successful operation
+    * Code: 400, Message: Invalid ID supplied, DataType: Problem
+    * Code: 404, Message: Token not found, DataType: Problem
+    */
+  override def deleteToken(
+    tokenId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    logger.info("Deleting token {}", tokenId)
+    val results: Future[Seq[StatusReply[Unit]]] = for {
+      tokenIdUUID <- tokenId.toFutureUUID
+      found       <- getCommander(tokenId).ask(ref => GetToken(tokenIdUUID, ref))
+      token       <- found.toFuture(TokenNotFound(tokenId))
+      results     <- processRelationships(token, DeletePartyRelationship)
+    } yield results
+
+    onComplete(results) {
+      case Success(statusReplies) if statusReplies.exists(_.isError) =>
+        val errors: String =
+          statusReplies.filter(_.isError).flatMap(sr => Option(sr.getError.getMessage)).mkString("\n")
+        logger.error(s"Deleting token failed: $errors")
+        deleteToken400(problemOf(StatusCodes.BadRequest, DeleteTokenBadRequest(errors)))
+      case Success(_)                                                => deleteToken201
+      case Failure(ex: TokenNotFound)                                =>
+        logger.error(s"Token not found", ex)
+        deleteToken404(problemOf(StatusCodes.NotFound, ConsumeTokenError(ex.getMessage)))
+      case Failure(ex)                                               =>
+        logger.error(s"Deleting token failed", ex)
+        deleteToken400(problemOf(StatusCodes.BadRequest, DeleteTokenError(ex.getMessage)))
+    }
+
+  }
+
   private def processRelationships(
     token: Token,
     commandFunc: (UUID, ActorRef[StatusReply[Unit]]) => Command
@@ -281,7 +314,8 @@ class PublicApiServiceImpl(
         institutionParty
           .copy(
             institutionType = institutionUpdate.institutionType.orElse(institutionParty.institutionType),
-            geographicTaxonomies = institutionUpdate.geographicTaxonomies
+            geographicTaxonomies = institutionUpdate.geographicTaxonomies,
+            supportEmail = institutionUpdate.supportEmail
           )
       else
         institutionParty.copy(
@@ -291,7 +325,13 @@ class PublicApiServiceImpl(
           description = institutionUpdate.description.getOrElse(institutionParty.description),
           digitalAddress = institutionUpdate.digitalAddress.getOrElse(institutionParty.digitalAddress),
           zipCode = institutionUpdate.zipCode.getOrElse(institutionParty.zipCode),
-          geographicTaxonomies = institutionUpdate.geographicTaxonomies
+          geographicTaxonomies = institutionUpdate.geographicTaxonomies,
+          paymentServiceProvider = institutionUpdate.paymentServiceProvider,
+          dataProtectionOfficer = institutionUpdate.dataProtectionOfficer,
+          rea = institutionUpdate.rea,
+          shareCapital = institutionUpdate.shareCapital,
+          businessRegisterPlace = institutionUpdate.businessRegisterPlace,
+          supportEmail = institutionUpdate.supportEmail
         )
     }
   }

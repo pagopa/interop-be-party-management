@@ -7,6 +7,7 @@ import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationship
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.{
   Attribute,
+  Billing,
   CollectionSearchMode,
   Institution,
   PartyRole,
@@ -107,3 +108,5 @@ final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])      
 final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
 final case class UpdateToken(tokenId: UUID, digest: String, replyTo: ActorRef[StatusReply[TokenText]])
     extends TokenCommand
+final case class UpdateBilling(partyRelationshipId: UUID, billing: Billing, replyTo: ActorRef[StatusReply[Unit]])
+    extends PartyRelationshipCommand

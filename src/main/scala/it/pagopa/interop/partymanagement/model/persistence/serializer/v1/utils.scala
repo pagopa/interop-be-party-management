@@ -3,6 +3,7 @@ package it.pagopa.interop.partymanagement.model.persistence.serializer.v1
 import cats.implicits._
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.partymanagement.common.utils.ErrorOr
+import it.pagopa.interop.partymanagement.model.Billing
 import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState._
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
@@ -20,11 +21,11 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
   DataProtectionOfficerV1,
+  GeographicTaxonomyV1,
   InstitutionUpdateV1,
   PartyRelationshipProductV1,
   PartyRelationshipV1,
-  PaymentServiceProviderV1,
-  GeographicTaxonomyV1
+  PaymentServiceProviderV1
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state.{
   PartiesV1,
@@ -279,6 +280,16 @@ object utils {
 
   private def getBillingV1(b: PersistedBilling): BillingV1 =
     BillingV1(vatNumber = b.vatNumber, recipientCode = b.recipientCode, publicServices = b.publicServices)
+
+  def getBillingV1FromBilling(b: Billing): BillingV1 =
+    BillingV1(vatNumber = b.vatNumber, recipientCode = b.recipientCode, publicServices = b.publicServices)
+  def getBilling(billingV1: BillingV1): Billing      = {
+    Billing(
+      vatNumber = billingV1.vatNumber,
+      recipientCode = billingV1.recipientCode,
+      publicServices = billingV1.publicServices
+    )
+  }
 
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
