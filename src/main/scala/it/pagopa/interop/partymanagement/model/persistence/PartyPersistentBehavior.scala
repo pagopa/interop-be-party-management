@@ -401,6 +401,7 @@ object PartyPersistentBehavior {
       case TokenUpdated(token)                                   => state.updateToken(token)
       case PartyRelationshipUpdateBilling(partyRelationshipId, billing, timestamp) =>
         state.updateBilling(partyRelationshipId, billing, timestamp)
+      case PartyRelationshipWithId(partyRelationshipId) => state.partyRelationship(partyRelationshipId)
     }
 
   val TypeKey: EntityTypeKey[Command] =

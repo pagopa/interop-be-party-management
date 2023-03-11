@@ -124,6 +124,15 @@ final case class State(
         this
     }
   }
+
+  def partyRelationship(partyRelationshipId: UUID): State = {
+    relationships.get(partyRelationshipId) match {
+      case Some(_) =>
+        this
+      case None    =>
+        this
+    }
+  }
 }
 
 object State {

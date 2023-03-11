@@ -41,6 +41,7 @@ final case class PartyRelationshipEnabled(partyRelationshipId: UUID, timestamp: 
     extends PartyRelationshipEvent
 final case class PartyRelationshipUpdateBilling(partyRelationshipId: UUID, billing: Billing, timestamp: OffsetDateTime)
     extends PartyRelationshipEvent
+final case class PartyRelationshipWithId(partyRelationshipId: UUID)                    extends PartyRelationshipEvent
 /* Token Event */
 final case class TokenAdded(token: Token)                                              extends TokenEvent
 final case class TokenUpdated(token: Token)                                            extends TokenEvent

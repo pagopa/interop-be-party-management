@@ -17,7 +17,7 @@ import it.pagopa.interop.commons.utils.TypeConversions.OptionOps
 import it.pagopa.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
 import it.pagopa.interop.partymanagement.common.system._
 import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{GetInstitutionError, GetRelationshipNotFound}
-import it.pagopa.interop.partymanagement.model.PartyRole
+import it.pagopa.interop.partymanagement.model.{PartyRole, Relationship}
 import it.pagopa.interop.partymanagement.model.party.{
   InstitutionOnboarded,
   InstitutionOnboardedBilling,
@@ -38,6 +38,7 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import akka.projection.HandlerRecoveryStrategy
+
 import scala.concurrent.duration._
 
 class PartyPersistentContractsProjection(
@@ -93,22 +94,24 @@ class ProjectionContractsHandler(
 
   override def process(envelope: EventEnvelope[Event]): DBIO[Done] = {
     envelope.event match {
-      case event: PartyRelationshipConfirmed =>
-        checkRelationshipConfirmed(event)
-      case _                                 =>
+      case event: PartyRelationshipConfirmed     =>
+        checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId))
+      case event: PartyRelationshipUpdateBilling =>
+        checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId))
+      case _                                     =>
         logger.debug("This is the envelope event payload > {} On tagged projection > {}", envelope.event, tag)
         DBIOAction.successful(Done)
     }
   }
 
-  private def checkRelationshipConfirmed(event: PartyRelationshipConfirmed): DBIO[Done] = {
+  private def checkRelationshipConfirmed(event: PartyRelationshipWithId): DBIO[Done] = {
     logger.info(s"projecting confirmation of relationship having id ${event.partyRelationshipId}") // apz debug
     val result = for {
       found             <- relationshipService.getRelationshipById(event.partyRelationshipId)
       partyRelationship <- found.toFuture(GetRelationshipNotFound(event.partyRelationshipId.toString))
       _                 <-
         if (partyRelationship.role == PartyRole.MANAGER)
-          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, event)
+          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, partyRelationship)
         else Future.unit
     } yield Done
 
@@ -125,20 +128,56 @@ class ProjectionContractsHandler(
     DBIOAction.from(result)
   }
 
-  def notifyInstitutionOnboarded(
-    institutionId: UUID,
-    productId: String,
-    managerRelationshipConfirm: PartyRelationshipConfirmed
-  )(implicit ec: ExecutionContext): Future[Unit] = {
+  /*private def checkRelationshipFromId(event: PartyRelationshipWithId): DBIO[Done] = {
+    logger.info(s"projecting confirmation of relationship having id ${event.partyRelationshipId}") // apz debug
+    val result = for {
+      found <- relationshipService.getRelationshipById(event.partyRelationshipId)
+      partyRelationship <- found.toFuture(GetRelationshipNotFound(event.partyRelationshipId.toString))
+      _ <-
+        if (partyRelationship.role == PartyRole.MANAGER)
+          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, partyRelationship)
+        else Future.unit
+    } yield Done
+
+    result.onComplete {
+      case Failure(e) =>
+        logger.info( // apz debug
+          s"Error projecting confirmation of relationshing having id ${event.partyRelationshipId} on queue",
+          e
+        )
+      case Success(_) =>
+        logger.info(s"Message has been sent on queue") // apz debug
+    }
+
+    DBIOAction.from(result)
+  }*/
+
+//  def notifyInstitutionOnboardedFromRelation(
+//    institutionId: UUID,
+//    productId: String,
+//    relationship: Relationship
+//  )(implicit ec: ExecutionContext): Future[Unit] = {
+//    logger.info(s"confirming institution having id $institutionId") // apz debug
+//    for {
+//      institutionOpt <- institutionService.getInstitutionById(institutionId)
+//      institution <- unpackInstitutionParty(institutionOpt)
+//      notification = InstitutionOnboardedNotificationObj.toNotification(
+//        institution,
+//        productId,
+//        relationship
+//      )
+//      _ <- datalakeContractsPublisher.send(notification)
+//    } yield ()
+//  }
+
+  def notifyInstitutionOnboarded(institutionId: UUID, productId: String, relationship: Relationship)(implicit
+    ec: ExecutionContext
+  ): Future[Unit] = {
     logger.info(s"confirming institution having id $institutionId") // apz debug
     for {
       institutionOpt <- institutionService.getInstitutionById(institutionId)
       institution    <- unpackInstitutionParty(institutionOpt)
-      notification = InstitutionOnboardedNotificationObj.toNotification(
-        institution,
-        productId,
-        managerRelationshipConfirm
-      )
+      notification = InstitutionOnboardedNotificationObj.toNotification(institution, productId, relationship)
       _ <- datalakeContractsPublisher.send(notification)
     } yield ()
   }
