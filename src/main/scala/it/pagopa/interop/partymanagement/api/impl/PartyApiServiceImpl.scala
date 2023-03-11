@@ -937,7 +937,6 @@ class PartyApiServiceImpl(
       for {
 
         relationshipUUID  <- relationshipId.toFutureUUID
-        // manager.billing = Some(PersistedBilling.fromBilling(billing))
         resultsCollection <- Future.traverse(commanders)(
           _.ask(ref => UpdateBilling(relationshipUUID, billing, ref))
             .transform(Success(_))
@@ -953,24 +952,11 @@ class PartyApiServiceImpl(
         party            <- getCommander(manager.to.toString).ask(ref => GetParty(manager.to, ref))
         institutionParty <- Party.extractInstitutionParty(partyId = manager.to.toString, party = party)
         _                <- updateInstitutionWithRelationship(institutionParty, manager, billing)
-
-        // val relationship: Option[PersistedPartyRelationship] = state.relationships.get(relationshipId)
-        // "it.pagopa.interop.partymanagement.model.persistence.PartyRelationshipUpdateBilling" = party-relationship-update-billing
-        // institutionParty <- Party.extractInstitutionParty(partyId = manager.to.toString, party = party)
-//        maybePartyRelationship = results.find(_.isDefined).flatten
-//        partyRelationship = maybePartyRelationship.map(_.toRelationship)
-
       } yield result
 
     onComplete(result) {
       case Success(_)  =>
         updateBillingRelationshipById204
-      /*if (reply.isSuccess) {
-          updateBillingRelationshipById204
-        } else {
-          logger.error(s"Error while updating billing data for relationship id $relationshipId - Not found")
-          updateBillingRelationshipById404(problemOf(StatusCodes.NotFound, BillingRelationshipError(relationshipId)))
-        }*/
       case Failure(ex) =>
         logger.error(s"Error while updating billing data for relationship id $relationshipId", ex)
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, BillingRelationshipBadRequest(relationshipId)))
