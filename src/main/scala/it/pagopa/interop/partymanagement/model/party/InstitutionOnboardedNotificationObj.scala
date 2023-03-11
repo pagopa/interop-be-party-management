@@ -17,7 +17,8 @@ final case class InstitutionOnboardedNotification(
   pricingPlan: Option[String],
   institution: InstitutionOnboarded,
   billing: Option[InstitutionOnboardedBilling],
-  updatedAt: Option[OffsetDateTime]
+  updatedAt: Option[OffsetDateTime],
+  createdAt: OffsetDateTime
 )
 
 case class InstitutionOnboarded(
@@ -53,7 +54,8 @@ object InstitutionOnboardedNotificationObj {
       pricingPlan = productInfo.flatMap(_.pricingPlan),
       institution = InstitutionOnboardedObj.fromInstitution(institution),
       billing = productInfo.map(p => InstitutionOnboardedBillingObj.fromInstitutionProduct(p.billing)),
-      updatedAt = relationship.updatedAt
+      updatedAt = relationship.updatedAt,
+      createdAt = relationship.createdAt
     )
   }
 }

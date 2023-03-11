@@ -127,49 +127,6 @@ class ProjectionContractsHandler(
 
     DBIOAction.from(result)
   }
-
-  /*private def checkRelationshipFromId(event: PartyRelationshipWithId): DBIO[Done] = {
-    logger.info(s"projecting confirmation of relationship having id ${event.partyRelationshipId}") // apz debug
-    val result = for {
-      found <- relationshipService.getRelationshipById(event.partyRelationshipId)
-      partyRelationship <- found.toFuture(GetRelationshipNotFound(event.partyRelationshipId.toString))
-      _ <-
-        if (partyRelationship.role == PartyRole.MANAGER)
-          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, partyRelationship)
-        else Future.unit
-    } yield Done
-
-    result.onComplete {
-      case Failure(e) =>
-        logger.info( // apz debug
-          s"Error projecting confirmation of relationshing having id ${event.partyRelationshipId} on queue",
-          e
-        )
-      case Success(_) =>
-        logger.info(s"Message has been sent on queue") // apz debug
-    }
-
-    DBIOAction.from(result)
-  }*/
-
-//  def notifyInstitutionOnboardedFromRelation(
-//    institutionId: UUID,
-//    productId: String,
-//    relationship: Relationship
-//  )(implicit ec: ExecutionContext): Future[Unit] = {
-//    logger.info(s"confirming institution having id $institutionId") // apz debug
-//    for {
-//      institutionOpt <- institutionService.getInstitutionById(institutionId)
-//      institution <- unpackInstitutionParty(institutionOpt)
-//      notification = InstitutionOnboardedNotificationObj.toNotification(
-//        institution,
-//        productId,
-//        relationship
-//      )
-//      _ <- datalakeContractsPublisher.send(notification)
-//    } yield ()
-//  }
-
   def notifyInstitutionOnboarded(institutionId: UUID, productId: String, relationship: Relationship)(implicit
     ec: ExecutionContext
   ): Future[Unit] = {
@@ -193,7 +150,7 @@ class ProjectionContractsHandler(
   implicit val institutionOnboardedBillingFormat: RootJsonFormat[InstitutionOnboardedBilling]           = jsonFormat3(
     InstitutionOnboardedBilling
   )
-  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat12(
+  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat13(
     InstitutionOnboardedNotification
   )
 }
