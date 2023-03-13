@@ -1,6 +1,6 @@
 package it.pagopa.interop.partymanagement.model.party
 
-import it.pagopa.interop.partymanagement.model.persistence.PartyRelationshipConfirmed
+import it.pagopa.interop.partymanagement.model.Relationship
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -17,7 +17,8 @@ final case class InstitutionOnboardedNotification(
   pricingPlan: Option[String],
   institution: InstitutionOnboarded,
   billing: Option[InstitutionOnboardedBilling],
-  updatedAt: Option[OffsetDateTime]
+  updatedAt: Option[OffsetDateTime],
+  createdAt: OffsetDateTime
 )
 
 case class InstitutionOnboarded(
@@ -36,24 +37,25 @@ object InstitutionOnboardedNotificationObj {
   def toNotification(
     institution: InstitutionParty,
     productId: String,
-    managerRelationshipConfirm: PartyRelationshipConfirmed
+    relationship: Relationship
   ): InstitutionOnboardedNotification = {
     val productInfo = institution.products
       .find(p => productId == p.product)
 
     InstitutionOnboardedNotification(
-      id = Option(managerRelationshipConfirm.onboardingTokenId),
+      id = relationship.tokenId,
       internalIstitutionID = institution.id,
       product = productId,
       state = "ACTIVE",
-      filePath = Option(managerRelationshipConfirm.filePath),
-      fileName = Option(managerRelationshipConfirm.fileName),
-      contentType = Option(managerRelationshipConfirm.contentType),
-      onboardingTokenId = Option(managerRelationshipConfirm.onboardingTokenId),
+      filePath = relationship.filePath,
+      fileName = relationship.fileName,
+      contentType = relationship.contentType,
+      onboardingTokenId = relationship.tokenId,
       pricingPlan = productInfo.flatMap(_.pricingPlan),
       institution = InstitutionOnboardedObj.fromInstitution(institution),
       billing = productInfo.map(p => InstitutionOnboardedBillingObj.fromInstitutionProduct(p.billing)),
-      updatedAt = Option(managerRelationshipConfirm.timestamp)
+      updatedAt = relationship.updatedAt,
+      createdAt = relationship.createdAt
     )
   }
 }

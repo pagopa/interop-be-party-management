@@ -270,7 +270,8 @@ class ProjectionContractsHandlerSpec
           originId = originId
         ),
         billing = Option(InstitutionOnboardedBilling("VATNUMBER", "RECIPIENTCODE", Option(true))),
-        updatedAt = Option(managerConfirmEvent.timestamp)
+        updatedAt = Option(managerConfirmEvent.timestamp),
+        createdAt = OffsetDateTime.now()
       )
 
       storeRelationship(

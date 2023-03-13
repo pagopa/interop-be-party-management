@@ -7,7 +7,7 @@ import it.pagopa.interop.partymanagement.model.party.{Party, PersistedPartyRelat
 import it.pagopa.interop.partymanagement.model.persistence._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state._
-import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.utils._
+import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.utils.{getParty, _}
 
 import java.util.UUID
 
@@ -167,6 +167,21 @@ package object v1 {
     event =>
       Right[Throwable, PartyRelationshipEnabledV1](
         PartyRelationshipEnabledV1.of(event.partyRelationshipId.toString, event.timestamp.toMillis)
+      )
+
+  implicit def partyRelationshipUpdateBillingV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipUpdateBillingV1, PartyRelationshipUpdateBilling] = event =>
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+    } yield PartyRelationshipUpdateBilling(uuid, getBilling(event.billing), timestamp)
+
+  implicit def partyRelationshipUpdateBillingV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipUpdateBilling, PartyRelationshipUpdateBillingV1] =
+    event =>
+      Right[Throwable, PartyRelationshipUpdateBillingV1](
+        PartyRelationshipUpdateBillingV1
+          .of(event.partyRelationshipId.toString, getBillingV1FromBilling(event.billing), event.timestamp.toMillis)
       )
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
