@@ -1,6 +1,6 @@
 package it.pagopa.interop.partymanagement.model.party
 
-import it.pagopa.interop.partymanagement.model.Relationship
+import it.pagopa.interop.partymanagement.model.{PaymentServiceProvider, Relationship, RelationshipState}
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -18,7 +18,9 @@ final case class InstitutionOnboardedNotification(
   institution: InstitutionOnboarded,
   billing: Option[InstitutionOnboardedBilling],
   updatedAt: Option[OffsetDateTime],
-  createdAt: OffsetDateTime
+  closedAt: Option[OffsetDateTime],
+  createdAt: OffsetDateTime,
+  psp: Option[PSP]
 )
 
 case class InstitutionOnboarded(
@@ -29,6 +31,19 @@ case class InstitutionOnboarded(
   taxCode: String,
   origin: String,
   originId: String
+)
+
+case class PSP(
+  abiCode: Option[String],
+  vatNumberGroup: Option[Boolean],
+  contractId: Option[String],
+  providerNames: Option[String],
+  contractType: Option[String],
+  courtesyMail: Option[String],
+  referenteFatturaMail: Option[String],
+  sdd: Option[String],
+  membershipId: Option[String],
+  recipientId: Option[String]
 )
 
 case class InstitutionOnboardedBilling(vatNumber: String, recipientCode: String, publicServices: Option[Boolean])
@@ -46,7 +61,10 @@ object InstitutionOnboardedNotificationObj {
       id = relationship.tokenId,
       internalIstitutionID = institution.id,
       product = productId,
-      state = "ACTIVE",
+      state = relationship.state match {
+        case RelationshipState.DELETED => "CLOSED"
+        case _                         => "ACTIVE"
+      },
       filePath = relationship.filePath,
       fileName = relationship.fileName,
       contentType = relationship.contentType,
@@ -55,7 +73,18 @@ object InstitutionOnboardedNotificationObj {
       institution = InstitutionOnboardedObj.fromInstitution(institution),
       billing = productInfo.map(p => InstitutionOnboardedBillingObj.fromInstitutionProduct(p.billing)),
       updatedAt = relationship.updatedAt,
-      createdAt = relationship.createdAt
+      createdAt = relationship.createdAt,
+      closedAt = relationship.state match {
+        case RelationshipState.DELETED => relationship.updatedAt
+        case _                         => Option.empty
+      },
+      psp = institution.institutionType.getOrElse("") match {
+        case "PSP" =>
+          relationship.institutionUpdate
+            .flatMap(_.paymentServiceProvider)
+            .map(p => PSPObj.fromPaymentServiceProvider(p))
+        case _     => Option.empty
+      }
     )
   }
 }
@@ -77,5 +106,20 @@ object InstitutionOnboardedBillingObj {
     vatNumber = billing.vatNumber,
     recipientCode = billing.recipientCode,
     publicServices = billing.publicServices
+  )
+}
+
+object PSPObj {
+  def fromPaymentServiceProvider(paymentServiceProvider: PaymentServiceProvider): PSP = PSP(
+    abiCode = paymentServiceProvider.abiCode,
+    vatNumberGroup = paymentServiceProvider.vatNumberGroup,
+    contractId = Option.empty,
+    providerNames = Option.empty,
+    contractType = Option.empty,
+    courtesyMail = Option.empty,
+    referenteFatturaMail = Option.empty,
+    sdd = Option.empty,
+    membershipId = Option.empty,
+    recipientId = Option.empty
   )
 }

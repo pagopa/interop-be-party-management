@@ -24,6 +24,7 @@ import it.pagopa.interop.partymanagement.model.party.{
   InstitutionOnboardedNotification,
   InstitutionOnboardedNotificationObj,
   InstitutionParty,
+  PSP,
   Party
 }
 import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
@@ -130,7 +131,6 @@ class ProjectionContractsHandler(
   def notifyInstitutionOnboarded(institutionId: UUID, productId: String, relationship: Relationship)(implicit
     ec: ExecutionContext
   ): Future[Unit] = {
-    logger.info(s"confirming institution having id $institutionId") // apz debug
     for {
       institutionOpt <- institutionService.getInstitutionById(institutionId)
       institution    <- unpackInstitutionParty(institutionOpt)
@@ -147,10 +147,11 @@ class ProjectionContractsHandler(
   }
 
   implicit val institutionOnboardedFormat: RootJsonFormat[InstitutionOnboarded] = jsonFormat7(InstitutionOnboarded)
+  implicit val pspFormat: RootJsonFormat[PSP]                                   = jsonFormat10(PSP)
   implicit val institutionOnboardedBillingFormat: RootJsonFormat[InstitutionOnboardedBilling]           = jsonFormat3(
     InstitutionOnboardedBilling
   )
-  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat13(
+  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat15(
     InstitutionOnboardedNotification
   )
 }
