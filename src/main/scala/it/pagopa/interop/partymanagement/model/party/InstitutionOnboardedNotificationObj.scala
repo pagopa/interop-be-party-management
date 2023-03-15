@@ -2,7 +2,8 @@ package it.pagopa.interop.partymanagement.model.party
 
 import it.pagopa.interop.partymanagement.model.{PaymentServiceProvider, Relationship, RelationshipState}
 
-import java.time.OffsetDateTime
+import java.time.{LocalDateTime, OffsetDateTime, ZoneOffset}
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 final case class InstitutionOnboardedNotification(
@@ -57,6 +58,8 @@ object InstitutionOnboardedNotificationObj {
     val productInfo = institution.products
       .find(p => productId == p.product)
 
+    val FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+
     InstitutionOnboardedNotification(
       id = relationship.tokenId,
       internalIstitutionID = institution.id,
@@ -72,10 +75,18 @@ object InstitutionOnboardedNotificationObj {
       pricingPlan = productInfo.flatMap(_.pricingPlan),
       institution = InstitutionOnboardedObj.fromInstitution(institution),
       billing = productInfo.map(p => InstitutionOnboardedBillingObj.fromInstitutionProduct(p.billing)),
-      updatedAt = relationship.updatedAt,
-      createdAt = relationship.createdAt,
+      updatedAt = relationship.updatedAt.map(t =>
+        LocalDateTime.parse(OffsetDateTime.from(t).format(FORMATTER)).atZone(ZoneOffset.UTC).toOffsetDateTime
+      ),
+      createdAt = LocalDateTime
+        .parse(OffsetDateTime.from(relationship.createdAt).format(FORMATTER))
+        .atZone(ZoneOffset.UTC)
+        .toOffsetDateTime,
       closedAt = relationship.state match {
-        case RelationshipState.DELETED => relationship.updatedAt
+        case RelationshipState.DELETED =>
+          relationship.updatedAt.map(t =>
+            LocalDateTime.parse(OffsetDateTime.from(t).format(FORMATTER)).atZone(ZoneOffset.UTC).toOffsetDateTime
+          )
         case _                         => Option.empty
       },
       psp = institution.institutionType.getOrElse("") match {
