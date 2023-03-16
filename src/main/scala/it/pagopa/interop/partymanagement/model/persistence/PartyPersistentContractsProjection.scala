@@ -151,7 +151,7 @@ class ProjectionContractsHandler(
   implicit val institutionOnboardedBillingFormat: RootJsonFormat[InstitutionOnboardedBilling]           = jsonFormat3(
     InstitutionOnboardedBilling
   )
-  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat15(
+  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat16(
     InstitutionOnboardedNotification
   )
 }

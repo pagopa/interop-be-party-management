@@ -273,7 +273,8 @@ class ProjectionContractsHandlerSpec
         updatedAt = Option(managerConfirmEvent.timestamp),
         createdAt = OffsetDateTime.now(),
         closedAt = Option.empty,
-        psp = Option.empty
+        psp = Option.empty,
+        zipCode = Option("12345")
       )
 
       storeRelationship(
