@@ -402,49 +402,49 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.NotFound
     }
 
-    /*"return 400 when updating an existing institution changing its externalId and block the update" in {
-      val uuid        = UUID.randomUUID()
-      val institution = institutionSeed1.copy(externalId = randomString(), originId = randomString())
-      val expected    = expected1.copy(id = uuid, externalId = institution.externalId, originId = institution.originId)
-
-      (() => uuidSupplier.get).expects().returning(uuid).once()
-
-      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
-
-      prepareTest(institution)
-
-      val updatedExternalId =
-        expected.copy(externalId = s"UPDATED_${expected.externalId}", address = s"UPDATED_${expected.address}")
-
-      val dataExternalId = Marshal(updatedExternalId).to[MessageEntity].map(_.dataBytes).futureValue
-
-      val responseExternalId = updateInstitution(uuid.toString, dataExternalId)
-
-      responseExternalId.status shouldBe StatusCodes.BadRequest
-
-      val updatedOriginId =
-        expected.copy(originId = s"UPDATED_${expected.originId}", address = s"UPDATED_${expected.address}")
-
-      val dataOriginId = Marshal(updatedOriginId).to[MessageEntity].map(_.dataBytes).futureValue
-
-      val responseOrigin = updateInstitution(uuid.toString, dataOriginId)
-
-      responseOrigin.status shouldBe StatusCodes.BadRequest
-
-      val responseGET =
-        Http()
-          .singleRequest(
-            HttpRequest(uri = s"$url/institutions/${uuid.toString}", method = HttpMethods.GET, headers = authorization)
-          )
-          .futureValue
-
-      responseGET.status shouldBe StatusCodes.OK
-
-      val bodyGET = Unmarshal(responseGET.entity).to[Institution].futureValue
-
-      bodyGET shouldBe expected
-    }
-  }*/
+//    "return 400 when updating an existing institution changing its externalId and block the update" in {
+//      val uuid        = UUID.randomUUID()
+//      val institution = institutionSeed1.copy(externalId = randomString(), originId = randomString())
+//      val expected    = expected1.copy(id = uuid, externalId = institution.externalId, originId = institution.originId)
+//
+//      (() => uuidSupplier.get).expects().returning(uuid).once()
+//
+//      (() => offsetDateTimeSupplier.get).expects().returning(timestampValid).once()
+//
+//      prepareTest(institution)
+//
+//      val updatedExternalId =
+//        expected.copy(externalId = s"UPDATED_${expected.externalId}", address = s"UPDATED_${expected.address}")
+//
+//      val dataExternalId = Marshal(updatedExternalId).to[MessageEntity].map(_.dataBytes).futureValue
+//
+//      val responseExternalId = updateInstitution(uuid.toString, dataExternalId)
+//
+//      responseExternalId.status shouldBe StatusCodes.BadRequest
+//
+//      val updatedOriginId =
+//        expected.copy(originId = s"UPDATED_${expected.originId}", address = s"UPDATED_${expected.address}")
+//
+//      val dataOriginId = Marshal(updatedOriginId).to[MessageEntity].map(_.dataBytes).futureValue
+//
+//      val responseOrigin = updateInstitution(uuid.toString, dataOriginId)
+//
+//      responseOrigin.status shouldBe StatusCodes.BadRequest
+//
+//      val responseGET =
+//        Http()
+//          .singleRequest(
+//            HttpRequest(uri = s"$url/institutions/${uuid.toString}", method = HttpMethods.GET, headers = authorization)
+//          )
+//          .futureValue
+//
+//      responseGET.status shouldBe StatusCodes.OK
+//
+//      val bodyGET = Unmarshal(responseGET.entity).to[Institution].futureValue
+//
+//      bodyGET shouldBe expected
+//    }
+  }
 
   "Working on relationships" must {
     import RelationshipPartyApiServiceData._
