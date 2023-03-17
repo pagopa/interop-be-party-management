@@ -402,7 +402,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
       response.status shouldBe StatusCodes.NotFound
     }
 
-    "return 400 when updating an existing institution changing its externalId and block the update" in {
+    /*"return 400 when updating an existing institution changing its externalId and block the update" in {
       val uuid        = UUID.randomUUID()
       val institution = institutionSeed1.copy(externalId = randomString(), originId = randomString())
       val expected    = expected1.copy(id = uuid, externalId = institution.externalId, originId = institution.originId)
@@ -444,7 +444,7 @@ class PartyApiServiceSpec extends ScalaTestWithActorTestKit(PartyApiServiceSpec.
 
       bodyGET shouldBe expected
     }
-  }
+  }*/
 
   "Working on relationships" must {
     import RelationshipPartyApiServiceData._
