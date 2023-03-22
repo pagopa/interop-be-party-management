@@ -65,7 +65,7 @@ object InstitutionOnboardedNotificationObj {
     InstitutionOnboardedNotification(
       id = queueEvent match {
         case QueueEvent.ADD => relationship.tokenId
-        case _              => Some(relationship.id)
+        case _              => Some(UUID.randomUUID())
       },
       internalIstitutionID = institution.id,
       product = productId,
