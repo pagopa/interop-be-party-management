@@ -54,7 +54,8 @@ object InstitutionOnboardedNotificationObj {
   def toNotification(
     institution: InstitutionParty,
     productId: String,
-    relationship: Relationship
+    relationship: Relationship,
+    queueEvent: QueueEvent
   ): InstitutionOnboardedNotification = {
     val productInfo = institution.products
       .find(p => productId == p.product)
@@ -62,7 +63,10 @@ object InstitutionOnboardedNotificationObj {
     val FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
 
     InstitutionOnboardedNotification(
-      id = relationship.tokenId,
+      id = queueEvent match {
+        case QueueEvent.ADD => relationship.tokenId
+        case _              => Some(relationship.id)
+      },
       internalIstitutionID = institution.id,
       product = productId,
       state = relationship.state match {
