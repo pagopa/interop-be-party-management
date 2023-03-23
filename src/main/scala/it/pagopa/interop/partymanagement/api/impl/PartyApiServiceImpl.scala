@@ -150,7 +150,7 @@ class PartyApiServiceImpl(
       institutionParty <- Party.extractInstitutionParty(partyId = id, party = party)
       updatedOrg       <-
         if (
-          institutionParty.externalId == institution.externalId && institutionParty.originId == institution.originId
+          institutionParty.externalId == institution.externalId // && institutionParty.originId == institution.originId
         ) {
           Future.successful(
             InstitutionParty.fromInstitution(institution)(uuid, institutionParty.start, institutionParty.end)

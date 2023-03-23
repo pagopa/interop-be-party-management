@@ -1,8 +1,9 @@
 package it.pagopa.interop.partymanagement.model.party
 
-import it.pagopa.interop.partymanagement.model.Relationship
+import it.pagopa.interop.partymanagement.model.{PaymentServiceProvider, Relationship, RelationshipState}
 
-import java.time.OffsetDateTime
+import java.time.{LocalDateTime, OffsetDateTime, ZoneOffset}
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 final case class InstitutionOnboardedNotification(
@@ -12,13 +13,16 @@ final case class InstitutionOnboardedNotification(
   state: String,
   filePath: Option[String],
   fileName: Option[String],
+  zipCode: Option[String],
   contentType: Option[String],
   onboardingTokenId: Option[UUID],
   pricingPlan: Option[String],
   institution: InstitutionOnboarded,
   billing: Option[InstitutionOnboardedBilling],
   updatedAt: Option[OffsetDateTime],
-  createdAt: OffsetDateTime
+  closedAt: Option[OffsetDateTime],
+  createdAt: OffsetDateTime,
+  psp: Option[PSP]
 )
 
 case class InstitutionOnboarded(
@@ -31,31 +35,73 @@ case class InstitutionOnboarded(
   originId: String
 )
 
+case class PSP(
+  abiCode: Option[String],
+  vatNumberGroup: Option[Boolean],
+  contractId: Option[String],
+  providerNames: Option[String],
+  contractType: Option[String],
+  courtesyMail: Option[String],
+  referenteFatturaMail: Option[String],
+  sdd: Option[String],
+  membershipId: Option[String],
+  recipientId: Option[String]
+)
+
 case class InstitutionOnboardedBilling(vatNumber: String, recipientCode: String, publicServices: Option[Boolean])
 
 object InstitutionOnboardedNotificationObj {
   def toNotification(
     institution: InstitutionParty,
     productId: String,
-    relationship: Relationship
+    relationship: Relationship,
+    queueEvent: QueueEvent
   ): InstitutionOnboardedNotification = {
     val productInfo = institution.products
       .find(p => productId == p.product)
 
+    val FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+
     InstitutionOnboardedNotification(
-      id = relationship.tokenId,
+      id = queueEvent match {
+        case QueueEvent.ADD => relationship.tokenId
+        case _              => Some(UUID.randomUUID())
+      },
       internalIstitutionID = institution.id,
       product = productId,
-      state = "ACTIVE",
+      state = relationship.state match {
+        case RelationshipState.DELETED => "CLOSED"
+        case _                         => "ACTIVE"
+      },
       filePath = relationship.filePath,
       fileName = relationship.fileName,
+      zipCode = relationship.institutionUpdate.flatMap(_.zipCode),
       contentType = relationship.contentType,
       onboardingTokenId = relationship.tokenId,
       pricingPlan = productInfo.flatMap(_.pricingPlan),
       institution = InstitutionOnboardedObj.fromInstitution(institution),
       billing = productInfo.map(p => InstitutionOnboardedBillingObj.fromInstitutionProduct(p.billing)),
-      updatedAt = relationship.updatedAt,
-      createdAt = relationship.createdAt
+      updatedAt = relationship.updatedAt.map(t =>
+        LocalDateTime.parse(OffsetDateTime.from(t).format(FORMATTER)).atZone(ZoneOffset.UTC).toOffsetDateTime
+      ),
+      createdAt = LocalDateTime
+        .parse(OffsetDateTime.from(relationship.createdAt).format(FORMATTER))
+        .atZone(ZoneOffset.UTC)
+        .toOffsetDateTime,
+      closedAt = relationship.state match {
+        case RelationshipState.DELETED =>
+          relationship.updatedAt.map(t =>
+            LocalDateTime.parse(OffsetDateTime.from(t).format(FORMATTER)).atZone(ZoneOffset.UTC).toOffsetDateTime
+          )
+        case _                         => Option.empty
+      },
+      psp = institution.institutionType.getOrElse("") match {
+        case "PSP" =>
+          relationship.institutionUpdate
+            .flatMap(_.paymentServiceProvider)
+            .map(p => PSPObj.fromPaymentServiceProvider(p))
+        case _     => Option.empty
+      }
     )
   }
 }
@@ -77,5 +123,20 @@ object InstitutionOnboardedBillingObj {
     vatNumber = billing.vatNumber,
     recipientCode = billing.recipientCode,
     publicServices = billing.publicServices
+  )
+}
+
+object PSPObj {
+  def fromPaymentServiceProvider(paymentServiceProvider: PaymentServiceProvider): PSP = PSP(
+    abiCode = paymentServiceProvider.abiCode,
+    vatNumberGroup = paymentServiceProvider.vatNumberGroup,
+    contractId = Option.empty,
+    providerNames = Option.empty,
+    contractType = Option.empty,
+    courtesyMail = Option.empty,
+    referenteFatturaMail = Option.empty,
+    sdd = Option.empty,
+    membershipId = Option.empty,
+    recipientId = Option.empty
   )
 }
