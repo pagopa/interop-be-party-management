@@ -1918,16 +1918,12 @@ components:
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
     NewDesignUserInstitution:
       type: object
       additionalProperties: false
       required:
         - institutionId
         - products
-        - createdAt
       properties:
         institutionId:
           type: string
@@ -1935,9 +1931,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NewDesignUserInstitutionProduct'
-        createdAt:
-          type: string
-          format: date-time
     NewDesignUserInstitutionProduct:
       type: object
       additionalProperties: false

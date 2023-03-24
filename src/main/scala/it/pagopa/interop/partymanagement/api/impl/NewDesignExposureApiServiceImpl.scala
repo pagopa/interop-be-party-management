@@ -152,13 +152,11 @@ class NewDesignExposureApiServiceImpl(
     NewDesignUser(
       id = uid.toString,
       createdAt = rels.map(_.createdAt).min,
-      updatedAt = rels.map(_.updatedAt).max,
       bindings = rels
         .groupBy(_.to)
         .map(institutionUid2Rels =>
           NewDesignUserInstitution(
             institutionId = institutionUid2Rels._1.toString,
-            createdAt = institutionUid2Rels._2.map(_.createdAt).min,
             products = institutionUid2Rels._2
               .map(rel => {
                 val tokenId = retrieveTokenIdByRelationship(rel)
@@ -270,7 +268,7 @@ class NewDesignExposureApiServiceImpl(
             tokenId = tokenId,
             contract = lastManager.filePath,
             pricingPlan = p.pricingPlan,
-            billing = p.billing.toBilling,
+            billing = p.billing.toBilling.copy(publicServices = p.billing.publicServices.orElse(Some(false))),
             createdAt = productManagers.map(_.createdAt).min,
             updatedAt = lastManager.updatedAt
           )
@@ -294,7 +292,8 @@ class NewDesignExposureApiServiceImpl(
             tokenId = tokenId,
             contract = lastManager.filePath,
             pricingPlan = lastManager.pricingPlan,
-            billing = lastManager.billing.get,
+            billing =
+              lastManager.billing.get.copy(publicServices = lastManager.billing.get.publicServices.orElse(Some(false))),
             createdAt = productManagers.map(_.createdAt).min,
             updatedAt = lastManager.updatedAt
           )
@@ -320,7 +319,7 @@ class NewDesignExposureApiServiceImpl(
         businessRegisterPlace = party.businessRegisterPlace,
         supportEmail = party.supportEmail,
         supportPhone = party.supportPhone,
-        imported = party.imported,
+        imported = party.imported.orElse(Some(false)),
         onboarding = onboardedProducts.concat(pendingProducts).toSeq,
         createdAt = party.start
       )
@@ -407,7 +406,9 @@ class NewDesignExposureApiServiceImpl(
               contractVersion = token.contractInfo.version,
               contractSigned = manager.flatMap(_.filePath),
               users = legals.map(u => NewDesignTokenUser(userId = u.from.toString, role = u.role)),
-              institutionUpdate = managerNoTokenRelConfirmed.institutionUpdate,
+              institutionUpdate = managerNoTokenRelConfirmed.institutionUpdate.map(i =>
+                i.copy(imported = i.imported.orElse(Some(false)))
+              ),
               createdAt = managerNoTokenRelConfirmed.createdAt,
               updatedAt = managerNoTokenRelConfirmed.updatedAt
             )

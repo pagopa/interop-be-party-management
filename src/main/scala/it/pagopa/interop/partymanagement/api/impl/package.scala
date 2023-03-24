@@ -50,10 +50,10 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val newDesignUserInstitutionProductFormat: RootJsonFormat[NewDesignUserInstitutionProduct] = jsonFormat10(
     NewDesignUserInstitutionProduct
   )
-  implicit val newDesignUserInstitutionFormat: RootJsonFormat[NewDesignUserInstitution]               = jsonFormat3(
+  implicit val newDesignUserInstitutionFormat: RootJsonFormat[NewDesignUserInstitution]               = jsonFormat2(
     NewDesignUserInstitution
   )
-  implicit val newDesignUserFormat: RootJsonFormat[NewDesignUser] = jsonFormat4(NewDesignUser)
+  implicit val newDesignUserFormat: RootJsonFormat[NewDesignUser] = jsonFormat3(NewDesignUser)
 
   implicit val newDesignInstitutionOnboardingFormat: RootJsonFormat[NewDesignInstitutionOnboarding] = jsonFormat8(
     NewDesignInstitutionOnboarding
