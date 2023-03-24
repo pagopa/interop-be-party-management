@@ -17,14 +17,16 @@ import it.pagopa.interop.commons.utils.TypeConversions.OptionOps
 import it.pagopa.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
 import it.pagopa.interop.partymanagement.common.system._
 import it.pagopa.interop.partymanagement.error.PartyManagementErrors.{GetInstitutionError, GetRelationshipNotFound}
-import it.pagopa.interop.partymanagement.model.PartyRole
+import it.pagopa.interop.partymanagement.model.{PartyRole, Relationship}
 import it.pagopa.interop.partymanagement.model.party.{
   InstitutionOnboarded,
   InstitutionOnboardedBilling,
   InstitutionOnboardedNotification,
   InstitutionOnboardedNotificationObj,
   InstitutionParty,
-  Party
+  PSP,
+  Party,
+  QueueEvent
 }
 import it.pagopa.interop.partymanagement.service.{InstitutionService, RelationshipService}
 import org.slf4j.{Logger, LoggerFactory}
@@ -38,6 +40,7 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import akka.projection.HandlerRecoveryStrategy
+
 import scala.concurrent.duration._
 
 class PartyPersistentContractsProjection(
@@ -93,22 +96,24 @@ class ProjectionContractsHandler(
 
   override def process(envelope: EventEnvelope[Event]): DBIO[Done] = {
     envelope.event match {
-      case event: PartyRelationshipConfirmed =>
-        checkRelationshipConfirmed(event)
-      case _                                 =>
+      case event: PartyRelationshipConfirmed     =>
+        checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId), QueueEvent.ADD)
+      case event: PartyRelationshipUpdateBilling =>
+        checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId), QueueEvent.UPDATE)
+      case _                                     =>
         logger.debug("This is the envelope event payload > {} On tagged projection > {}", envelope.event, tag)
         DBIOAction.successful(Done)
     }
   }
 
-  private def checkRelationshipConfirmed(event: PartyRelationshipConfirmed): DBIO[Done] = {
+  private def checkRelationshipConfirmed(event: PartyRelationshipWithId, queueEvent: QueueEvent): DBIO[Done] = {
     logger.info(s"projecting confirmation of relationship having id ${event.partyRelationshipId}") // apz debug
     val result = for {
       found             <- relationshipService.getRelationshipById(event.partyRelationshipId)
       partyRelationship <- found.toFuture(GetRelationshipNotFound(event.partyRelationshipId.toString))
       _                 <-
         if (partyRelationship.role == PartyRole.MANAGER)
-          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, event)
+          notifyInstitutionOnboarded(partyRelationship.to, partyRelationship.product.id, partyRelationship, queueEvent)
         else Future.unit
     } yield Done
 
@@ -124,20 +129,20 @@ class ProjectionContractsHandler(
 
     DBIOAction.from(result)
   }
-
   def notifyInstitutionOnboarded(
     institutionId: UUID,
     productId: String,
-    managerRelationshipConfirm: PartyRelationshipConfirmed
+    relationship: Relationship,
+    queueEvent: QueueEvent
   )(implicit ec: ExecutionContext): Future[Unit] = {
-    logger.info(s"confirming institution having id $institutionId") // apz debug
     for {
       institutionOpt <- institutionService.getInstitutionById(institutionId)
       institution    <- unpackInstitutionParty(institutionOpt)
       notification = InstitutionOnboardedNotificationObj.toNotification(
         institution,
         productId,
-        managerRelationshipConfirm
+        relationship,
+        queueEvent
       )
       _ <- datalakeContractsPublisher.send(notification)
     } yield ()
@@ -151,10 +156,11 @@ class ProjectionContractsHandler(
   }
 
   implicit val institutionOnboardedFormat: RootJsonFormat[InstitutionOnboarded] = jsonFormat7(InstitutionOnboarded)
+  implicit val pspFormat: RootJsonFormat[PSP]                                   = jsonFormat10(PSP)
   implicit val institutionOnboardedBillingFormat: RootJsonFormat[InstitutionOnboardedBilling]           = jsonFormat3(
     InstitutionOnboardedBilling
   )
-  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat12(
+  implicit val institutionOnboardedNotificationFormat: RootJsonFormat[InstitutionOnboardedNotification] = jsonFormat16(
     InstitutionOnboardedNotification
   )
 }

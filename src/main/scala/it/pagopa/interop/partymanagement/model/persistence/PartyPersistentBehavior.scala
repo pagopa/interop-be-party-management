@@ -10,6 +10,7 @@ import it.pagopa.interop.commons.utils.OpenapiUtils._
 import it.pagopa.interop.partymanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.{
+  Billing,
   CollectionSearchMode,
   Institution,
   PartyRole,
@@ -20,6 +21,7 @@ import it.pagopa.interop.partymanagement.service.OffsetDateTimeSupplier
 import org.slf4j.LoggerFactory
 
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
 
@@ -379,6 +381,19 @@ object PartyPersistentBehavior {
         replyTo ! state.getPartyRelationshipByAttributes(from, to, role, product, productRole)
         Effect.none[Event, State]
 
+      case UpdateBilling(partyRelationshipId: UUID, billing: Billing, replyTo) =>
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipUpdateBilling(rel.id, billing, offsetDateTimeSupplier.get))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None      =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
         Effect.none[Event, State]
@@ -419,6 +434,9 @@ object PartyPersistentBehavior {
         state.enableRelationship(relationshipId, timestamp)
       case TokenAdded(token)                                     => state.addToken(token)
       case TokenUpdated(token)                                   => state.updateToken(token)
+      case PartyRelationshipUpdateBilling(partyRelationshipId, billing, timestamp) =>
+        state.updateBilling(partyRelationshipId, billing, timestamp)
+      case PartyRelationshipWithId(partyRelationshipId) => state.partyRelationship(partyRelationshipId)
     }
 
   val TypeKey: EntityTypeKey[Command] =

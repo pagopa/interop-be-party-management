@@ -63,6 +63,12 @@ message PartyRelationshipEnabledV1 {
   required int64 timestamp = 2;
 }
 
+message PartyRelationshipUpdateBillingV1 {
+  required string partyRelationshipId = 1;
+  required BillingV1 billing = 2;
+  required int64 timestamp = 3;
+}
+
 message TokenAddedV1 {
   required TokenV1 token = 1;
 }

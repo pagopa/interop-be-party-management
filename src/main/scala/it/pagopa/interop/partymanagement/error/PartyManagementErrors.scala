@@ -137,12 +137,27 @@ object PartyManagementErrors {
         s"Invalid search configuration while searching institutions related to $geoTaxonomies and searchMode $searchMode: $desc"
       )
 
+  final case class BillingRelationshipError(id: String)
+      extends ComponentError("0055", s"Error while updating billing data for relationship $id")
+
+  final case class BillingRelationshipNotFound(id: String)
+      extends ComponentError("0056", s"Error while updating billing data for relationship $id - not found")
+
+  final case class BillingRelationshipBadRequest(id: String)
+      extends ComponentError("0057", s"Error while updating billing data for relationship $id - bad request")
+
+  final case class DeleteTokenBadRequest(errors: String)
+      extends ComponentError("0058", s"Error while deleting token with errors: $errors")
+
+  final case class DeleteTokenError(message: String)
+      extends ComponentError("0059", s"Error while deleting token: $message")
+
   final case class FindNewDesignUserError(desc: String)
-      extends ComponentError("0055", s"Error while returning users mapping them into new design: $desc")
+      extends ComponentError("0060", s"Error while returning users mapping them into new design: $desc")
 
   final case class FindNewDesignInstitutionError(desc: String)
-      extends ComponentError("0056", s"Error while returning institutions mapping them into new design: $desc")
+      extends ComponentError("0061", s"Error while returning institutions mapping them into new design: $desc")
 
   final case class FindNewDesignTokenError(desc: String)
-      extends ComponentError("0057", s"Error while returning tokens mapping them into new design: $desc")
+      extends ComponentError("0062", s"Error while returning tokens mapping them into new design: $desc")
 }

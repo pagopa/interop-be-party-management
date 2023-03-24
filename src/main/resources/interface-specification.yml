@@ -615,6 +615,42 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: enablePartyRelationshipById
       description: 'Activate Relationship by ID'
+  '/relationships/{relationshipId}/billing':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+    post:
+      summary: Update Billing data for Relationship by plaftorm ID
+      tags:
+        - party
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Billing'
+      responses:
+        '204':
+          description: Relationship updated
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: updateBillingRelationshipById
+      description: 'Update Billing data for Relationship by ID'
   /relationships/{relationshipId}/institution:
     get:
       security: [ ]
@@ -767,6 +803,38 @@ paths:
             format: uuid
       responses:
         '200':
+          description: successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Token not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /tokens/{tokenId}/delete:
+    post:
+      security: [{}]
+      tags:
+        - public
+      summary: Delete a token, close contract
+      description: Return ok
+      operationId: deleteToken
+      parameters:
+        - name: tokenId
+          in: path
+          description: The token id to delete
+          required: true
+          schema:
+            description: to be defined
+            type: string
+            format: uuid
+      responses:
+        '201':
           description: successful operation
         '400':
           description: Invalid ID supplied
@@ -1445,6 +1513,9 @@ components:
           $ref: '#/components/schemas/Billing'
         state:
           $ref: '#/components/schemas/RelationshipState'
+        createdAt:
+          type: string
+          format: date-time
       additionalProperties: false
       required:
         - from
