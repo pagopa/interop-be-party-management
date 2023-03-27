@@ -2073,6 +2073,7 @@ components:
       additionalProperties: false
       required:
         - id
+        - type
         - status
         - institutionId
         - productId
@@ -2084,6 +2085,8 @@ components:
         - createdAt
       properties:
         id:
+          type: string
+        type:
           type: string
         status:
           type: RelationshipState

@@ -397,6 +397,7 @@ class NewDesignExposureApiServiceImpl(
           Some(
             NewDesignToken(
               id = token.id.toString,
+              `type` = "INSTITUTION",
               status = manager.map(_.state).getOrElse(RelationshipState.PENDING),
               institutionId = managerNoTokenRelConfirmed.to.toString,
               productId = managerNoTokenRelConfirmed.product.id,
