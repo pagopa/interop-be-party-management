@@ -305,7 +305,13 @@ class NewDesignExposureApiServiceImpl(
         origin = party.origin,
         originId = party.originId,
         description = party.description,
-        institutionType = party.institutionType,
+        institutionType = party.institutionType.orElse(
+          product2managers
+            .flatMap(_._2)
+            .map(r => r.institutionUpdate.flatMap(_.institutionType))
+            .headOption
+            .getOrElse(Some("UNKNOWN"))
+        ),
         digitalAddress = party.digitalAddress,
         address = party.address,
         zipCode = party.zipCode,
