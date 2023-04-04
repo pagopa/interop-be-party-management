@@ -123,8 +123,10 @@ class ProjectionContractsHandler(
           s"Error projecting confirmation of relationshing having id ${event.partyRelationshipId} on queue",
           e
         )
+        DBIOAction.failed(e)
       case Success(_) =>
         logger.info(s"Message has been sent on queue") // apz debug
+        DBIOAction.successful(Done)
     }
 
     DBIOAction.from(result)
