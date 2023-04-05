@@ -6,6 +6,7 @@ import it.pagopa.interop.partymanagement.common.utils.ErrorOr
 import it.pagopa.interop.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 import it.pagopa.interop.partymanagement.model.persistence._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.events._
+import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.CreatedAtV1
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.state._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.utils.{getParty, _}
 
@@ -183,6 +184,23 @@ package object v1 {
         PartyRelationshipUpdateBillingV1
           .of(event.partyRelationshipId.toString, getBillingV1FromBilling(event.billing), event.timestamp.toMillis)
       )
+
+  implicit def partyRelationshipUpdateCreatedAtV1PersistEventDeserializer
+    : PersistEventDeserializer[PartyRelationshipUpdateCreatedAtV1, PartyRelationshipUpdateCreatedAt] = event =>
+    for {
+      uuid      <- stringToUUID(event.partyRelationshipId)
+      timestamp <- event.timestamp.toOffsetDateTime.toEither
+      createdAt <- getCreatedAt(event.createdAt)
+    } yield PartyRelationshipUpdateCreatedAt(uuid, createdAt, timestamp)
+
+  implicit def partyRelationshipUpdateCreatedAtV1PersistEventSerializer
+    : PersistEventSerializer[PartyRelationshipUpdateCreatedAt, PartyRelationshipUpdateCreatedAtV1] =
+    event => {
+      for {
+        createdAt <- getCreatedAtV1(event.createdAtSeed).map(c => CreatedAtV1(createdAt = c.createdAt))
+      } yield PartyRelationshipUpdateCreatedAtV1
+        .of(event.partyRelationshipId.toString, createdAt, event.timestamp.toMillis)
+    }
 
   implicit def tokenAddedV1PersistEventDeserializer: PersistEventDeserializer[TokenAddedV1, TokenAdded] = event =>
     getToken(event.token).map(TokenAdded)
