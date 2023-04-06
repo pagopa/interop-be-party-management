@@ -152,4 +152,9 @@ object PartyManagementErrors {
   final case class DeleteTokenError(message: String)
       extends ComponentError("0059", s"Error while deleting token: $message")
 
+  final case class CreatedAtRelationshipNotFound(id: String)
+      extends ComponentError("0060", s"Error while updating createdAt data for relationship $id - not found")
+
+  final case class CreatedAtRelationshipBadRequest(id: String)
+      extends ComponentError("0061", s"Error while updating createdAt data for relationship $id - bad request")
 }

@@ -1,6 +1,6 @@
 package it.pagopa.interop.partymanagement.model.persistence
 
-import it.pagopa.interop.partymanagement.model.Billing
+import it.pagopa.interop.partymanagement.model.{Billing, CreatedAtSeed}
 import it.pagopa.interop.partymanagement.model.party.{Party, PersistedPartyRelationship, Token}
 
 import java.time.OffsetDateTime
@@ -41,6 +41,11 @@ final case class PartyRelationshipEnabled(partyRelationshipId: UUID, timestamp: 
     extends PartyRelationshipEvent
 final case class PartyRelationshipUpdateBilling(partyRelationshipId: UUID, billing: Billing, timestamp: OffsetDateTime)
     extends PartyRelationshipEvent
+final case class PartyRelationshipUpdateCreatedAt(
+  partyRelationshipId: UUID,
+  createdAtSeed: CreatedAtSeed,
+  timestamp: OffsetDateTime
+) extends PartyRelationshipEvent
 final case class PartyRelationshipWithId(partyRelationshipId: UUID)                    extends PartyRelationshipEvent
 /* Token Event */
 final case class TokenAdded(token: Token)                                              extends TokenEvent

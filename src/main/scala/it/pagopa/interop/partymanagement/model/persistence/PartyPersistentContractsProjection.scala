@@ -84,11 +84,13 @@ class ProjectionContractsHandler(
 
   override def process(envelope: EventEnvelope[Event]): DBIO[Done] = {
     envelope.event match {
-      case event: PartyRelationshipConfirmed     =>
+      case event: PartyRelationshipConfirmed       =>
         checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId), QueueEvent.ADD)
-      case event: PartyRelationshipUpdateBilling =>
+      case event: PartyRelationshipUpdateBilling   =>
         checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId), QueueEvent.UPDATE)
-      case _                                     =>
+      case event: PartyRelationshipUpdateCreatedAt =>
+        checkRelationshipConfirmed(PartyRelationshipWithId(event.partyRelationshipId), QueueEvent.UPDATE)
+      case _                                       =>
         logger.debug("This is the envelope event payload > {} On tagged projection > {}", envelope.event, tag)
         DBIOAction.successful(Done)
     }
