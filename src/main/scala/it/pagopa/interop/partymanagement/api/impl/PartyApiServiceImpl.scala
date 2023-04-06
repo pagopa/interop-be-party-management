@@ -406,11 +406,11 @@ class PartyApiServiceImpl(
       } yield re.map(_.toRelationship)
 
     def retrieveRelationshipsByProduct(
-       roles: List[PartyRole],
-       states: List[RelationshipState],
-       product: List[String],
-       productRoles: List[String]
-     ): Future[List[Relationship]] = {
+      roles: List[PartyRole],
+      states: List[RelationshipState],
+      products: List[String],
+      productRoles: List[String]
+    ): Future[List[Relationship]] = {
       val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
         .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
         .toList
@@ -418,7 +418,7 @@ class PartyApiServiceImpl(
       for {
         re <- Future.traverse(commanders)(
           _.ask[List[PersistedPartyRelationship]](ref =>
-            GetPartyRelationshipsByProduct(roles, states, product, productRoles, ref)
+            GetPartyRelationshipsByProduct(roles, states, products, productRoles, ref)
           )
         )
       } yield re.flatten.map(_.toRelationship)
@@ -431,13 +431,14 @@ class PartyApiServiceImpl(
       states: List[RelationshipState],
       product: List[String],
       productRoles: List[String]
-    ): Future[List[Relationship]] = (from, to, product) match {
-      case (Some(f), Some(t), List.empty) =>
+    ): Future[List[Relationship]] = (from, to) match {
+      case (Some(f), Some(t)) =>
         retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
-      case (Some(f), None, List.empty)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
-      case (None, Some(t), List.empty)    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
-      case (None, None, product)    => retrieveRelationshipsByProduct(roles, states, product, productRoles)
-      case _                  => Future.failed(MissingQueryParam)
+      case (Some(f), None)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
+      case (None, Some(t))    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
+      case _                  =>
+        if (product.isEmpty) Future.failed(MissingQueryParam)
+        else retrieveRelationshipsByProduct(roles, states, product, productRoles)
     }
 
     val result: Future[List[Relationship]] = for {

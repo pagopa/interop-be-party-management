@@ -97,7 +97,7 @@ final case class GetPartyRelationshipsByTo(
 final case class GetPartyRelationshipsByProduct(
   roles: List[PartyRole],
   states: List[RelationshipState],
-  product: String,
+  product: List[String],
   productRoles: List[String],
   replyTo: ActorRef[List[PersistedPartyRelationship]]
 ) extends PartyRelationshipCommand
