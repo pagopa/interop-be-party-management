@@ -61,4 +61,7 @@ object PartyApiMarshallerImpl extends PartyApiMarshaller with SprayJsonSupport w
   override implicit def fromEntityUnmarshallerBilling: FromEntityUnmarshaller[Billing] =
     sprayJsonUnmarshaller[Billing]
 
+  override implicit def fromEntityUnmarshallerCreatedAtSeed: FromEntityUnmarshaller[CreatedAtSeed] =
+    sprayJsonUnmarshaller[CreatedAtSeed]
+
 }

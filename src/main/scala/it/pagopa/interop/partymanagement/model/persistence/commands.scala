@@ -9,6 +9,7 @@ import it.pagopa.interop.partymanagement.model.{
   Attribute,
   Billing,
   CollectionSearchMode,
+  CreatedAtSeed,
   Institution,
   PartyRole,
   RelationshipState,
@@ -110,3 +111,8 @@ final case class UpdateToken(tokenId: UUID, digest: String, replyTo: ActorRef[St
     extends TokenCommand
 final case class UpdateBilling(partyRelationshipId: UUID, billing: Billing, replyTo: ActorRef[StatusReply[Unit]])
     extends PartyRelationshipCommand
+final case class UpdateCreatedAt(
+  partyRelationshipId: UUID,
+  createdAtSeed: CreatedAtSeed,
+  replyTo: ActorRef[StatusReply[Unit]]
+) extends PartyRelationshipCommand
