@@ -305,6 +305,14 @@ object PartyPersistentBehavior {
         replyTo ! filtered
         Effect.none
 
+      case GetPartyRelationshipsByProduct(roles, states, products, productRoles, replyTo) =>
+        val relationships: List[PersistedPartyRelationship] =
+          state.relationships.values.filter(_.product.id == products.head).toList
+        val filtered: List[PersistedPartyRelationship]      =
+          filterRelationships(relationships, roles, states, products, productRoles)
+        replyTo ! filtered
+        Effect.none
+
       case GetToken(tokenId, replyTo) =>
         val token: Option[Token] = state.tokens.get(tokenId)
         replyTo ! token

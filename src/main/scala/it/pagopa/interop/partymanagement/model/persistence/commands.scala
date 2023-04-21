@@ -95,6 +95,14 @@ final case class GetPartyRelationshipsByTo(
   replyTo: ActorRef[List[PersistedPartyRelationship]]
 ) extends PartyRelationshipCommand
 
+final case class GetPartyRelationshipsByProduct(
+  roles: List[PartyRole],
+  states: List[RelationshipState],
+  product: List[String],
+  productRoles: List[String],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
+
 final case class GetPartyRelationshipByAttributes(
   from: UUID,
   to: UUID,
