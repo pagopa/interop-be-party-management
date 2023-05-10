@@ -7,8 +7,8 @@ import akka.util.Timeout
 import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.partymanagement.error.PartyManagementErrors.MissingQueryParam
 import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationship
-import it.pagopa.interop.partymanagement.model.{PartyRole, Relationship, RelationshipState}
 import it.pagopa.interop.partymanagement.model.persistence._
+import it.pagopa.interop.partymanagement.model.{PartyRole, Relationship, RelationshipState}
 import it.pagopa.interop.partymanagement.service._
 
 import java.util.UUID
@@ -80,6 +80,25 @@ class RelationshipServiceImpl(
       )
     } yield re.map(_.toRelationship)
 
+  def retrieveRelationshipsByProduct(
+    roles: List[PartyRole],
+    states: List[RelationshipState],
+    products: List[String],
+    productRoles: List[String]
+  )(implicit timeout: Timeout): Future[List[Relationship]] = {
+    val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    for {
+      re <- Future.traverse(commanders)(
+        _.ask[List[PersistedPartyRelationship]](ref =>
+          GetPartyRelationshipsByProduct(roles, states, products, productRoles, ref)
+        )
+      )
+    } yield re.flatten.map(_.toRelationship)
+  }
+
   override def relationshipsFromParams(
     from: Option[UUID],
     to: Option[UUID],
@@ -92,7 +111,9 @@ class RelationshipServiceImpl(
       retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
     case (Some(f), None)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
     case (None, Some(t))    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
-    case _                  => Future.failed(MissingQueryParam)
+    case _                  =>
+      if (product.isEmpty) Future.failed(MissingQueryParam)
+      else retrieveRelationshipsByProduct(roles, states, product, productRoles)
   }
 
   override def getRelationshipsByUserIds(userIds: List[UUID])(implicit timeout: Timeout): Future[Seq[Relationship]] = {

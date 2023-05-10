@@ -372,25 +372,6 @@ class PartyApiServiceImpl(
     logger.info(s"Getting relationships for from: ${from.getOrElse("Empty")} / to: ${to
         .getOrElse("Empty")}/ roles: $roles/ states: $states/ products: $products/ productRoles: $productRoles")
 
-    def retrieveRelationshipsByProduct(
-      roles: List[PartyRole],
-      states: List[RelationshipState],
-      products: List[String],
-      productRoles: List[String]
-    ): Future[List[Relationship]] = {
-      val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
-        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-        .toList
-
-      for {
-        re <- Future.traverse(commanders)(
-          _.ask[List[PersistedPartyRelationship]](ref =>
-            GetPartyRelationshipsByProduct(roles, states, products, productRoles, ref)
-          )
-        )
-      } yield re.flatten.map(_.toRelationship)
-    }
-
     val result: Future[List[Relationship]] = for {
       fromUuid    <- from.traverse(_.toFutureUUID)
       toUuid      <- to.traverse(_.toFutureUUID)
