@@ -255,9 +255,15 @@ class NewDesignExposureApiServiceImpl(
 
       onboardedProducts = party.products
         .map(p => {
-          val productManagers = product2managers(p.product)
-          val lastManager     = retrieveLastRelationships(productManagers).head
+          val productManagers = product2managers.getOrElse(p.product, null)
 
+          if (productManagers == null) {
+            throw new IllegalStateException(
+              s"Found institution related to a product without a MANAGER! institutionId:${party.id}, product:${p.product}"
+            )
+          }
+
+          val lastManager = retrieveLastRelationships(productManagers).head
           warnIfNoContract(lastManager)
 
           val tokenId = retrieveTokenId(Some(lastManager), productManagers)
