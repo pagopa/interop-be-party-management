@@ -152,12 +152,18 @@ object PartyManagementErrors {
   final case class DeleteTokenError(message: String)
       extends ComponentError("0059", s"Error while deleting token: $message")
 
+  final case class CreatedAtRelationshipNotFound(id: String)
+      extends ComponentError("0060", s"Error while updating createdAt data for relationship $id - not found")
+
+  final case class CreatedAtRelationshipBadRequest(id: String)
+      extends ComponentError("0061", s"Error while updating createdAt data for relationship $id - bad request")
+
   final case class FindNewDesignUserError(desc: String)
-      extends ComponentError("0060", s"Error while returning users mapping them into new design: $desc")
+      extends ComponentError("0062", s"Error while returning users mapping them into new design: $desc")
 
   final case class FindNewDesignInstitutionError(desc: String)
-      extends ComponentError("0061", s"Error while returning institutions mapping them into new design: $desc")
+      extends ComponentError("0063", s"Error while returning institutions mapping them into new design: $desc")
 
   final case class FindNewDesignTokenError(desc: String)
-      extends ComponentError("0062", s"Error while returning tokens mapping them into new design: $desc")
+      extends ComponentError("0064", s"Error while returning tokens mapping them into new design: $desc")
 }

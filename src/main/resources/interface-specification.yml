@@ -651,6 +651,42 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: updateBillingRelationshipById
       description: 'Update Billing data for Relationship by ID'
+  '/relationships/{relationshipId}/createdate':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+    post:
+      summary: Update Created data for Relationship by plaftorm ID
+      tags:
+        - party
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatedAtSeed'
+      responses:
+        '204':
+          description: Relationship updated
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Relationship not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      operationId: updateCreatedAtRelationshipById
+      description: 'Update CreatedAt data for Relationship by ID'
   /relationships/{relationshipId}/institution:
     get:
       security: [ ]
@@ -1629,6 +1665,15 @@ components:
       additionalProperties: false
       required:
         - checksum
+    CreatedAtSeed:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+      additionalProperties: false
+      required:
+        - createdAt
     TokenSeed:
       type: object
       properties:

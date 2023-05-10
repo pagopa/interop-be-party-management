@@ -69,6 +69,12 @@ message PartyRelationshipUpdateBillingV1 {
   required int64 timestamp = 3;
 }
 
+message PartyRelationshipUpdateCreatedAtV1 {
+  required string partyRelationshipId = 1;
+  required CreatedAtV1 createdAt = 2;
+  required int64 timestamp = 3;
+}
+
 message TokenAddedV1 {
   required TokenV1 token = 1;
 }

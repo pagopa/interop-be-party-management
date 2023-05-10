@@ -3,7 +3,7 @@ package it.pagopa.interop.partymanagement.model.persistence.serializer.v1
 import cats.implicits._
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.partymanagement.common.utils.ErrorOr
-import it.pagopa.interop.partymanagement.model.Billing
+import it.pagopa.interop.partymanagement.model.{Billing, CreatedAtSeed}
 import it.pagopa.interop.partymanagement.model.party.PersistedPartyRelationshipState._
 import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.party.PartyV1.Empty
@@ -20,6 +20,7 @@ import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relatio
 }
 import it.pagopa.interop.partymanagement.model.persistence.serializer.v1.relationship.{
   BillingV1,
+  CreatedAtV1,
   DataProtectionOfficerV1,
   GeographicTaxonomyV1,
   InstitutionUpdateV1,
@@ -291,6 +292,12 @@ object utils {
     )
   }
 
+  def getCreatedAt(createdAtV1: CreatedAtV1): ErrorOr[CreatedAtSeed] = {
+    for {
+      createdAt <- createdAtV1.createdAt.toOffsetDateTime.toEither
+    } yield CreatedAtSeed(createdAt = createdAt)
+  }
+
   def getToken(tokenV1: TokenV1): ErrorOr[Token] = {
     for {
       id       <- tokenV1.id.toUUID.toEither
@@ -326,7 +333,10 @@ object utils {
         contractInfo = OnboardingContractInfoV1(version = token.contractInfo.version, path = token.contractInfo.path)
       )
     )
+  }
 
+  def getCreatedAtV1(createdAtSeed: CreatedAtSeed): ErrorOr[CreatedAtV1] = {
+    createdAtSeed.createdAt.asFormattedString.toEither.map(createdAt => CreatedAtV1(createdAt = createdAt))
   }
 
   def extractTupleFromPartiesV1(partiesV1: PartiesV1): Either[Throwable, (UUID, Party)] = {

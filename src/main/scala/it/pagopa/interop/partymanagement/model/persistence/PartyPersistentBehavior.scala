@@ -12,6 +12,7 @@ import it.pagopa.interop.partymanagement.model.party._
 import it.pagopa.interop.partymanagement.model.{
   Billing,
   CollectionSearchMode,
+  CreatedAtSeed,
   Institution,
   PartyRole,
   RelationshipState,
@@ -313,6 +314,14 @@ object PartyPersistentBehavior {
         replyTo ! filtered
         Effect.none
 
+      case GetPartyRelationshipsByProduct(roles, states, products, productRoles, replyTo) =>
+        val relationships: List[PersistedPartyRelationship] =
+          state.relationships.values.filter(_.product.id == products.head).toList
+        val filtered: List[PersistedPartyRelationship]      =
+          filterRelationships(relationships, roles, states, products, productRoles)
+        replyTo ! filtered
+        Effect.none
+
       case GetPartyRelationshipsByUserIds(userIds, states, replyTo) =>
         val relationships: List[PersistedPartyRelationship] =
           state.relationships.values.filter(rel => userIds.contains(rel.from)).toList
@@ -394,6 +403,19 @@ object PartyPersistentBehavior {
             Effect.none
         }
 
+      case UpdateCreatedAt(partyRelationshipId: UUID, createdAtSeed: CreatedAtSeed, replyTo) =>
+        val relationship: Option[PersistedPartyRelationship] = state.relationships.get(partyRelationshipId)
+
+        relationship match {
+          case Some(rel) =>
+            Effect
+              .persist(PartyRelationshipUpdateCreatedAt(rel.id, createdAtSeed, offsetDateTimeSupplier.get))
+              .thenRun(_ => replyTo ! StatusReply.Success(()))
+          case None      =>
+            replyTo ! StatusReply.Error(s"Relationship ${partyRelationshipId.toString} not found")
+            Effect.none
+        }
+
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
         Effect.none[Event, State]
@@ -434,8 +456,10 @@ object PartyPersistentBehavior {
         state.enableRelationship(relationshipId, timestamp)
       case TokenAdded(token)                                     => state.addToken(token)
       case TokenUpdated(token)                                   => state.updateToken(token)
-      case PartyRelationshipUpdateBilling(partyRelationshipId, billing, timestamp) =>
+      case PartyRelationshipUpdateBilling(partyRelationshipId, billing, timestamp)         =>
         state.updateBilling(partyRelationshipId, billing, timestamp)
+      case PartyRelationshipUpdateCreatedAt(partyRelationshipId, createdAtSeed, timestamp) =>
+        state.updateCreatedAt(partyRelationshipId, createdAtSeed, timestamp)
       case PartyRelationshipWithId(partyRelationshipId) => state.partyRelationship(partyRelationshipId)
     }
 

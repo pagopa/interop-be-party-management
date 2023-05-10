@@ -1,6 +1,6 @@
 package it.pagopa.interop.partymanagement.model.persistence
 
-import it.pagopa.interop.partymanagement.model.Billing
+import it.pagopa.interop.partymanagement.model.{Billing, CreatedAtSeed}
 import it.pagopa.interop.partymanagement.model.party._
 import org.slf4j.LoggerFactory
 
@@ -119,6 +119,16 @@ final case class State(
           ),
           updatedAt = Some(timestamp)
         )
+        copy(relationships = relationships + (relationship.id -> updatedRelationship))
+      case None               =>
+        this
+    }
+  }
+
+  def updateCreatedAt(partyRelationshipId: UUID, createdAtSeed: CreatedAtSeed, timestamp: OffsetDateTime): State = {
+    relationships.get(partyRelationshipId) match {
+      case Some(relationship) =>
+        val updatedRelationship = relationship.copy(createdAt = createdAtSeed.createdAt, updatedAt = Some(timestamp))
         copy(relationships = relationships + (relationship.id -> updatedRelationship))
       case None               =>
         this

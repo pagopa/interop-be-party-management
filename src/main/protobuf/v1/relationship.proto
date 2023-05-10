@@ -71,6 +71,10 @@ message BillingV1 {
   optional bool publicServices = 3;
 }
 
+message CreatedAtV1 {
+  required string createdAt = 1;
+}
+
 message PaymentServiceProviderV1 {
   optional string abiCode = 1;
   optional string businessRegisterNumber = 2;

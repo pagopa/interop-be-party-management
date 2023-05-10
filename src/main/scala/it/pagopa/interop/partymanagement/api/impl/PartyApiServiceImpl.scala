@@ -372,6 +372,25 @@ class PartyApiServiceImpl(
     logger.info(s"Getting relationships for from: ${from.getOrElse("Empty")} / to: ${to
         .getOrElse("Empty")}/ roles: $roles/ states: $states/ products: $products/ productRoles: $productRoles")
 
+    def retrieveRelationshipsByProduct(
+      roles: List[PartyRole],
+      states: List[RelationshipState],
+      products: List[String],
+      productRoles: List[String]
+    ): Future[List[Relationship]] = {
+      val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
+        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+        .toList
+
+      for {
+        re <- Future.traverse(commanders)(
+          _.ask[List[PersistedPartyRelationship]](ref =>
+            GetPartyRelationshipsByProduct(roles, states, products, productRoles, ref)
+          )
+        )
+      } yield re.flatten.map(_.toRelationship)
+    }
+
     val result: Future[List[Relationship]] = for {
       fromUuid    <- from.traverse(_.toFutureUUID)
       toUuid      <- to.traverse(_.toFutureUUID)
@@ -919,6 +938,44 @@ class PartyApiServiceImpl(
       case Failure(ex) =>
         logger.error(s"Error while updating billing data for relationship id $relationshipId", ex)
         deleteRelationshipById400(problemOf(StatusCodes.BadRequest, BillingRelationshipBadRequest(relationshipId)))
+    }
+  }
+
+  /**
+    * Code: 204, Message: Relationship updated
+    * Code: 400, Message: Bad Request, DataType: Problem
+    * Code: 404, Message: Relationship not found, DataType: Problem
+    */
+  override def updateCreatedAtRelationshipById(relationshipId: String, createdAtSeed: CreatedAtSeed)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    logger.info("Updating relationship with id {}", relationshipId)
+
+    val commanders = (0 until settings.numberOfShards)
+      .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
+      .toList
+
+    val result: Future[StatusReply[Unit]] =
+      for {
+
+        relationshipUUID  <- relationshipId.toFutureUUID
+        resultsCollection <- Future.traverse(commanders)(
+          _.ask(ref => UpdateCreatedAt(relationshipUUID, createdAtSeed, ref))
+            .transform(Success(_))
+        )
+        result            <- resultsCollection.reduce((r1, r2) => if (r1.isSuccess) r1 else r2).toFuture
+
+      } yield result
+
+    onComplete(result) {
+      case Success(_)  =>
+        updateCreatedAtRelationshipById204
+      case Failure(ex) =>
+        logger.error(s"Error while updating billing data for relationship id $relationshipId", ex)
+        updateCreatedAtRelationshipById400(
+          problemOf(StatusCodes.BadRequest, CreatedAtRelationshipBadRequest(relationshipId))
+        )
     }
   }
 
