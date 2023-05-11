@@ -305,6 +305,14 @@ class NewDesignExposureApiServiceImpl(
           )
         })
 
+      products = onboardedProducts.concat(pendingProducts)
+
+      _ = if (products.isEmpty && party.institutionType.isEmpty) {
+        logger.warn(
+          s"Found institution ${party.id.toString} not related to products without InstitutionType: setting PA as default!"
+        )
+      }
+
       newDesignInstitution = NewDesignInstitution(
         id = party.id.toString,
         externalId = party.externalId,
@@ -317,7 +325,7 @@ class NewDesignExposureApiServiceImpl(
               .flatMap(_._2)
               .map(r => r.institutionUpdate.flatMap(_.institutionType))
               .headOption
-              .getOrElse(Some("UNKNOWN"))
+              .getOrElse(Some(if (products.isEmpty) "PA" else "UNKNOWN"))
           ),
         digitalAddress = party.digitalAddress,
         address = party.address,
@@ -333,7 +341,7 @@ class NewDesignExposureApiServiceImpl(
         supportEmail = party.supportEmail,
         supportPhone = party.supportPhone,
         imported = party.imported.orElse(Some(false)),
-        onboarding = onboardedProducts.concat(pendingProducts).toSeq,
+        onboarding = products.toSeq,
         createdAt = party.start
       )
     } yield newDesignInstitution
