@@ -372,75 +372,6 @@ class PartyApiServiceImpl(
     logger.info(s"Getting relationships for from: ${from.getOrElse("Empty")} / to: ${to
         .getOrElse("Empty")}/ roles: $roles/ states: $states/ products: $products/ productRoles: $productRoles")
 
-    def retrieveRelationshipsByTo(
-      id: UUID,
-      roles: List[PartyRole],
-      states: List[RelationshipState],
-      product: List[String],
-      productRoles: List[String]
-    ): Future[List[Relationship]] = {
-      val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
-        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-        .toList
-
-      for {
-        re <- Future.traverse(commanders)(
-          _.ask[List[PersistedPartyRelationship]](ref =>
-            GetPartyRelationshipsByTo(id, roles, states, product, productRoles, ref)
-          )
-        )
-      } yield re.flatten.map(_.toRelationship)
-    }
-
-    def retrieveRelationshipsByFrom(
-      id: UUID,
-      roles: List[PartyRole],
-      states: List[RelationshipState],
-      product: List[String],
-      productRoles: List[String]
-    ): Future[List[Relationship]] =
-      for {
-        re <- getCommander(id.toString).ask(ref =>
-          GetPartyRelationshipsByFrom(id, roles, states, product, productRoles, ref)
-        )
-      } yield re.map(_.toRelationship)
-
-    def retrieveRelationshipsByProduct(
-      roles: List[PartyRole],
-      states: List[RelationshipState],
-      products: List[String],
-      productRoles: List[String]
-    ): Future[List[Relationship]] = {
-      val commanders: List[EntityRef[Command]] = (0 until settings.numberOfShards)
-        .map(shard => sharding.entityRefFor(PartyPersistentBehavior.TypeKey, shard.toString))
-        .toList
-
-      for {
-        re <- Future.traverse(commanders)(
-          _.ask[List[PersistedPartyRelationship]](ref =>
-            GetPartyRelationshipsByProduct(roles, states, products, productRoles, ref)
-          )
-        )
-      } yield re.flatten.map(_.toRelationship)
-    }
-
-    def relationshipsFromParams(
-      from: Option[UUID],
-      to: Option[UUID],
-      roles: List[PartyRole],
-      states: List[RelationshipState],
-      product: List[String],
-      productRoles: List[String]
-    ): Future[List[Relationship]] = (from, to) match {
-      case (Some(f), Some(t)) =>
-        retrieveRelationshipsByFrom(f, roles, states, product, productRoles).map(_.filter(_.to == t))
-      case (Some(f), None)    => retrieveRelationshipsByFrom(f, roles, states, product, productRoles)
-      case (None, Some(t))    => retrieveRelationshipsByTo(t, roles, states, product, productRoles)
-      case _                  =>
-        if (product.isEmpty) Future.failed(MissingQueryParam)
-        else retrieveRelationshipsByProduct(roles, states, product, productRoles)
-    }
-
     val result: Future[List[Relationship]] = for {
       fromUuid    <- from.traverse(_.toFutureUUID)
       toUuid      <- to.traverse(_.toFutureUUID)
@@ -448,7 +379,14 @@ class PartyApiServiceImpl(
       statesArray <- parseArrayParameters(states).traverse(RelationshipState.fromValue).toFuture
       productsArray     = parseArrayParameters(products)
       productRolesArray = parseArrayParameters(productRoles)
-      r <- relationshipsFromParams(fromUuid, toUuid, rolesArray, statesArray, productsArray, productRolesArray)
+      r <- relationshipService.relationshipsFromParams(
+        fromUuid,
+        toUuid,
+        rolesArray,
+        statesArray,
+        productsArray,
+        productRolesArray
+      )
     } yield r
 
     onComplete(result) {

@@ -2,9 +2,9 @@ package it.pagopa.interop.partymanagement.api
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCode
-import it.pagopa.interop.partymanagement.model._
 import it.pagopa.interop.commons.utils.SprayCommonFormats.{offsetDateTimeFormat, uuidFormat}
 import it.pagopa.interop.commons.utils.errors.ComponentError
+import it.pagopa.interop.partymanagement.model._
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
@@ -47,6 +47,22 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val bulkPartiesSeedFormat: RootJsonFormat[BulkPartiesSeed]                 = jsonFormat1(BulkPartiesSeed)
   implicit val bulkInstitutionsFormat: RootJsonFormat[BulkInstitutions]               = jsonFormat2(BulkInstitutions)
   implicit val digestSeedFormat: RootJsonFormat[DigestSeed]                           = jsonFormat1(DigestSeed)
+
+  implicit val newDesignUserInstitutionProductFormat: RootJsonFormat[NewDesignUserInstitutionProduct] = jsonFormat10(
+    NewDesignUserInstitutionProduct
+  )
+  implicit val newDesignUserInstitutionFormat: RootJsonFormat[NewDesignUserInstitution]               = jsonFormat2(
+    NewDesignUserInstitution
+  )
+  implicit val newDesignUserFormat: RootJsonFormat[NewDesignUser] = jsonFormat3(NewDesignUser)
+
+  implicit val newDesignInstitutionOnboardingFormat: RootJsonFormat[NewDesignInstitutionOnboarding] = jsonFormat8(
+    NewDesignInstitutionOnboarding
+  )
+  implicit val newDesignInstitutionFormat: RootJsonFormat[NewDesignInstitution] = jsonFormat22(NewDesignInstitution)
+
+  implicit val newDesignTokenUserFormat: RootJsonFormat[NewDesignTokenUser] = jsonFormat2(NewDesignTokenUser)
+  implicit val newDesignTokenFormat: RootJsonFormat[NewDesignToken]         = jsonFormat14(NewDesignToken)
 
   final val serviceErrorCodePrefix: String = "001"
   final val defaultProblemType: String     = "about:blank"

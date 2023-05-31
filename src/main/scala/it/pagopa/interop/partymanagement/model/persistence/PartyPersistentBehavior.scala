@@ -83,6 +83,15 @@ object PartyPersistentBehavior {
 
         Effect.none
 
+      case GetInstitutionParties(replyTo) =>
+        val parties: List[InstitutionParty] = state.parties.values.flatMap {
+          case i: InstitutionParty => Some(i)
+          case _                   => None
+        }.toList
+        replyTo ! parties
+
+        Effect.none
+
       case GetPartyAttributes(uuid, replyTo) =>
         val statusReply: StatusReply[Seq[InstitutionAttribute]] = state.parties
           .get(uuid)
@@ -313,9 +322,35 @@ object PartyPersistentBehavior {
         replyTo ! filtered
         Effect.none
 
+      case GetPartyRelationshipsByUserIds(userIds, states, replyTo) =>
+        val relationships: List[PersistedPartyRelationship] =
+          state.relationships.values.filter(rel => userIds.contains(rel.from)).toList
+        val filtered: List[PersistedPartyRelationship]      =
+          filterRelationships(relationships, List.empty, states, List.empty, List.empty)
+        replyTo ! filtered
+        Effect.none
+
+      case GetPartyRelationships(states, replyTo) =>
+        val relationships: List[PersistedPartyRelationship] = state.relationships.values.toList
+        val filtered: List[PersistedPartyRelationship]      =
+          filterRelationships(relationships, List.empty, states, List.empty, List.empty)
+        replyTo ! filtered
+        Effect.none
+
       case GetToken(tokenId, replyTo) =>
         val token: Option[Token] = state.tokens.get(tokenId)
         replyTo ! token
+        Effect.none
+
+      case GetTokens(replyTo) =>
+        val tokens: List[Token] = state.tokens.values.toList
+        replyTo ! tokens
+        Effect.none
+
+      case GetTokensByRelationshipUUID(relationshipId, replyTo) =>
+        val tokens: List[Token] =
+          state.tokens.values.filter(_.legals.map(_.relationshipId).contains(relationshipId)).toList
+        replyTo ! tokens
         Effect.none
 
       case UpdateToken(tokenId, digest, replyTo) =>

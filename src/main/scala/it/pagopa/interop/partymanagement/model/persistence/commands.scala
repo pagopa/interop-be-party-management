@@ -31,6 +31,7 @@ final case class AddParty(entity: Party, replyTo: ActorRef[StatusReply[Party]]) 
 final case class UpdateParty(entity: Party, replyTo: ActorRef[StatusReply[Party]]) extends PartyCommand
 final case class DeleteParty(entity: Party, replyTo: ActorRef[StatusReply[Unit]])  extends PartyCommand
 final case class GetParty(partyId: UUID, replyTo: ActorRef[Option[Party]])         extends PartyCommand
+final case class GetInstitutionParties(replyTo: ActorRef[List[InstitutionParty]])  extends PartyCommand
 final case class GetPartyAttributes(partyId: UUID, replyTo: ActorRef[StatusReply[Seq[InstitutionAttribute]]])
     extends PartyCommand
 final case class AddAttributes(institutionId: UUID, attributes: Seq[Attribute], replyTo: ActorRef[StatusReply[Party]])
@@ -77,6 +78,17 @@ final case class DeletePartyRelationship(relationshipId: UUID, replyTo: ActorRef
 final case class GetPartyRelationshipById(relationshipId: UUID, replyTo: ActorRef[Option[PersistedPartyRelationship]])
     extends PartyRelationshipCommand
 
+final case class GetPartyRelationshipsByUserIds(
+  userIds: List[UUID],
+  states: List[RelationshipState],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
+
+final case class GetPartyRelationships(
+  states: List[RelationshipState],
+  replyTo: ActorRef[List[PersistedPartyRelationship]]
+) extends PartyRelationshipCommand
+
 final case class GetPartyRelationshipsByFrom(
   from: UUID,
   roles: List[PartyRole],
@@ -113,8 +125,10 @@ final case class GetPartyRelationshipByAttributes(
 ) extends PartyRelationshipCommand
 
 /* Token Command */
-final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])         extends TokenCommand
-final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]]) extends TokenCommand
+final case class GetToken(tokenId: UUID, replyTo: ActorRef[Option[Token]])                         extends TokenCommand
+final case class GetTokens(replyTo: ActorRef[List[Token]])                                         extends TokenCommand
+final case class GetTokensByRelationshipUUID(relationshipId: UUID, replyTo: ActorRef[List[Token]]) extends TokenCommand
+final case class AddToken(token: Token, replyTo: ActorRef[StatusReply[TokenText]])                 extends TokenCommand
 final case class UpdateToken(tokenId: UUID, digest: String, replyTo: ActorRef[StatusReply[TokenText]])
     extends TokenCommand
 final case class UpdateBilling(partyRelationshipId: UUID, billing: Billing, replyTo: ActorRef[StatusReply[Unit]])

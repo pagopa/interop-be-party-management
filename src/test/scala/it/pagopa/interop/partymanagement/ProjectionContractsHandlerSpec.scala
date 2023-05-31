@@ -19,6 +19,8 @@ import it.pagopa.interop.partymanagement.api.impl.PartyApiMarshallerImpl.sprayJs
 import it.pagopa.interop.partymanagement.api.impl.{
   ExternalApiMarshallerImpl,
   ExternalApiServiceImpl,
+  NewDesignExposureApiMarshallerImpl,
+  NewDesignExposureApiServiceImpl,
   PartyApiMarshallerImpl,
   PartyApiServiceImpl,
   PublicApiMarshallerImpl,
@@ -160,10 +162,28 @@ class ProjectionContractsHandlerSpec
         SecurityDirectives.authenticateOAuth2("public", AkkaUtils.PassThroughAuthenticator)
       )
 
+    val newDesignExposureApiService: NewDesignExposureApiService =
+      new NewDesignExposureApiServiceImpl(
+        system = system,
+        sharding = sharding,
+        entity = persistentEntity,
+        relationshipService,
+        institutionService
+      )
+
+    val newDesignExposureApi: NewDesignExposureApi =
+      new NewDesignExposureApi(newDesignExposureApiService, NewDesignExposureApiMarshallerImpl, wrappingDirective)
+
     val healthApi: HealthApi = mock[HealthApi]
 
     controller = Some(
-      new Controller(health = healthApi, party = partyApi, external = externalApi, public = publicApi)(classicSystem)
+      new Controller(
+        health = healthApi,
+        party = partyApi,
+        external = externalApi,
+        public = publicApi,
+        newDesignExposure = newDesignExposureApi
+      )(classicSystem)
     )
 
     controller foreach { controller =>

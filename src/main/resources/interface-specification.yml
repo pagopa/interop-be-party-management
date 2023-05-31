@@ -34,6 +34,11 @@ tags:
     externalDocs:
       description: Find out more
       url: 'http://swagger.io'
+  - name: newDesignExposure
+    description: To expose data modelling them as the new design
+    externalDocs:
+      description: Find out more
+      url: 'http://swagger.io'
 security:
   - bearerAuth: [ ]
 paths:
@@ -1085,6 +1090,150 @@ paths:
                 $ref: '#/components/schemas/Problem'
       operationId: findByGeoTaxonomies
       description: 'returns a collection of all the parties satisfying a geographic taxonomy based search.'
+  '/newdesign/users':
+    get:
+      operationId: findNewDesignUsers
+      description: Retrieves a collection of users modelled as the new design
+      tags:
+        - newDesignExposure
+      parameters:
+        - name: userIds
+          description: Comma separated list of userId to extract. if none provided, it will return all data
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to access (0 indexed, defaults to 0)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page (defaults to 20, max 2000)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: collection of users modelled as new design
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewDesignUser'
+        '500':
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  '/newdesign/institutions':
+    get:
+      operationId: findNewDesignInstitutions
+      description: Retrieves a collection of institutions modelled as the new design
+      tags:
+        - newDesignExposure
+      parameters:
+        - name: institutionIds
+          description: Comma separated list of institutionIds to extract. if none provided, it will return all data
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to access (0 indexed, defaults to 0)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page (defaults to 20, max 2000)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: collection of institutions modelled as new design
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewDesignInstitution'
+        '500':
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  '/newdesign/tokens':
+    get:
+      operationId: findNewDesignTokens
+      description: Retrieves a collection of tokens modelled as the new design
+      tags:
+        - newDesignExposure
+      parameters:
+        - name: tokenIds
+          description: Comma separated list of tokenIds to extract. if none provided, it will return all data
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to access (0 indexed, defaults to 0)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page (defaults to 20, max 2000)
+          required: false
+          style: form
+          allowReserved: true
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: collection of tokens modelled as new design
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewDesignToken'
+        '500':
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     PersonSeed:
@@ -1797,6 +1946,233 @@ components:
         - exact
         - any
         - all
+    NewDesignUser:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - bindings
+        - createdAt
+      properties:
+        id:
+          type: string
+        bindings:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignUserInstitution'
+        createdAt:
+          type: string
+          format: date-time
+    NewDesignUserInstitution:
+      type: object
+      additionalProperties: false
+      required:
+        - institutionId
+        - products
+      properties:
+        institutionId:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignUserInstitutionProduct'
+    NewDesignUserInstitutionProduct:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - env
+        - relationshipId
+        - role
+        - productRole
+        - status
+        - createdAt
+      properties:
+        productId:
+          type: string
+        env:
+          type: string
+        relationshipId:
+          type: string
+        role:
+          type: PartyRole
+        productRole:
+          type: string
+        status:
+          type: RelationshipState
+        tokenId:
+          type: string
+        contract:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignInstitution:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - externalId
+        - origin
+        - originId
+        - description
+        - digitalAddress
+        - taxCode
+        - address
+        - zipCode
+        - attributes
+        - geographicTaxonomies
+        - onboarding
+        - createdAt
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+        origin:
+          type: string
+        originId:
+          type: string
+        description:
+          type: string
+        institutionType:
+          type: string
+        digitalAddress:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        taxCode:
+          type: string
+# cannot handle more than 22 fields!
+#        billing:
+#          $ref: '#/components/schemas/Billing'
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicTaxonomy'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+        paymentServiceProvider:
+          $ref: '#/components/schemas/PaymentServiceProvider'
+        dataProtectionOfficer:
+          $ref: '#/components/schemas/DataProtectionOfficer'
+        rea:
+          type: string
+        shareCapital:
+          type: string
+        businessRegisterPlace:
+          type: string
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+        imported:
+          type: boolean
+        onboarding:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignInstitutionOnboarding'
+        createdAt:
+          type: string
+          format: date-time
+# cannot handle more than 22 fields!
+#        updatedAt:
+#          type: string
+#          format: date-time
+    NewDesignInstitutionOnboarding:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - status
+        - billing
+        - createdAt
+      properties:
+        productId:
+          type: string
+        status:
+          type: RelationshipState
+        tokenId:
+          type: string
+        contract:
+          type: string
+        pricingPlan:
+          type: string
+        billing:
+          $ref: '#/components/schemas/Billing'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignToken:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - status
+        - institutionId
+        - productId
+        - expiringDate
+        - checksum
+        - contractTemplate
+        - contractVersion
+        - users
+        - createdAt
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          type: RelationshipState
+        institutionId:
+          type: string
+        productId:
+          type: string
+        expiringDate:
+          type: string
+          format: date-time
+        checksum:
+          type: string
+        contractTemplate:
+          type: string
+        contractVersion:
+          type: string
+        contractSigned:
+          type: string
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewDesignTokenUser'
+        institutionUpdate:
+          $ref: '#/components/schemas/InstitutionUpdate'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewDesignTokenUser:
+      type: object
+      additionalProperties: false
+      required:
+        - userId
+        - role
+      properties:
+        userId:
+          type: string
+        role:
+          type: PartyRole
   securitySchemes:
     bearerAuth:
       type: http
